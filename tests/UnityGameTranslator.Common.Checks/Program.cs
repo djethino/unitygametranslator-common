@@ -25,6 +25,7 @@ namespace UnityGameTranslator.Common.Checks
             VersionOrdering();
             VersionTolerance();
             UpdateVerdicts();
+            StoredSecrets();
 
             Console.WriteLine();
             if (_failures == 0)
@@ -35,6 +36,13 @@ namespace UnityGameTranslator.Common.Checks
 
             Console.WriteLine($"{_failures} check(s) FAILED.");
             return 1;
+        }
+
+        /// <summary>The stored-secret format, checked against its own specification.</summary>
+        private static void StoredSecrets()
+        {
+            Section("Stored secrets");
+            SecretsChecks.Run(Check);
         }
 
         /// <summary>Which of two versions comes first, including the suffix rules.</summary>

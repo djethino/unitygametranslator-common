@@ -9,6 +9,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
+
+    <!-- Rfc2898DeriveBytes without a hash algorithm is obsolete on modern .NET and pinned on
+         purpose: the library derives its key that way because netstandard2.0 offers nothing else,
+         and this checks that exact derivation. -->
+    <NoWarn>$(NoWarn);SYSLIB0041</NoWarn>
   </PropertyGroup>
 
   <!--
