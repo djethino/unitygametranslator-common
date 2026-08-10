@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      Overrides the netstandard2.0 floor from Directory.Build.props on purpose: this one is run,
+      not shipped, so it needs a framework that can execute. The library it checks stays on the
+      floor — that is the point of checking it from the outside.
+    -->
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!--
+    ⚠ No test framework, and that is deliberate. THIRD_PARTY_LICENSES.md says "None" and means it,
+    so this prints its own results and exits non-zero on failure. `dotnet run` is the whole
+    protocol; anything that can run a program can run these.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="../../src/UnityGameTranslator.Common/UnityGameTranslator.Common.csproj" />
+  </ItemGroup>
+
+</Project>
