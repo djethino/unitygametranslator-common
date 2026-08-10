@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>UnityGameTranslator.Common</AssemblyName>
+    <RootNamespace>UnityGameTranslator.Common</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    No ItemGroup for packages, and there should never be one: this library is consumed by two
+    programs that disagree about their own dependencies, so anything referenced here is imposed on
+    both. See THIRD_PARTY_LICENSES.md, which says "none" on purpose.
+  -->
+
+</Project>

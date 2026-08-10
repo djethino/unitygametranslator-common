@@ -1,0 +1,26 @@
+<Project>
+  <PropertyGroup>
+    <!--
+      ⚠ netstandard2.0 is a floor, not a preference. The mod runs on Unity's Mono and on IL2CPP,
+      which is the narrower of the two runtimes this library serves; the installer's .NET consumes
+      it without trouble. Written the other way round it could not be shared at all, which is how
+      a shared file quietly becomes two files again.
+    -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+
+    <!--
+      Modern syntax is welcome; modern RUNTIME is not. The compiler happily targets an old
+      framework with a recent language, so pattern matching and the like are available — but
+      anything needing a newer base library (GetValueOrDefault, ranges, index-from-end) will not
+      compile here, and that is the guard rail working rather than getting in the way.
+    -->
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+
+    <!-- Nothing here is allowed to need a package. See CONTRIBUTING.md and THIRD_PARTY_LICENSES.md. -->
+    <NoWarn>$(NoWarn)</NoWarn>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>
