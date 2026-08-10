@@ -7,23 +7,34 @@ namespace UnityGameTranslator.Common
     /// <summary>
     /// What language a code means, and what code a language answers to.
     ///
-    /// ⚠ TWO INVENTORIES, deliberately not the same size — the first thing to understand before
-    /// touching anything here:
-    ///  · <see cref="Table"/> maps ISO 639-1 codes to names. It is what talks to the outside
-    ///    world: a system locale, an API answer, a Google or DeepL request, the code written into
-    ///    a config file.
-    ///  · <see cref="TranslatableNames"/> is what a model can actually translate INTO, and it is
-    ///    wider. Five of them have no ISO 639-1 code at all, so they exist as names and nothing
-    ///    else.
-    /// Collapsing the two would either drop five languages a player can legitimately ask for, or
-    /// invent codes no API would accept.
+    /// ⚠ A LANGUAGE IS IDENTIFIED BY ITS NAME, not by its code. The website stores a name, its
+    /// upload endpoint validates against a list of names, the mod resolves to a name and the game
+    /// config holds a name. Codes are a means — a system locale, a Google or DeepL request, a
+    /// setting — never the identity.
+    ///
+    /// ⚠ TWO INVENTORIES, deliberately not the same size:
+    ///  · <see cref="Table"/> maps ISO 639-1 codes to names. It is what talks to anything that
+    ///    speaks in codes.
+    ///  · <see cref="TranslatableNames"/> is the CONTRACT with the website — exactly the list in
+    ///    its config/languages.php. It is wider because five of those names have no ISO 639-1 code
+    ///    at all.
+    /// Drift in that second list does not degrade a translation: it gets the upload REJECTED by a
+    /// validation error the player did not cause and cannot read. It moves only together with the
+    /// website. Collapsing the two would either drop five languages the site accepts, or invent
+    /// codes no API accepts.
+    ///
+    /// ⚠ Neither list says what any model can translate. Models are chosen from a catalogue and
+    /// most will attempt any pair, with varying success; naming one here would read as a limit
+    /// that does not exist.
     ///
     /// ⚠ SEVERAL CODES MAP TO ONE NAME on purpose: "zh", "zh-cn" and "zh-hans" all mean Simplified
-    /// Chinese, because this has to recognise whatever a system or an API hands over. Anything
-    /// building a list for a human goes through <see cref="All"/>, which keeps one entry per
-    /// language — reading the table directly put Simplified Chinese in a dropdown three times. The
-    /// shortest code wins, and both programs must agree on that: the code chosen here ends up
-    /// written into a game config.
+    /// Chinese, because this has to recognise whatever a system or an API hands over. That gives
+    /// the table two jobs, and each has its own entry point:
+    ///  · offering a choice to a human goes through <see cref="All"/>, one entry per language —
+    ///    reading the table directly put Simplified Chinese in a dropdown three times;
+    ///  · comparing two codes goes through <see cref="Canonical"/> — compared raw, a language
+    ///    failed to match itself when the two sides spelled its code differently.
+    /// The shortest code wins, and it is the one the website uses.
     ///
     /// No language is special-cased as a policy: this is a lookup. The exceptions below exist
     /// because Google and DeepL ask for particular spellings, not because any language is treated
@@ -134,11 +145,12 @@ namespace UnityGameTranslator.Common
         };
 
         /// <summary>
-        /// Every language a translation can target.
+        /// Every language a translation can target: the website's config/languages.php, name for
+        /// name.
         ///
-        /// ⚠ Wider than <see cref="Table"/>, and case-sensitive as it has always been — these
-        /// names come from Unity's SystemLanguage enum and from the model's own list, both of
-        /// which spell them exactly this way.
+        /// ⚠ Case-sensitive, and the spelling is not ours to choose — it is what the upload
+        /// endpoint compares against. Unity's SystemLanguage enum happens to spell them the same
+        /// way, which is what makes system detection land on a valid name.
         /// </summary>
         private static readonly HashSet<string> TranslatableNames = new HashSet<string>
         {
