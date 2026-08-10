@@ -26,6 +26,7 @@ namespace UnityGameTranslator.Common.Checks
             VersionTolerance();
             UpdateVerdicts();
             StoredSecrets();
+            LanguageLookup();
 
             Console.WriteLine();
             if (_failures == 0)
@@ -36,6 +37,13 @@ namespace UnityGameTranslator.Common.Checks
 
             Console.WriteLine($"{_failures} check(s) FAILED.");
             return 1;
+        }
+
+        /// <summary>Codes, names, and the two inventories that must not be collapsed.</summary>
+        private static void LanguageLookup()
+        {
+            Section("Languages");
+            LanguagesChecks.Run(Check);
         }
 
         /// <summary>The stored-secret format, checked against its own specification.</summary>
