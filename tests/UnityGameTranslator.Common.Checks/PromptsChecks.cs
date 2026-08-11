@@ -64,6 +64,20 @@ namespace UnityGameTranslator.Common.Checks
             check(full.Contains("[!nl]") && full.Contains("[!t*0]") && full.Contains("[!v*0]") && full.Contains("[!STR*0]"),
                 "and one rule each for those it does", "four kinds, four sentences");
 
+            // Reading an answer: three outcomes, and the third is the point.
+            check(Prompts.ReadAnswer(Prompts.SkipMarker) == Prompts.AnswerKind.Skip,
+                "the marker alone is a refusal", "the caller keeps the original and tags it S");
+            check(Prompts.ReadAnswer("  " + Prompts.SkipMarker + "\n") == Prompts.AnswerKind.Skip,
+                "surrounding blank space does not change that", "models add a newline");
+            check(Prompts.ReadAnswer("Démarrer la partie") == Prompts.AnswerKind.Translation,
+                "an ordinary answer is a translation", "nothing special about it");
+            check(Prompts.ReadAnswer("Démarrer la partie " + Prompts.SkipMarker) == Prompts.AnswerKind.Unusable,
+                "a translation carrying the marker is thrown away",
+                "read as a refusal it drops a good line; read as a translation it writes the marker into the game");
+            check(Prompts.ReadAnswer("") == Prompts.AnswerKind.Unusable
+                  && Prompts.ReadAnswer(null) == Prompts.AnswerKind.Unusable,
+                "and so is nothing at all", "there is no line to store");
+
             // The mod's own interface: a different job, different rules.
             string ui = Prompts.ForOwnInterface("French", TextType.Phrase, none);
             check(ui.Contains("from English to French"), "its source is always English", "the interface is written in it");
