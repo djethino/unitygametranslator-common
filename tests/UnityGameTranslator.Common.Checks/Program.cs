@@ -32,6 +32,7 @@ namespace UnityGameTranslator.Common.Checks
             PlaceholderRules();
             PromptWording();
             EndpointAddresses();
+            ProviderNegotiation();
 
             Console.WriteLine();
             if (_failures == 0)
@@ -42,6 +43,13 @@ namespace UnityGameTranslator.Common.Checks
 
             Console.WriteLine($"{_failures} check(s) FAILED.");
             return 1;
+        }
+
+        /// <summary>What a provider will accept, learned by being refused.</summary>
+        private static void ProviderNegotiation()
+        {
+            Section("Negotiation");
+            NegotiationChecks.Run(Check);
         }
 
         /// <summary>Where a request really goes, from whatever address somebody pasted.</summary>
