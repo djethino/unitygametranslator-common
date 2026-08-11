@@ -18,6 +18,14 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
 
+    <!--
+      ⚠ Symbols go INSIDE the assembly. One of the consumers publishes as a single file and
+      asserts, at packaging time, that nothing else was produced beside the executable — a stray
+      UnityGameTranslator.Common.pdb fails that check. It has to be set here rather than there:
+      a project's own props decide how it emits, and this one is referenced across repositories.
+    -->
+    <DebugType>embedded</DebugType>
+
     <!-- Nothing here is allowed to need a package. See CONTRIBUTING.md and THIRD_PARTY_LICENSES.md. -->
     <NoWarn>$(NoWarn)</NoWarn>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
