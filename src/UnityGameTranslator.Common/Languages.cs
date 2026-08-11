@@ -269,6 +269,49 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// What language an operating system or a browser is asking for.
+        ///
+        /// ⚠ Locales arrive longer than a language code, and in shapes that differ per system:
+        /// "zh-Hant-TW" on Windows, "fr_FR.UTF-8" on Linux, "pt-BR" in a browser header. Cutting
+        /// them to two letters is what everything here used to do, and it is wrong in exactly one
+        /// visible way: "zh-Hant-TW" becomes "zh", which is SIMPLIFIED Chinese. Someone whose
+        /// system is set to Traditional was being offered Simplified, in the mod and in the tool
+        /// alike, while the table right here holds "zh-hant" and could have answered.
+        ///
+        /// So the tag is shortened one segment at a time and the first form we recognise wins —
+        /// "zh-hant-tw", then "zh-hant", then "zh". That is the lookup rule BCP 47 itself
+        /// describes, and it costs nothing over cutting blindly.
+        ///
+        /// Returns the canonical code, or null when nothing is recognised. Null is not a failure
+        /// to report: an unknown locale simply means the caller keeps its own default.
+        /// </summary>
+        public static string? FromLocale(string? locale)
+        {
+            if (locale == null) return null;
+
+            // Linux writes fr_FR.UTF-8 and can list several; a browser sends fr-FR;q=0.9.
+            string tag = locale.Trim().ToLowerInvariant();
+            foreach (char cut in new[] { '.', ':', '@', ';', ',' })
+            {
+                int at = tag.IndexOf(cut);
+                if (at >= 0) tag = tag.Substring(0, at);
+            }
+
+            tag = tag.Replace('_', '-').Trim();
+            if (tag.Length == 0) return null;
+
+            while (true)
+            {
+                if (Knows(tag)) return Canonical(tag);
+
+                int dash = tag.LastIndexOf('-');
+                if (dash <= 0) return null;
+
+                tag = tag.Substring(0, dash);
+            }
+        }
+
+        /// <summary>
         /// True when this exact code is one we carry.
         ///
         /// Distinct from <see cref="NameOf"/>, which hands an unknown code back rather than

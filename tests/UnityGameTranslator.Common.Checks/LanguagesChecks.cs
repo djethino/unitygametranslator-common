@@ -63,6 +63,23 @@ namespace UnityGameTranslator.Common.Checks
             check(Languages.Names().Contains("French") && Languages.IsTranslatable("fr"),
                 "both inventories still answer for an ordinary language", "the split is not a divide");
 
+            // ⚠ Ce qu'un systeme ou un navigateur nous tend, et le defaut que ca corrige.
+            check(Languages.FromLocale("zh-Hant-TW") == "zh-tw",
+                "a Traditional Chinese system is recognised as Traditional",
+                "cutting to two letters gave zh, which is Simplified - the visible bug this fixes");
+            check(Languages.FromLocale("zh-CN") == "zh", "and a Simplified one as Simplified", "zh-cn is in the table");
+            check(Languages.FromLocale("fr-FR") == "fr", "a region is dropped when it means nothing to us",
+                "fr-fr is not a language we carry, fr is");
+            check(Languages.FromLocale("fr_FR.UTF-8") == "fr", "Linux shapes are understood",
+                "LANG carries an encoding and an underscore");
+            check(Languages.FromLocale("nb-NO") == "nb", "nb-NO stays Norwegian Bokmal", "not truncated into nothing");
+            check(Languages.FromLocale("no") == "nb", "and the older no resolves to the same language",
+                "canonical, so two systems do not disagree about one person");
+            check(Languages.FromLocale("iw") == "he", "the pre-1989 Hebrew code still works", "Java emits it to this day");
+            check(Languages.FromLocale("qqq-XX") == null && Languages.FromLocale("") == null
+                  && Languages.FromLocale(null) == null,
+                "and something we cannot place gives null", "the caller keeps its own default rather than guessing");
+
             // Matching an API answer against what a player asked for.
             check(Languages.Matches("French", "fr"), "French answers to fr", "the ordinary case");
             check(Languages.Matches("Simplified Chinese", "zh-hans")
