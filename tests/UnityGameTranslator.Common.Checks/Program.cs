@@ -28,6 +28,7 @@ namespace UnityGameTranslator.Common.Checks
             StoredSecrets();
             LanguageLookup();
             HotkeySpelling();
+            QualityMeasures();
 
             Console.WriteLine();
             if (_failures == 0)
@@ -38,6 +39,13 @@ namespace UnityGameTranslator.Common.Checks
 
             Console.WriteLine($"{_failures} check(s) FAILED.");
             return 1;
+        }
+
+        /// <summary>What a player is told about a file, checked against the website's rules.</summary>
+        private static void QualityMeasures()
+        {
+            Section("Quality measures");
+            QualityChecks.Run(Check);
         }
 
         /// <summary>How a keyboard shortcut is spelled — silent when wrong, hence the cases.</summary>
