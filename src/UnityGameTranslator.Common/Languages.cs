@@ -40,150 +40,55 @@ namespace UnityGameTranslator.Common
     /// because Google and DeepL ask for particular spellings, not because any language is treated
     /// differently from another.
     /// </summary>
-    public static class Languages
+    public static partial class Languages
     {
-        /// <summary>ISO 639-1 code to language name. Case-insensitive: a locale can arrive as "FR".</summary>
-        private static readonly Dictionary<string, string> Table =
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        /// <summary>
+        /// Code to language name. Case-insensitive: a locale can arrive as "FR".
+        ///
+        /// Built from the catalogue rather than written here — see Languages.Tables.g.cs and
+        /// generate-common-languages.py. Every code a language answers to is in it, so the same
+        /// language is reachable as "zh", "zh-cn" and "zh-hans".
+        /// </summary>
+        // ⚠ Built on first use, not at type initialisation. The data lives in the generated
+        // partial, and C# does not promise which partial's static fields run first — building
+        // eagerly threw a null reference that looked like a corrupt catalogue.
+        private static Dictionary<string, string>? _table;
+        private static Dictionary<string, string> Table => _table ??= BuildTable();
+
+        private static Dictionary<string, string> BuildTable()
         {
-            { "en", "English" },
-            { "fr", "French" },
-            { "de", "German" },
-            { "es", "Spanish" },
-            { "it", "Italian" },
-            { "pt", "Portuguese" },
-            { "ru", "Russian" },
-            { "pl", "Polish" },
-            { "ja", "Japanese" },
-            { "ko", "Korean" },
-            { "zh", "Simplified Chinese" },
-            { "zh-cn", "Simplified Chinese" },
-            { "zh-hans", "Simplified Chinese" },
-            { "zh-tw", "Traditional Chinese" },
-            { "zh-hant", "Traditional Chinese" },
-            { "ar", "Arabic" },
-            { "tr", "Turkish" },
-            { "nl", "Dutch" },
-            { "sv", "Swedish" },
-            { "da", "Danish" },
-            { "nb", "Norwegian Bokmål" },
-            { "nn", "Norwegian Nynorsk" },
-            { "no", "Norwegian Bokmål" },
-            { "fi", "Finnish" },
-            { "cs", "Czech" },
-            { "hu", "Hungarian" },
-            { "ro", "Romanian" },
-            { "el", "Greek" },
-            { "th", "Thai" },
-            { "vi", "Vietnamese" },
-            { "id", "Indonesian" },
-            { "ms", "Malay" },
-            { "uk", "Ukrainian" },
-            { "bg", "Bulgarian" },
-            // Other Indo-European
-            { "sk", "Slovak" },
-            { "hr", "Croatian" },
-            { "sr", "Serbian" },
-            { "sl", "Slovenian" },
-            { "lt", "Lithuanian" },
-            { "lv", "Latvian" },
-            { "et", "Estonian" },
-            { "is", "Icelandic" },
-            { "fo", "Faroese" },
-            { "ga", "Irish" },
-            { "cy", "Welsh" },
-            { "ca", "Catalan" },
-            { "gl", "Galician" },
-            { "eu", "Basque" },
-            { "lb", "Luxembourgish" },
-            { "af", "Afrikaans" },
-            { "mk", "Macedonian" },
-            { "bs", "Bosnian" },
-            { "sq", "Albanian" },
-            { "hy", "Armenian" },
-            { "be", "Belarusian" },
-            { "fa", "Persian" },
-            { "tg", "Tajik" },
-            // South Asian
-            { "hi", "Hindi" },
-            { "bn", "Bengali" },
-            { "ur", "Urdu" },
-            { "pa", "Punjabi" },
-            { "gu", "Gujarati" },
-            { "mr", "Marathi" },
-            { "ta", "Tamil" },
-            { "te", "Telugu" },
-            { "kn", "Kannada" },
-            { "ml", "Malayalam" },
-            { "or", "Oriya" },
-            { "si", "Sinhala" },
-            { "ne", "Nepali" },
-            { "as", "Assamese" },
-            { "sd", "Sindhi" },
-            // East/Southeast Asian
-            { "my", "Burmese" },
-            { "km", "Khmer" },
-            { "lo", "Lao" },
-            { "tl", "Tagalog" },
-            { "ceb", "Cebuano" },
-            { "jv", "Javanese" },
-            { "su", "Sundanese" },
-            // Turkic
-            { "az", "Azerbaijani" },
-            { "uz", "Uzbek" },
-            { "kk", "Kazakh" },
-            { "ba", "Bashkir" },
-            { "tt", "Tatar" },
-            // Semitic/Afro-Asiatic
-            { "he", "Hebrew" },
-            { "iw", "Hebrew" },
-            { "mt", "Maltese" },
-            // Other
-            { "ka", "Georgian" },
-            { "sw", "Swahili" },
-            { "ht", "Haitian Creole" },
-        };
+            var table = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (string[] row in CatalogueCodes)
+            {
+                for (int i = 1; i < row.Length; i++) table[row[i]] = row[0];
+            }
+
+            return table;
+        }
 
         /// <summary>
-        /// Every language a translation can target: the website's config/languages.php, name for
-        /// name.
+        /// Every language a translation can target: the website's list, name for name.
         ///
         /// ⚠ Case-sensitive, and the spelling is not ours to choose — it is what the upload
-        /// endpoint compares against. Unity's SystemLanguage enum happens to spell them the same
-        /// way, which is what makes system detection land on a valid name.
+        /// endpoint compares against.
         /// </summary>
-        private static readonly HashSet<string> TranslatableNames = new HashSet<string>
+        private static HashSet<string>? _names;
+        private static HashSet<string> TranslatableNames => _names ??= BuildNames();
+
+        private static HashSet<string> BuildNames()
         {
-            "English", "French", "German", "Spanish",
-            "Italian", "Portuguese", "Russian", "Polish",
-            "Japanese", "Korean", "Simplified Chinese", "Traditional Chinese",
-            "Arabic", "Turkish", "Dutch", "Swedish",
-            "Danish", "Norwegian Bokmål", "Norwegian Nynorsk", "Finnish",
-            "Czech", "Hungarian", "Romanian", "Greek",
-            "Thai", "Vietnamese", "Indonesian", "Malay",
-            "Ukrainian", "Bulgarian", "Slovak", "Croatian",
-            "Serbian", "Slovenian", "Lithuanian", "Latvian",
-            "Estonian", "Icelandic", "Faroese", "Irish",
-            "Welsh", "Catalan", "Galician", "Basque",
-            "Luxembourgish", "Afrikaans", "Macedonian", "Bosnian",
-            "Albanian", "Armenian", "Belarusian", "Persian",
-            "Dari", "Tajik", "Hindi", "Bengali",
-            "Urdu", "Punjabi", "Gujarati", "Marathi",
-            "Tamil", "Telugu", "Kannada", "Malayalam",
-            "Oriya", "Sinhala", "Nepali", "Assamese",
-            "Sindhi", "Cantonese", "Burmese", "Khmer",
-            "Lao", "Tagalog", "Cebuano", "Javanese",
-            "Sundanese", "Azerbaijani", "Uzbek", "Kazakh",
-            "Bashkir", "Tatar", "Hebrew", "Maltese",
-            "Egyptian Arabic", "Levantine Arabic", "Moroccan Arabic", "Georgian",
-            "Swahili", "Haitian Creole",
-        };
+            var names = new HashSet<string>();
+            foreach (string[] row in CatalogueCodes) names.Add(row[0]);
+            return names;
+        }
 
         /// <summary>
         /// Name to code. Built once, keeping the SHORTEST code for each name — "zh" over "zh-cn" —
         /// because that is the form written into config files on both sides.
         /// </summary>
-        private static readonly Dictionary<string, string> Reverse = BuildReverse();
+        private static Dictionary<string, string>? _reverse;
+        private static Dictionary<string, string> Reverse => _reverse ??= BuildReverse();
 
         private static Dictionary<string, string> BuildReverse()
         {
@@ -354,57 +259,37 @@ namespace UnityGameTranslator.Common
                 .OrderBy(entry => entry.Name, StringComparer.OrdinalIgnoreCase);
         }
 
-        /// <summary>The code Google Translate expects: lower-case ISO, with the spellings it insists on.</summary>
-        public static string? GoogleCode(string? languageName)
+        /// <summary>
+        /// What each provider accepts, from the catalogue. Null when it does not do this language.
+        ///
+        /// ⚠ Read, never deduced. These used to be worked out by rule — take the ISO code, upper
+        /// case it for DeepL, send it and hope — so the only refusal anybody could predict was a
+        /// language with no code at all. Everything else went out and came back 400, leaving a
+        /// line untranslated with nothing but a log entry, once per line, forever.
+        /// </summary>
+        private static string? Provider(string? languageName, int column)
         {
-            if (languageName == null || languageName.Length == 0) return null;
+            if (languageName == null) return null;
 
-            switch (languageName)
+            foreach (string[] row in CatalogueProviders)
             {
-                case "Simplified Chinese": return "zh-CN";
-                case "Traditional Chinese": return "zh-TW";
-                case "Norwegian Bokmål": return "no";
-                case "Norwegian Nynorsk": return "no"; // Google does not tell the two apart
+                if (string.Equals(row[0], languageName, StringComparison.OrdinalIgnoreCase))
+                    return row[column];
             }
 
-            return CodeOf(languageName);
+            return null;
         }
+
+        /// <summary>The code Google Translate expects, or null when it does not do this language.</summary>
+        public static string? GoogleCode(string? languageName) => Provider(languageName, 1);
 
         /// <summary>
-        /// The code DeepL expects: upper case, and a handful of variants that differ depending on
-        /// whether the language is the source or the target.
+        /// The code DeepL expects, or null when it does not do this language.
+        ///
+        /// ⚠ Source and target differ, and sending the wrong one is refused: the same language is
+        /// "EN" going in and "EN-US" coming out.
         /// </summary>
-        public static string? DeepLCode(string? languageName, bool isTarget)
-        {
-            if (languageName == null || languageName.Length == 0) return null;
-
-            if (isTarget)
-            {
-                switch (languageName)
-                {
-                    case "English": return "EN-US";
-                    case "Portuguese": return "PT-BR";
-                    case "Simplified Chinese": return "ZH-HANS";
-                    case "Traditional Chinese": return "ZH-HANT";
-                    case "Norwegian Bokmål": return "NB";
-                    case "Norwegian Nynorsk": return "NB"; // DeepL carries Bokmål only
-                }
-            }
-            else
-            {
-                switch (languageName)
-                {
-                    case "English": return "EN";
-                    case "Portuguese": return "PT";
-                    case "Simplified Chinese": return "ZH";
-                    case "Traditional Chinese": return "ZH";
-                    case "Norwegian Bokmål": return "NB";
-                    case "Norwegian Nynorsk": return "NB";
-                }
-            }
-
-            string? code = CodeOf(languageName);
-            return code == null ? null : code.ToUpperInvariant();
-        }
+        public static string? DeepLCode(string? languageName, bool isTarget) =>
+            Provider(languageName, isTarget ? 3 : 2);
     }
 }

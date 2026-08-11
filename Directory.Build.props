@@ -31,4 +31,66 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <!--
+    ⚠ THE LANGUAGE TABLES ARE GENERATED from catalogs/languages.json, by
+    generate-common-languages.py at the project root, and committed. This target does not generate
+    them — it REFUSES TO BUILD when they no longer match the catalogue they came from.
+
+    Why not generate here: MSBuild cannot parse JSON without an assembly reference that resolves
+    on one machine and not the next (System.Text.Json is not resolvable by name in an inline task,
+    and is not in the SDK folder either). Hashing needs nothing.
+
+    The effect is the one that matters: a release cannot ship a language list the catalogue no
+    longer says. It fails loudly at build instead of quietly at upload.
+  -->
+  <PropertyGroup>
+    <LanguageCatalogue>$(MSBuildThisFileDirectory)catalogs/languages.json</LanguageCatalogue>
+    <LanguageTables>$(MSBuildThisFileDirectory)src/UnityGameTranslator.Common/Languages.Tables.g.cs</LanguageTables>
+  </PropertyGroup>
+
+  <UsingTask TaskName="CheckLanguageTables" TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Catalogue ParameterType="System.String" Required="true" />
+      <Tables ParameterType="System.String" Required="true" />
+      <Stale ParameterType="System.Boolean" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Security.Cryptography" />
+      <Using Namespace="System.Text" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+          using (var sha = SHA256.Create())
+          {
+              var hash = sha.ComputeHash(File.ReadAllBytes(Catalogue));
+              var builder = new StringBuilder();
+              foreach (var b in hash) builder.Append(b.ToString("x2"));
+
+              var recorded = "";
+              foreach (var line in File.ReadAllLines(Tables))
+              {
+                  var at = line.IndexOf("catalogue-sha256:");
+                  if (at < 0) continue;
+                  recorded = line.Substring(at + "catalogue-sha256:".Length).Trim();
+                  break;
+              }
+
+              Stale = recorded != builder.ToString();
+          }
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="VerifyLanguageTables" BeforeTargets="CoreCompile"
+          Condition="'$(MSBuildProjectName)' == 'UnityGameTranslator.Common' AND Exists('$(LanguageCatalogue)')">
+    <CheckLanguageTables Catalogue="$(LanguageCatalogue)" Tables="$(LanguageTables)">
+      <Output TaskParameter="Stale" PropertyName="LanguageTablesStale" />
+    </CheckLanguageTables>
+    <Error Condition="'$(LanguageTablesStale)' == 'true'"
+           Text="The language tables no longer match catalogs/languages.json. Run: python generate-common-languages.py" />
+  </Target>
+
 </Project>

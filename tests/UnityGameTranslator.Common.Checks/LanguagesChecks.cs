@@ -55,11 +55,11 @@ namespace UnityGameTranslator.Common.Checks
             check(Languages.IsTranslatable("Cantonese"),
                 "a language with no ISO code is still translatable",
                 "five of them exist as names only; dropping them loses real choices");
-            check(Languages.CodeOf("Cantonese") == null,
-                "and it honestly has no code", "inventing one would produce a request no API accepts");
-            check(Languages.Names().Length > all.Count,
-                "so there are more translatable languages than codes",
-                "the day these two are equal, something has been collapsed");
+            check(Languages.CodeOf("Cantonese") == "yue",
+                "and it does have a BCP 47 tag", "checked in the IANA registry, not written from memory");
+            check(Languages.Names().Length == all.Count,
+                "every translatable language can be offered", "each one has a tag to store");
+
             check(Languages.Names().Contains("French") && Languages.IsTranslatable("fr"),
                 "both inventories still answer for an ordinary language", "the split is not a divide");
 
@@ -103,8 +103,16 @@ namespace UnityGameTranslator.Common.Checks
                 "and plain EN as a source", "the same language, two codes, depending on the side");
             check(Languages.DeepLCode("French", isTarget: true) == "FR",
                 "anything without a special case is upper-cased", "no table of exceptions to maintain");
-            check(Languages.GoogleCode("Cantonese") == null && Languages.DeepLCode("Cantonese", true) == null,
-                "a codeless language reaches no provider", "said plainly rather than sent and rejected");
+            // ⚠ What a provider accepts is READ from the catalogue, never deduced from the code.
+            check(Languages.GoogleCode("Cantonese") == "yue" && Languages.DeepLCode("Cantonese", true) == "YUE",
+                "both providers do Cantonese", "they added it; a rule based on ISO 639-1 could never have known");
+            check(Languages.GoogleCode("Dari") == null && Languages.DeepLCode("Dari", true) == "PRS",
+                "DeepL does Dari and Google does not", "no rule produces that, only their own tables do");
+            check(Languages.GoogleCode("Egyptian Arabic") == null && Languages.DeepLCode("Egyptian Arabic", true) == null,
+                "neither does Egyptian Arabic", "said before translating, not discovered one refused line at a time");
+            check(Languages.DeepLCode("Khmer", true) == null && Languages.GoogleCode("Khmer") == "km",
+                "and DeepL does not do Khmer while Google does",
+                "the kind of gap that used to cost a 400 per line, in silence");
         }
     }
 }

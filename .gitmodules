@@ -1,0 +1,3 @@
+[submodule "catalogs"]
+	path = catalogs
+	url = https://github.com/djethino/unitygametranslator-catalogs.git
