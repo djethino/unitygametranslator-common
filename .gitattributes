@@ -1,0 +1,11 @@
+# Line endings are LF in this repository, on every platform, without exception.
+#
+# This library contains GENERATED code — Languages.Tables.g.cs is written from catalogs/languages.json
+# and carries that file's SHA-256 — and generated code is compared, not just read: the build refuses
+# to compile when the recorded hash no longer matches the catalogue, and the generator has a --check
+# mode that compares the file it would write against the file on disk.
+#
+# Anything that lets the same content have two byte representations turns those comparisons into
+# coin flips that depend on whose machine ran them. That already happened once, in the catalogue
+# repository, and it made the project unbuildable anywhere `core.autocrlf` was not set.
+* text=auto eol=lf
