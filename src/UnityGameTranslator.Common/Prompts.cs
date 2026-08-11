@@ -35,54 +35,8 @@ namespace UnityGameTranslator.Common
     /// </summary>
     public static class Prompts
     {
-        /// <summary>
-        /// What a model is told to answer when the text is not in the source language at all.
-        ///
-        /// Deliberately not a word: it must never collide with something a game could legitimately
-        /// contain, and it must survive being echoed back verbatim.
-        /// </summary>
-        public const string SkipMarker = "AxNoTranslateXa";
-
-        /// <summary>What came back, once the skip marker has been taken into account.</summary>
-        public enum AnswerKind
-        {
-            /// <summary>A translation to use.</summary>
-            Translation,
-
-            /// <summary>A refusal: the text was not in the source language. Keep the original, tag it S.</summary>
-            Skip,
-
-            /// <summary>Neither. Do not store it.</summary>
-            Unusable,
-        }
-
-        /// <summary>
-        /// Read an answer: a translation, a refusal, or something to throw away.
-        ///
-        /// ⚠ A refusal is the marker ALONE. What follows depends on it: the caller keeps the
-        /// original text and tags the entry "S", and it can only know to do that if the answer says
-        /// nothing else.
-        ///
-        /// ⚠ The third outcome is why this is not a boolean. An answer that translates AND appends
-        /// the marker — "Démarrer la partie AxNoTranslateXa" — is a real thing models do, and both
-        /// simple rules get it wrong: reading it as a refusal drops a line that was translated
-        /// perfectly well, and reading it as a translation writes the marker into the game. Neither
-        /// is recoverable afterwards, and neither says anything at the time. So it is thrown away,
-        /// which costs one line this session and is the only outcome that cannot corrupt anything.
-        /// </summary>
-        public static AnswerKind ReadAnswer(string? answer)
-        {
-            if (answer == null) return AnswerKind.Unusable;
-
-            string trimmed = answer.Trim();
-            if (trimmed.Length == 0) return AnswerKind.Unusable;
-
-            if (string.Equals(trimmed, SkipMarker, StringComparison.Ordinal)) return AnswerKind.Skip;
-
-            return trimmed.IndexOf(SkipMarker, StringComparison.Ordinal) >= 0
-                ? AnswerKind.Unusable
-                : AnswerKind.Translation;
-        }
+        /// <summary>The refusal a model is told to answer with. Read back by <see cref="Answers"/>.</summary>
+        public const string SkipMarker = Answers.SkipMarker;
 
         /// <summary>
         /// Sort a text before asking for it.

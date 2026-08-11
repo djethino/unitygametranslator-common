@@ -65,18 +65,36 @@ namespace UnityGameTranslator.Common.Checks
                 "and one rule each for those it does", "four kinds, four sentences");
 
             // Reading an answer: three outcomes, and the third is the point.
-            check(Prompts.ReadAnswer(Prompts.SkipMarker) == Prompts.AnswerKind.Skip,
+            check(Answers.Read(Prompts.SkipMarker) == AnswerKind.Skip,
                 "the marker alone is a refusal", "the caller keeps the original and tags it S");
-            check(Prompts.ReadAnswer("  " + Prompts.SkipMarker + "\n") == Prompts.AnswerKind.Skip,
+            check(Answers.Read("  " + Prompts.SkipMarker + "\n") == AnswerKind.Skip,
                 "surrounding blank space does not change that", "models add a newline");
-            check(Prompts.ReadAnswer("Démarrer la partie") == Prompts.AnswerKind.Translation,
+            check(Answers.Read("Démarrer la partie") == AnswerKind.Translation,
                 "an ordinary answer is a translation", "nothing special about it");
-            check(Prompts.ReadAnswer("Démarrer la partie " + Prompts.SkipMarker) == Prompts.AnswerKind.Unusable,
+            check(Answers.Read("Démarrer la partie " + Prompts.SkipMarker) == AnswerKind.Unusable,
                 "a translation carrying the marker is thrown away",
                 "read as a refusal it drops a good line; read as a translation it writes the marker into the game");
-            check(Prompts.ReadAnswer("") == Prompts.AnswerKind.Unusable
-                  && Prompts.ReadAnswer(null) == Prompts.AnswerKind.Unusable,
+            check(Answers.Read("") == AnswerKind.Unusable
+                  && Answers.Read(null) == AnswerKind.Unusable,
                 "and so is nothing at all", "there is no line to store");
+
+            // Cleaning: each rule narrow enough not to eat real text.
+            check(Answers.Clean("**Démarrer**") == "Démarrer", "markdown emphasis comes off",
+                "a game shows what comes back, verbatim");
+            check(Answers.Clean("Translation: Démarrer") == "Démarrer", "and an announcing prefix",
+                "the model explaining itself");
+            check(Answers.Clean("\"Démarrer\"") == "Démarrer", "quotes wrapping the whole answer",
+                "the model added them");
+            check(Answers.Clean("Il a dit \"non\" hier") == "Il a dit \"non\" hier",
+                "but quotes inside a line stay", "a line of dialogue may legitimately be quoted");
+            check(Answers.Clean("Démarrer\n\nNote: I kept the name") == "Démarrer",
+                "an explanation after a blank line is cut", "the model talking about its own work");
+            check(Answers.Clean("Ligne un\n\nLigne deux") == "Ligne un\n\nLigne deux",
+                "a genuine blank line is not", "cutting there would lose half a paragraph");
+            check(Answers.Clean("<think>hmm</think>Démarrer") == "Démarrer", "reasoning is removed",
+                "models emit their working out");
+            check(Answers.Clean("") == "" && Answers.Clean(null!) == null, "nothing in, nothing out",
+                "no work to do");
 
             // The mod's own interface: a different job, different rules.
             string ui = Prompts.ForOwnInterface("French", TextType.Phrase, none);
