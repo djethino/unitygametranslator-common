@@ -30,6 +30,7 @@ namespace UnityGameTranslator.Common.Checks
             HotkeySpelling();
             QualityMeasures();
             PlaceholderRules();
+            PromptWording();
 
             Console.WriteLine();
             if (_failures == 0)
@@ -40,6 +41,13 @@ namespace UnityGameTranslator.Common.Checks
 
             Console.WriteLine($"{_failures} check(s) FAILED.");
             return 1;
+        }
+
+        /// <summary>What a model is actually told, and how a text is sorted before being asked for.</summary>
+        private static void PromptWording()
+        {
+            Section("Prompts");
+            PromptsChecks.Run(Check);
         }
 
         /// <summary>What a game will accept back from a model, and what it says when it will not.</summary>
