@@ -27,6 +27,7 @@ namespace UnityGameTranslator.Common.Checks
             UpdateVerdicts();
             StoredSecrets();
             LanguageLookup();
+            HotkeySpelling();
 
             Console.WriteLine();
             if (_failures == 0)
@@ -37,6 +38,13 @@ namespace UnityGameTranslator.Common.Checks
 
             Console.WriteLine($"{_failures} check(s) FAILED.");
             return 1;
+        }
+
+        /// <summary>How a keyboard shortcut is spelled — silent when wrong, hence the cases.</summary>
+        private static void HotkeySpelling()
+        {
+            Section("Hotkeys");
+            HotkeysChecks.Run(Check);
         }
 
         /// <summary>Codes, names, and the two inventories that must not be collapsed.</summary>
