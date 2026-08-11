@@ -29,6 +29,7 @@ namespace UnityGameTranslator.Common.Checks
             LanguageLookup();
             HotkeySpelling();
             QualityMeasures();
+            PlaceholderRules();
 
             Console.WriteLine();
             if (_failures == 0)
@@ -39,6 +40,13 @@ namespace UnityGameTranslator.Common.Checks
 
             Console.WriteLine($"{_failures} check(s) FAILED.");
             return 1;
+        }
+
+        /// <summary>What a game will accept back from a model, and what it says when it will not.</summary>
+        private static void PlaceholderRules()
+        {
+            Section("Placeholder rules");
+            PlaceholdersChecks.Run(Check);
         }
 
         /// <summary>What a player is told about a file, checked against the website's rules.</summary>
