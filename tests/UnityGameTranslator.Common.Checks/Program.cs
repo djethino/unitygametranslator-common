@@ -31,6 +31,7 @@ namespace UnityGameTranslator.Common.Checks
             QualityMeasures();
             PlaceholderRules();
             PromptWording();
+            EndpointAddresses();
 
             Console.WriteLine();
             if (_failures == 0)
@@ -41,6 +42,13 @@ namespace UnityGameTranslator.Common.Checks
 
             Console.WriteLine($"{_failures} check(s) FAILED.");
             return 1;
+        }
+
+        /// <summary>Where a request really goes, from whatever address somebody pasted.</summary>
+        private static void EndpointAddresses()
+        {
+            Section("Endpoints");
+            EndpointsChecks.Run(Check);
         }
 
         /// <summary>What a model is actually told, and how a text is sorted before being asked for.</summary>
