@@ -5,7 +5,7 @@
 // it undoes you. The build refuses to compile when this file no longer matches the
 // catalogue it names below, so a stale list cannot be released.
 //
-// catalogue-sha256: 3220ce60a0546dbb329538e2d640a559ece00ed07ab2519400e85c63d13cfc71
+// catalogue-sha256: 98f96d61e38a09b0ebf406350ee376cf7511136add368e8189c667a2cf341dcb
 // </auto-generated>
 
 using System.Collections.Generic;
