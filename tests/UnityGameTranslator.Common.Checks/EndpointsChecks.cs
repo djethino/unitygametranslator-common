@@ -64,6 +64,42 @@ namespace UnityGameTranslator.Common.Checks
                 "we do not send it housekeeping");
             check(!Endpoints.IsOnYourOwnNetwork("not a url at all") && !Endpoints.IsOnYourOwnNetwork(""),
                 "and anything unreadable counts as remote", "the safe way round");
+
+            // ⚠ One spelling of "this machine", or a difference report offers to fix an address
+            // that is already right — which is exactly what it did.
+            check(Endpoints.OllamaDefault == "http://127.0.0.1:11434",
+                "the local default is the literal address", "a name resolves, and resolves to ::1 first");
+            check(Endpoints.LocalServer(1234) == "http://127.0.0.1:1234",
+                "and every other local port is spelled the same way", "one rule, whatever the server");
+
+            // ⚠ Three localities, because each carries a different consequence. Folding any two of
+            // them together produces a sentence that is wrong for somebody.
+            check(Endpoints.Where("http://127.0.0.1:11434") == Endpoints.Locality.ThisMachine,
+                "loopback is this machine", "nothing leaves it");
+            check(Endpoints.Where("http://127.0.0.2:11434") == Endpoints.Locality.ThisMachine,
+                "and so is the rest of 127", "the whole block is loopback, not just the first address");
+            check(Endpoints.Where("http://localhost:11434") == Endpoints.Locality.ThisMachine,
+                "the name counts too", "somebody may well have typed it");
+            check(Endpoints.Where("http://192.168.1.20:11434") == Endpoints.Locality.YourNetwork,
+                "a private address is your network", "yours, but not this machine");
+            check(Endpoints.Where("http://nas.local:1234") == Endpoints.Locality.YourNetwork,
+                "and so is a .local name", "what a household router and mDNS hand out");
+            check(Endpoints.Where("https://api.openai.com/v1") == Endpoints.Locality.Elsewhere,
+                "a provider is elsewhere", "somebody else's service, on somebody else's terms");
+            check(Endpoints.Where("gibberish") == Endpoints.Locality.Elsewhere,
+                "and so is anything we cannot read", "an unnecessary caution costs nothing");
+
+            // ⚠ What is said about each. Silence on the local one is the load-bearing part: free
+            // local translation is what this project offers, and a bill notice under it would
+            // contradict the offer.
+            check(Endpoints.CautionFor("http://127.0.0.1:11434") == null,
+                "nothing is said about a server on this machine", "nothing leaves and nothing is billed");
+            check(Endpoints.CautionFor("http://192.168.1.20:11434") is string onNetwork
+                  && onNetwork.Contains("network") && !onNetwork.Contains("bills"),
+                "a server on your network raises privacy, never cost", "nobody bills you for your own box");
+            check(Endpoints.CautionFor("https://api.openai.com/v1") is string remote
+                  && remote.Contains("bills") && remote.Contains("sent"),
+                "a provider raises both", "the text leaves AND the meter runs");
         }
     }
 }
