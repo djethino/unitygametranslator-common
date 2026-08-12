@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityGameTranslator.Common;
 
@@ -26,6 +26,7 @@ namespace UnityGameTranslator.Common.Checks
             VersionTolerance();
             UpdateVerdicts();
             StoredSecrets();
+            SyncState();
             LanguageLookup();
             HotkeySpelling();
             QualityMeasures();
@@ -99,6 +100,18 @@ namespace UnityGameTranslator.Common.Checks
         {
             Section("Stored secrets");
             SecretsChecks.Run(Check);
+        }
+
+        /// <summary>
+        /// A translation's identity and where it stands against the published one.
+        ///
+        /// ⚠ Its vectors come from the website's implementation, not from ours — see the note at
+        /// the top of SyncChecks. This is the one measure in the library where agreeing with
+        /// ourselves proves nothing at all.
+        /// </summary>
+        private static void SyncState()
+        {
+            SyncChecks.Run(Check);
         }
 
         /// <summary>Which of two versions comes first, including the suffix rules.</summary>
