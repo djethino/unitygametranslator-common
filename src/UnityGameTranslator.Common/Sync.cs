@@ -5,22 +5,47 @@ using System.Text;
 
 namespace UnityGameTranslator.Common
 {
-    /// <summary>One translated line, reduced to what identifies its content.</summary>
-    /// <remarks>
-    /// ⚠ The capture-order index "i" is deliberately absent. It is presentation metadata — the web
-    /// editors sort by it — and letting it into the hash would make a file that nobody edited
-    /// report itself as changed the moment a line was captured in a different order.
-    /// </remarks>
+    /// <summary>
+    /// One translated line, reduced to what identifies its content.
+    ///
+    /// ⚠ **It carries what the FILE holds, not a tidied version of it**, and that distinction was
+    /// found by measurement rather than by reading. The website hashes the file as written —
+    /// `array_intersect_key($value, ['v','t'])` keeps whatever is there and nothing else — so a
+    /// null value stays null, an absent tag stays absent, and a pre-tag entry stays a bare string.
+    /// Normalising any of those produces a different document and therefore a different hash, for
+    /// a file nobody touched.
+    ///
+    /// ⚠ The capture-order index "i" is the one thing deliberately dropped. It is presentation
+    /// metadata — the web editors sort by it — and the website drops it for the same reason.
+    /// </summary>
     public struct TranslationLine
     {
+        /// <summary>The translation. Null is a real value and is written as JSON null.</summary>
         public string Value;
+
+        /// <summary>Where it came from, or null when the entry has no "t" at all.</summary>
         public string Tag;
 
+        /// <summary>
+        /// True when the file holds `"key":"value"` — the format from before tags existed.
+        ///
+        /// ⚠ The mod turns these into {v,t} in its cache, so it hashes them as objects; the site
+        /// hashes them as it finds them. A caller reading a FILE must say so here, or an old
+        /// published translation will never match the hash the server issued for it.
+        /// </summary>
+        public bool BareString;
+
+        /// <summary>An entry of the current form. Tag null means the file has no "t".</summary>
         public TranslationLine(string value, string tag)
         {
-            Value = value ?? string.Empty;
-            Tag = string.IsNullOrEmpty(tag) ? "A" : tag;
+            Value = value;
+            Tag = tag;
+            BareString = false;
         }
+
+        /// <summary>An entry from before tags existed: the value stands alone.</summary>
+        public static TranslationLine Bare(string value) =>
+            new TranslationLine { Value = value, Tag = null, BareString = true };
     }
 
     /// <summary>
@@ -82,7 +107,9 @@ namespace UnityGameTranslator.Common
             // The uuid takes part, and sorts among the lines rather than leading them: "_" sits
             // between the upper-case and lower-case letters in byte order, so it lands in the
             // middle of an ordinary file. Anything that appended it would produce another document.
-            sorted[UuidKey] = new TranslationLine(uuid ?? string.Empty, null);
+            //
+            // Bare, because it is a plain string in the file and in the mod's cache alike.
+            sorted[UuidKey] = TranslationLine.Bare(uuid ?? string.Empty);
 
             var json = new StringBuilder();
             json.Append('{');
@@ -96,17 +123,30 @@ namespace UnityGameTranslator.Common
                 Write(json, entry.Key);
                 json.Append(':');
 
-                if (entry.Key == UuidKey)
+                // Pre-tag format: the value stands alone, exactly as the file holds it.
+                if (entry.Value.BareString)
                 {
-                    // The uuid is a plain string, not a line. It is the one exception to the shape.
                     Write(json, entry.Value.Value);
                     continue;
                 }
 
+                // ⚠ Only the fields that are there. An absent tag is NOT written as "A": the
+                // website keeps whatever the file has, so inventing a default here would make an
+                // entry written without one hash differently on the two sides.
+                //
+                // ⚠ v first, then t. The website preserves the file's own order, and every writer
+                // we have emits them this way; a file hand-edited into the other order would hash
+                // differently there than here, and that is a limit worth knowing rather than a
+                // case worth carrying a field for.
                 json.Append("{\"v\":");
                 Write(json, entry.Value.Value);
-                json.Append(",\"t\":");
-                Write(json, entry.Value.Tag);
+
+                if (entry.Value.Tag != null)
+                {
+                    json.Append(",\"t\":");
+                    Write(json, entry.Value.Tag);
+                }
+
                 json.Append('}');
             }
 
@@ -138,9 +178,17 @@ namespace UnityGameTranslator.Common
         /// </summary>
         private static void Write(StringBuilder json, string value)
         {
+            // ⚠ Null is the JSON literal, NOT an empty string. The website keeps a null "v" as
+            // null; writing "" instead produced a different document for a file nobody had
+            // touched, which is the whole class of bug this type exists to avoid.
+            if (value == null)
+            {
+                json.Append("null");
+                return;
+            }
+
             json.Append('"');
 
-            if (value != null)
             {
                 for (int i = 0; i < value.Length; i++)
                 {

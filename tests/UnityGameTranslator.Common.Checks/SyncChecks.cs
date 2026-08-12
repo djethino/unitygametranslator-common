@@ -81,8 +81,25 @@ namespace UnityGameTranslator.Common.Checks
                   == Hash(new[] { ("b", "2", "A"), ("a", "1", "A") }, "u"),
                 "the order they arrive in is irrelevant", "two machines meet lines in different orders");
 
-            check(Hash(new[] { ("a", "1", (string)null) }, "u") == Hash(new[] { ("a", "1", "A") }, "u"),
-                "an absent tag is an AI tag", "the mod's default, and the site's");
+            // ⚠ The file is hashed AS WRITTEN, and these three cases were found by running the mod's
+            // own implementation against this one rather than by reading either. hashableEntry
+            // keeps only what an entry holds among v and t, in the file's order, and hands back a
+            // pre-tag bare string untouched — so tidying any of it produces a different hash for a
+            // file nobody edited.
+            check(Hash(new[] { ("a", "1", (string)null) }, "u")
+                  == "e554b432e93283de2b870573a7ef23e458a32399ff746bd2cc8a21d488410338",
+                "an absent tag stays absent", "it is NOT filled in with the default");
+
+            check(Hash(new[] { ("a", (string)null, "A") }, "u")
+                  == "6127fc7d1af8abd3ecea62fb043d7ec47d6fe13d452a09fb50754f94ac124ba3",
+                "a null value stays null", "not an empty string; they are different documents");
+
+            check(Bare("a", "just text", "u")
+                  == "ddb6a47d6edc8e2ee2442e11de8124f6d6cc1e1b9371f4523af047bc36a5e78e",
+                "a pre-tag entry stays a bare string", "an old published file must still match");
+
+            check(Mixed() == "564754a6f7d13ce8454cf5b8b9fc01571ff8197f9fb4699328752b5c932c4106",
+                "and the two forms coexist in one file", "which is what an old file looks like");
 
             // ⚠ Which direction, and the two that are easy to get backwards.
             check(Sync.Decide("same", "same", null, true) == SyncDirection.InSync,
@@ -108,6 +125,19 @@ namespace UnityGameTranslator.Common.Checks
             check(Sync.Decide("mine", null, null, true) == SyncDirection.InSync,
                 "nothing published means nothing to reconcile", "not an upload nobody asked for");
         }
+
+        private static string Bare(string key, string value, string uuid) =>
+            ContentHash.Of(new[]
+            {
+                new KeyValuePair<string, TranslationLine>(key, TranslationLine.Bare(value)),
+            }, uuid);
+
+        private static string Mixed() =>
+            ContentHash.Of(new[]
+            {
+                new KeyValuePair<string, TranslationLine>("a", TranslationLine.Bare("old")),
+                new KeyValuePair<string, TranslationLine>("b", new TranslationLine("new", "H")),
+            }, "u");
 
         private static string Hash((string Key, string Value, string Tag)[] lines, string uuid)
         {
