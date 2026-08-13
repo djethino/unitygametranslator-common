@@ -43,6 +43,44 @@ namespace UnityGameTranslator.Common
             return R.ToString("X2") + G.ToString("X2") + B.ToString("X2");
         }
 
+        /// <summary>
+        /// This colour laid over <paramref name="under"/> at the given strength, flattened into an
+        /// opaque one.
+        ///
+        /// The website expresses a tinted state — a selected row, a callout — as a translucent
+        /// layer, and it can afford to: what shows through is the page. Neither consumer can. The
+        /// mod's panel floats over a RUNNING GAME, so a translucent row shows scenery rather than
+        /// the card; the Manager would show the desktop. Both therefore have to compute the result
+        /// and paint it opaque.
+        ///
+        /// Shared rather than written twice, for the reason the whole file exists: two products
+        /// blending "the same" tint by slightly different arithmetic drift exactly like two copies
+        /// of a palette do, and a selected row that is not quite the same purple in the two windows
+        /// is the kind of thing nobody can name and everybody sees.
+        ///
+        /// <paramref name="strength"/> is how much of THIS colour ends up in the result: 0 gives
+        /// <paramref name="under"/> untouched, 1 gives this one. Values outside 0-1 are clamped —
+        /// a tint stronger than the colour itself means nothing.
+        /// </summary>
+        public Rgb Over(Rgb under, double strength)
+        {
+            if (strength < 0) strength = 0;
+            if (strength > 1) strength = 1;
+
+            return new Rgb(
+                Mix(under.R, R, strength),
+                Mix(under.G, G, strength),
+                Mix(under.B, B, strength));
+        }
+
+        private static byte Mix(byte under, byte over, double strength)
+        {
+            // Rounded, not truncated: truncation biases every channel downwards, which darkens a
+            // blend by up to a unit per channel — visible once a dozen of them sit side by side.
+            double value = under + (over - under) * strength;
+            return (byte)(value + 0.5);
+        }
+
         public override string ToString()
         {
             return "#" + ToHex();
@@ -196,5 +234,29 @@ namespace UnityGameTranslator.Common
         /// teal-600.
         /// </summary>
         public static readonly Rgb TagModUi = new Rgb(0x009689);
+
+        // ── States, computed once ─────────────────────────────────────────────────────────────
+        //
+        // The website draws these as a translucent layer; neither consumer can (see Rgb.Over). So
+        // they are flattened here rather than in each product, because two windows disagreeing
+        // about what "selected" looks like is the same failure as two palettes disagreeing.
+        //
+        // ⚠ These initialise from the values above, so they must stay BELOW them: a static readonly
+        // field runs in the order it is written, and moving one of these up would silently blend
+        // against black.
+
+        /// <summary>A chosen row: the deep purple over the card, dark enough to keep text legible.</summary>
+        public static readonly Rgb RowSelected = AccentDim.Over(SurfaceCard, 0.65);
+
+        /// <summary>Related to the chosen one — same family, said more quietly.</summary>
+        public static readonly Rgb RowRelated = AccentDim.Over(SurfaceCard, 0.45);
+
+        /// <summary>How strongly a callout is tinted. Named because it is a judgement, not a fact.</summary>
+        private const double CalloutTint = 0.16;
+
+        public static readonly Rgb CalloutSuccess = StatusSuccess.Over(SurfaceDeep, CalloutTint);
+        public static readonly Rgb CalloutWarning = StatusWarning.Over(SurfaceDeep, CalloutTint);
+        public static readonly Rgb CalloutError = StatusError.Over(SurfaceDeep, CalloutTint);
+        public static readonly Rgb CalloutInfo = StatusInfo.Over(SurfaceDeep, CalloutTint);
     }
 }

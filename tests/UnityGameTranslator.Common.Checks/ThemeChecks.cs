@@ -163,6 +163,36 @@ namespace UnityGameTranslator.Common.Checks
             check(probe.ToHex() == "9810FA", "and prints back the way it was written", "round trip");
             check(new Rgb(0xFFFFFF).Rf == 1f && new Rgb(0x000000).Rf == 0f,
                 "the float form spans 0 to 1", "Unity wants floats; 255 there would be white everywhere");
+
+            // Blending. Both products flatten their tinted states through this, so an error here
+            // moves every selected row and every callout in both windows at once.
+            var white = new Rgb(0xFFFFFF);
+            var black = new Rgb(0x000000);
+            check(white.Over(black, 0).ToHex() == "000000",
+                "no strength leaves the surface untouched", "0 means the tint is not applied at all");
+            check(white.Over(black, 1).ToHex() == "FFFFFF",
+                "full strength is the tint itself", "1 means the surface is gone");
+            check(white.Over(black, 0.5).ToHex() == "808080",
+                "half way is half way, rounded up from 127.5",
+                "truncating instead would darken every blend by a unit per channel");
+            check(white.Over(black, 2).ToHex() == "FFFFFF" && white.Over(black, -1).ToHex() == "000000",
+                "strength outside 0-1 is clamped", "a tint stronger than the colour means nothing");
+            check(Theme.Accent.Over(Theme.SurfaceCard, 0.5).ToHex() ==
+                  Theme.Accent.Over(Theme.SurfaceCard, 0.5).ToHex(),
+                "blending is deterministic", "the same state must not differ between two windows");
+
+            // The states themselves: what matters is that they stay READABLE, which is the whole
+            // reason they are blends rather than the accent laid on raw.
+            check(Theme.RowSelected.ToHex() != Theme.AccentDim.ToHex(),
+                "a selected row is not the raw purple",
+                "purple-900 undiluted swallows the text sitting on it");
+            check(Theme.RowSelected.ToHex() != Theme.SurfaceCard.ToHex(),
+                "and it is not the card either", "a selection nobody can see is not one");
+            check(Theme.RowRelated.ToHex() != Theme.RowSelected.ToHex(),
+                "related is not the same as selected", "two states, two shades, or one of them is decoration");
+            check(Theme.CalloutError.ToHex() != Theme.CalloutWarning.ToHex()
+               && Theme.CalloutInfo.ToHex() != Theme.CalloutSuccess.ToHex(),
+                "the four callouts are four colours", "a callout that cannot be told apart says nothing");
         }
     }
 }
