@@ -38,6 +38,7 @@ namespace UnityGameTranslator.Common
         private int _rung;
         private bool _useMaxCompletionTokens;
         private bool _omitTemperature;
+        private bool _omitSeed;
         private string _learnedFor;
 
         /// <summary>
@@ -56,6 +57,7 @@ namespace UnityGameTranslator.Common
             _rung = 0;
             _useMaxCompletionTokens = false;
             _omitTemperature = false;
+            _omitSeed = false;
         }
 
         /// <summary>
@@ -75,6 +77,19 @@ namespace UnityGameTranslator.Common
 
         /// <summary>False once a provider has refused our temperature. Its own default then applies.</summary>
         public bool SendTemperature => !_omitTemperature;
+
+        /// <summary>
+        /// False once a provider has refused a seed.
+        ///
+        /// ⚠ A seed is only ever sent when the caller asks for a DIFFERENT answer to a question
+        /// already asked — a retranslation the human did not like. Ordinary translation sends none:
+        /// it wants the same answer every time, which is what temperature 0 already gives.
+        ///
+        /// ⚠ Being accepted is not being honoured. Several servers take the field and ignore it, and
+        /// nothing in the response says so. The variation must therefore never RELY on the seed —
+        /// it comes from the temperature, and the seed only makes it reproducible where supported.
+        /// </summary>
+        public bool SendSeed => !_omitSeed;
 
         /// <summary>What to ask for reasoning, or null to send no such field at all.</summary>
         public string ReasoningEffort => EffortLadder[_rung];
@@ -108,6 +123,15 @@ namespace UnityGameTranslator.Common
             {
                 _useMaxCompletionTokens = true;
                 reason = "provider wants max_completion_tokens instead of max_tokens";
+                return true;
+            }
+
+            // Before the temperature, deliberately: a body naming both costs us the variation itself
+            // if we give up the temperature, and only its reproducibility if we give up the seed.
+            if (!_omitSeed && body.IndexOf("seed", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                _omitSeed = true;
+                reason = "provider rejects a seed — dropping it, the temperature still varies the answer";
                 return true;
             }
 

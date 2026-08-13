@@ -20,6 +20,8 @@ namespace UnityGameTranslator.Common.Checks
                 "sending both is itself rejected");
             check(start.SendTemperature, "temperature is sent", "translation wants it at zero, not at a default");
             check(start.ReasoningEffort == "none", "and reasoning is asked to stand down", "the best rung");
+            check(start.SendSeed, "a seed may be sent",
+                "only a retranslation ever asks for one — ordinary translation wants the same answer twice");
 
             // Only a refusal about our request may cost us anything.
             check(Negotiation.IsAboutOurRequest(400) && Negotiation.IsAboutOurRequest(422),
@@ -41,6 +43,15 @@ namespace UnityGameTranslator.Common.Checks
             var temp = New();
             check(temp.Concede("temperature does not support 0.0 with this model", out _) && !temp.SendTemperature,
                 "a refused temperature is dropped", "its own default applies, and the line still gets translated");
+            check(temp.SendSeed, "and it takes the seed down with it only if the seed was named",
+                "one variable per attempt, or the next refusal teaches us nothing");
+
+            // The seed is conceded BEFORE the temperature on purpose.
+            var seeded = New();
+            check(seeded.Concede("Unrecognized request argument supplied: seed", out _)
+                  && !seeded.SendSeed && seeded.SendTemperature,
+                "a refused seed is dropped, and the temperature is kept",
+                "the variation comes from the temperature; the seed only makes it reproducible where honoured");
 
             // Nothing named: walk down the ladder, one rung at a time.
             var ladder = New();
