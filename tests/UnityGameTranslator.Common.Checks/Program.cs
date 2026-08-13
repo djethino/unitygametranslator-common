@@ -27,6 +27,7 @@ namespace UnityGameTranslator.Common.Checks
             UpdateVerdicts();
             StoredSecrets();
             SyncState();
+            MergeDecisions();
             LanguageLookup();
             HotkeySpelling();
             QualityMeasures();
@@ -45,6 +46,13 @@ namespace UnityGameTranslator.Common.Checks
 
             Console.WriteLine($"{_failures} check(s) FAILED.");
             return 1;
+        }
+
+        /// <summary>Settling one line between here, there, and what both came from.</summary>
+        private static void MergeDecisions()
+        {
+            Section("Merge");
+            MergeChecks.Run(Check);
         }
 
         /// <summary>The palette, against what the website actually renders.</summary>
