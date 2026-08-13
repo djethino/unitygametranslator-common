@@ -207,8 +207,12 @@ namespace UnityGameTranslator.Common
         /// that somebody's review.
         ///
         /// A missing tag reads as "A", which is what the older file format meant by writing none.
+        ///
+        /// ⚠ Public because "has this line changed" is asked well outside a merge — counting what
+        /// somebody edited since the last sync, for one — and answering it a second way is how two
+        /// screens end up reporting different numbers about one file.
         /// </summary>
-        private static bool Same(TranslationLine a, TranslationLine b) =>
+        public static bool Same(TranslationLine a, TranslationLine b) =>
             string.Equals(a.Value, b.Value, StringComparison.Ordinal)
             && string.Equals(Tag(a), Tag(b), StringComparison.Ordinal);
 
