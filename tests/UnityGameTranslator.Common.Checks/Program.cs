@@ -34,6 +34,7 @@ namespace UnityGameTranslator.Common.Checks
             PromptWording();
             EndpointAddresses();
             ProviderNegotiation();
+            ProductColours();
 
             Console.WriteLine();
             if (_failures == 0)
@@ -44,6 +45,13 @@ namespace UnityGameTranslator.Common.Checks
 
             Console.WriteLine($"{_failures} check(s) FAILED.");
             return 1;
+        }
+
+        /// <summary>The palette, against what the website actually renders.</summary>
+        private static void ProductColours()
+        {
+            Section("Theme");
+            ThemeChecks.Run(Check);
         }
 
         /// <summary>What a provider will accept, learned by being refused.</summary>
