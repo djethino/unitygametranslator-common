@@ -28,6 +28,7 @@ namespace UnityGameTranslator.Common.Checks
             StoredSecrets();
             SyncState();
             MergeDecisions();
+            EditingSides();
             LanguageLookup();
             HotkeySpelling();
             QualityMeasures();
@@ -53,6 +54,13 @@ namespace UnityGameTranslator.Common.Checks
         {
             Section("Merge");
             MergeChecks.Run(Check);
+        }
+
+        /// <summary>Which copy an editor is about to change, and what is reachable from where.</summary>
+        private static void EditingSides()
+        {
+            Section("Edit scope");
+            EditScopeChecks.Run(Check);
         }
 
         /// <summary>The palette, against what the website actually renders.</summary>
