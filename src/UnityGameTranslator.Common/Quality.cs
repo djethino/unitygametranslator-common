@@ -115,5 +115,25 @@ namespace UnityGameTranslator.Common
 
             return ReviewStage.Machine;
         }
+
+        /// <summary>
+        /// What a stage is called, in the words used everywhere.
+        ///
+        /// ⚠ Moved here on 2026-08-14 because it existed TWICE, identical to the character, in the
+        /// mod's TranslationQuality and the manager's QualityBar. Two copies of a verdict are two
+        /// chances to tell somebody their file is "fully reviewed" on one screen and something
+        /// else on the next — and the rule that produces the stage was already shared, so only the
+        /// wording was free to drift.
+        /// </summary>
+        public static string StageName(ReviewStage stage)
+        {
+            switch (stage)
+            {
+                case ReviewStage.Reviewed: return "Fully reviewed";
+                case ReviewStage.Advanced: return "Review well under way";
+                case ReviewStage.Started: return "Review started";
+                default: return "Machine translation";
+            }
+        }
     }
 }

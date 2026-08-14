@@ -29,7 +29,7 @@ namespace UnityGameTranslator.Common.Checks
             SyncState();
             MergeDecisions();
             EditingSides();
-            CountedFrom();
+            HasItBeenPublished();
             LanguageLookup();
             HotkeySpelling();
             QualityMeasures();
@@ -64,11 +64,11 @@ namespace UnityGameTranslator.Common.Checks
             EditScopeChecks.Run(Check);
         }
 
-        /// <summary>Whose figures a quality bar is counting — and that it does not sound like the switch.</summary>
-        private static void CountedFrom()
+        /// <summary>Whether a translation has ever left this machine.</summary>
+        private static void HasItBeenPublished()
         {
-            Section("Provenance");
-            ProvenanceChecks.Run(Check);
+            Section("Publication");
+            PublicationChecks.Run(Check);
         }
 
         /// <summary>The palette, against what the website actually renders.</summary>
