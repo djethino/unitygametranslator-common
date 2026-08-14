@@ -51,6 +51,57 @@ namespace UnityGameTranslator.Common.Checks
                   != EditSessions.Describe(EditSessionStage.Applied, 3),
                 "one change and three changes do not read the same",
                 "a count that never changes is a count nobody trusts");
+
+            // ── The marker ────────────────────────────────────────────────────
+            // 🔴 The one that matters: silence must not be read as "nobody is editing".
+            check(EditSessions.MarkerIsLive(null),
+                "a marker the site could not be asked about counts as live",
+                "reading silence as dead opens a second session over somebody's work");
+
+            check(EditSessions.MarkerIsLive(true) && !EditSessions.MarkerIsLive(false),
+                "and the site's answer is followed when there is one",
+                "a marker whose session the site has forgotten must not block for ever");
+
+            // ⚠ The suffix is APPENDED to the translation's name. Two things depend on that: one
+            // marker per game (so two games stay editable at once), and the manager's uninstall
+            // sweep picking it up by prefix instead of by a list somebody has to maintain.
+            check(EditSessions.MarkerSuffix.StartsWith(".", StringComparison.Ordinal)
+                  && EditSessions.MarkerSuffix.Length > 1,
+                "the marker is a suffix, not a file name of its own",
+                "a fixed name would be one marker for the whole machine, and invisible to the sweep");
+
+            check(EditSessions.MarkerHolderField != EditSessions.MarkerKeyField
+                  && EditSessions.MarkerKeyField != EditSessions.MarkerOpenedField
+                  && EditSessions.MarkerHolderField != EditSessions.MarkerOpenedField,
+                "its three fields are named apart",
+                "two writers reading one name for two things is how a marker starts lying");
+
+            check(EditSessions.HolderName(EditSessions.EditSessionHolder.Game)
+                  != EditSessions.HolderName(EditSessions.EditSessionHolder.Manager),
+                "the game and the manager are named differently",
+                "the question is only answerable if it says WHO is holding the session");
+
+            foreach (EditSessions.EditSessionHolder holder in
+                     Enum.GetValues(typeof(EditSessions.EditSessionHolder)))
+            {
+                var question = EditSessions.ConflictQuestion(holder, "at 14:32", 0);
+                check(question.Contains(EditSessions.HolderName(holder)) && question.Contains("14:32"),
+                    $"the question about {holder} names it and when it started",
+                    "'a session is already open' with neither is not a question anybody can answer");
+            }
+
+            // 🔴 Saves the browser made and nobody fetched exist in the session and NOWHERE else.
+            var withWork = EditSessions.ConflictQuestion(EditSessions.EditSessionHolder.Manager,
+                                                         "at 14:32", 3);
+            check(withWork.Contains("3") && withWork.Length
+                  > EditSessions.ConflictQuestion(EditSessions.EditSessionHolder.Manager, "at 14:32", 0).Length,
+                "unfetched saves are counted in the question",
+                "ending a session silently drops work the browser said was saved");
+
+            check(EditSessions.ConflictQuestion(EditSessions.EditSessionHolder.Game, "now", 1)
+                  != EditSessions.ConflictQuestion(EditSessions.EditSessionHolder.Game, "now", 2),
+                "one and several do not read the same",
+                "a sentence that does not agree with its number reads as a machine talking");
         }
     }
 }
