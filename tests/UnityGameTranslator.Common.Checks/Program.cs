@@ -29,6 +29,7 @@ namespace UnityGameTranslator.Common.Checks
             SyncState();
             MergeDecisions();
             EditingSides();
+            CountedFrom();
             LanguageLookup();
             HotkeySpelling();
             QualityMeasures();
@@ -61,6 +62,13 @@ namespace UnityGameTranslator.Common.Checks
         {
             Section("Edit scope");
             EditScopeChecks.Run(Check);
+        }
+
+        /// <summary>Whose figures a quality bar is counting — and that it does not sound like the switch.</summary>
+        private static void CountedFrom()
+        {
+            Section("Provenance");
+            ProvenanceChecks.Run(Check);
         }
 
         /// <summary>The palette, against what the website actually renders.</summary>

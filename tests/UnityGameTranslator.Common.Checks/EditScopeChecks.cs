@@ -97,6 +97,19 @@ namespace UnityGameTranslator.Common.Checks
             check(EditScope.Effect(EditSide.Local).IndexOf("Nothing is published", StringComparison.Ordinal) >= 0,
                 "the local side promises nothing leaves the machine",
                 "that promise is the reason somebody picks it");
+
+            // ── The pictures ──────────────────────────────────────────────────
+            //
+            // ⚠ Pinned as literals rather than compared to one another. The small form of this
+            // control carries three marks and NO words: if one silently changed side, the only
+            // thing left saying where a button writes would be wrong, and nothing else in any of
+            // the three products would notice.
+            check(EditScope.Mark(EditSide.Server) == "cloud",
+                "the published side is the cloud", "what is published lives away from this machine");
+            check(EditScope.Mark(EditSide.Local) == "display",
+                "this machine is the screen", "the one in front of whoever is reading");
+            check(EditScope.Mark(EditSide.Both) == "link",
+                "both is the two linked", "it is the pair, not a third place");
         }
 
         private static SideStanding Find(SideStanding[] sides, EditSide side)

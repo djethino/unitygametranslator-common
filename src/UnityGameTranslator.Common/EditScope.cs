@@ -153,6 +153,31 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// Which picture stands for a side — an identity, never the picture itself.
+        ///
+        /// ⚠ **The icons are what make the two sizes one control.** The switch is shown in full
+        /// beside a title, where there is room for words, and as the three marks alone beside an
+        /// action, where there is not. The small one is only recognisable as the big one if the
+        /// pictures are identical, so the metaphor is fixed here and nowhere else: a cloud for what
+        /// is published, a screen for this machine, and the two linked for both.
+        ///
+        /// ⚠ **A name, not a drawing.** A browser has a CSS class, the manager a vector path and the
+        /// mod a sprite built from raw pixels — three technologies with nothing in common. What they
+        /// CAN share is the decision of which picture means which side, and that is a rule, so it
+        /// lives here beside <see cref="Name"/> and <see cref="Effect"/>. Anything returning pixels
+        /// from this library would be rendering, which this library does not do.
+        /// </summary>
+        public static string Mark(EditSide side)
+        {
+            switch (side)
+            {
+                case EditSide.Server: return "cloud";
+                case EditSide.Both: return "link";
+                default: return "display";
+            }
+        }
+
+        /// <summary>
         /// Why a side cannot be chosen, in one sentence somebody can act on. Empty when it can.
         /// </summary>
         public static string Explain(SideBlock block)
