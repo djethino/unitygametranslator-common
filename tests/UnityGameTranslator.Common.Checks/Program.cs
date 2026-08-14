@@ -30,6 +30,7 @@ namespace UnityGameTranslator.Common.Checks
             MergeDecisions();
             EditingSides();
             HasItBeenPublished();
+            WhoMayRate();
             LanguageLookup();
             HotkeySpelling();
             QualityMeasures();
@@ -69,6 +70,13 @@ namespace UnityGameTranslator.Common.Checks
         {
             Section("Publication");
             PublicationChecks.Run(Check);
+        }
+
+        /// <summary>Who may rate a translation, and why the arrows are sometimes absent.</summary>
+        private static void WhoMayRate()
+        {
+            Section("Voting");
+            VotingChecks.Run(Check);
         }
 
         /// <summary>The palette, against what the website actually renders.</summary>
