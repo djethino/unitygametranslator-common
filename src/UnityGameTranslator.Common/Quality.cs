@@ -125,12 +125,18 @@ namespace UnityGameTranslator.Common
         /// else on the next — and the rule that produces the stage was already shared, so only the
         /// wording was free to drift.
         /// </summary>
+        /// 🔴 **Plain, international English.** These words are read in the mod and in the manager,
+        /// and NEITHER has translations — an English word is all a Polish or Brazilian player will
+        /// ever get here. "Review well under way" stood in this spot and is exactly the kind of
+        /// idiom that is transparent to a native and opaque to everybody else. The website is
+        /// translated and keys its own wording separately, so it is unaffected by what is chosen
+        /// here: this is the untranslated surface, and it has to be readable at a school level.
         public static string StageName(ReviewStage stage)
         {
             switch (stage)
             {
                 case ReviewStage.Reviewed: return "Fully reviewed";
-                case ReviewStage.Advanced: return "Review well under way";
+                case ReviewStage.Advanced: return "Review in progress";
                 case ReviewStage.Started: return "Review started";
                 default: return "Machine translation";
             }

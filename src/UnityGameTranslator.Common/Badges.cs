@@ -52,6 +52,13 @@ namespace UnityGameTranslator.Common
     /// ⚠ **Silence is a decision, not an omission.** A count of zero votes reads as a verdict; a
     /// completeness of 100% is the ordinary state. Both stay out. Anything shown here earned its
     /// place by saying something.
+    ///
+    /// 🔴 **Plain, international English, because there is no other.** The mod and the manager ship
+    /// no translations: whatever is written here is what a Polish, Brazilian or Korean player
+    /// reads, forever. So the words are the ones every program has used for thirty years — "Up to
+    /// date", "Update available", "Conflict" — and never the precise-but-bookish ones a native
+    /// reaches for first. This strip read "In step", "Behind", "Ahead" and "Diverged" until
+    /// somebody pointed out that nobody outside a version-control habit says any of them.
     /// </summary>
     public static class Badges
     {
@@ -139,10 +146,15 @@ namespace UnityGameTranslator.Common
             {
                 switch (sync.Value)
                 {
+                    // ⚠ **The words a program uses, not the words a novel uses.** These read
+                    // "In step", "Behind", "Ahead" and "Diverged" — precise, and nobody outside a
+                    // version-control habit says any of them. Somebody looking at a game wants to
+                    // know whether there is an update, in the four words every piece of software
+                    // has used for thirty years.
                     case SyncDirection.InSync:
                         badges.Add(new Badge
                         {
-                            Text = "In step",
+                            Text = "Up to date",
                             Tone = BadgeTone.Good,
                             Tip = "This file and the published version hold the same content.",
                         });
@@ -151,7 +163,7 @@ namespace UnityGameTranslator.Common
                     case SyncDirection.Download:
                         badges.Add(new Badge
                         {
-                            Text = "Behind",
+                            Text = "Update available",
                             Tone = BadgeTone.Notice,
                             Tip = "The published version has moved on. Nothing of yours is at risk "
                                 + "— you have no unpublished changes here.",
@@ -161,7 +173,7 @@ namespace UnityGameTranslator.Common
                     case SyncDirection.Upload:
                         badges.Add(new Badge
                         {
-                            Text = "Ahead",
+                            Text = "Unpublished changes",
                             Tone = BadgeTone.Attention,
                             Tip = "You have changes here that the published version does not have.",
                         });
@@ -170,7 +182,7 @@ namespace UnityGameTranslator.Common
                     default:
                         badges.Add(new Badge
                         {
-                            Text = "Diverged",
+                            Text = "Conflict",
                             Tone = BadgeTone.Attention,
                             Tip = "Both this file and the published one have moved. Settling that "
                                 + "is done line by line.",

@@ -56,6 +56,66 @@ namespace UnityGameTranslator.Common
             return RateBlock.None;
         }
 
+        /// <summary>The mark for rating up. Two arrows around a count, everywhere.</summary>
+        public const string Up = "▲";
+
+        /// <summary>The mark for rating down.</summary>
+        public const string Down = "▼";
+
+        /// <summary>
+        /// The count as it is written everywhere: signed when positive, bare otherwise.
+        ///
+        /// ⚠ **"+0" is never written**, and the website's own component says why: the sign carries
+        /// the meaning, so it only appears when there is one — "+0" reads as a positive vote at a
+        /// glance, when zero is precisely the absence of any.
+        /// </summary>
+        public static string CountLabel(int count)
+        {
+            return count > 0 ? "+" + count : count.ToString();
+        }
+
+        /// <summary>
+        /// How the count reads: approved, rejected, or nothing yet.
+        ///
+        /// ⚠ Same three colours as the arrows themselves, and the same as the website's. A count
+        /// green here and amber there would be two products disagreeing about what a number means.
+        /// </summary>
+        public static BadgeTone CountTone(int count)
+        {
+            if (count > 0) return BadgeTone.Good;
+            if (count < 0) return BadgeTone.Wrong;
+
+            return BadgeTone.Quiet;
+        }
+
+        /// <summary>
+        /// The colour an arrow takes: its own when this account cast it, quiet otherwise.
+        ///
+        /// ⚠ **This is the whole "have I already voted" signal**, and it has to be the same picture
+        /// in three products — a filled arrow, not a tick, not a word. Somebody who learned it in a
+        /// browser must recognise it in a game and in the tool.
+        /// </summary>
+        public static BadgeTone ArrowTone(int arrow, int? myVote)
+        {
+            if (myVote != arrow) return BadgeTone.Plain;
+
+            return arrow > 0 ? BadgeTone.Good : BadgeTone.Wrong;
+        }
+
+        /// <summary>
+        /// What clicking an arrow will do, said before it is done.
+        ///
+        /// ⚠ Clicking the arrow you already chose REMOVES your vote — that is the server's own
+        /// behaviour (`Translation::vote` deletes an identical existing vote), not a convention we
+        /// invented, and nothing on screen would otherwise say so.
+        /// </summary>
+        public static string ArrowTip(int arrow, int? myVote)
+        {
+            if (myVote == arrow) return "Click again to withdraw your rating.";
+
+            return arrow > 0 ? "Rate this translation up." : "Rate this translation down.";
+        }
+
         /// <summary>
         /// What to say instead of the arrows. Empty when they are shown.
         ///
