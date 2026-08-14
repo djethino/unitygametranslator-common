@@ -24,11 +24,34 @@ namespace UnityGameTranslator.Common
         Wrong,
     }
 
+    /// <summary>
+    /// What a chip is ABOUT, so a screen can drop the ones it already says another way.
+    ///
+    /// ⚠ **Selection is a rendering decision; the words, order and tones are not.** The manager's
+    /// game page has nothing but this strip, so it shows everything. The mod's card already draws a
+    /// quality bar and a vote row, and repeating those as chips would spend attention on something
+    /// the reader can already see — the same reasoning the website's own badge component gives for
+    /// carrying only two. What must never differ is what a shown chip SAYS.
+    /// </summary>
+    public enum BadgeKind
+    {
+        Publication,
+        Role,
+        BranchesWaiting,
+        MainMissing,
+        Sync,
+        ReviewStage,
+        Completeness,
+        Votes,
+        Downloads,
+    }
+
     /// <summary>One chip: what it says, how loudly, and what it means in full.</summary>
     public struct Badge
     {
         public string Text;
         public BadgeTone Tone;
+        public BadgeKind Kind;
 
         /// <summary>The sentence behind it, for a tooltip or a long-press. Never empty.</summary>
         public string Tip;
@@ -92,6 +115,7 @@ namespace UnityGameTranslator.Common
             badges.Add(new Badge
             {
                 Text = Publications.Name(publication),
+                    Kind = BadgeKind.Publication,
                 Tone = publication == Publication.NeverPublished ? BadgeTone.Attention : BadgeTone.Plain,
                 Tip = Publications.Effect(publication),
             });
@@ -102,6 +126,7 @@ namespace UnityGameTranslator.Common
                 badges.Add(new Badge
                 {
                     Text = "Main",
+                    Kind = BadgeKind.Role,
                     Tone = BadgeTone.Plain,
                     Tip = "You lead this lineage. Contributions arrive as branches for you to take "
                         + "or leave.",
@@ -115,6 +140,7 @@ namespace UnityGameTranslator.Common
                 badges.Add(new Badge
                 {
                     Text = "Branch",
+                    Kind = BadgeKind.Role,
                     Tone = BadgeTone.Attention,
                     Tip = "Yours is a contribution to somebody else's translation. They decide "
                         + "what they keep.",
@@ -126,6 +152,7 @@ namespace UnityGameTranslator.Common
                 badges.Add(new Badge
                 {
                     Text = branchesWaiting.Value + " waiting",
+                    Kind = BadgeKind.BranchesWaiting,
                     Tone = BadgeTone.Good,
                     Tip = "Contributions sent to your Main that you have not settled yet.",
                 });
@@ -136,6 +163,7 @@ namespace UnityGameTranslator.Common
                 badges.Add(new Badge
                 {
                     Text = "Main is gone",
+                    Kind = BadgeKind.MainMissing,
                     Tone = BadgeTone.Wrong,
                     Tip = "The translation yours contributes to is no longer on the site.",
                 });
@@ -155,6 +183,7 @@ namespace UnityGameTranslator.Common
                         badges.Add(new Badge
                         {
                             Text = "Up to date",
+                    Kind = BadgeKind.Sync,
                             Tone = BadgeTone.Good,
                             Tip = "This file and the published version hold the same content.",
                         });
@@ -164,6 +193,7 @@ namespace UnityGameTranslator.Common
                         badges.Add(new Badge
                         {
                             Text = "Update available",
+                    Kind = BadgeKind.Sync,
                             Tone = BadgeTone.Notice,
                             Tip = "The published version has moved on. Nothing of yours is at risk "
                                 + "— you have no unpublished changes here.",
@@ -174,6 +204,7 @@ namespace UnityGameTranslator.Common
                         badges.Add(new Badge
                         {
                             Text = "Unpublished changes",
+                    Kind = BadgeKind.Sync,
                             Tone = BadgeTone.Attention,
                             Tip = "You have changes here that the published version does not have.",
                         });
@@ -183,6 +214,7 @@ namespace UnityGameTranslator.Common
                         badges.Add(new Badge
                         {
                             Text = "Conflict",
+                    Kind = BadgeKind.Sync,
                             Tone = BadgeTone.Attention,
                             Tip = "Both this file and the published one have moved. Settling that "
                                 + "is done line by line.",
@@ -202,6 +234,7 @@ namespace UnityGameTranslator.Common
                 badges.Add(new Badge
                 {
                     Text = Quality.StageName(stage.Value),
+                    Kind = BadgeKind.ReviewStage,
                     Tone = tone,
                     Tip = "How much of this file a human has settled.",
                 });
@@ -214,6 +247,7 @@ namespace UnityGameTranslator.Common
                 badges.Add(new Badge
                 {
                     Text = (int)(completeness.Value * 100 + 0.5) + "% translated",
+                    Kind = BadgeKind.Completeness,
                     Tone = BadgeTone.Attention,
                     Tip = "Share of the lines this file has met in game that are actually "
                         + "translated.",
@@ -229,6 +263,7 @@ namespace UnityGameTranslator.Common
                 badges.Add(new Badge
                 {
                     Text = votes + (votes == 1 ? " vote" : " votes"),
+                    Kind = BadgeKind.Votes,
                     Tone = BadgeTone.Plain,
                     Tip = "What players thought of it on the site.",
                 });
@@ -239,6 +274,7 @@ namespace UnityGameTranslator.Common
                 badges.Add(new Badge
                 {
                     Text = downloads + (downloads == 1 ? " download" : " downloads"),
+                    Kind = BadgeKind.Downloads,
                     Tone = BadgeTone.Quiet,
                     Tip = "How many times it has been taken from the site.",
                 });
