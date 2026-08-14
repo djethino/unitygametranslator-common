@@ -41,7 +41,13 @@ namespace UnityGameTranslator.Common
         /// form that changes the content's width can drive the flip itself. The dead band means a
         /// size that just lost its words has to gain a visible amount before getting them back.
         /// </summary>
-        public const double ClimbBack = 20;
+        /// <remarks>
+        /// ⚠ Raised from 20 on 2026-08-14: a slow drag could be stopped in a band where the words
+        /// were kept but wrapped. Part of that was a width estimate that had drifted from what it
+        /// estimated, and is fixed at the source — but a band narrower than a few characters is
+        /// asking a measurement to be exact, and this one is deliberately approximate.
+        /// </remarks>
+        public const double ClimbBack = 40;
 
         /// <param name="available">Room left for the strip once the title has what it needs.</param>
         /// <param name="full">Width the full form would take.</param>
