@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityGameTranslator.Common;
 
@@ -32,6 +32,7 @@ namespace UnityGameTranslator.Common.Checks
             HasItBeenPublished();
             WhoMayRate();
             WhereSomebodyStands();
+            HowMuchStripFits();
             LanguageLookup();
             HotkeySpelling();
             QualityMeasures();
@@ -78,6 +79,13 @@ namespace UnityGameTranslator.Common.Checks
         {
             Section("Voting");
             VotingChecks.Run(Check);
+        }
+
+        /// <summary>Which form of the scope strip fits beside a title.</summary>
+        private static void HowMuchStripFits()
+        {
+            Section("Scope strip");
+            ScopeStripChecks.Run(Check);
         }
 
         /// <summary>The four independent questions a screen answers, and who may write.</summary>
