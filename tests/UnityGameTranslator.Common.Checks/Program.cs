@@ -31,6 +31,7 @@ namespace UnityGameTranslator.Common.Checks
             EditingSides();
             HasItBeenPublished();
             WhoMayRate();
+            WhereSomebodyStands();
             LanguageLookup();
             HotkeySpelling();
             QualityMeasures();
@@ -77,6 +78,13 @@ namespace UnityGameTranslator.Common.Checks
         {
             Section("Voting");
             VotingChecks.Run(Check);
+        }
+
+        /// <summary>The four independent questions a screen answers, and who may write.</summary>
+        private static void WhereSomebodyStands()
+        {
+            Section("Standing");
+            StandingChecks.Run(Check);
         }
 
         /// <summary>The palette, against what the website actually renders.</summary>
