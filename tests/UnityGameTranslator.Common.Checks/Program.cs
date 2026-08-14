@@ -33,6 +33,7 @@ namespace UnityGameTranslator.Common.Checks
             WhoMayRate();
             WhereSomebodyStands();
             HowMuchStripFits();
+            BrowserSessions();
             LanguageLookup();
             HotkeySpelling();
             QualityMeasures();
@@ -79,6 +80,13 @@ namespace UnityGameTranslator.Common.Checks
         {
             Section("Voting");
             VotingChecks.Run(Check);
+        }
+
+        /// <summary>The durations and the words of a browser edit session.</summary>
+        private static void BrowserSessions()
+        {
+            Section("Edit sessions");
+            EditSessionsChecks.Run(Check);
         }
 
         /// <summary>Which form of the scope strip fits beside a title.</summary>
