@@ -102,6 +102,26 @@ namespace UnityGameTranslator.Common.Checks
                   != EditSessions.ConflictQuestion(EditSessions.EditSessionHolder.Game, "now", 2),
                 "one and several do not read the same",
                 "a sentence that does not agree with its number reads as a machine talking");
+
+            // ⚠ The marker is a file anybody with an account on the machine can write, so what
+            // comes out of it is data. Mirrors the site's own Str::random(64) check.
+            check(EditSessions.IsPlausibleKey(new string('a', 64))
+                  && EditSessions.IsPlausibleKey("0123456789" + new string('Z', 54)),
+                "a 64-character alphanumeric key is accepted",
+                "that is exactly what the site issues");
+
+            check(!EditSessions.IsPlausibleKey(new string('a', 63))
+                  && !EditSessions.IsPlausibleKey(new string('a', 65))
+                  && !EditSessions.IsPlausibleKey("")
+                  && !EditSessions.IsPlausibleKey(null),
+                "and nothing of another length is",
+                "a key is a fixed shape; anything else was not issued by the site");
+
+            check(!EditSessions.IsPlausibleKey(new string('a', 60) + "/../")
+                  && !EditSessions.IsPlausibleKey(new string('a', 63) + " ")
+                  && !EditSessions.IsPlausibleKey(new string('a', 63) + "é"),
+                "nor anything carrying a character a key never has",
+                "the value ends up in a URL, and a planted marker must not decide what it says");
         }
     }
 }

@@ -123,6 +123,51 @@ namespace UnityGameTranslator.Common
         public const string MarkerKeyField = "mod_key";
         public const string MarkerOpenedField = "opened_at";
 
+        // 🔴 WHAT THE MARKER MAY CARRY, AND WHY IT IS SAFE — read this before adding a field.
+        //
+        // The marker sits in a game folder, which on a shared computer means anybody with an
+        // account can read and write it. The key inside is encrypted, and that encryption must NOT
+        // be read as a boundary: Secrets derives from the machine name, the user name, the platform
+        // and the home path — every one of them a value another local account can look up — so a
+        // deliberate attacker rebuilds the key. The header of Secrets.cs says exactly this, and
+        // says it first, because the mistake it prevents is reading "encrypted" as "safe".
+        //
+        // It is safe for one reason, and the reason is not cryptography: THE KEY REACHES EXACTLY AS
+        // FAR AS THE FILE IT SITS BESIDE. It authorises reading, rewriting and ending ONE edit
+        // session, whose content is the translation lying next to it in plain JSON. Whoever can
+        // read the marker can already open that translation in a text editor; going through the
+        // session gains them nothing.
+        //
+        // ⚠ Two things would break that, so they must never be written here:
+        //  · a URL or any address — the endpoints are compiled in, and a marker able to redirect
+        //    them would turn a shared folder into an exfiltration path;
+        //  · an account token — that reaches the server and every translation published under a
+        //    name, incomparably further than one game folder.
+
+        /// <summary>
+        /// Does this look like a session key at all?
+        ///
+        /// ⚠ Mirrors the site's own `isValidTokenFormat` — `Str::random(64)`, nothing else — and
+        /// exists for the same stated reason: defence in depth. A marker is a file anybody on the
+        /// machine can write, so what comes out of it is data, not a promise, and it is checked
+        /// before it is ever put in a URL.
+        /// </summary>
+        public static bool IsPlausibleKey(string key)
+        {
+            if (key == null || key.Length != 64) return false;
+
+            for (int i = 0; i < key.Length; i++)
+            {
+                char c = key[i];
+                bool alphanumeric = (c >= '0' && c <= '9')
+                                 || (c >= 'a' && c <= 'z')
+                                 || (c >= 'A' && c <= 'Z');
+                if (!alphanumeric) return false;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Which program opened the session.
         ///
