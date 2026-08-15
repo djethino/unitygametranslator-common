@@ -2,16 +2,42 @@ using System;
 
 namespace UnityGameTranslator.Common
 {
-    /// <summary>Which copy of a translation an editing screen is working on.</summary>
+    /// <summary>
+    /// Where a translation stands ONCE AN ACTION HAS BEEN APPLIED.
+    ///
+    /// 🔴 **The question is "who holds the result afterwards", NOT "which file does this write".**
+    /// Written this way because the other reading was taken twice, by the same person, days apart,
+    /// and each time it reclassified real buttons the wrong way. Downloading the published version
+    /// writes only the local file — under "which file does it write" that is Local, and it is
+    /// wrong: afterwards the two sides carry the same translation, which is the whole thing
+    /// somebody wants to know before pressing it.
+    ///
+    /// ⚠ Ask it of every action in one sentence: **after applying, do both sides carry the same
+    /// data?** Yes is <see cref="Both"/>. No, and it is here, is <see cref="Local"/>. No, and it is
+    /// on the site, is <see cref="Server"/>. <see cref="SideAfter"/> exists so a caller answers the
+    /// two halves of that question instead of picking a name.
+    /// </summary>
     public enum EditSide
     {
-        /// <summary>The published translation, on the community site.</summary>
+        /// <summary>
+        /// The published translation carries the result; this machine does not.
+        ///
+        /// ⚠ Which in practice means work done with no game and no manager on the other end —
+        /// merging a contribution from the website, changing what a translation says about itself.
+        /// </summary>
         Server,
 
-        /// <summary>Both at once: what is saved lands here AND is published.</summary>
+        /// <summary>
+        /// Both carry the same translation afterwards.
+        ///
+        /// ⚠ Publishing and downloading are BOTH this, and that surprises people: each one writes a
+        /// single file. What matters is where it leaves things — in step — not which hand moved.
+        /// </summary>
         Both,
 
-        /// <summary>The file on this machine, in the game.</summary>
+        /// <summary>
+        /// The file on this machine carries the result; the published version does not.
+        /// </summary>
         Local,
     }
 
@@ -139,6 +165,32 @@ namespace UnityGameTranslator.Common
             // Nothing is available. The caller shows the switch dead, with the reasons under it,
             // rather than pretending a side was chosen.
             return preferred;
+        }
+
+        /// <summary>
+        /// Which side an action leaves things on, from the only two facts that decide it.
+        ///
+        /// 🔴 **Use this instead of naming a side by hand.** Every mark that was wrong got that way
+        /// the same manner: somebody looked at a button, thought "this one publishes", and wrote
+        /// Server. The name invites it. These two questions do not — they are about the state
+        /// afterwards, which is what the control tells a user.
+        ///
+        /// ⚠ Neither true is not a side, it is an action that changes no translation. Reported as
+        /// <see cref="EditSide.Local"/> because that is the harmless answer: a screen that claims
+        /// to leave the published version alone and does is never a lie, where the reverse would be.
+        /// </summary>
+        /// <param name="onThisMachine">
+        /// Once applied, the file in the game carries the result of this action.
+        /// </param>
+        /// <param name="published">
+        /// Once applied, the translation on the site carries the result of this action. ⚠ True for
+        /// downloading as well as for publishing: afterwards the published version IS what is here.
+        /// </param>
+        public static EditSide SideAfter(bool onThisMachine, bool published)
+        {
+            if (onThisMachine && published) return EditSide.Both;
+            if (published) return EditSide.Server;
+            return EditSide.Local;
         }
 
         /// <summary>The name of a side, identical in every product.</summary>

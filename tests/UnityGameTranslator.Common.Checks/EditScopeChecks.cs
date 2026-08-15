@@ -110,6 +110,48 @@ namespace UnityGameTranslator.Common.Checks
                 "this machine is the screen", "the one in front of whoever is reading");
             check(EditScope.Mark(EditSide.Both) == "link",
                 "both is the two linked", "it is the pair, not a third place");
+
+            // ── What the switch actually answers ──────────────────────────────
+            //
+            // 🔴 The question is "after applying, do both sides carry the same data?" — NOT "which
+            // file does this write". The wrong reading was taken twice, days apart, and each time
+            // it reclassified real buttons: downloading writes one file and yet leaves the two
+            // sides identical, which is Both and reads as Local to anybody thinking about writes.
+            //
+            // ⚠ Every real action of the three products is listed below. This is the table somebody
+            // adding a button should copy a line from, and it is here rather than in a comment
+            // because a comment cannot fail.
+            // ⚠ One case, two actions that look opposite: publishing and downloading. Each writes a
+            // single file, in opposite directions, and both end with the two sides carrying the
+            // same translation. That is the pair the wrong reading always splits.
+            check(EditScope.SideAfter(onThisMachine: true, published: true) == EditSide.Both,
+                "publishing and downloading both leave the two sides carrying the same thing",
+                "each writes one file, in opposite directions, and both end in step");
+
+            check(EditScope.SideAfter(onThisMachine: true, published: false) == EditSide.Local,
+                "live editing, in-game editing and a local merge stay here",
+                "the published version does not have those lines, so the two differ afterwards");
+
+            check(EditScope.SideAfter(onThisMachine: false, published: true) == EditSide.Server,
+                "merging from the website stays there",
+                "there is no game and no manager on the other end to receive it");
+
+            check(EditScope.SideAfter(onThisMachine: false, published: false) == EditSide.Local,
+                "and an action that changes no translation is reported as the harmless side",
+                "claiming to leave the published version alone and doing so is never a lie");
+
+            // The three answers are three, or the switch has a position that says nothing.
+            check(EditScope.SideAfter(true, true) != EditScope.SideAfter(true, false)
+               && EditScope.SideAfter(true, false) != EditScope.SideAfter(false, true)
+               && EditScope.SideAfter(true, true) != EditScope.SideAfter(false, true),
+                "the three cases give three different sides",
+                "two of them collapsing would leave the control unable to describe a real action");
+
+            // ⚠ The sentence a user reads must carry the criterion too, or the control explains
+            // itself one way and is classified another.
+            check(EditScope.Effect(EditSide.Both).Contains("in step"),
+                "and the Both sentence says they end in step",
+                "that clause IS the rule; without it the position reads as 'writes twice'");
         }
 
         private static SideStanding Find(SideStanding[] sides, EditSide side)
