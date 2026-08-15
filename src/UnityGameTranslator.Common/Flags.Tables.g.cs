@@ -4,7 +4,7 @@
 // Do not edit: change the catalogue and run that script. The build refuses to compile
 // when this file no longer matches the catalogue it names below.
 //
-// catalogue-sha256: c9549967653019617fb9c66af8352fc40ae115efdbc69eea846307448f4ade47
+// catalogue-sha256: 0117e0c48cd153cf2cee4733c254a3a24ce11d4afd5dcd0b9521ea1fc702ae0d
 // </auto-generated>
 
 namespace UnityGameTranslator.Common
@@ -27,6 +27,7 @@ namespace UnityGameTranslator.Common
             new[] { "be", "kkkkkkyyyyyrrrrr", "kkkkkkyyyyyrrrrr", "kkkkkkyyyyyrrrrr", "kkkkkkyyyyyrrrrr", "kkkkkkyyyyyrrrrr", "kkkkkkyyyyyrrrrr", "kkkkkkyyyyyrrrrr", "kkkkkkyyyyyrrrrr", "kkkkkkyyyyyrrrrr", "kkkkkkyyyyyrrrrr", "kkkkkkyyyyyrrrrr" },
             new[] { "bg", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
             new[] { "bo", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "yyyyyyyyyyyyyyyy", "yyyyyyyyyyyyyyyy", "yyyyyyyyyyyyyyyy", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg" },
+            new[] { "br", "gggggggggggggggg", "gggggggggggggggg", "ggggyyyyyyyygggg", "gggyyyyyyyyyyggg", "ggyyyybbbbyyyygg", "ggyyybbwwbbyyygg", "ggyyyybbbbyyyygg", "gggyyyyyyyyyyggg", "ggggyyyyyyyygggg", "gggggggggggggggg", "gggggggggggggggg" },
             new[] { "by", "wwwrrrrrrrrrrrrr", "wwwrrrrrrrrrrrrr", "wwwrrrrrrrrrrrrr", "wwwrrrrrrrrrrrrr", "wwwrrrrrrrrrrrrr", "wwwrrrrrrrrrrrrr", "wwwrrrrrrrrrrrrr", "wwwggggggggggggg", "wwwggggggggggggg", "wwwggggggggggggg", "wwwggggggggggggg" },
             new[] { "ca", "rrrrwwwwwwwwrrrr", "rrrrwwwwwwwwrrrr", "rrrrwwwwwwwwrrrr", "rrrrwwwwwwwwrrrr", "rrrrwwwwrwwwrrrr", "rrrrwwwrrrwwrrrr", "rrrrwwwwrwwwrrrr", "rrrrwwwwwwwwrrrr", "rrrrwwwwwwwwrrrr", "rrrrwwwwwwwwrrrr", "rrrrwwwwwwwwrrrr" },
             new[] { "ch", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrwwrrrrrrr", "rrrrrrrwwrrrrrrr", "rrrrwwwwwwwwrrrr", "rrrrwwwwwwwwrrrr", "rrrrwwwwwwwwrrrr", "rrrrrrrwwrrrrrrr", "rrrrrrrwwrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
@@ -124,6 +125,7 @@ namespace UnityGameTranslator.Common
             new[] { "be", "k", "#000000", "r", "#EF3340", "y", "#FDDA24" },
             new[] { "bg", "g", "#00966E", "r", "#D62612", "w", "#FFFFFF" },
             new[] { "bo", "g", "#007A33", "r", "#D52B1E", "y", "#F9E300" },
+            new[] { "br", "b", "#002776", "g", "#009B3A", "w", "#FFFFFF", "y", "#FEDF00" },
             new[] { "by", "g", "#007C30", "r", "#D22730", "w", "#FFFFFF" },
             new[] { "ca", "r", "#FF0000", "w", "#FFFFFF" },
             new[] { "ch", "r", "#FF0000", "w", "#FFFFFF" },
