@@ -122,6 +122,15 @@ namespace UnityGameTranslator.Common.Checks
                         "the tag is then the only thing naming it");
             }
 
+            // 🔴 The chip exists because a flag may not name the language. A written name does,
+            // so asking for both is asking for "🇮🇳 hi Hindi" — the same thing said twice.
+            foreach (var name in Languages.Names())
+            {
+                check(!Flags.Mark(name, nameIsWritten: true).ShowTag,
+                    name + " drops its chip when its name is written",
+                    "the chip answers a question the name has already answered");
+            }
+
             var french = Flags.Mark("French");
             check(french.Flag == "fr" && !french.ShowTag && french.Tag == "fr",
                 "a language with a flag of its own shows the flag alone",

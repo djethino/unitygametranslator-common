@@ -100,7 +100,14 @@ namespace UnityGameTranslator.Common
         /// each time — and the third product to be written would decide it slightly differently.
         /// The RULE is here; drawing a flag beside a chip stays each product's business.
         /// </summary>
-        public static LanguageMark Mark(string languageName)
+        /// <param name="nameIsWritten">
+        /// The caller is also writing the language's NAME beside this mark.
+        ///
+        /// 🔴 **Then the chip is noise.** It exists for one reason — a flag that cannot say which
+        /// language this is, because ten share it or none was drawn — and a written name answers
+        /// that completely. "🇮🇳 hi Hindi" says the same thing twice and reads as a bug.
+        /// </param>
+        public static LanguageMark Mark(string languageName, bool nameIsWritten)
         {
             var flag = For(languageName);
 
@@ -110,9 +117,16 @@ namespace UnityGameTranslator.Common
                 Tag = Languages.CodeOf(languageName),
 
                 // No flag means the tag is the only thing naming this language; a shared flag means
-                // it names ten of them at once. Both need the chip, for the same reason.
-                ShowTag = flag == null || SharedBySeveral(flag),
+                // it names ten of them at once. Both need the chip, for the same reason — unless
+                // the name is right there, which settles it better than either.
+                ShowTag = !nameIsWritten && (flag == null || SharedBySeveral(flag)),
             };
+        }
+
+        /// <summary>The mark on its own, with nothing else naming the language.</summary>
+        public static LanguageMark Mark(string languageName)
+        {
+            return Mark(languageName, nameIsWritten: false);
         }
 
         /// <summary>Every flag drawn so far, for a renderer that wants to warm a cache.</summary>
