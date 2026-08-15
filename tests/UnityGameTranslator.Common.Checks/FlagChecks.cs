@@ -104,6 +104,28 @@ namespace UnityGameTranslator.Common.Checks
             check(!Flags.SharedBySeveral(null) && !Flags.SharedBySeveral("nothing"),
                 "and nothing is shared by an absent flag",
                 "a missing flag must not turn every tag chip on");
+
+            // ── What a renderer actually asks for ─────────────────────────────
+            foreach (var name in Languages.Names())
+            {
+                var mark = Flags.Mark(name);
+
+                // 🔴 Something must always name the language. A row with neither flag nor tag is a
+                // language nobody can identify, which is the one outcome this whole thing exists
+                // to prevent.
+                check(mark.Flag != null || mark.ShowTag,
+                    name + " is named by something",
+                    "no flag and no tag would leave a row saying nothing at all");
+
+                if (mark.Flag == null)
+                    check(mark.ShowTag, name + " with no flag shows its tag",
+                        "the tag is then the only thing naming it");
+            }
+
+            var french = Flags.Mark("French");
+            check(french.Flag == "fr" && !french.ShowTag && french.Tag == "fr",
+                "a language with a flag of its own shows the flag alone",
+                "a chip beside every flag would be noise on eighty of them");
         }
     }
 }

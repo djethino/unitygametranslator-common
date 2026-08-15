@@ -76,6 +76,45 @@ namespace UnityGameTranslator.Common
             return false;
         }
 
+        /// <summary>What to show for one language: a flag, a tag, or both.</summary>
+        public struct LanguageMark
+        {
+            /// <summary>The flag to draw, or null when none has been drawn for this language.</summary>
+            public string Flag;
+
+            /// <summary>The language's own code. Null only when the language is unknown.</summary>
+            public string Tag;
+
+            /// <summary>
+            /// Show the tag beside the flag. Always true when there is no flag — something has to
+            /// name the language.
+            /// </summary>
+            public bool ShowTag;
+        }
+
+        /// <summary>
+        /// How a language is marked, decided once for the three products.
+        ///
+        /// 🔴 **One call rather than three.** A renderer that asked <see cref="For"/>, then
+        /// <see cref="SharedBySeveral"/>, then the language's code, would be re-deciding the rule
+        /// each time — and the third product to be written would decide it slightly differently.
+        /// The RULE is here; drawing a flag beside a chip stays each product's business.
+        /// </summary>
+        public static LanguageMark Mark(string languageName)
+        {
+            var flag = For(languageName);
+
+            return new LanguageMark
+            {
+                Flag = flag,
+                Tag = Languages.CodeOf(languageName),
+
+                // No flag means the tag is the only thing naming this language; a shared flag means
+                // it names ten of them at once. Both need the chip, for the same reason.
+                ShowTag = flag == null || SharedBySeveral(flag),
+            };
+        }
+
         /// <summary>Every flag drawn so far, for a renderer that wants to warm a cache.</summary>
         public static IEnumerable<string> Known()
         {
