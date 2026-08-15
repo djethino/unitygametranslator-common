@@ -157,6 +157,9 @@ namespace UnityGameTranslator.Common.Checks
         {
             Section("Languages");
             LanguagesChecks.Run(Check);
+
+            Section("Flags");
+            FlagChecks.Run(Check);
         }
 
         /// <summary>The stored-secret format, checked against its own specification.</summary>

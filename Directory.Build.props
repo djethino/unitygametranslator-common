@@ -47,6 +47,15 @@
   <PropertyGroup>
     <LanguageCatalogue>$(MSBuildThisFileDirectory)catalogs/languages.json</LanguageCatalogue>
     <LanguageTables>$(MSBuildThisFileDirectory)src/UnityGameTranslator.Common/Languages.Tables.g.cs</LanguageTables>
+
+    <!--
+      The flags follow the same regime, and the check below is the same task run twice: a table
+      generated from a catalogue must never outlive it. ⚠ Both are needed — the language tables
+      also carry which flag each language points at, so a flag renamed in one file and not the
+      other has to fail here rather than render the wrong picture in a game.
+    -->
+    <FlagCatalogue>$(MSBuildThisFileDirectory)catalogs/flags.json</FlagCatalogue>
+    <FlagTables>$(MSBuildThisFileDirectory)src/UnityGameTranslator.Common/Flags.Tables.g.cs</FlagTables>
   </PropertyGroup>
 
   <UsingTask TaskName="CheckLanguageTables" TaskFactory="RoslynCodeTaskFactory"
@@ -91,6 +100,15 @@
     </CheckLanguageTables>
     <Error Condition="'$(LanguageTablesStale)' == 'true'"
            Text="The language tables no longer match catalogs/languages.json. Run: python generate-common-languages.py" />
+  </Target>
+
+  <Target Name="VerifyFlagTables" BeforeTargets="CoreCompile"
+          Condition="'$(MSBuildProjectName)' == 'UnityGameTranslator.Common' AND Exists('$(FlagCatalogue)')">
+    <CheckLanguageTables Catalogue="$(FlagCatalogue)" Tables="$(FlagTables)">
+      <Output TaskParameter="Stale" PropertyName="FlagTablesStale" />
+    </CheckLanguageTables>
+    <Error Condition="'$(FlagTablesStale)' == 'true'"
+           Text="The flag tables no longer match catalogs/flags.json. Run: python generate-common-languages.py" />
   </Target>
 
 </Project>

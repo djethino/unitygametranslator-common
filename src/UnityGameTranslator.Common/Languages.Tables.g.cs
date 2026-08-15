@@ -5,7 +5,7 @@
 // it undoes you. The build refuses to compile when this file no longer matches the
 // catalogue it names below, so a stale list cannot be released.
 //
-// catalogue-sha256: 98f96d61e38a09b0ebf406350ee376cf7511136add368e8189c667a2cf341dcb
+// catalogue-sha256: 052f4b0d784ef90634355601548e7b9124d03cbffcc11f374e0b31adf2a055a0
 // </auto-generated>
 
 using System.Collections.Generic;
@@ -211,6 +211,29 @@ namespace UnityGameTranslator.Common
             new[] { "Georgian", "ka", "KA", "KA" },
             new[] { "Swahili", "sw", "SW", "SW" },
             new[] { "Haitian Creole", "ht", "HT", "HT" },
+        };
+    }
+
+    public static partial class Flags
+    {
+        /// <summary>
+        /// Which flag stands for each language. Name, then flag id.
+        ///
+        /// ⚠ A FLAG, not a country: the relation is language to flag. Portuguese has to
+        /// choose one of two countries, English one of several, and ten Indian languages
+        /// share a single flag because no Indian state has one of its own. A language with
+        /// no entry here simply has no flag yet, which renders as its tag alone.
+        /// </summary>
+        private static readonly string[][] CatalogueFlagsOfLanguages =
+        {
+            new[] { "English", "gb" },
+            new[] { "French", "fr" },
+            new[] { "German", "de" },
+            new[] { "Japanese", "jp" },
+            new[] { "Turkish", "tr" },
+            new[] { "Swedish", "se" },
+            new[] { "Hindi", "in" },
+            new[] { "Nepali", "np" },
         };
     }
 }
