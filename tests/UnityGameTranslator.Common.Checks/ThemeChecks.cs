@@ -54,6 +54,7 @@ namespace UnityGameTranslator.Common.Checks
                 { "QualityCapture", "6A7282" },   // gray-500
                 { "QualityTrack", "364153" },     // gray-700
                 { "TagModUi", "009689" },         // teal-600
+                { "MarkLit", "A5F3FC" },          // cyan-200
             };
 
             var actual = new Dictionary<string, Rgb>
@@ -85,7 +86,76 @@ namespace UnityGameTranslator.Common.Checks
                 { "QualityCapture", Theme.QualityCapture },
                 { "QualityTrack", Theme.QualityTrack },
                 { "TagModUi", Theme.TagModUi },
+                { "MarkLit", Theme.MarkLit },
             };
+
+            // ── The lit scope mark must OUTRANK the dimmed ones, on every button it can land on ──
+            //
+            // 🔴 This is the defect it was written for, and it is measurable: the lit mark used to
+            // be AccentSoft, which on a purple-600 button scored 1.98 against the fill while the
+            // DIMMED marks scored 2.13. The control read backwards, and nothing said so — the two
+            // colours were each defensible on their own, and only their ratio against a third thing
+            // was wrong.
+            //
+            // ⚠ Contrast is computed here from the WCAG definition, not from anything in Theme:
+            // a check that borrowed the library's own arithmetic would only prove it agrees with
+            // itself. Every fill a button can carry in any of the three products is listed.
+            var fills = new Dictionary<string, Rgb>
+            {
+                { "the primary button", Theme.Accent },
+                { "a primary button hovered", Theme.AccentEdge },
+                { "a primary button pressed", Theme.AccentDeep },
+                { "the secondary button", Theme.SurfaceRaised },
+                { "a card", Theme.SurfaceCard },
+                { "a recess", Theme.SurfaceDeep },
+            };
+
+            foreach (var fill in fills)
+            {
+                double lit = Contrast(Theme.MarkLit, fill.Value);
+                double dimmed = Contrast(Theme.TextMuted, fill.Value);
+
+                check(lit >= 3.0,
+                    "the lit mark is legible on " + fill.Key,
+                    "3.0 is the floor for something read as a picture; this scores "
+                        + lit.ToString("0.00"));
+
+                check(lit > dimmed * 1.4,
+                    "and clearly outranks the dimmed ones there",
+                    "lit " + lit.ToString("0.00") + " against dimmed " + dimmed.ToString("0.00")
+                        + ": whichever is brighter is the one somebody reads as chosen");
+            }
+
+            // ⚠ Stated as a requirement rather than a hex: any colour a button is FILLED with is
+            // disqualified, whatever it is, because the mark sits on top of it.
+            foreach (var fill in fills)
+            {
+                check(Theme.MarkLit.ToHex() != fill.Value.ToHex(),
+                    "the lit mark is not the colour of " + fill.Key,
+                    "a mark the same colour as what it sits on is an invisible mark");
+            }
+
+            // 🔴 **A LIGHT fill takes no mark at all**, and this check exists because the first
+            // draft of the list above included the warning button: cyan-200 scores 1.38 on amber,
+            // and so would ANY light colour — amber is nearly as bright as white, so there is no
+            // shade of a light mark that survives it. The answer is not a different mark, it is
+            // that the marks never go there.
+            //
+            // ⚠ Which is not a limitation in practice, it is a rule that was already true: the
+            // marks say where a save LANDS, and they sit on the actions that save — publish,
+            // contribute, download, edit. None of those is styled as a warning or as a danger,
+            // because none of them is one. If an action ever needs both, the button changes, not
+            // the mark.
+            foreach (var light in new Dictionary<string, Rgb>
+                     {
+                         { "a warning button", Theme.StatusWarning },
+                         { "a danger button", Theme.StatusError },
+                     })
+            {
+                check(Contrast(Theme.TextPrimary, light.Value) < 3.0,
+                    "nothing light is readable on " + light.Key + ", marks included",
+                    "if this ever passes, that fill darkened and could carry marks after all");
+            }
 
             check(actual.Count == expected.Count,
                 "every colour is checked",
@@ -193,6 +263,33 @@ namespace UnityGameTranslator.Common.Checks
             check(Theme.CalloutError.ToHex() != Theme.CalloutWarning.ToHex()
                && Theme.CalloutInfo.ToHex() != Theme.CalloutSuccess.ToHex(),
                 "the four callouts are four colours", "a callout that cannot be told apart says nothing");
+        }
+
+        /// <summary>
+        /// WCAG 2.x relative luminance, written from the definition.
+        ///
+        /// ⚠ Deliberately not built on anything in <see cref="Theme"/>: the point of a check is to
+        /// hold the library to an outside rule, and one that reuses the library's own arithmetic
+        /// only proves it agrees with itself.
+        /// </summary>
+        private static double Luminance(Rgb colour)
+        {
+            return 0.2126 * Channel(colour.R) + 0.7152 * Channel(colour.G) + 0.0722 * Channel(colour.B);
+        }
+
+        private static double Channel(byte value)
+        {
+            double c = value / 255.0;
+            return c <= 0.03928 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);
+        }
+
+        /// <summary>The WCAG ratio of two colours, always ≥ 1.</summary>
+        private static double Contrast(Rgb a, Rgb b)
+        {
+            double la = Luminance(a), lb = Luminance(b);
+            double high = la > lb ? la : lb;
+            double low = la > lb ? lb : la;
+            return (high + 0.05) / (low + 0.05);
         }
     }
 }

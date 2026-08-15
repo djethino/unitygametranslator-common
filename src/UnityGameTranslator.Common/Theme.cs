@@ -172,6 +172,34 @@ namespace UnityGameTranslator.Common
         /// <summary>A purple dark enough to sit under text: a selected row's fill. purple-900.</summary>
         public static readonly Rgb AccentDim = new Rgb(0x59168B);
 
+        // ── The lit scope mark ────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// The one of the three scope marks an action aims at. cyan-200.
+        ///
+        /// 🔴 **It may never be a colour a button is filled with, and that is the whole reason it
+        /// exists.** The lit mark was AccentSoft, a light purple — on a purple-600 button it scored
+        /// 1.98 against the background while the two DIMMED marks scored 2.13. The control said the
+        /// opposite of what it meant, and worse on hover (1.48 against 1.58). Measured, not judged.
+        ///
+        /// ⚠ The failure was structural, not a bad shade: a fixed hue taken from the accent family
+        /// is guaranteed to collapse the day it lands on an accent fill, and buttons are exactly
+        /// where the compact form lives. So the requirement is stated rather than the colour: this
+        /// value must stay outside every family a button is filled with — the purples (primary),
+        /// the greys (secondary and the surfaces), and the status ramp (warning, danger, play).
+        ///
+        /// ⚠ Cyan is what is left, and it is free: the site uses blue for links and information
+        /// (forty-eight times), green/amber/red for status, and cyan nowhere a user can reach.
+        /// At this step it clears 3.0 — the threshold for something read as a picture rather than
+        /// as text — on every one of those fills, and stays about twice <see cref="TextMuted"/>,
+        /// which is what makes the lit one legible AS the lit one.
+        ///
+        /// ⚠ **Opacity was the other candidate and is deliberately NOT used**: fading already means
+        /// "you cannot press this". Saying "not chosen" the same way would leave one signal doing
+        /// two jobs, and a disabled button would become unreadable in both.
+        /// </summary>
+        public static readonly Rgb MarkLit = new Rgb(0xA5F3FC);
+
         // ── Status ────────────────────────────────────────────────────────────────────────────
         // The 400 ramp: these are read as text or as a small mark on a dark surface, which is what
         // the site uses 400 for.
