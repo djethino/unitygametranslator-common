@@ -4,7 +4,7 @@
 // Do not edit: change the catalogue and run that script. The build refuses to compile
 // when this file no longer matches the catalogue it names below.
 //
-// catalogue-sha256: 8193425d8d7bc72056b727853aa725b104c9505bdd772e1b2e38e719029bf66c
+// catalogue-sha256: 0e38a451b9bb1ffce38f3f9597deb9a8660ef3c24f34baa7996f1998bb06c37a
 // </auto-generated>
 
 namespace UnityGameTranslator.Common
@@ -17,7 +17,7 @@ namespace UnityGameTranslator.Common
         /// <summary>Flag id, then one string per row, each character a palette key.</summary>
         private static readonly string[][] CataloguePixels =
         {
-            new[] { "af", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwkkkkkkkkkkwww", "wwwkkkkkkkkkkwww", "wwwkkkkkkkkkkwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww" },
+            new[] { "af", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwkkkkkkkkkkwww", "wwwwwwwwwwwwwwww", "wwwwwkkkkkkwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww" },
             new[] { "al", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrkrrrrkrrrrr", "rrrrrkkrrkkrrrrr", "rrrrrrkkkkrrrrrr", "rrrrkkkkkkkkrrrr", "rrrrrkkkkkkrrrrr", "rrrrrrkkkkrrrrrr", "rrrrrrkkkkrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
             new[] { "am", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "oooooooooooooooo", "oooooooooooooooo", "oooooooooooooooo", "oooooooooooooooo" },
             new[] { "at", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
@@ -133,16 +133,16 @@ namespace UnityGameTranslator.Common
             new[] { "td", "bbbbbbyyyyyrrrrr", "bbbbbbyyyyyrrrrr", "bbbbbbyyyyyrrrrr", "bbbbbbyyyyyrrrrr", "bbbbbbyyyyyrrrrr", "bbbbbbyyyyyrrrrr", "bbbbbbyyyyyrrrrr", "bbbbbbyyyyyrrrrr", "bbbbbbyyyyyrrrrr", "bbbbbbyyyyyrrrrr", "bbbbbbyyyyyrrrrr" },
             new[] { "th", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
             new[] { "tj", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "wwwwwwwwwwwwwwww", "wwwwwwwyywwwwwww", "wwwwwwyyyywwwwww", "wwwwwwwyywwwwwww", "wwwwwwwwwwwwwwww", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg" },
-            new[] { "tm", "gggggggggggggggg", "grrrgggwwwwggggg", "grwrggwwggggwggg", "grrrggwggggggggg", "grwrggwggggwgggg", "grrrggwwggggwggg", "grwrgggwwwwggggg", "grrrgggggggggggg", "grwrgggggggggggg", "grrrgggggggggggg", "gggggggggggggggg" },
+            new[] { "tm", "grrrgggggggggggg", "grwrgggwwwwggggg", "grrrggwwggggwggg", "grwrggwggggggggg", "grrrggwggggwgggg", "grwrggwwggggwggg", "grrrgggwwwwggggg", "grwrgggggggggggg", "grrrgggggggggggg", "grwrgggggggggggg", "grrrgggggggggggg" },
             new[] { "tn", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrwwrrrrrr", "rrrrrrrwwwwrrrrr", "rrrrwrrwwrwwrrrr", "rrrrwrrwrrrwrrrr", "rrrrwrrwwrwwrrrr", "rrrrrwrrwwwrrrrr", "rrrrrrwwwwrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
             new[] { "tr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrwwwrrrrrrrr", "rrrrwwrrrrrrrrrr", "rrrwwwrrrrrwrrrr", "rrrwwrrrrrwwwrrr", "rrrwwwrrrrwwwrrr", "rrrrwwrrrrrrrrrr", "rrrrrwwwrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
             new[] { "tw", "bbwwwbbbrrrrrrrr", "bwwwwwbbrrrrrrrr", "bwwwwwbbrrrrrrrr", "bwwwwwbbrrrrrrrr", "bbwwwbbbrrrrrrrr", "bbbbbbbbrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
             new[] { "ua", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "yyyyyyyyyyyyyyyy", "yyyyyyyyyyyyyyyy", "yyyyyyyyyyyyyyyy", "yyyyyyyyyyyyyyyy", "yyyyyyyyyyyyyyyy" },
-            new[] { "uz", "ccccwccwcwcwcccc", "ccwwcccccccccccc", "ccwwccccwcwcwccc", "rrrrwrrrrrrrrrrr", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "rrrrrrrrrrrrrrrr", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg" },
+            new[] { "uz", "cccwwcccwcwcwccc", "ccwwcccccccccccc", "cccwwccwcwcwcccc", "rrrrrrrrrrrrrrrr", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "rrrrrrrrrrrrrrrr", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg" },
             new[] { "ve", "yyyyyyyyyyyyyyyy", "yyyyyyyyyyyyyyyy", "yyyyyyyyyyyyyyyy", "yyyyyyyyyyyyyyyy", "bbbbbwbwbwbwbbbb", "bbbwbbbbbbbbbwbb", "bbbbbbbbbbbbbbbb", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
             new[] { "vn", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrryrrrrrrr", "rrrrrrryyyrrrrrr", "rrrrryyyyyyyrrrr", "rrrrrryyyyyrrrrr", "rrrrrrryyyrrrrrr", "rrrrrrryryrrrrrr", "rrrrrryrrrryrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
             new[] { "ye", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "kkkkkkkkkkkkkkkk", "kkkkkkkkkkkkkkkk", "kkkkkkkkkkkkkkkk", "kkkkkkkkkkkkkkkk" },
-            new[] { "za", "kygggwrrrrrrrrrr", "kkygggwrrrrrrrrr", "kkkygggwrrrrrrrr", "kkkkywwwwwwwwwww", "kkkkyggggggggggg", "kkkkyggggggggggg", "kkkkywwwwwwwwwww", "kkkkyggwbbbbbbbb", "kkkygggwbbbbbbbb", "kkygggwbbbbbbbbb", "kygggwbbbbbbbbbb" },
+            new[] { "za", "kygggwrrrrrrrrrr", "kkygggwrrrrrrrrr", "kkkygggwrrrrrrrr", "kkkkygggwwwwwwww", "kkkkyggggggggggg", "kkkkyggggggggggg", "kkkkygggwwwwwwww", "kkkkygggwbbbbbbb", "kkkygggwbbbbbbbb", "kkygggwbbbbbbbbb", "kygggwbbbbbbbbbb" },
         };
 
         /// <summary>Flag id, then key/#RRGGBB pairs. '.' is transparent and is never listed.</summary>
