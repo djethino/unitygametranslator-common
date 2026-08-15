@@ -121,24 +121,41 @@ namespace UnityGameTranslator.Common.Checks
             // ⚠ Every real action of the three products is listed below. This is the table somebody
             // adding a button should copy a line from, and it is here rather than in a comment
             // because a comment cannot fail.
-            // ⚠ One case, two actions that look opposite: publishing and downloading. Each writes a
-            // single file, in opposite directions, and both end with the two sides carrying the
-            // same translation. That is the pair the wrong reading always splits.
-            check(EditScope.SideAfter(onThisMachine: true, published: true) == EditSide.Both,
-                "publishing and downloading both leave the two sides carrying the same thing",
-                "each writes one file, in opposite directions, and both end in step");
+            // ⚠ One case, two actions that look opposite: publishing, and taking the latest of a
+            // lineage you lead. Each writes a single file, in opposite directions, and both end
+            // with your own two copies carrying the same translation.
+            check(EditScope.SideAfter(onThisMachine: true, yourPublishedCopy: true) == EditSide.Both,
+                "publishing and taking back your own published version end in step",
+                "each writes one file, in opposite directions, and both leave your two copies equal");
 
-            check(EditScope.SideAfter(onThisMachine: true, published: false) == EditSide.Local,
+            check(EditScope.SideAfter(onThisMachine: true, yourPublishedCopy: false) == EditSide.Local,
                 "live editing, in-game editing and a local merge stay here",
-                "the published version does not have those lines, so the two differ afterwards");
+                "nothing published under your name has those lines, so your two copies differ");
 
-            check(EditScope.SideAfter(onThisMachine: false, published: true) == EditSide.Server,
+            check(EditScope.SideAfter(onThisMachine: false, yourPublishedCopy: true) == EditSide.Server,
                 "merging from the website stays there",
                 "there is no game and no manager on the other end to receive it");
 
-            check(EditScope.SideAfter(onThisMachine: false, published: false) == EditSide.Local,
-                "and an action that changes no translation is reported as the harmless side",
+            check(EditScope.SideAfter(onThisMachine: false, yourPublishedCopy: false) == EditSide.Local,
+                "and an action that changes no translation of yours is the harmless side",
                 "claiming to leave the published version alone and doing so is never a lie");
+
+            // 🔴 **THE case, and it was wrong in three products at once.** Taking a community
+            // translation lands entirely on this machine — and Both would say "your two copies are
+            // in step" at the exact moment a Main owner's own published version stops matching
+            // what they are running. The data is not theirs; there is no second side of theirs to
+            // be in step with.
+            check(EditScope.SideAfter(onThisMachine: true, yourPublishedCopy: false) == EditSide.Local,
+                "taking somebody else's translation is Local, however completely it lands here",
+                "what you hold is theirs — nothing published under your name moved");
+
+            // ⚠ Somebody with no account at all lands on that same line: no published copy of
+            // theirs exists, so there is nothing for the local file to be in step WITH. Anonymous
+            // is not a lesser case here, it is the same arithmetic — which is why this rule takes
+            // no "signed in" argument at all, and must never grow one.
+            check(EditScope.SideAfter(true, false) != EditScope.SideAfter(true, true),
+                "so a download tells a Main owner and a stranger two different things",
+                "one keeps their own published copy in step, the other does not — that IS the news");
 
             // The three answers are three, or the switch has a position that says nothing.
             check(EditScope.SideAfter(true, true) != EditScope.SideAfter(true, false)

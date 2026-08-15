@@ -175,21 +175,35 @@ namespace UnityGameTranslator.Common
         /// Server. The name invites it. These two questions do not — they are about the state
         /// afterwards, which is what the control tells a user.
         ///
-        /// ⚠ Neither true is not a side, it is an action that changes no translation. Reported as
-        /// <see cref="EditSide.Local"/> because that is the harmless answer: a screen that claims
-        /// to leave the published version alone and does is never a lie, where the reverse would be.
+        /// 🔴 **"Published" means YOUR published translation. Never somebody else's.** Taking a
+        /// community translation leaves this machine carrying it — and leaves the published copy
+        /// that belongs to you exactly as it was, or non-existent. So it is <see cref="Local"/>,
+        /// not <see cref="Both"/>, and calling it Both would reassure at the precise moment a Main
+        /// owner's own published version stops matching their machine.
+        ///
+        /// ⚠ That is the same rule the server enforces on writes: a Main may only write its own
+        /// translation, a Branch only its own branch, and holding somebody else's file makes you a
+        /// user of it, not its owner. The switch has to read the world the same way, or two parts
+        /// of one product describe one situation differently.
+        ///
+        /// ⚠ Neither true is not a side, it is an action that changes no translation of yours.
+        /// Reported as <see cref="EditSide.Local"/> because that is the harmless answer: a screen
+        /// that claims to leave the published version alone and does is never a lie, where the
+        /// reverse would be.
         /// </summary>
         /// <param name="onThisMachine">
         /// Once applied, the file in the game carries the result of this action.
         /// </param>
-        /// <param name="published">
-        /// Once applied, the translation on the site carries the result of this action. ⚠ True for
-        /// downloading as well as for publishing: afterwards the published version IS what is here.
+        /// <param name="yourPublishedCopy">
+        /// Once applied, the translation published UNDER YOUR OWN NAME carries the result. True for
+        /// publishing, and true for taking the latest of a lineage you lead. ⚠ FALSE for taking
+        /// somebody else's translation, however completely it lands on this machine: what you now
+        /// hold is theirs, and nothing of yours moved.
         /// </param>
-        public static EditSide SideAfter(bool onThisMachine, bool published)
+        public static EditSide SideAfter(bool onThisMachine, bool yourPublishedCopy)
         {
-            if (onThisMachine && published) return EditSide.Both;
-            if (published) return EditSide.Server;
+            if (onThisMachine && yourPublishedCopy) return EditSide.Both;
+            if (yourPublishedCopy) return EditSide.Server;
             return EditSide.Local;
         }
 
