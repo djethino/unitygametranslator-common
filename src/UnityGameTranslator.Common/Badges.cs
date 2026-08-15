@@ -40,6 +40,17 @@ namespace UnityGameTranslator.Common
         BranchesWaiting,
         MainMissing,
         Sync,
+
+        /// <summary>
+        /// The author's own "this is finished".
+        ///
+        /// 🔴 Distinct from <see cref="ReviewStage"/> and from <see cref="Completeness"/>, which
+        /// are MEASURED from the file. This one is a declaration: somebody decided it, and only
+        /// they can change it. A card that showed the measurements and hid the declaration left an
+        /// author unable to tell whether they still had to go and say it.
+        /// </summary>
+        Finished,
+
         ReviewStage,
         Completeness,
         Votes,
@@ -97,9 +108,14 @@ namespace UnityGameTranslator.Common
         /// <param name="completeness">Share of what the file met in game that is translated.</param>
         /// <param name="votes">What the site records. Zero means "none", which is not shown.</param>
         /// <param name="downloads">Same.</param>
+        /// <param name="finished">
+        /// The author's own declaration, or null when it is not known — an older server, or a
+        /// translation that is not ours to speak for. Null shows nothing rather than guessing.
+        /// </param>
         public static List<Badge> For(Publication publication, bool? isMain, int? branchesWaiting,
                                       bool mainMissing, SyncDirection? sync, ReviewStage? stage,
-                                      double? completeness, int votes, int downloads)
+                                      double? completeness, int votes, int downloads,
+                                      bool? finished = null)
         {
             var badges = new List<Badge>();
 
@@ -221,6 +237,27 @@ namespace UnityGameTranslator.Common
                         });
                         break;
                 }
+            }
+
+            // ── 3b. What its author says about it ─────────────────────────────
+            //
+            // ⚠ Only when it has been published. Before that there is nobody to declare it to, and
+            // a chip saying "in progress" on a private file would report a state that does not
+            // exist yet rather than one somebody chose.
+            if (finished.HasValue && publication == Publication.Published)
+            {
+                badges.Add(new Badge
+                {
+                    Text = finished.Value ? "Finished" : "Still writing",
+                    Kind = BadgeKind.Finished,
+
+                    // Quiet either way: this is a statement of intent, not a verdict on quality.
+                    // Colouring "finished" as good would rank two legitimate answers.
+                    Tone = finished.Value ? BadgeTone.Good : BadgeTone.Quiet,
+                    Tip = finished.Value
+                        ? "Its author says this translation is finished."
+                        : "Its author is still working on this one.",
+                });
             }
 
             // ── 4. What the file is made of ───────────────────────────────────
