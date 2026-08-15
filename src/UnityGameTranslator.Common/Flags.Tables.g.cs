@@ -4,7 +4,7 @@
 // Do not edit: change the catalogue and run that script. The build refuses to compile
 // when this file no longer matches the catalogue it names below.
 //
-// catalogue-sha256: 4ad6d417c652ceb15482f1ac1fc310d9682b4e7d7387dfb3dcbb6dad27fb163f
+// catalogue-sha256: 9d91bc5e47ff28aa547d22a37e30688b5c8571b28f05cb1972885db703b85f60
 // </auto-generated>
 
 namespace UnityGameTranslator.Common
@@ -53,7 +53,7 @@ namespace UnityGameTranslator.Common
             new[] { "fo", "wwwwbrrbwwwwwwww", "wwwwbrrbwwwwwwww", "wwwwbrrbwwwwwwww", "wwwwbrrbwwwwwwww", "bbbbbrrbbbbbbbbb", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "bbbbbrrbbbbbbbbb", "wwwwbrrbwwwwwwww", "wwwwbrrbwwwwwwww", "wwwwbrrbwwwwwwww" },
             new[] { "fr", "bbbbbwwwwwwrrrrr", "bbbbbwwwwwwrrrrr", "bbbbbwwwwwwrrrrr", "bbbbbwwwwwwrrrrr", "bbbbbwwwwwwrrrrr", "bbbbbwwwwwwrrrrr", "bbbbbwwwwwwrrrrr", "bbbbbwwwwwwrrrrr", "bbbbbwwwwwwrrrrr", "bbbbbwwwwwwrrrrr", "bbbbbwwwwwwrrrrr" },
             new[] { "fr-bre", "wwwwwwkkkkkkkkkk", "wkwkwwwwwwwwwwww", "wwwwwwkkkkkkkkkk", "wkwkwwwwwwwwwwww", "wwwwwwkkkkkkkkkk", "wwwwwwwwwwwwwwww", "kkkkkkkkkkkkkkkk", "wwwwwwwwwwwwwwww", "kkkkkkkkkkkkkkkk", "wwwwwwwwwwwwwwww", "kkkkkkkkkkkkkkkk" },
-            new[] { "fr-cor", "wwwwwwwwwwwwwwww", "wwwwwkkkkkkwwwww", "wwwwkkkkkkkkwwww", "wwwwwwwwwwwwwwww", "wwwkkkkkkkkkwwww", "wwkkkkkkkkkkwwww", "wwwkkkkkkkkkwwww", "wwwwkkkkkkkkwwww", "wwwwwkkkkkkwwwww", "wwwwwwkkkkwwwwww", "wwwwwwwwwwwwwwww" },
+            new[] { "fr-cor", "wwwwwwwwwwwwwwww", "wwwwwwkkkkwwwwww", "wwwwwwkkkkkwwwww", "wwwwwwwkkkkwwwww", "wwwwwkkwwkkwwwww", "wwwwwkkkkkkwwwww", "wwwwwkkkkkwwwwww", "wwwwwkkkkkwwwwww", "wwwwwwkkkkwwwwww", "wwwwwwwkkwwwwwww", "wwwwwwwwwwwwwwww" },
             new[] { "fr-oci", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrryyrrrrrrr", "rrrrrrryyrrrrrrr", "rrrryyryyryyrrrr", "rrrryyyyyyyyrrrr", "rrrryyryyryyrrrr", "rrrrrrryyrrrrrrr", "rrrrrrryyrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
             new[] { "gb", "rwwbbbwrrwbbbwwr", "wrrwbbwrrwbbwrrw", "bwwrwwwrrwwwrwwb", "bbbwrrwrrwrrwbbb", "wwwwwwwrrwwwwwww", "rrrrrrrrrrrrrrrr", "wwwwwwwrrwwwwwww", "bbbwrrwrrwrrwbbb", "bwwrwwwrrwwwrwwb", "wrrwbbwrrwbbwrrw", "rwwbbbwrrwbbbwwr" },
             new[] { "gb-cor", "kkkkkkkwwkkkkkkk", "kkkkkkkwwkkkkkkk", "kkkkkkkwwkkkkkkk", "kkkkkkkwwkkkkkkk", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "kkkkkkkwwkkkkkkk", "kkkkkkkwwkkkkkkk", "kkkkkkkwwkkkkkkk", "kkkkkkkwwkkkkkkk", "kkkkkkkwwkkkkkkk" },
@@ -97,16 +97,16 @@ namespace UnityGameTranslator.Common
             new[] { "ma", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrgrrrrrrr", "rrrrrrrgggrrrrrr", "rrrrrgggggggrrrr", "rrrrrrgggggrrrrr", "rrrrrrrgggrrrrrr", "rrrrrrrgrgrrrrrr", "rrrrrrgrrrrgrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
             new[] { "mg", "wwwwwrrrrrrrrrrr", "wwwwwrrrrrrrrrrr", "wwwwwrrrrrrrrrrr", "wwwwwrrrrrrrrrrr", "wwwwwrrrrrrrrrrr", "wwwwwrrrrrrrrrrr", "wwwwwggggggggggg", "wwwwwggggggggggg", "wwwwwggggggggggg", "wwwwwggggggggggg", "wwwwwggggggggggg" },
             new[] { "mk", "yyrrrrryyrrrrryy", "ryyrrrryyrrrryyr", "rrryyrryyrryyrrr", "rrrryyrrrryyrrrr", "rrrrrryyyyrrrrrr", "yyyyyyyyyyyyyyyy", "rrrrrryyyyrrrrrr", "rrrryyrrrryyrrrr", "rrryyrryyrryyrrr", "ryyrrrryyrrrryyr", "yyrrrrryyrrrrryy" },
-            new[] { "mm", "yyyyyyyyyyyyyyyy", "yyyyyyyyyyyyyyyy", "yyyyyyyywyyyyyyy", "yyyyyyywwwyyyyyy", "ggggwwwwwwwggggg", "ggggggwwwwwggggg", "gggggggwwwgggggg", "rrrrrrrwrwrrrrrr", "rrrrrrwrrrrwrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
+            new[] { "mm", "yyyyyyyyyyyyyyyy", "yyyyyyyyyyyyyyyy", "yyyyyyyyyyyyyyyy", "yyyyyyywwyyyyyyy", "gggggggwwggggggg", "gggggwwwwwwggggg", "ggggggwwwwgggggg", "rrrrrrwwwwrrrrrr", "rrrrrrwrrwrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
             new[] { "mn", "rrrrrrbbbbbrrrrr", "rrrrrrbbbbbrrrrr", "rryrrrbbbbbrrrrr", "rryrrrbbbbbrrrrr", "rryrrrbbbbbrrrrr", "rryrrrbbbbbrrrrr", "rryrrrbbbbbrrrrr", "rryrrrbbbbbrrrrr", "rryrrrbbbbbrrrrr", "rrrrrrbbbbbrrrrr", "rrrrrrbbbbbrrrrr" },
             new[] { "mt", "wwwwwwwwrrrrrrrr", "wwwwwwwwrrrrrrrr", "wwwwwwwwrrrrrrrr", "wwwwwwwwrrrrrrrr", "wwwwwwwwrrrrrrrr", "wwwwwwwwrrrrrrrr", "wwwwwwwwrrrrrrrr", "wwwwwwwwrrrrrrrr", "wwwwwwwwrrrrrrrr", "wwwwwwwwrrrrrrrr", "wwwwwwwwrrrrrrrr" },
             new[] { "my", "bbbybbbbrrrrrrrr", "bbybbybbwwwwwwww", "bybbyyybrrrrrrrr", "bbybbybbwwwwwwww", "bbbybbbbrrrrrrrr", "bbbbbbbbwwwwwwww", "rrrrrrrrrrrrrrrr", "wwwwwwwwwwwwwwww", "rrrrrrrrrrrrrrrr", "wwwwwwwwwwwwwwww", "rrrrrrrrrrrrrrrr" },
             new[] { "ng", "ggggggwwwwwggggg", "ggggggwwwwwggggg", "ggggggwwwwwggggg", "ggggggwwwwwggggg", "ggggggwwwwwggggg", "ggggggwwwwwggggg", "ggggggwwwwwggggg", "ggggggwwwwwggggg", "ggggggwwwwwggggg", "ggggggwwwwwggggg", "ggggggwwwwwggggg" },
             new[] { "nl", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb" },
             new[] { "nl-fr", "bbbbwwrwbbbbwwrw", "wbbbbwwwwbbbbwww", "wwbbbbwwwwbbbbww", "wwrbbbbwwwwbbbbw", "wwwwbbbbwwrwbbbb", "bwwwwbbbbwwwwbbb", "bbwwwwbbbbwwwwbb", "bbbwwwrbbbbwwwwb", "bbbbwwwwbbbbwwrw", "wbbbbwwwwbbbbwww", "wwbbbbwwwwbbbbww" },
-            new[] { "nl-li", "wwwwwwwwwwwwwwww", "wwrrwwwwwwwwwwww", "wwrrrwwwwwwwwwww", "wwrrrwwwwwwwwwww", "wwrrrrwwwwwwwwww", "bbrrrrbbbbbbbbbb", "bbrrrrbbbbbbbbbb", "yyrrryyyyyyyyyyy", "yyrryyyyyyyyyyyy", "yyryyyyyyyyyyyyy", "yyyyyyyyyyyyyyyy" },
+            new[] { "nl-li", "wwwwwwwwwwwwwwww", "wwrwwrwwwwwwwwww", "wwyrrrwwwwwwwwww", "wwrrrrwwwwwwwwww", "bbrrrbbbbbbbbbbb", "bbrrbrbbbbbbbbbb", "byyrrrbbbbbbbbbb", "yyyrrryyyyyyyyyy", "yyyryyryyyyyyyyy", "yyryyryyyyyyyyyy", "yyyyyyyyyyyyyyyy" },
             new[] { "no", "rrrrwbbwrrrrrrrr", "rrrrwbbwrrrrrrrr", "rrrrwbbwrrrrrrrr", "rrrrwbbwrrrrrrrr", "wwwwwbbwwwwwwwww", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "wwwwwbbwwwwwwwww", "rrrrwbbwrrrrrrrr", "rrrrwbbwrrrrrrrr", "rrrrwbbwrrrrrrrr" },
-            new[] { "np", "bb..............", "brrb............", "brrrrb..........", "brwrrrb.........", "brrrrrrrb.......", "brrrb...........", "brrrrrb.........", "brrwrrrb........", "brrrrrrrrrb.....", "brrrrrrrrrrrrb..", "bbbbbbbbbbbbbbb." },
+            new[] { "np", "bb..............", "brrr............", "brrrrrb.........", "brrwrrrrrb......", "brwwwwrrrrrrb...", "brrrrbb.........", "brrrrrrb........", "brwwwwrrrrb.....", "brwwwwrrrrrrb...", "brrrrrrrrrrrrb..", "brrrrrrrrrrrrbb." },
             new[] { "nz", "bwbrbwbbbbbbbbbb", "bbwrwbbbbbbbbbbb", "rrrrrrrbbbbrbbbb", "bbwrwbbbbbbbbbbb", "bwbrbwbbbbbbrbbb", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbrbbbbb", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbrbbb", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb" },
             new[] { "pe", "rrrrrrwwwwwrrrrr", "rrrrrrwwwwwrrrrr", "rrrrrrwwwwwrrrrr", "rrrrrrwwwwwrrrrr", "rrrrrrwwwwwrrrrr", "rrrrrrwwwwwrrrrr", "rrrrrrwwwwwrrrrr", "rrrrrrwwwwwrrrrr", "rrrrrrwwwwwrrrrr", "rrrrrrwwwwwrrrrr", "rrrrrrwwwwwrrrrr" },
             new[] { "ph", "wbbbbbbbbbbbbbbb", "wwbbbbbbbbbbbbbb", "wwwbbbbbbbbbbbbb", "wwywbbbbbbbbbbbb", "wyywwbbbbbbbbbbb", "wwywwwbbbbbbbbbb", "wyywwrrrrrrrrrrr", "wwwwrrrrrrrrrrrr", "wwwrrrrrrrrrrrrr", "wwrrrrrrrrrrrrrr", "wrrrrrrrrrrrrrrr" },
