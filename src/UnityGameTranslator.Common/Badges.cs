@@ -51,6 +51,19 @@ namespace UnityGameTranslator.Common
         /// </summary>
         Finished,
 
+        /// <summary>
+        /// Whether this lineage takes contributions — the Main's own decision.
+        ///
+        /// 🔴 Same nature as <see cref="Finished"/> and for the same reason: a DECLARATION, not
+        /// something measured. Only the Main can change it, and a card that hid it left a reader
+        /// discovering the answer at the moment they tried to contribute.
+        ///
+        /// ⚠ Both states are shown, and neither is a reproach. Keeping a translation open is work
+        /// nobody agreed to by publishing; "Solo work" says how somebody works, not that they
+        /// refused anybody.
+        /// </summary>
+        Contributions,
+
         ReviewStage,
         Completeness,
         Votes,
@@ -112,10 +125,16 @@ namespace UnityGameTranslator.Common
         /// The author's own declaration, or null when it is not known — an older server, or a
         /// translation that is not ours to speak for. Null shows nothing rather than guessing.
         /// </param>
+        /// <param name="acceptsContributions">
+        /// Whether the Main of this lineage takes branches. Null when unknown — an older server —
+        /// and unknown shows nothing: announcing "Solo work" on a server that never said so would
+        /// turn a missing field into somebody's decision.
+        /// </param>
         public static List<Badge> For(Publication publication, bool? isMain, int? branchesWaiting,
                                       bool mainMissing, SyncDirection? sync, ReviewStage? stage,
                                       double? completeness, int votes, int downloads,
-                                      bool? finished = null)
+                                      bool? finished = null,
+                                      bool? acceptsContributions = null)
         {
             var badges = new List<Badge>();
 
@@ -257,6 +276,25 @@ namespace UnityGameTranslator.Common
                     Tip = finished.Value
                         ? "Its author says this translation is finished."
                         : "Its author is still working on this one.",
+                });
+            }
+
+            // ⚠ Beside the author's other declaration, and published only: an unpublished file
+            // has no lineage for anybody to contribute to, so the question does not arise.
+            if (acceptsContributions.HasValue && publication == Publication.Published)
+            {
+                badges.Add(new Badge
+                {
+                    Text = acceptsContributions.Value ? "Accepts contributions" : "Solo work",
+                    Kind = BadgeKind.Contributions,
+
+                    // Quiet either way, exactly like Finished. Two legitimate ways of working;
+                    // colouring one as good would make the other read as a refusal.
+                    Tone = BadgeTone.Quiet,
+                    Tip = acceptsContributions.Value
+                        ? "Its author takes contributions: your work can be sent to them for review."
+                        : "Its author works alone on this one. You can still publish your own "
+                          + "version of it.",
                 });
             }
 
