@@ -129,6 +129,9 @@ namespace UnityGameTranslator.Common
         /// Whether the Main of this lineage takes branches. Null when unknown — an older server —
         /// and unknown shows nothing: announcing "Solo work" on a server that never said so would
         /// turn a missing field into somebody's decision.
+        ///
+        /// ⚠ Dropped outright when <paramref name="isMain"/> is false, so a caller holding a
+        /// branch may pass the lineage's answer without having to remember the rule.
         /// </param>
         public static List<Badge> For(Publication publication, bool? isMain, int? branchesWaiting,
                                       bool mainMissing, SyncDirection? sync, ReviewStage? stage,
@@ -281,7 +284,25 @@ namespace UnityGameTranslator.Common
 
             // ⚠ Beside the author's other declaration, and published only: an unpublished file
             // has no lineage for anybody to contribute to, so the question does not arise.
-            if (acceptsContributions.HasValue && publication == Publication.Published)
+            // 🔴 **Never on a branch, whatever the caller passes.** The decision belongs to the
+            // lineage's Main; rendered beside "Branch" it reads as a claim about THIS row, which
+            // its author cannot change and did not make. The website already hid it there, and a
+            // fact that reads one way on one product and another way on the next is a defect even
+            // when each is defensible alone.
+            //
+            // ⚠ `isMain == false` and not `!= true`: null means "the question has no answer here"
+            // — the community list passes null on purpose, because "Main" would be read as a claim
+            // about the reader — and every row in that list IS a Main whose decision is exactly
+            // what helps somebody choose.
+            // 🔴 **No publication guard.** It carried one — `publication == Published` — and that
+            // was importing a question about YOUR standing into a fact about the LINEAGE. Somebody
+            // holding a translation they downloaded is "Never published" here, and is exactly the
+            // person who needs to know whether their corrections can be sent back. They saw
+            // nothing; the chip appeared only on one's own work, which reads as nonsense.
+            //
+            // Nothing has to replace it: the value is null whenever no Main has decided, and null
+            // already shows nothing.
+            if (acceptsContributions.HasValue && isMain != false)
             {
                 badges.Add(new Badge
                 {
