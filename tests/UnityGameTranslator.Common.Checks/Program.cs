@@ -166,6 +166,9 @@ namespace UnityGameTranslator.Common.Checks
 
             Section("People");
             PeopleChecks.Run(Check);
+
+            Section("Backups");
+            BackupsChecks.Run(Check);
         }
 
         /// <summary>The stored-secret format, checked against its own specification.</summary>
