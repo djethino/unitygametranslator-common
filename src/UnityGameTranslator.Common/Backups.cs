@@ -239,7 +239,7 @@ namespace UnityGameTranslator.Common
             return count;
         }
 
-        /// <summary>Whether another deliberate copy may be taken.</summary>
+        /// <summary>Whether another deliberate backup may be taken.</summary>
         public static bool CanSaveAnother(IEnumerable<BackupEntry> all) =>
             SavedCount(all) < SavedKept;
 
@@ -251,9 +251,25 @@ namespace UnityGameTranslator.Common
         public static string? WhyCannotSave(IEnumerable<BackupEntry> all) =>
             CanSaveAnother(all)
                 ? null
-                : $"{SavedKept} copies kept. Delete one to make room.";
+                : $"{SavedKept} backups kept. Delete one to make room.";
 
         // ── Words ─────────────────────────────────────────────────────────
+
+        // 🔴 **ONE word for the thing, and it is "backup". One for the act, and it is "restore".**
+        //
+        // This file first said "copy" — "Save a copy", "Put it back", "Delete this copy?" — beside
+        // a screen called Backups, a folder called `backups` and a class called `Backups`. Two
+        // vocabularies for one thing, and the invented one said nothing: a copy OF WHAT, put back
+        // WHERE. Somebody reading this in their fourth language has to work out on their own that
+        // the two words mean the same thing, with nothing on the screen saying so.
+        //
+        // ⚠ And the pair is not decorative. "Backup" is the noun every program has used for thirty
+        // years and "restore" is its verb. Reaching for a fresher phrase swaps a word that needs no
+        // explaining for one that does.
+        //
+        // ⚠ **The screen carries the subject so the buttons do not repeat it**: it is named
+        // "Translation backups", therefore the verb is `Backup`, never `Backup translation`. See
+        // .claude/rules/name-things-in-ui.md — a button is a verb, not a sentence.
 
         /// <summary>
         /// What a row says about itself, in one line.
@@ -270,7 +286,7 @@ namespace UnityGameTranslator.Common
             switch (reason)
             {
                 case BackupReason.Saved:
-                    return "Saved by you";
+                    return "You asked for it";
 
                 case BackupReason.Installed:
                     return who is null
@@ -292,17 +308,23 @@ namespace UnityGameTranslator.Common
                     return "When the translation was removed";
 
                 case BackupReason.Restored:
-                    return "Before another copy was put back";
+                    return "Before another backup was restored";
 
                 default:
                     return "Before something replaced the translation";
             }
         }
 
-        /// <summary>Headings, so the two lists are named identically in both products.</summary>
-        public const string SavedHeading = "Saved by you";
+        /// <summary>
+        /// The name of the screen, in both products — and the reason its buttons read `Backup` and
+        /// `Restore` with nothing after them: the subject is written once, up here.
+        /// </summary>
+        public const string ScreenTitle = "Translation backups";
 
-        public const string AutomaticHeading = "Replaced automatically";
+        /// <summary>Headings, so the two lists are named identically in both products.</summary>
+        public const string SavedHeading = "Your backups";
+
+        public const string AutomaticHeading = "Automatic backups";
 
         /// <summary>Said beside the automatic list, so nobody counts on one staying.</summary>
         public const string AutomaticNote = "the oldest goes on its own";
@@ -312,7 +334,7 @@ namespace UnityGameTranslator.Common
         /// a list of their own work deserves to know that before they wonder.
         /// </summary>
         public const string PrivacyNote =
-            "Nothing here is sent anywhere. These stay in this game's folder.";
+            "Nothing here is sent anywhere. Backups stay in this game's folder.";
 
         // ── The one mistake that cannot be undone ─────────────────────────
 
@@ -354,7 +376,7 @@ namespace UnityGameTranslator.Common
         /// this project follows: "are you sure?" is a question nobody can answer usefully, because
         /// the person asking already knows what is at stake and the person answering does not.
         /// </summary>
-        public const string ConfirmRestoreTitle = "Put this copy back?";
+        public const string ConfirmRestoreTitle = "Restore this backup?";
 
         /// <param name="lines">What the copy holds.</param>
         /// <param name="nowLines">What the game holds today — the thing being replaced.</param>
@@ -363,29 +385,29 @@ namespace UnityGameTranslator.Common
         public static string ConfirmRestoreBody(int lines, int nowLines, string when,
                                                 bool anotherLineage)
         {
-            var body = $"This game will use the {lines}-line version from {when} instead of the "
-                     + $"{nowLines} lines it holds now.\n\nWhat it holds now is kept as a backup, "
-                     + "so you can come back to it.";
+            var body = $"This game will use the {lines}-line translation from {when} instead of "
+                     + $"the {nowLines} lines it holds now.\n\nWhat it holds now is backed up "
+                     + "first, so you can come back to it.";
 
             // ⚠ Repeated here even though the row already says it: a confirmation is read by
             // somebody who has decided, and this is the last moment the decision can change.
             if (anotherLineage)
             {
-                body += "\n\n⚠ This copy is " + AnotherLineageNote
+                body += "\n\n⚠ This backup is " + AnotherLineageNote
                       + ". Its lines and its history are not yours.";
             }
 
             return body;
         }
 
-        public const string ConfirmRestoreVerb = "Put it back";
+        public const string ConfirmRestoreVerb = "Restore";
 
-        public const string ConfirmDeleteTitle = "Delete this copy?";
+        public const string ConfirmDeleteTitle = "Delete this backup?";
 
         /// <param name="what">The name it carries, or a phrase naming its date. Never blank.</param>
         public static string ConfirmDeleteBody(string what, int lines) =>
-            $"This removes {what} and the {lines} lines it holds. It cannot be undone.\n\n"
-            + "Nothing else is touched: the translation in the game stays exactly as it is.";
+            $"This deletes the backup {what} and the {lines} lines it holds. It cannot be undone."
+            + "\n\nNothing else is touched: the translation in the game stays exactly as it is.";
 
         public const string ConfirmDeleteVerb = "Delete";
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace UnityGameTranslator.Common.Checks
 {
@@ -145,7 +146,7 @@ namespace UnityGameTranslator.Common.Checks
                 "the restore question names both sides in figures",
                 "'are you sure?' cannot be answered: the asker knows the stake, the answerer does not");
 
-            check(restore.Contains("kept as a backup"),
+            check(restore.Contains("backed up"),
                 "and says the current state survives it",
                 "the difference between a decision and a gamble");
 
@@ -162,7 +163,48 @@ namespace UnityGameTranslator.Common.Checks
 
             check(delete.Contains("stays exactly as it is"),
                 "and says the game is not touched",
-                "somebody deleting a copy must not fear for the translation they are playing");
+                "somebody deleting a backup must not fear for the translation they are playing");
+
+            // ── One word for the thing, one for the act ───────────────────
+            //
+            // 🔴 Checked rather than merely written down, because this is the drift that happened:
+            // a screen called Backups whose buttons said "Save a copy" and "Put it back". Somebody
+            // reading it in their fourth language had to work out on their own that "copy" and
+            // "backup" were the same thing, with nothing on the screen saying so.
+            var everyPhrase = new[]
+            {
+                Backups.ScreenTitle, Backups.SavedHeading, Backups.AutomaticHeading,
+                Backups.AutomaticNote, Backups.PrivacyNote, Backups.AnotherLineageNote,
+                Backups.ConfirmRestoreTitle, Backups.ConfirmRestoreVerb,
+                Backups.ConfirmDeleteTitle, Backups.ConfirmDeleteVerb,
+                restore, delete, Backups.WhyCannotSave(Full()) ?? "",
+                Backups.Describe(BackupReason.Saved), Backups.Describe(BackupReason.Restored),
+                Backups.Describe(BackupReason.Installed, "@someone"),
+                Backups.Describe(BackupReason.Unknown),
+            };
+
+            check(!everyPhrase.Any(p => p.IndexOf("copy", StringComparison.OrdinalIgnoreCase) >= 0
+                                     || p.IndexOf("copies", StringComparison.OrdinalIgnoreCase) >= 0),
+                "nothing shown to anybody calls a backup a \"copy\"",
+                "two words for one thing, and the invented one says neither what nor where");
+
+            check(Backups.ConfirmRestoreVerb == "Restore",
+                "the verb for putting one back is the one every program uses",
+                "\"Put it back\" is fresher and needs explaining; \"Restore\" needs none");
+
+            check(!Backups.ConfirmRestoreVerb.Contains(" ") && !Backups.ConfirmDeleteVerb.Contains(" "),
+                "and both verbs are one word",
+                "a button is a verb, not a sentence — the screen already names the subject");
+        }
+
+        /// <summary>A full saved list, so the refusal sentence can be read.</summary>
+        private static List<BackupEntry> Full()
+        {
+            var all = new List<BackupEntry>();
+            for (var i = 0; i < Backups.SavedKept; i++)
+                all.Add(new BackupEntry { Id = "saved-" + i, Reason = BackupReason.Saved });
+
+            return all;
         }
     }
 }
