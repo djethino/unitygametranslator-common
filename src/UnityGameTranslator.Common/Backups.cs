@@ -339,5 +339,54 @@ namespace UnityGameTranslator.Common
 
         /// <summary>Said on such a row, and it names what it is rather than shouting.</summary>
         public const string AnotherLineageNote = "a different translation, not an earlier yours";
+
+        // ── What is asked before an act that cannot be taken back ─────────
+
+        /// <summary>
+        /// The two questions asked before acting, worded HERE so the two products cannot drift.
+        ///
+        /// 🔴 One of them asked and the other did not: the mod confirmed a deletion, the manager
+        /// removed the copy on the click. Two screens onto the same folder, disagreeing about
+        /// whether losing work deserves a question — and the one that did not ask was the one
+        /// where a mis-click is cheapest to make and dearest to notice.
+        ///
+        /// ⚠ Both name what stands to be lost IN FIGURES, which is the rule every confirmation in
+        /// this project follows: "are you sure?" is a question nobody can answer usefully, because
+        /// the person asking already knows what is at stake and the person answering does not.
+        /// </summary>
+        public const string ConfirmRestoreTitle = "Put this copy back?";
+
+        /// <param name="lines">What the copy holds.</param>
+        /// <param name="nowLines">What the game holds today — the thing being replaced.</param>
+        /// <param name="when">When the copy was taken, already written the way the row writes it.</param>
+        /// <param name="anotherLineage">Whether it belongs to a different translation entirely.</param>
+        public static string ConfirmRestoreBody(int lines, int nowLines, string when,
+                                                bool anotherLineage)
+        {
+            var body = $"This game will use the {lines}-line version from {when} instead of the "
+                     + $"{nowLines} lines it holds now.\n\nWhat it holds now is kept as a backup, "
+                     + "so you can come back to it.";
+
+            // ⚠ Repeated here even though the row already says it: a confirmation is read by
+            // somebody who has decided, and this is the last moment the decision can change.
+            if (anotherLineage)
+            {
+                body += "\n\n⚠ This copy is " + AnotherLineageNote
+                      + ". Its lines and its history are not yours.";
+            }
+
+            return body;
+        }
+
+        public const string ConfirmRestoreVerb = "Put it back";
+
+        public const string ConfirmDeleteTitle = "Delete this copy?";
+
+        /// <param name="what">The name it carries, or a phrase naming its date. Never blank.</param>
+        public static string ConfirmDeleteBody(string what, int lines) =>
+            $"This removes {what} and the {lines} lines it holds. It cannot be undone.\n\n"
+            + "Nothing else is touched: the translation in the game stays exactly as it is.";
+
+        public const string ConfirmDeleteVerb = "Delete";
     }
 }

@@ -137,6 +137,32 @@ namespace UnityGameTranslator.Common.Checks
             check(!Backups.IsAnotherLineage(null, "bbb") && !Backups.IsAnotherLineage("aaa", null),
                 "an unknown uuid accuses nobody",
                 "warning on silence teaches people to ignore the warning");
+
+            // ── What is asked before acting ───────────────────────────────
+            var restore = Backups.ConfirmRestoreBody(3227, 3180, "17 Aug 14:32", false);
+
+            check(restore.Contains("3227") && restore.Contains("3180"),
+                "the restore question names both sides in figures",
+                "'are you sure?' cannot be answered: the asker knows the stake, the answerer does not");
+
+            check(restore.Contains("kept as a backup"),
+                "and says the current state survives it",
+                "the difference between a decision and a gamble");
+
+            check(!restore.Contains(Backups.AnotherLineageNote)
+                  && Backups.ConfirmRestoreBody(1, 1, "x", true).Contains(Backups.AnotherLineageNote),
+                "the foreign-lineage warning appears only when it applies",
+                "a warning shown always is a warning nobody reads");
+
+            var delete = Backups.ConfirmDeleteBody("\"before the AI pass\"", 3227);
+
+            check(delete.Contains("3227") && delete.Contains("cannot be undone"),
+                "the delete question names the loss and that it is final",
+                "this is the one act here nothing puts back");
+
+            check(delete.Contains("stays exactly as it is"),
+                "and says the game is not touched",
+                "somebody deleting a copy must not fear for the translation they are playing");
         }
     }
 }
