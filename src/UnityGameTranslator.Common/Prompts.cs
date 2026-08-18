@@ -188,6 +188,70 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// A second pass that asks a model to mark a translation out of ten — **the bench only**,
+        /// never a game.
+        ///
+        /// The job is deliberately easier than translating: nothing to produce, two texts to
+        /// compare in languages it already reads. That is what makes it worth asking of the small
+        /// models this project runs on.
+        ///
+        /// 🔴 **What it is asked to judge is exactly what no test can see.** Markers, punctuation
+        /// and technical terms are checked mechanically, case by case; handing them to a judge
+        /// would measure the same thing twice and let a structural failure sink a mark that is
+        /// supposed to be about language. So the criteria are the five the machine is blind to:
+        /// right language, faithful meaning, tone kept, comparable length, natural reading.
+        ///
+        /// ⚠ **But the markers must still be EXPLAINED to it**, or it reads `[!v*0]` on both sides,
+        /// takes it for gibberish and marks a correct translation down.
+        ///
+        /// 🔴 **Three limits, and they decide how the number may be read.**
+        /// 1. **A judge cannot mark a language it does not have.** The model that wrote fluent
+        ///    French believing it was writing Breton would have given itself a good mark, because
+        ///    it would have re-read French believing it was re-reading Breton. The mark is least
+        ///    trustworthy precisely where it would be most useful. No prompt fixes that.
+        /// 2. Requests carry no memory, so the judge does not know the translation is its own —
+        ///    but a model still prefers text that is stylistically familiar to it. A bias without
+        ///    recognition, which is why the bench can point the judge at a different model: to
+        ///    MEASURE that gap, not to pretend it has been corrected.
+        /// 3. Small models bunch everything between 6 and 8. What carries meaning is the gap
+        ///    between two models or two versions of the prompt, never one mark on its own.
+        /// ⇒ Hence "self-assessment" wherever this is shown: the word says the limit out loud.
+        ///
+        /// ⚠ The answer must be a bare number. Anything else is refused by the caller rather than
+        /// repaired — a default mark would be a measurement nobody made.
+        /// </summary>
+        public static string ForRating(string sourceLanguage, string targetLanguage, Markers markers)
+        {
+            var prompt = new StringBuilder();
+
+            prompt.AppendLine("=== CONTEXT ===");
+            prompt.AppendLine($"Rating one translation of video game text, from {sourceLanguage} to {targetLanguage}.");
+            prompt.AppendLine("You are not translating. You are comparing two texts.");
+            prompt.AppendLine();
+
+            prompt.AppendLine("=== WHAT TO JUDGE ===");
+            prompt.AppendLine($"- Is the translation written in {targetLanguage}?");
+            prompt.AppendLine("- Does it say what the source says?");
+            prompt.AppendLine("- Does it keep the tone of the source?");
+            prompt.AppendLine("- Is it about as long as the source?");
+            prompt.AppendLine("- Does it read naturally?");
+            prompt.AppendLine();
+
+            if (markers.LineBreaks || markers.Tags || markers.Numbers || markers.Variables)
+            {
+                prompt.AppendLine("=== IGNORE THESE ===");
+                prompt.AppendLine("[!nl], [!t*0], [!v*0], [!STR*0] and the like are slots the game fills in.");
+                prompt.AppendLine("They are checked elsewhere. Do not judge them.");
+                prompt.AppendLine();
+            }
+
+            prompt.AppendLine("=== ANSWER ===");
+            prompt.Append("Reply with one number from 0 to 10. Nothing else.");
+
+            return prompt.ToString();
+        }
+
+        /// <summary>
         /// The three rules both jobs share: which language, which tone, which length.
         ///
         /// 🔴 **The target language is NAMED, not referred to.** It used to read "correct in target
@@ -224,16 +288,31 @@ namespace UnityGameTranslator.Common
             prompt.AppendLine("- Do not add punctuation if not in the source to translate");
         }
 
+        /// <summary>
+        /// One rule per kind of placeholder the text really carries.
+        ///
+        /// ⚠ **Each one says what it REPLACES, not merely that it must survive**, and that costs no
+        /// extra line. `[!v*0]` used to be described as nothing at all — "placeholders" — and `[!nl]`
+        /// no better. Naming them buys real things: knowing `[!v*0]` stands for a number lets the
+        /// model agree the plural around it, and knowing `[!STR*0]` is text the game drops in is
+        /// exactly what Korean needs — 은/는 and 이/가 are chosen by the last sound of the word
+        /// before them, which the marker hides — and what French, Spanish or Arabic need to avoid
+        /// guessing a gender. A model told this can reach for a neutral turn of phrase instead.
+        ///
+        /// ⚠ `[!STR*N]` is **text**, deliberately not "a name": it holds whatever the game puts in
+        /// a string variable — an item, a place, a turn of phrase. Saying "name" would be narrower
+        /// than the truth and invite the model to treat everything else as translatable.
+        /// </summary>
         private static void AppendMarkerRules(StringBuilder prompt, Markers markers)
         {
             if (markers.LineBreaks)
-                prompt.AppendLine("- IMPORTANT: Keep [!nl] placeholders exactly where they are, do not remove or move them");
+                prompt.AppendLine("- IMPORTANT: [!nl] is a line break: keep it exactly where it is, do not remove or move it");
             if (markers.Tags)
-                prompt.AppendLine("- IMPORTANT: Keep [!t*0], [!t*1], etc. tag placeholders exactly as-is, do not modify or remove them");
+                prompt.AppendLine("- IMPORTANT: [!t*0], [!t*1], etc. are formatting tags: keep them exactly as-is, do not modify or remove them");
             if (markers.Numbers)
-                prompt.AppendLine("- IMPORTANT: Keep [!v*0], [!v*1], etc. placeholders exactly as-is, do not modify them");
+                prompt.AppendLine("- IMPORTANT: [!v*0], [!v*1], etc. are numbers: keep them exactly as-is, do not modify them");
             if (markers.Variables)
-                prompt.AppendLine("- IMPORTANT: Keep [!STR*0], [!STR*1], etc. string variable placeholders exactly as-is, do not translate or modify them");
+                prompt.AppendLine("- IMPORTANT: [!STR*0], [!STR*1], etc. are text the game inserts: keep them exactly as-is, do not translate them");
         }
 
         private static void AppendSingleWordClosing(StringBuilder prompt, TextType textType)

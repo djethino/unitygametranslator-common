@@ -88,6 +88,45 @@ namespace UnityGameTranslator.Common.Checks
             check(full.Contains("[!nl]") && full.Contains("[!t*0]") && full.Contains("[!v*0]") && full.Contains("[!STR*0]"),
                 "and one rule each for those it does", "four kinds, four sentences");
 
+            // ⚠ Each rule says what the marker REPLACES. "[!v*0]" used to be described as nothing.
+            check(full.Contains("[!nl] is a line break"), "the line break is named", "so its place in the text means something");
+            check(full.Contains("are formatting tags"), "the tags are named", "");
+            check(full.Contains("[!v*0], [!v*1], etc. are numbers"), "and the numbers are named",
+                "a model that knows it is a number can agree the plural around it");
+            check(full.Contains("are text the game inserts"), "and the inserted text is named",
+                "what Korean particles and gendered languages need in order not to guess");
+            check(!full.Contains("are names"), "which is NOT called a name",
+                "it holds an item, a place or a turn of phrase just as often");
+
+            // The rating pass: the bench's second question, never a game's.
+            string rate = Prompts.ForRating("English", "French", all);
+            check(rate.Contains("You are not translating"), "the judge is told it is not translating",
+                "the whole reason a small model can do this at all");
+            check(rate.Contains("Is the translation written in French?"), "it is asked about the language itself",
+                "the failure a structural check cannot see: fluent prose in the wrong language");
+            check(rate.Contains("tone") && rate.Contains("about as long") && rate.Contains("naturally"),
+                "and about tone, length and naturalness", "the three rules no test can verify");
+            check(rate.Contains("Do not judge them"), "told to ignore the markers",
+                "they are checked mechanically; judging them twice would sink a language mark on a structural fault");
+            check(!Prompts.ForRating("English", "French", none).Contains("IGNORE THESE"),
+                "and that block is absent when the text has no markers", "naming one invites a model to look for it");
+            check(rate.TrimEnd().EndsWith("Nothing else.", StringComparison.Ordinal),
+                "it ends on the shape of the answer", "the last thing read is the thing to do");
+
+            // Reading a mark: tolerant about the wrapping, strict about the number.
+            check(Answers.ReadRating("7") == 7, "a bare number is a mark", "what we asked for");
+            check(Answers.ReadRating("7/10") == 7, "and so is a mark out of ten", "the ten is our own scale, not a second number");
+            check(Answers.ReadRating("**8**") == 8 && Answers.ReadRating("Rating: 8") == 8,
+                "wrapped or announced, still one mark", "models dress their answers");
+            check(Answers.ReadRating("7.5") == 8 && Answers.ReadRating("7,5") == 8,
+                "a decimal is rounded, not refused", "a model answering 7.5 understood the question");
+            check(Answers.ReadRating("I would say 7 or 8") is null,
+                "two numbers is no mark at all", "picking one would be inventing which was meant");
+            check(Answers.ReadRating("11") is null && Answers.ReadRating("-1") is null,
+                "and out of range is no mark either", "0 and 10 both mean something, 11 means it misread the question");
+            check(Answers.ReadRating("") is null && Answers.ReadRating(null) is null,
+                "nothing in, no mark out", "an empty cell says the model would not answer");
+
             // Reading an answer: three outcomes, and the third is the point.
             check(Answers.Read(Prompts.SkipMarker) == AnswerKind.Skip,
                 "the marker alone is a refusal", "the caller keeps the original and tags it S");

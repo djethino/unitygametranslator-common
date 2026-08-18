@@ -38,6 +38,43 @@ namespace UnityGameTranslator.Common
         public const string SkipMarker = "AxNoTranslateXa";
 
         /// <summary>
+        /// Read a mark out of ten from a rating pass, or null when there is not one to read.
+        ///
+        /// 🔴 **Null rather than a default.** A mark nobody produced, sitting in a column of marks
+        /// that were, is a measurement invented by the tool — and it would land in the middle of
+        /// the range, exactly where a real bad mark would have shown something. Better an empty
+        /// cell that says "this model would not answer the question", which is itself a result.
+        ///
+        /// ⚠ Deliberately tolerant about what surrounds the number and strict about the number:
+        /// models answer "7", "7/10", "**7**", "Rating: 7". All of those are an answer to the
+        /// question. What is refused is a sentence with several numbers in it, where picking one
+        /// would be guessing which one was meant.
+        ///
+        /// ⚠ A decimal is read and rounded rather than refused — a model that answers 7.5 has
+        /// understood the question perfectly well.
+        /// </summary>
+        public static int? ReadRating(string? answer)
+        {
+            if (answer == null) return null;
+
+            // "7/10" is one answer, not two numbers: the ten is the scale we asked for.
+            string text = Regex.Replace(answer, @"/\s*10\b", " ");
+
+            var numbers = Regex.Matches(text, @"-?\d+(?:[.,]\d+)?");
+            if (numbers.Count != 1) return null;
+
+            string found = numbers[0].Value.Replace(',', '.');
+            if (!double.TryParse(found, System.Globalization.NumberStyles.Float,
+                                 System.Globalization.CultureInfo.InvariantCulture, out double value))
+                return null;
+
+            // Out of range is a misread question, not a low mark: 0 and 10 both mean something.
+            if (value < 0 || value > 10) return null;
+
+            return (int)Math.Round(value, MidpointRounding.AwayFromZero);
+        }
+
+        /// <summary>
         /// Read an answer: a translation, a refusal, or something to throw away.
         ///
         /// ⚠ A refusal is the marker ALONE. What follows depends on it: the caller keeps the
