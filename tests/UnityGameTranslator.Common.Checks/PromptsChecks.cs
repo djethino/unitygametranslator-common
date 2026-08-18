@@ -42,6 +42,30 @@ namespace UnityGameTranslator.Common.Checks
             check(Game(TextType.Phrase, context: "grim dungeon crawler").Contains("grim dungeon crawler"),
                 "and the author's own words when they did", "they know their game");
 
+            // The game's own name, when the caller has one worth sending.
+            check(Game(TextType.Phrase, name: "Pixel Starships").Contains("the video game \"Pixel Starships\""),
+                "the game is named when we know it", "a model that knows it can draw on its vocabulary");
+            check(Game(TextType.Phrase).Contains("Translating video game ("),
+                "and plainly \"video game\" when we do not", "an empty pair of quotes would say we knew");
+
+            // ⚠ The three shared rules. Each is here because its predecessor failed in the field.
+            check(Game(TextType.Phrase).Contains("- Write natural, correct French"),
+                "the target language is named inside the rules too",
+                "\"correct in target language\" is satisfiable while writing another language entirely");
+            check(Game(TextType.Phrase).Contains("- Keep the tone of the source"),
+                "the tone is asked for", "a translation that changes register betrays the source");
+            check(!Game(TextType.Phrase).Contains("formal, casual"),
+                "without listing tones", "a list reads as closed and the model picks from it");
+            check(Game(TextType.Phrase).Contains("- Keep it about as long as the source"),
+                "length is relative to the source", "the only rule that holds across every script");
+            check(!Game(TextType.Phrase).Contains("concise for UI"),
+                "and never asserts the text is UI", "false for a character name, a place or a line of dialogue");
+
+            // ⚠ The classification must not reach the rules — it cannot tell "Kyoto" from "OK".
+            check(Game(TextType.SingleWord).Contains("- Keep it about as long as the source")
+                  && Game(TextType.Paragraph).Contains("- Keep it about as long as the source"),
+                "the same length rule whatever the shape", "sorting by shape cannot say what a text IS");
+
             // The strict-source block, and what it is gated on.
             check(Game(TextType.Phrase, source: "English", strict: true).StartsWith("=== CRITICAL RULE ===", StringComparison.Ordinal),
                 "strict source comes first", "it decides whether to translate at all");
@@ -103,10 +127,18 @@ namespace UnityGameTranslator.Common.Checks
             check(ui.Contains("API, URL, UUID, JSON, AI") && ui.Contains("Ctrl, Alt, Shift"),
                 "it protects this tool's own vocabulary", "not a game's settings");
             check(!ui.Contains("VSync"), "and not the other way round", "a game's rules would be noise here");
+
+            // ⚠ The three shared rules are shared: a rule kept in one prompt and not the other is
+            // a rule that drifts the day someone edits one of them.
+            check(ui.Contains("- Write natural, correct French")
+                  && ui.Contains("- Keep the tone of the source")
+                  && ui.Contains("- Keep it about as long as the source"),
+                "and it carries the same three shared rules", "one prompt fixed alone drifts from the other");
         }
 
         private static string Game(TextType textType, string? source = null, string? context = null,
-                                   bool strict = false, Prompts.Markers markers = default) =>
-            Prompts.ForGameText("French", source, context, strict, textType, markers);
+                                   bool strict = false, Prompts.Markers markers = default,
+                                   string? name = null) =>
+            Prompts.ForGameText("French", source, name, context, strict, textType, markers);
     }
 }

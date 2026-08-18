@@ -97,6 +97,14 @@ namespace UnityGameTranslator.Common
         /// </summary>
         /// <param name="targetLanguage">Where it is going. Always known.</param>
         /// <param name="sourceLanguage">Where it comes from, or null when nobody said.</param>
+        /// <param name="gameName">
+        /// The game's own name, or null when we do not have one worth sending.
+        ///
+        /// ⚠ **Only a name the game states about itself** — Unity's `productName`. Never a folder
+        /// name: those are routinely `HyperEchelon6vYY3` or `Forsaken.Frontiers.v1510`, which teach
+        /// a model nothing and invite it to invent something from the noise. The caller decides;
+        /// this builder only writes what it is handed.
+        /// </param>
         /// <param name="gameContext">What kind of game, in the author's words. Empty falls back.</param>
         /// <param name="strictSourceLanguage">
         /// Whether a text that is NOT in the source language should come back as
@@ -106,6 +114,7 @@ namespace UnityGameTranslator.Common
         public static string ForGameText(
             string targetLanguage,
             string? sourceLanguage,
+            string? gameName,
             string? gameContext,
             bool strictSourceLanguage,
             TextType textType,
@@ -116,6 +125,13 @@ namespace UnityGameTranslator.Common
             string context = string.IsNullOrEmpty(gameContext)
                 ? "video game UI, menus and dialogues"
                 : gameContext!;
+
+            // Named when we have one, so a model that knows the game can draw on its vocabulary.
+            // Stated flatly, as a label — not "you know this game", which is what invites a small
+            // model to invent a universe for one it has never heard of.
+            string subject = string.IsNullOrEmpty(gameName)
+                ? "video game"
+                : $"the video game \"{gameName}\"";
 
             if (strictSourceLanguage && sourceLanguage != null)
             {
@@ -128,15 +144,13 @@ namespace UnityGameTranslator.Common
 
             prompt.AppendLine("=== CONTEXT ===");
             prompt.AppendLine(sourceLanguage != null
-                ? $"Translating video game ({context}) from {sourceLanguage} to {targetLanguage}."
-                : $"Translating video game ({context}) to {targetLanguage}.");
+                ? $"Translating {subject} ({context}) from {sourceLanguage} to {targetLanguage}."
+                : $"Translating {subject} ({context}) to {targetLanguage}.");
             prompt.AppendLine();
 
             prompt.AppendLine("=== TRANSLATION RULES ===");
             prompt.AppendLine("- Output the translation only, no explanation");
-            prompt.AppendLine("- Translation must be correct in target language");
-            prompt.AppendLine("- Keep it concise for UI");
-            prompt.AppendLine("- Do not add punctuation if not in the source to translate");
+            AppendCommonRules(prompt, targetLanguage);
             prompt.AppendLine("- Keep unchanged: keyboard keys (Tab, Esc, Space...), technical settings (VSync, Auto)");
 
             AppendMarkerRules(prompt, markers);
@@ -163,9 +177,7 @@ namespace UnityGameTranslator.Common
 
             prompt.AppendLine("=== TRANSLATION RULES ===");
             prompt.AppendLine("- Output the translation only, no explanation");
-            prompt.AppendLine("- Translation must be understandable and correct in target language");
-            prompt.AppendLine("- Keep it concise for UI");
-            prompt.AppendLine("- Do not add punctuation if not in the source to translate");
+            AppendCommonRules(prompt, targetLanguage);
             prompt.AppendLine("- Keep technical terms unchanged: API, URL, UUID, JSON, AI");
             prompt.AppendLine("- Keep keyboard shortcuts as-is: Ctrl, Alt, Shift, F1-F12, Tab, Esc");
 
@@ -173,6 +185,43 @@ namespace UnityGameTranslator.Common
             AppendSingleWordClosing(prompt, textType);
 
             return prompt.ToString();
+        }
+
+        /// <summary>
+        /// The three rules both jobs share: which language, which tone, which length.
+        ///
+        /// 🔴 **The target language is NAMED, not referred to.** It used to read "correct in target
+        /// language", which a small model can satisfy while writing something else entirely — asked
+        /// for Breton, one wrote fluent French for every long line and no rule was broken. Naming it
+        /// makes the language appear twice in the prompt, which is the cheapest hold a small model
+        /// gives you.
+        ///
+        /// ⚠ **The tone rule carries NO examples, deliberately.** "formal, casual or playful" reads
+        /// as a closed list: the model picks one of the three instead of keeping what is there, and
+        /// ironic, solemn, childish or menacing quietly disappear.
+        ///
+        /// 🔴 **Length is measured against the SOURCE, never against a threshold.** This replaced
+        /// "Keep it concise for UI", which asserted a nature — *this is UI* — that is false for a
+        /// character name, a place, an item or a line of dialogue. A relative rule needs no such
+        /// guess, and it is the only formulation that survives every script: three Latin words and
+        /// three ideograms are not the same amount of text, so any counting rule we wrote would be
+        /// wrong somewhere. The model knows both languages; it converts better than a number would.
+        ///
+        /// ⚠ Which is also why <see cref="TextType"/> does NOT branch here. Sorting a text by shape
+        /// to guess what it is cannot be done reliably — "Kyoto" and "OK" have the same shape — and
+        /// a relative rule makes the guess unnecessary.
+        ///
+        /// ⚠ And why the model is not asked to classify the text itself either: it answers with the
+        /// verdict in the line — `UI label: Annuler` — and that line is what gets written into the
+        /// game. Same reason reasoning is turned off through a parameter rather than by adding a
+        /// marker to the text (see the mod's request builder).
+        /// </summary>
+        private static void AppendCommonRules(StringBuilder prompt, string targetLanguage)
+        {
+            prompt.AppendLine($"- Write natural, correct {targetLanguage}");
+            prompt.AppendLine("- Keep the tone of the source");
+            prompt.AppendLine("- Keep it about as long as the source");
+            prompt.AppendLine("- Do not add punctuation if not in the source to translate");
         }
 
         private static void AppendMarkerRules(StringBuilder prompt, Markers markers)
