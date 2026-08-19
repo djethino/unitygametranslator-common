@@ -65,6 +65,28 @@ namespace UnityGameTranslator.Common.Checks
                   "Describe(empty message) still says something",
                   "an exception with no message is still a failure");
 
+            // The short form goes INSIDE a sentence, so it must not be one itself.
+            foreach (ConnectionProblem p in Enum.GetValues(typeof(ConnectionProblem)))
+            {
+                string? said = Connectivity.Summarize(p);
+                if (string.IsNullOrEmpty(said)) continue;
+
+                check(said![0] == char.ToLowerInvariant(said[0]),
+                      $"Summarize({p}) starts lower case",
+                      "it is embedded mid-sentence, not started with");
+                check(!said.EndsWith("."),
+                      $"Summarize({p}) has no full stop",
+                      "the sentence around it owns the punctuation");
+                check(said.IndexOf('.') < 0,
+                      $"Summarize({p}) is one phrase",
+                      "two sentences inside a parenthesis is what this form exists to avoid");
+            }
+
+            check(Connectivity.Summarize(Wrapped(SocketError.AccessDenied)) == "blocked by this computer",
+                  "Summarize(blocked) names the machine", "the reader checks their own firewall, not ours");
+            check(Connectivity.Summarize(new InvalidOperationException("raw")) == "raw",
+                  "Summarize(unknown) falls back to the raw message", "better the original than a guess");
+
             // The wording is read by players in their fourth language: no mechanism words.
             foreach (ConnectionProblem p in Enum.GetValues(typeof(ConnectionProblem)))
             {

@@ -161,6 +161,39 @@ namespace UnityGameTranslator.Common
         public static string? Explain(Exception? error) => Explain(Classify(error));
 
         /// <summary>
+        /// A few words for the cause, to sit INSIDE a larger sentence.
+        ///
+        /// ⚠ Its own form rather than a truncation of <see cref="Explain"/>: the long one is two
+        /// sentences of advice, and screens that embed a reason — "could not check for a newer
+        /// version (…)" — need a noun phrase, not a paragraph. Cutting the long one at the first
+        /// full stop would give a sentence with a capital letter in the middle of another.
+        /// </summary>
+        public static string? Summarize(ConnectionProblem problem)
+        {
+            switch (problem)
+            {
+                case ConnectionProblem.BlockedLocally:  return "blocked by this computer";
+                case ConnectionProblem.NoNetwork:       return "no network connection";
+                case ConnectionProblem.AddressNotFound: return "the address could not be found";
+                case ConnectionProblem.Refused:         return "the server refused the connection";
+                case ConnectionProblem.NoAnswer:        return "no answer in time";
+                case ConnectionProblem.SecureHandshake: return "the secure connection failed";
+                case ConnectionProblem.Interrupted:     return "the connection was cut";
+                default:                                return null;
+            }
+        }
+
+        /// <summary>A few words for this exception, or its raw message when it cannot be named.</summary>
+        public static string Summarize(Exception? error)
+        {
+            string? said = Summarize(Classify(error));
+            if (!string.IsNullOrEmpty(said)) return said!;
+
+            string? raw = error?.Message;
+            return string.IsNullOrEmpty(raw) ? "the connection failed" : raw!;
+        }
+
+        /// <summary>
         /// What to show: the sentence when we have one, the raw message when we do not.
         ///
         /// ⚠ Never returns an empty string — a failure that displays as nothing reads as a failure
