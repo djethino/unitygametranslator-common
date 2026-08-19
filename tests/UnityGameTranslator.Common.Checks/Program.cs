@@ -40,6 +40,7 @@ namespace UnityGameTranslator.Common.Checks
             PlaceholderRules();
             PromptWording();
             EndpointAddresses();
+            WhyItNeverArrived();
             ProviderNegotiation();
             ProductColours();
 
@@ -115,6 +116,13 @@ namespace UnityGameTranslator.Common.Checks
         {
             Section("Negotiation");
             NegotiationChecks.Run(Check);
+        }
+
+        /// <summary>Why a request never arrived, in words that point at the right culprit.</summary>
+        private static void WhyItNeverArrived()
+        {
+            Section("Connectivity");
+            ConnectivityChecks.Run(Check);
         }
 
         /// <summary>Where a request really goes, from whatever address somebody pasted.</summary>
