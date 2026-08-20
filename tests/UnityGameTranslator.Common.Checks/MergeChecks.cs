@@ -25,12 +25,22 @@ namespace UnityGameTranslator.Common.Checks
             check(Merge.PriorityOf("H", "") < Merge.PriorityOf("A", "x"),
                 "an empty human line is the BOTTOM, not the top",
                 "it is a captured line waiting for a translation, so any translation beats it");
-            check(Merge.PriorityOf("S", "x") > Merge.PriorityOf("H", "x")
-                  && Merge.PriorityOf("M", "x") > Merge.PriorityOf("H", "x"),
-                "a refusal and the mod's own interface sit above everything",
-                "they are statements about the file, not translations of the game");
+            check(Merge.PriorityOf("S", "x") == Merge.PriorityOf("H", "x"),
+                "a refusal stands level with a line written by hand",
+                "one person wrote it, another ruled it must not be written: both are decisions, "
+                + "and neither outranks the other");
+            check(Merge.PriorityOf("S", "x") > Merge.PriorityOf("V", "x"),
+                "and both outrank anything a machine produced",
+                "a refusal is a reading, a machine line is not");
             check(Merge.PriorityOf(null, "x") == Merge.PriorityOf("A", "x"),
                 "no tag reads as A", "the older file format wrote none and meant exactly that");
+
+            // ── The mod's own interface is not a line of the game ─────────────
+            check(!Merge.IsGameLine("M") && Merge.IsGameLine("H") && Merge.IsGameLine("S"),
+                "M is not a line of the game", "it is the mod's own interface, carried but not weighed");
+            check(!Merge.CanReplace(Line("Salut", "M"), (TranslationLine?)null),
+                "and it does not install itself where a game line is missing",
+                "an absent translation is not an invitation for the interface to take its place");
 
             // ⚠ The immutable pair cannot be replaced even by something that outranks it, which is
             // a different statement from the ladder and the one a priority comparison alone loses.
@@ -40,6 +50,39 @@ namespace UnityGameTranslator.Common.Checks
                 "nor a line of the mod's own interface", "same reason");
             check(Merge.CanReplace(Line("x", "A"), (TranslationLine?)null),
                 "anything replaces nothing", "an absent line is not a line to protect");
+
+            // ── A contribution against a Main: the Main keeps its own on a tie ─
+            //
+            // ⚠ Written from the rule as the owner stated it, case by case. These four are the ones
+            // a ladder alone gets wrong, and each of them is somebody's work being taken or kept.
+            check(Merge.ContributionWins(null, Line("Bonjour", "A")),
+                "a key the Main does not have at all is offered",
+                "there is no question in that case, which is why it is the one taken outright");
+
+            check(!Merge.ContributionWins(Line("Bonjour", "H"), Line("Salut", "H")),
+                "a hand-written line does not displace the Main's own",
+                "equal standing, and the Main is the one who publishes");
+            check(!Merge.ContributionWins(Line("Bonjour", "H"), Line("Salut", "S")),
+                "nor does a refusal displace it", "same tie, from the other side");
+            check(!Merge.ContributionWins(Line("", "S"), Line("Salut", "H")),
+                "nor does a hand-written line displace the Main's refusal",
+                "the Main ruled this line must not be translated, and that ruling is theirs");
+
+            check(Merge.ContributionWins(Line("Bonjour", "H"), Line("Salut", "V")) == false
+                  && Merge.ContributionWins(Line("Bonjour", "A"), Line("Bonjour", "V")),
+                "a review of the Main's machine line IS a contribution",
+                "the words do not change and the work is real: comparing values alone loses it");
+
+            check(Merge.ContributionWins(Line("", "H"), Line("Bonjour", "A")),
+                "anything translated beats a captured line waiting for one",
+                "an empty capture is the floor, on the Main's side as anywhere else");
+
+            check(!Merge.ContributionWins(Line("Bonjour", "A"), Line("Bonjour", "A")),
+                "the same line offered back is not a contribution", "nothing changed hands");
+
+            check(!Merge.ContributionWins(Line("Bonjour", "A"), Line("Interface", "M")),
+                "the mod's interface is never offered to a Main",
+                "it is not a translation of the game, and it is about to live in its own file");
 
             // ── One side only ─────────────────────────────────────────────────
             var added = Merge.Decide(Line("Salut", "H"), null, null);
