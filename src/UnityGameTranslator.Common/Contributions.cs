@@ -45,6 +45,41 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// WHAT those lines are, in three words and two separators: "21 new · 17 validated".
+        ///
+        /// 🔴 **Because a total cannot answer "is this worth an evening".** Lines nobody has, lines
+        /// somebody retranslated and lines the Main already had that somebody read and stood behind
+        /// are three different propositions. The last one changes no text at all — it is the work
+        /// this site asks for, and it is precisely the kind a single number hides.
+        ///
+        /// ⚠ **A zero is left out, never printed.** "0 reworded" is a word asking to be read for
+        /// nothing, in the reader's fourth language. The order never changes, so what is shown is
+        /// recognised by its place as much as by its label.
+        ///
+        /// ⚠ Empty when nothing is known — a server too old to break the total down sends nulls,
+        /// and the caller then shows the total alone, exactly as it did before.
+        /// </summary>
+        public static string WhatKindOfWork(int? newLines, int? rewordedLines, int? validatedLines)
+        {
+            string said = "";
+
+            said = Add(said, newLines, "new");
+            said = Add(said, rewordedLines, "reworded");
+            said = Add(said, validatedLines, "validated");
+
+            return said;
+        }
+
+        private static string Add(string said, int? count, string label)
+        {
+            if (!count.HasValue || count.Value <= 0) return said;
+
+            string part = count.Value + " " + label;
+
+            return said.Length == 0 ? part : said + " · " + part;
+        }
+
+        /// <summary>
         /// The same fact for the person who sent one: what their own contribution is still holding
         /// for its Main.
         ///

@@ -58,6 +58,28 @@ namespace UnityGameTranslator.Common.Checks
                   && Contributions.WhatYouAreOffering(4).Contains("4 lines"),
                 "what is still outstanding is counted plainly",
                 "it is the one measure of whether their work has arrived");
+
+            // ── What those lines ARE ──────────────────────────────────────────
+            //
+            // Measured on a real lineage the day this was written: 38 waiting, and not one of them
+            // a retranslation — 21 lines nobody had, and 17 the Main already held that somebody
+            // read and stood behind. A total of 38 says none of that.
+            check(Contributions.WhatKindOfWork(21, 0, 17) == "21 new · 17 validated",
+                "the kinds are listed in order, and a zero is left out",
+                "\"0 reworded\" is a word to read for nothing, in the reader's fourth language");
+
+            check(Contributions.WhatKindOfWork(12, 7, 19) == "12 new · 7 reworded · 19 validated",
+                "and all three when all three are there",
+                "the order is what makes them recognisable at a glance");
+
+            check(Contributions.WhatKindOfWork(0, 0, 0) == ""
+                  && Contributions.WhatKindOfWork(null, null, null) == "",
+                "nothing known and nothing waiting both say nothing",
+                "a caller then shows the total alone, as it did before the breakdown existed");
+
+            check(Contributions.WhatKindOfWork(null, null, 3) == "3 validated",
+                "a server that answers about one kind and not the others is still read",
+                "a partial answer is not a reason to drop what it did say");
         }
     }
 }
