@@ -133,11 +133,16 @@ namespace UnityGameTranslator.Common
         /// ⚠ Dropped outright when <paramref name="isMain"/> is false, so a caller holding a
         /// branch may pass the lineage's answer without having to remember the rule.
         /// </param>
+        /// <param name="linesAvailable">
+        /// How many lines those contributions hold, counted once each. Null when unknown — an older
+        /// server — and the chip then says how many contributions without saying what they carry.
+        /// </param>
         public static List<Badge> For(Publication publication, bool? isMain, int? branchesWaiting,
                                       bool mainMissing, SyncDirection? sync, ReviewStage? stage,
                                       double? completeness, int votes, int downloads,
                                       bool? finished = null,
-                                      bool? acceptsContributions = null)
+                                      bool? acceptsContributions = null,
+                                      int? linesAvailable = null)
         {
             var badges = new List<Badge>();
 
@@ -192,7 +197,9 @@ namespace UnityGameTranslator.Common
                     Text = branchesWaiting.Value + " waiting",
                     Kind = BadgeKind.BranchesWaiting,
                     Tone = BadgeTone.Good,
-                    Tip = "Contributions sent to your Main that you have not settled yet.",
+                    // ⚠ The chip stays two words; what it is worth goes in the tip, which is where
+                    // somebody looks before deciding whether to open the merge screen at all.
+                    Tip = Contributions.WhatIsWaiting(branchesWaiting.Value, linesAvailable),
                 });
             }
 

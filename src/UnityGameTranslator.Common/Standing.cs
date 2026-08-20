@@ -69,8 +69,24 @@ namespace UnityGameTranslator.Common
         /// <summary>What this translation is in its lineage.</summary>
         public LineageRole Role;
 
-        /// <summary>Contributions waiting on this Main. Null when the question does not apply.</summary>
+        /// <summary>
+        /// Contributions waiting on this Main. Null when the question does not apply.
+        ///
+        /// 🔴 **Not "how many branches exist".** Two filters, and dropping either produces noise:
+        /// these are the ones their Main has NOT been through in their current state, AND that are
+        /// holding something a merge would offer. Counting the rest sends somebody to review
+        /// emptiness, and a number that never falls to zero is a number nobody reads.
+        /// </summary>
         public int? BranchesWaiting;
+
+        /// <summary>
+        /// How many lines those contributions hold, counted once each. Null when unknown — an
+        /// older server — which is not the same as none.
+        ///
+        /// ⚠ Distinct keys, never a sum: two contributions offering the same line are one line to
+        /// recover, and adding their counts would promise twice the work that exists.
+        /// </summary>
+        public int? LinesAvailable;
 
         /// <summary>A Branch whose Main is no longer on the site.</summary>
         public bool MainMissing;
