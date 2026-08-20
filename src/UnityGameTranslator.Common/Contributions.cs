@@ -45,36 +45,44 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
-        /// WHAT those lines are, in three words and two separators: "21 new · 17 validated".
+        /// What is waiting, on the two axes a Main actually weighs a review on:
+        /// "56 to review: 21 new (H 21) · 35 differing (V 17, A 18)".
         ///
-        /// 🔴 **Because a total cannot answer "is this worth an evening".** Lines nobody has, lines
-        /// somebody retranslated and lines the Main already had that somebody read and stood behind
-        /// are three different propositions. The last one changes no text at all — it is the work
-        /// this site asks for, and it is precisely the kind a single number hides.
+        /// 🔴 **Two measures, and neither follows from the other.** How many rows need a decision
+        /// (new lines plus lines both sides hold differently) is not how many are worth taking —
+        /// on the lineage this was written against, 56 and 38, the 18 in between being two machine
+        /// translations that differ. One answers "how long will this take", the other "is there
+        /// anything here for me", and a screen showing one of them cannot answer both.
         ///
-        /// ⚠ **A zero is left out, never printed.** "0 reworded" is a word asking to be read for
-        /// nothing, in the reader's fourth language. The order never changes, so what is shown is
-        /// recognised by its place as much as by its label.
+        /// 🔴 **The tags say whether it is worth the evening.** 21 new lines all written by hand is
+        /// not the same proposition as 21 the machine produced, and the letters are the ones every
+        /// screen of this project already shows — H, V, A, S — so nobody has to learn a word.
         ///
-        /// ⚠ Empty when nothing is known — a server too old to break the total down sends nulls,
-        /// and the caller then shows the total alone, exactly as it did before.
+        /// ⚠ **A zero is left out**, and the order never changes: a kind is recognised by its place
+        /// as much as by its letter. Empty when nothing is known — a server too old to answer sends
+        /// nothing, and the caller then shows the total alone, exactly as it did before.
         /// </summary>
-        public static string WhatKindOfWork(int? newLines, int? rewordedLines, int? validatedLines)
+        public static string WhatKindOfWork(int? review, TagTally added, TagTally differing)
         {
-            string said = "";
+            if (!review.HasValue || review.Value <= 0) return "";
 
-            said = Add(said, newLines, "new");
-            said = Add(said, rewordedLines, "reworded");
-            said = Add(said, validatedLines, "validated");
+            string said = review.Value + " to review";
+            string parts = "";
 
-            return said;
+            parts = Add(parts, added, "new");
+            parts = Add(parts, differing, "differing");
+
+            return parts.Length == 0 ? said : said + ": " + parts;
         }
 
-        private static string Add(string said, int? count, string label)
+        private static string Add(string said, TagTally tally, string label)
         {
-            if (!count.HasValue || count.Value <= 0) return said;
+            if (tally.Total <= 0) return said;
 
-            string part = count.Value + " " + label;
+            string part = tally.Total + " " + label;
+            string letters = tally.Letters();
+
+            if (letters.Length > 0) part += " (" + letters + ")";
 
             return said.Length == 0 ? part : said + " · " + part;
         }
@@ -98,6 +106,60 @@ namespace UnityGameTranslator.Common
             return lines == 1
                 ? "1 line you sent is not in the Main yet."
                 : lines + " lines you sent are not in the Main yet.";
+        }
+    }
+
+    /// <summary>
+    /// How many lines of each quality, in the four letters this whole project already uses.
+    ///
+    /// ⚠ A struct rather than four loose integers: they are read together, printed together, and a
+    /// caller that swaps two of them produces a sentence nobody can tell is wrong.
+    /// </summary>
+    public struct TagTally
+    {
+        /// <summary>Written by a person.</summary>
+        public int Human;
+
+        /// <summary>Read by a person, who stood behind what the machine wrote.</summary>
+        public int Validated;
+
+        /// <summary>The machine's, with nobody's word on it. Also covers a line carrying no tag.</summary>
+        public int Machine;
+
+        /// <summary>A person ruled this line must not be translated.</summary>
+        public int Skipped;
+
+        public int Total
+        {
+            get { return Human + Validated + Machine + Skipped; }
+        }
+
+        /// <summary>
+        /// "V 17, A 18" — best quality first, zeros left out.
+        ///
+        /// ⚠ H and S are NOT merged, although the merge ladder ranks them level. One says somebody
+        /// wrote the line, the other says somebody ruled it must not be written; printing them
+        /// under one word would report as translated what nobody translated.
+        /// </summary>
+        public string Letters()
+        {
+            string said = "";
+
+            said = Append(said, Human, "H");
+            said = Append(said, Validated, "V");
+            said = Append(said, Machine, "A");
+            said = Append(said, Skipped, "S");
+
+            return said;
+        }
+
+        private static string Append(string said, int count, string letter)
+        {
+            if (count <= 0) return said;
+
+            string part = letter + " " + count;
+
+            return said.Length == 0 ? part : said + ", " + part;
         }
     }
 }

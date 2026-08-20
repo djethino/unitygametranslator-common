@@ -59,27 +59,49 @@ namespace UnityGameTranslator.Common.Checks
                 "what is still outstanding is counted plainly",
                 "it is the one measure of whether their work has arrived");
 
-            // ── What those lines ARE ──────────────────────────────────────────
+            // ── What there is to look at, and what it is made of ───────────────
             //
-            // Measured on a real lineage the day this was written: 38 waiting, and not one of them
-            // a retranslation — 21 lines nobody had, and 17 the Main already held that somebody
-            // read and stood behind. A total of 38 says none of that.
-            check(Contributions.WhatKindOfWork(21, 0, 17) == "21 new · 17 validated",
-                "the kinds are listed in order, and a zero is left out",
-                "\"0 reworded\" is a word to read for nothing, in the reader's fourth language");
+            // 🔴 Measured on a real lineage the day this was written: 56 rows to decide and 38
+            // worth taking — 21 lines nobody had, all written by hand, and 35 both sides hold
+            // differently, of which 17 are validations and 18 two machine translations that
+            // disagree. Neither figure follows from the other, and "38 lines" says none of it.
+            var added = new TagTally { Human = 21 };
+            var differing = new TagTally { Validated = 17, Machine = 18 };
 
-            check(Contributions.WhatKindOfWork(12, 7, 19) == "12 new · 7 reworded · 19 validated",
-                "and all three when all three are there",
-                "the order is what makes them recognisable at a glance");
+            check(Contributions.WhatKindOfWork(56, added, differing)
+                  == "56 to review: 21 new (H 21) · 35 differing (V 17, A 18)",
+                "both axes, each broken down by tag",
+                "how long a review takes and whether anything comes of it are two questions");
 
-            check(Contributions.WhatKindOfWork(0, 0, 0) == ""
-                  && Contributions.WhatKindOfWork(null, null, null) == "",
-                "nothing known and nothing waiting both say nothing",
-                "a caller then shows the total alone, as it did before the breakdown existed");
+            check(Contributions.WhatKindOfWork(21, added, new TagTally()) == "21 to review: 21 new (H 21)",
+                "a side with nothing in it is left out entirely",
+                "\"0 differing\" is a word to read for nothing, in the reader's fourth language");
 
-            check(Contributions.WhatKindOfWork(null, null, 3) == "3 validated",
-                "a server that answers about one kind and not the others is still read",
-                "a partial answer is not a reason to drop what it did say");
+            check(Contributions.WhatKindOfWork(0, new TagTally(), new TagTally()) == ""
+                  && Contributions.WhatKindOfWork(null, added, differing) == "",
+                "nothing waiting and nothing known both say nothing",
+                "a caller then shows the total alone, as it did before this existed");
+
+            // ── The letters ───────────────────────────────────────────────────
+            check(new TagTally { Human = 2, Validated = 3, Machine = 4, Skipped = 1 }.Letters()
+                  == "H 2, V 3, A 4, S 1",
+                "best quality first, always in that order",
+                "a letter is recognised by its place as much as by itself");
+
+            check(new TagTally { Machine = 4 }.Letters() == "A 4",
+                "and the empty ones are not printed",
+                "a zero beside three others is noise on a card measured in pixels");
+
+            // 🔴 H and S sit level on the merge ladder and are NOT merged here. One says somebody
+            // wrote the line, the other that somebody ruled it must not be written — reporting
+            // them together would count as translated what nobody translated.
+            check(new TagTally { Human = 3, Skipped = 2 }.Letters() == "H 3, S 2",
+                "a refusal is never folded in with a hand-written line",
+                "they rank the same and they do not mean the same");
+
+            check(new TagTally { Human = 3, Skipped = 2 }.Total == 5,
+                "the total is the four added up",
+                "it is what the two halves are checked against");
         }
     }
 }
