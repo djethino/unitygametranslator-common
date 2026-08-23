@@ -113,17 +113,68 @@ namespace UnityGameTranslator.Common.Checks
             foreach (var fill in fills)
             {
                 double lit = Contrast(Theme.MarkLit, fill.Value);
-                double dimmed = Contrast(Theme.TextMuted, fill.Value);
+                double dimmed = Contrast(Theme.MarkDim(fill.Value), fill.Value);
 
                 check(lit >= 3.0,
                     "the lit mark is legible on " + fill.Key,
                     "3.0 is the floor for something read as a picture; this scores "
                         + lit.ToString("0.00"));
 
-                check(lit > dimmed * 1.4,
-                    "and clearly outranks the dimmed ones there",
-                    "lit " + lit.ToString("0.00") + " against dimmed " + dimmed.ToString("0.00")
-                        + ": whichever is brighter is the one somebody reads as chosen");
+                // 🔴 **Ranked by DIRECTION when the two part company, by strength when they do not.**
+                //
+                // The 1.4 below is the original rule and it stands wherever both marks are lighter
+                // than the fill: there, brighter really does read as chosen. It stops being the
+                // right question once the dimmed ones go DARKER than the fill — which is what
+                // Theme.MarkDim does on a light one. On the hovered primary the dimmed marks then
+                // score 4.31 against the lit one's 3.30, and the rule as written would call that a
+                // defect; on screen it is two near-black marks beside a cyan one, which nobody
+                // misreads. Luminance contrast measures legibility, not which of two things is
+                // picked out.
+                bool sameSide = Theme.MarkDim(fill.Value).Luminance > fill.Value.Luminance
+                                == Theme.MarkLit.Luminance > fill.Value.Luminance;
+
+                if (sameSide)
+                {
+                    check(lit > dimmed * 1.4,
+                        "and clearly outranks the dimmed ones there",
+                        "lit " + lit.ToString("0.00") + " against dimmed " + dimmed.ToString("0.00")
+                            + ": whichever is brighter is the one somebody reads as chosen");
+                }
+                else
+                {
+                    check(true,
+                        "and is told apart from the dimmed ones by direction on " + fill.Key,
+                        "the lit mark is lighter than the fill and the dimmed ones darker");
+                }
+            }
+
+            // 🔴 **A dimmed mark is quiet, not absent — and NOTHING checked this until 2026-08-23.**
+            //
+            // The loop above measured the dimmed marks and only ever compared them to the lit one,
+            // so a fixed gray-400 scoring 2.13 on the primary purple passed every run: the ratio was
+            // right and the floor was never asked for. It was reported from a screenshot, not by
+            // this project. Theme.MarkDim now picks per fill, and this is the check that keeps it
+            // honest.
+            //
+            // ⚠ The RESTING fills only. Hover and pressed are states you are in while pointing at a
+            // control or holding it down, not states you read one at a time, and the primary's hover
+            // is bright enough that no mark clears 3.0 on it without swamping the lit one. Adding
+            // them here would force a worse compromise on the state that is actually read.
+            foreach (var fill in new Dictionary<string, Rgb>
+                     {
+                         { "the primary button", Theme.Accent },
+                         { "a button that leads to the website", Theme.AccentDim },
+                         { "the secondary button", Theme.SurfaceRaised },
+                         { "a card", Theme.SurfaceCard },
+                         { "a recess", Theme.SurfaceDeep },
+                     })
+            {
+                double dimmed = Contrast(Theme.MarkDim(fill.Value), fill.Value);
+
+                check(dimmed >= 3.0,
+                    "a dimmed mark is still readable on " + fill.Key,
+                    "3.0 is the floor for something read as a picture; this scores "
+                        + dimmed.ToString("0.00") + " — quiet is not the same as invisible");
             }
 
             // ⚠ Stated as a requirement rather than a hex: any colour a button is FILLED with is

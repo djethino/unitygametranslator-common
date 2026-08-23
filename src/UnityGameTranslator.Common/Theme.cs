@@ -73,6 +73,46 @@ namespace UnityGameTranslator.Common
                 Mix(under.B, B, strength));
         }
 
+        /// <summary>
+        /// Relative luminance, as WCAG defines it: 0 for black, 1 for white.
+        ///
+        /// ⚠ NOT the average of the channels, and not <c>(R+G+B)/3</c>: the eye is roughly seven
+        /// times more sensitive to green than to blue, so a saturated blue and a saturated green of
+        /// the same "value" are nowhere near the same brightness. Getting this wrong is how a
+        /// palette ends up with a colour that measures fine and reads as invisible.
+        /// </summary>
+        public double Luminance
+        {
+            get { return 0.2126 * Channel(R) + 0.7152 * Channel(G) + 0.0722 * Channel(B); }
+        }
+
+        /// <summary>
+        /// How strongly this colour reads against another: 1 when they are the same, 21 for black
+        /// on white. Text wants 4.5; something read as a picture — a mark, an icon, a rule — wants
+        /// 3.0.
+        ///
+        /// ⚠ Here rather than in each product because it settles SHARED questions: which of two
+        /// greys a dimmed mark takes (<see cref="Theme.MarkDim"/>) has to be answered the same way
+        /// in the game and in the window, and a check that re-derives it proves nothing if each
+        /// consumer measures differently.
+        /// </summary>
+        public double Contrast(Rgb other)
+        {
+            double a = Luminance;
+            double b = other.Luminance;
+            double high = a > b ? a : b;
+            double low = a > b ? b : a;
+
+            return (high + 0.05) / (low + 0.05);
+        }
+
+        private static double Channel(byte value)
+        {
+            double c = value / 255.0;
+
+            return c <= 0.03928 ? c / 12.92 : System.Math.Pow((c + 0.055) / 1.055, 2.4);
+        }
+
         private static byte Mix(byte under, byte over, double strength)
         {
             // Rounded, not truncated: truncation biases every channel downwards, which darkens a
@@ -199,6 +239,38 @@ namespace UnityGameTranslator.Common
         /// two jobs, and a disabled button would become unreadable in both.
         /// </summary>
         public static readonly Rgb MarkLit = new Rgb(0xA5F3FC);
+
+        /// <summary>The dimmed scope marks on a dark fill — the ordinary case. gray-400.</summary>
+        public static readonly Rgb MarkDimOnDark = TextMuted;
+
+        /// <summary>The same, on a fill too light to carry a pale grey. gray-900.</summary>
+        public static readonly Rgb MarkDimOnLight = SurfaceDeep;
+
+        /// <summary>
+        /// The two scope marks an action is NOT aiming at, on a given fill.
+        ///
+        /// 🔴 **A dimmed mark is quiet, not absent.** It was a fixed gray-400 whatever it sat on,
+        /// which reads 3.96 on a grey button and **2.13 on the primary purple** — under the 3.0 a
+        /// small picture needs. And it cannot be fixed by lightening: on that fill the LIT mark
+        /// itself tops out at 4.44, so pushing the dimmed ones to 3.76 closes the gap between them
+        /// from x2.08 to x1.18 and the control stops saying which side it aims at. Measured.
+        ///
+        /// ⚠ **Answered by direction, not by strength.** On a light fill the dimmed marks go DARKER
+        /// than the fill while the lit one stays lighter: the two then differ in which way they
+        /// depart from the background, which no amount of crowding can flatten. Same trap
+        /// <see cref="MarkLit"/> was moved out of the accent family for, one step further.
+        ///
+        /// ⚠ No lightness threshold anywhere: this simply keeps whichever of the two reads better
+        /// against the fill it is given. A number would have to be re-judged for every fill added
+        /// later — and the status fills (amber .50, green .42) are lighter than the purple that
+        /// started this.
+        /// </summary>
+        public static Rgb MarkDim(Rgb fill)
+        {
+            return fill.Contrast(MarkDimOnDark) >= fill.Contrast(MarkDimOnLight)
+                ? MarkDimOnDark
+                : MarkDimOnLight;
+        }
 
         // ── Status ────────────────────────────────────────────────────────────────────────────
         // The 400 ramp: these are read as text or as a small mark on a dark surface, which is what
