@@ -66,7 +66,7 @@ namespace UnityGameTranslator.Common
         {
             if (!review.HasValue || review.Value <= 0) return "";
 
-            string said = review.Value + " to review";
+            string said = ToReview(review);
             string parts = "";
 
             foreach (WorkKind kind in KindsOfWork(added, differing))
@@ -94,6 +94,20 @@ namespace UnityGameTranslator.Common
         /// ⚠ The caller decides how to draw a piece, never what the pieces are: order, labels and
         /// exclusions stay here, which is the whole reason the socle carries this at all.
         /// </summary>
+        /// <summary>
+        /// "21 to review", or nothing at all — the head of the sentence, on its own.
+        ///
+        /// ⚠ Here rather than repeated in whoever draws the pieces: a screen composing chips still
+        /// has to open with these words, and two wordings for one fact is the thing this class
+        /// exists to prevent.
+        /// </summary>
+        public static string ToReview(int? review)
+        {
+            if (!review.HasValue || review.Value <= 0) return "";
+
+            return review.Value + " to review";
+        }
+
         public static WorkKind[] KindsOfWork(TagTally added, TagTally differing)
         {
             int count = 0;
