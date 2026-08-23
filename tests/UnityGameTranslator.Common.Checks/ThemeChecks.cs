@@ -194,6 +194,49 @@ namespace UnityGameTranslator.Common.Checks
                 "the validated band is not the info colour",
                 "same reason");
 
+            // ── Tag chips ──────────────────────────────────────────────────────────────────────
+            //
+            // Read out of the running site on 2026-08-23 with getComputedStyle on the rendered
+            // `.tag-*` chips — not off a class name, and written as literals here so this checks
+            // the port rather than checking it against itself.
+            var chips = new Dictionary<string, string>
+            {
+                { "H", "16A34A" },   // green-600
+                { "V", "2563EB" },   // blue-600
+                { "A", "EA580C" },   // orange-600
+                { "S", "9333EA" },   // purple-600
+                { "M", "0D9488" },   // teal-600
+            };
+
+            foreach (var pair in chips)
+            {
+                check(Theme.ChipBackground(pair.Key).ToHex() == pair.Value,
+                    "chip " + pair.Key + " is the colour the site draws",
+                    "expected #" + pair.Value + ", got #" + Theme.ChipBackground(pair.Key).ToHex());
+            }
+
+            // 🔴 A chip is six pixels of white type on a square, where a band is a wide filled
+            // area: the site has always used the 600 ramp for one and 500 for the other. Sharing
+            // them would make the letter thin, and the day somebody "tidied" them into a single
+            // value is the day the chips became unreadable everywhere at once.
+            check(Theme.ChipHuman.ToHex() != Theme.QualityHuman.ToHex(),
+                "the chip ramp is not the band ramp",
+                "600 behind small white type, 500 for a filled band — two jobs, two values");
+
+            // Every chip carries white type, so every one of them has to be dark enough for it.
+            foreach (var tag in new[] { "H", "V", "A", "S", "M" })
+            {
+                check(Contrast(Theme.ChipLetter, Theme.ChipBackground(tag)) >= 3.0,
+                    "chip " + tag + " carries its letter",
+                    "white on #" + Theme.ChipBackground(tag).ToHex() + " is under 3:1");
+            }
+
+            // An unknown tag is not a crash and not a sixth colour: it is what an unclassified
+            // line already is everywhere else.
+            check(Theme.ChipBackground("?").ToHex() == Theme.QualityCapture.ToHex(),
+                "an unknown tag falls back on the capture grey",
+                "inventing a colour for it would teach a meaning that does not exist");
+
             // Where two roles DO share a value, they share it on purpose, and saying so here keeps
             // the next reader from 'fixing' one of them.
             check(Theme.QualityCapture.ToHex() == Theme.StatusNeutral.ToHex(),

@@ -263,6 +263,55 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static readonly Rgb TagModUi = new Rgb(0x009689);
 
+        // ── Tag chips: the letter on its coloured square ───────────────────────────────────────
+        //
+        // 🔴 **A DIFFERENT RAMP FROM THE BANDS ABOVE, and that is on purpose.** The bands are wide
+        // filled areas where 500 reads well; a chip is six pixels of white type on a square, and
+        // 500 behind it is thin. The website has always used 600 there — measured in Chrome on the
+        // rendered chips, not read off a class name: #16A34A, #2563EB, #EA580C, #9333EA, #0D9488.
+        //
+        // ⚠ **Here so that nobody has to go looking for them.** The same five letters are named in
+        // the mod, in the Manager and on the website, and until now only the website drew them.
+        // Anything wanting to change how a tag looks changes it here, once, and the three follow.
+
+        /// <summary>Written by a person. green-600, the chip ramp.</summary>
+        public static readonly Rgb ChipHuman = new Rgb(0x16A34A);
+
+        /// <summary>Read back and confirmed. blue-600.</summary>
+        public static readonly Rgb ChipValidated = new Rgb(0x2563EB);
+
+        /// <summary>Machine-translated, nobody has read it. orange-600.</summary>
+        public static readonly Rgb ChipAi = new Rgb(0xEA580C);
+
+        /// <summary>Kept as is on purpose. purple-600.</summary>
+        public static readonly Rgb ChipKept = new Rgb(0x9333EA);
+
+        /// <summary>The mod's own interface. teal-600.</summary>
+        public static readonly Rgb ChipModUi = new Rgb(0x0D9488);
+
+        /// <summary>The letters, always white: every one of the five is dark enough to carry it.</summary>
+        public static readonly Rgb ChipLetter = new Rgb(0xFFFFFF);
+
+        /// <summary>Corner radius of a chip, in pixels — 0.25rem on the website.</summary>
+        public const int ChipRadius = 4;
+
+        /// <summary>
+        /// The background a tag is drawn on. Anything not one of the five gets the capture grey,
+        /// which is what an unclassified line already is everywhere else.
+        /// </summary>
+        public static Rgb ChipBackground(string tag)
+        {
+            switch (tag)
+            {
+                case "H": return ChipHuman;
+                case "V": return ChipValidated;
+                case "A": return ChipAi;
+                case "S": return ChipKept;
+                case "M": return ChipModUi;
+                default: return QualityCapture;
+            }
+        }
+
         // ── States, computed once ─────────────────────────────────────────────────────────────
         //
         // The website draws these as a translucent layer; neither consumer can (see Rgb.Over). So
