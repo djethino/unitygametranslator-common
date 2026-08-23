@@ -102,6 +102,48 @@ namespace UnityGameTranslator.Common.Checks
             check(new TagTally { Human = 3, Skipped = 2 }.Total == 5,
                 "the total is the four added up",
                 "it is what the two halves are checked against");
+
+            // ── The drawn form and the printed one are one answer ──────────────────────────────
+            //
+            // 🔴 The mod and the Manager draw chips where the sentence prints letters. The two
+            // must not be able to disagree about what is shown or in what order, so the property
+            // is checked rather than each side's output being described twice.
+            var mixed = new TagTally { Human = 9, Validated = 0, Machine = 3, Skipped = 1 };
+            var counted = mixed.Counted();
+
+            check(counted.Length == 3,
+                "a zero is left out of the pieces too",
+                "the sentence hides it; a row of chips that did not would show one nobody counted");
+
+            string rebuilt = "";
+            foreach (var piece in counted)
+            {
+                rebuilt = rebuilt.Length == 0
+                    ? piece.Letter + " " + piece.Count
+                    : rebuilt + ", " + piece.Letter + " " + piece.Count;
+            }
+
+            check(rebuilt == mixed.Letters(),
+                "the pieces say exactly what the sentence says",
+                "same letters, same counts, same order — one of them drifting is a silent lie");
+
+            // And the grouping above them: same order, same exclusions.
+            var kinds = Contributions.KindsOfWork(
+                new TagTally { Human = 2 },
+                new TagTally { Machine = 4 });
+
+            check(kinds.Length == 2 && kinds[0].Label == "new" && kinds[1].Label == "differing",
+                "what is new comes before what differs",
+                "a line the Main does not hold is a different proposition from one it holds otherwise");
+
+            check(Contributions.KindsOfWork(default(TagTally), new TagTally { Machine = 4 }).Length == 1,
+                "a kind holding nothing is not a piece",
+                "the sentence skips it, so the drawn form skips it");
+
+            check(Contributions.WhatKindOfWork(6, new TagTally { Human = 2 }, new TagTally { Machine = 4 })
+                    == "6 to review: 2 new (H 2) · 4 differing (A 4)",
+                "and the sentence is still the sentence",
+                "the pieces were extracted from it, not written beside it");
         }
     }
 }

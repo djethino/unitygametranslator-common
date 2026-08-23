@@ -69,22 +69,47 @@ namespace UnityGameTranslator.Common
             string said = review.Value + " to review";
             string parts = "";
 
-            parts = Add(parts, added, "new");
-            parts = Add(parts, differing, "differing");
+            foreach (WorkKind kind in KindsOfWork(added, differing))
+            {
+                string part = kind.Total + " " + kind.Label;
+                string letters = kind.Tally.Letters();
+
+                if (letters.Length > 0) part += " (" + letters + ")";
+
+                parts = parts.Length == 0 ? part : parts + " · " + part;
+            }
 
             return parts.Length == 0 ? said : said + ": " + parts;
         }
 
-        private static string Add(string said, TagTally tally, string label)
+        /// <summary>
+        /// The same answer in pieces, for a screen that DRAWS rather than prints.
+        ///
+        /// 🔴 **One source of order and of which zeros are left out.** H V A S are coloured chips
+        /// on the website, and the mod and the Manager should show that same mark rather than the
+        /// same letter in grey prose. A chip cannot come out of a sentence, so the pieces are
+        /// handed over — but built by the code the sentence itself uses, or the day one of them
+        /// starts hiding a zero the two stop agreeing and nothing says so.
+        ///
+        /// ⚠ The caller decides how to draw a piece, never what the pieces are: order, labels and
+        /// exclusions stay here, which is the whole reason the socle carries this at all.
+        /// </summary>
+        public static WorkKind[] KindsOfWork(TagTally added, TagTally differing)
         {
-            if (tally.Total <= 0) return said;
+            int count = 0;
+            if (added.Total > 0) count++;
+            if (differing.Total > 0) count++;
 
-            string part = tally.Total + " " + label;
-            string letters = tally.Letters();
+            WorkKind[] kinds = new WorkKind[count];
+            int at = 0;
 
-            if (letters.Length > 0) part += " (" + letters + ")";
+            // ⚠ Added before differing, always. A line the Main does not hold at all is a different
+            // proposition from one it holds otherwise, and the order is what tells them apart at a
+            // glance — the order the sentence has always used.
+            if (added.Total > 0) kinds[at++] = new WorkKind("new", added);
+            if (differing.Total > 0) kinds[at++] = new WorkKind("differing", differing);
 
-            return said.Length == 0 ? part : said + " · " + part;
+            return kinds;
         }
 
         /// <summary>
@@ -160,6 +185,68 @@ namespace UnityGameTranslator.Common
             string part = letter + " " + count;
 
             return said.Length == 0 ? part : said + ", " + part;
+        }
+
+        /// <summary>
+        /// The same four figures as letter/count pairs, for a caller that draws a chip per letter.
+        ///
+        /// ⚠ Same order and same exclusion of zeros as <see cref="Letters"/>, and deliberately
+        /// beside it rather than derived from its string: parsing a sentence back into data is how
+        /// a comma in a language ends up changing a count.
+        /// </summary>
+        public TagCount[] Counted()
+        {
+            int n = 0;
+            if (Human > 0) n++;
+            if (Validated > 0) n++;
+            if (Machine > 0) n++;
+            if (Skipped > 0) n++;
+
+            TagCount[] counted = new TagCount[n];
+            int at = 0;
+
+            if (Human > 0) counted[at++] = new TagCount("H", Human);
+            if (Validated > 0) counted[at++] = new TagCount("V", Validated);
+            if (Machine > 0) counted[at++] = new TagCount("A", Machine);
+            if (Skipped > 0) counted[at++] = new TagCount("S", Skipped);
+
+            return counted;
+        }
+    }
+
+    /// <summary>One letter and how many lines carry it.</summary>
+    public struct TagCount
+    {
+        public readonly string Letter;
+        public readonly int Count;
+
+        public TagCount(string letter, int count)
+        {
+            Letter = letter;
+            Count = count;
+        }
+    }
+
+    /// <summary>
+    /// One kind of work a contribution is holding — lines the Main does not have, or lines it has
+    /// differently — with how many and of what quality.
+    /// </summary>
+    public struct WorkKind
+    {
+        /// <summary>"new" or "differing", in the words the sentence uses.</summary>
+        public readonly string Label;
+
+        public readonly TagTally Tally;
+
+        public WorkKind(string label, TagTally tally)
+        {
+            Label = label;
+            Tally = tally;
+        }
+
+        public int Total
+        {
+            get { return Tally.Total; }
         }
     }
 }
