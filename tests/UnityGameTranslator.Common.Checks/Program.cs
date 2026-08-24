@@ -175,6 +175,9 @@ namespace UnityGameTranslator.Common.Checks
             Section("Origins");
             OriginsChecks.Run(Check);
 
+            Section("Composition");
+            CompositionChecks.Run(Check);
+
             Section("Contributions");
             ContributionsChecks.Run(Check);
 
