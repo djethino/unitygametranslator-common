@@ -75,7 +75,28 @@ namespace UnityGameTranslator.Common
         /// <summary>Whether it carries the fonts and images the translation names.</summary>
         public bool WithAssets;
 
-        public bool IsSaved => Reason == BackupReason.Saved;
+        /// <summary>
+        /// Somebody decided this copy stays — it is out of the automatic rotation's reach.
+        ///
+        /// 🔴 **A second axis, and squeezing it into <see cref="Reason"/> broke both.** Why a copy
+        /// was taken (before a merge, before a restore, before an install) and whether somebody
+        /// decided to keep it are independent: the whole point of keeping one is that "before
+        /// installing @somebody's translation" is exactly what makes it worth keeping, so the
+        /// reason must survive. Both writers already understood that — they set `kept` in the
+        /// description and leave `reason` alone — and both readers then rebuilt "is it kept" from
+        /// `reason`, which by then said Merged. So keeping a copy worked, and the screen went on
+        /// listing it as automatic with a Keep button that could only refuse.
+        /// </summary>
+        public bool Kept;
+
+        /// <summary>
+        /// Out of the rotation: kept by somebody, or taken by the Backup button in the first place.
+        ///
+        /// ⚠ Two ways in, deliberately. A copy taken on purpose carries the reason
+        /// <see cref="BackupReason.Saved"/>; an automatic one somebody kept carries its own reason
+        /// and this flag.
+        /// </summary>
+        public bool IsSaved => Kept || Reason == BackupReason.Saved;
     }
 
     /// <summary>
@@ -226,6 +247,30 @@ namespace UnityGameTranslator.Common
 
             return drop;
         }
+
+        /// <summary>
+        /// Whether this automatic copy has already been kept.
+        ///
+        /// 🔴 **Because keeping one COPIES it.** The automatic row stays where it is and goes on
+        /// rotating — that is the point, the two mechanisms are independent — so its Keep button
+        /// stays on screen too, and pressing it a second time can only fail. A control that cannot
+        /// succeed is disabled and says why; it does not wait to be pressed to refuse.
+        ///
+        /// ⚠ Matched on the moment, which is what the saved copy takes from the one it came from.
+        /// Comparing ids would never match: they differ by the very prefix that distinguishes them.
+        /// </summary>
+        public static bool AlreadyKept(IEnumerable<BackupEntry> all, BackupEntry entry)
+        {
+            foreach (var other in all)
+            {
+                if (other.IsSaved && other.At == entry.At) return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Said when Keep can do nothing, so the button explains itself before refusing.</summary>
+        public const string AlreadyKeptHint = "Already kept — it is in your backups.";
 
         /// <summary>How many of the deliberate slots are used.</summary>
         public static int SavedCount(IEnumerable<BackupEntry> all)

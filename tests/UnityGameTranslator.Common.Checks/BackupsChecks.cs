@@ -195,6 +195,54 @@ namespace UnityGameTranslator.Common.Checks
             check(!Backups.ConfirmRestoreVerb.Contains(" ") && !Backups.ConfirmDeleteVerb.Contains(" "),
                 "and both verbs are one word",
                 "a button is a verb, not a sentence — the screen already names the subject");
+
+            // ── Kept is not a reason ──────────────────────────────────────────
+            //
+            // 🔴 An automatic copy somebody decided to keep carries BOTH: why it was taken, and
+            // the fact that it stays. Both writers understood that and wrote `kept` beside the
+            // reason; both readers then rebuilt "is it kept" from the reason, which by then said
+            // Merged. So keeping worked, the screen went on listing the copy as automatic, and its
+            // Keep button could only refuse.
+            var keptMerge = Auto("20260824-201908");
+            keptMerge.Reason = BackupReason.Merged;
+            keptMerge.Kept = true;
+
+            check(keptMerge.IsSaved,
+                "an automatic copy somebody kept reads as saved",
+                "the reason it was taken must survive being kept, so it cannot carry the answer");
+
+            check(keptMerge.Reason == BackupReason.Merged,
+                "and it still says WHY it was taken",
+                "\"before writing a merge\" is precisely what makes a copy worth keeping");
+
+            check(Saved("20260824-120000").IsSaved,
+                "a copy taken by the Backup button is saved too",
+                "two ways in: a deliberate copy, and an automatic one somebody kept");
+
+            // ⚠ Kept means out of the rotation, whatever the reason says.
+            var rotation = new List<BackupEntry>();
+            for (var i = 0; i < Backups.AutomaticKept + 2; i++)
+                rotation.Add(Auto("2026081" + i + "-120000"));
+            rotation.Add(keptMerge);
+
+            check(!Backups.AutomaticToDrop(rotation).Contains(keptMerge.Id),
+                "and it no longer rotates",
+                "keeping a copy that the next automatic one deletes keeps nothing");
+
+            // ── Keeping COPIES, so the button must know it has already been used ──
+            var both = new List<BackupEntry> { Auto("20260824-201908"), Saved("20260824-201908") };
+
+            check(Backups.AlreadyKept(both, both[0]),
+                "an automatic copy whose moment is already in the saved list is already kept",
+                "the row stays after being kept, so its button must stop offering what will fail");
+
+            check(!Backups.AlreadyKept(both, Auto("20260824-202155")),
+                "and another moment is not",
+                "matching on anything looser would disable buttons that would have worked");
+
+            check(Backups.AlreadyKeptHint.Trim().Length > 0,
+                "and the disabled button says why",
+                "a control greyed out with no reason reads as a decision somebody else took");
         }
 
         /// <summary>A full saved list, so the refusal sentence can be read.</summary>
