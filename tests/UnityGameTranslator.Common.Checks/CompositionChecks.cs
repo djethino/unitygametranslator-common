@@ -52,6 +52,29 @@ namespace UnityGameTranslator.Common.Checks
                 "and a captured line carries none",
                 "it holds no tag: inventing one teaches a tag the file does not contain");
 
+            // ── One entry carries BOTH figures ────────────────────────────────
+            //
+            // 🔴 The bar draws the proportion, so the percentage repeats the picture and the count
+            // says what the picture cannot — a fifth of fifty lines or of six thousand. Dropping
+            // either one was the state each product was in, in opposite directions.
+            var entry = Composition.Entry(TagBand.Human, 1068, 20);
+
+            check(entry.Contains("1,068"), "an entry says how many lines",
+                "20% of fifty and 20% of six thousand are not the same proposition");
+
+            check(entry.Contains("20%"), "and what share of the file that is",
+                "a count alone does not place the band against the rest");
+
+            check(entry.Contains(Composition.Name(TagBand.Human)), "under the band's own name",
+                "a figure with no name is a figure nobody can act on");
+
+            // ⚠ Invariant grouping. The running culture is whatever the machine carries, and the
+            // same file would print 1,068 for one player and 1.068 for another — for a figure the
+            // website prints one way for everybody.
+            check(Composition.Amount(1068) == "1,068" && Composition.Amount(999) == "999",
+                "counts are grouped the way the website groups them",
+                "a separator that follows the machine is invisible until a screenshot");
+
             // ── Each band explains itself ─────────────────────────────────────
             foreach (var band in bands)
             {

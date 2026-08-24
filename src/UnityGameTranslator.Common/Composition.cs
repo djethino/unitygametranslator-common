@@ -95,6 +95,51 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// One entry of the key: <c>Human: 1,068 (20%)</c>.
+        ///
+        /// 🔴 **Both figures, decided on 2026-08-24.** The bar already DRAWS the proportion, so a
+        /// percentage beside it repeats the picture; a count says the thing the picture cannot —
+        /// whether 20% is a fifth of fifty lines or of six thousand. Neither answers alone: the
+        /// count does not place the band against the rest, the share does not size it.
+        ///
+        /// ⚠ Grouped in the INVARIANT culture, never the running one. This is read in a game whose
+        /// culture is whatever the machine happens to carry, and the same file would print
+        /// <c>1,068</c> on one player's screen and <c>1.068</c> on another's — for a figure the
+        /// website prints one way for everybody.
+        /// </summary>
+        public static string Entry(TagBand band, int count, int percent)
+        {
+            return EntryNamed(Name(band), count, percent);
+        }
+
+        /// <summary>
+        /// The same entry with the name already in hand — for the mod, whose own interface can be
+        /// run through the translator, so the WORD may arrive translated while the figures must
+        /// not be.
+        ///
+        /// ⚠ Takes a name rather than composing one, and that is the whole risk of this overload:
+        /// pass anything but <see cref="Name"/>'s answer (translated or not) and the drift this
+        /// class exists to end starts again. It is here so that the punctuation and the grouping
+        /// stay in one place, nothing more.
+        /// </summary>
+        public static string EntryNamed(string name, int count, int percent)
+        {
+            return name + ": " + Amount(count) + " (" + percent + "%)";
+        }
+
+        /// <summary>
+        /// A number of lines, grouped the way the website groups it.
+        ///
+        /// ⚠ Here rather than at each call site: three products print these counts, and a thousands
+        /// separator that follows the machine's culture is a difference nobody sees on their own
+        /// machine and everybody sees in a screenshot.
+        /// </summary>
+        public static string Amount(int count)
+        {
+            return count.ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
         /// What a band means, for a tooltip or a key nobody has met before.
         ///
         /// ⚠ Says what happened to the line, never why. An S can mean "a proper noun stays as it
