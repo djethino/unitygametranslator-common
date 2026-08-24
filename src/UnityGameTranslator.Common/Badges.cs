@@ -156,13 +156,19 @@ namespace UnityGameTranslator.Common
         /// — that is deliberate, a fork owner leads their own lineage — so nothing else here can
         /// tell one apart from a translation somebody wrote from scratch.
         /// </param>
+        /// <param name="mainOwner">
+        /// Who leads this lineage, used only to name them in the tip of
+        /// <see cref="Publication.NotYours"/>. Null is fine — an account can be gone, or a server
+        /// too old to say — and the sentence then says "Somebody else" rather than nothing.
+        /// </param>
         public static List<Badge> For(Publication publication, bool? isMain, int? branchesWaiting,
                                       bool mainMissing, SyncDirection? sync, ReviewStage? stage,
                                       double? completeness, int votes, int downloads,
                                       bool? finished = null,
                                       bool? acceptsContributions = null,
                                       int? linesAvailable = null,
-                                      Origin? origin = null)
+                                      Origin? origin = null,
+                                      string? mainOwner = null)
         {
             var badges = new List<Badge>();
 
@@ -175,12 +181,21 @@ namespace UnityGameTranslator.Common
             // "Never published" carries the warm tone — not because it is wrong, plenty of
             // translations are private on purpose, but because it is the one state where the work
             // exists in exactly one place.
+            // ⚠ "Not yours" is a NOTICE, never a warning: holding somebody else's translation is
+            // the ordinary way a player starts, and nothing is wrong. What earns the colour is that
+            // the buttons below mean something else there — publishing contributes rather than
+            // creates.
+            BadgeTone publicationTone;
+            if (publication == Publication.NeverPublished) publicationTone = BadgeTone.Attention;
+            else if (publication == Publication.NotYours) publicationTone = BadgeTone.Notice;
+            else publicationTone = BadgeTone.Plain;
+
             badges.Add(new Badge
             {
                 Text = Publications.Name(publication),
-                    Kind = BadgeKind.Publication,
-                Tone = publication == Publication.NeverPublished ? BadgeTone.Attention : BadgeTone.Plain,
-                Tip = Publications.Effect(publication),
+                Kind = BadgeKind.Publication,
+                Tone = publicationTone,
+                Tip = Publications.Effect(publication, mainOwner),
             });
 
             // ── 2. Who you are in this lineage ────────────────────────────────

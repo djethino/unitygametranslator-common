@@ -90,6 +90,15 @@ namespace UnityGameTranslator.Common
 
         /// <summary>A Branch whose Main is no longer on the site.</summary>
         public bool MainMissing;
+
+        /// <summary>
+        /// Who leads this lineage, when somebody else does.
+        ///
+        /// ⚠ Only used to name them in the <see cref="Publication.NotYours"/> sentence. Null is
+        /// ordinary — this account leads it, nothing is published, or the server did not say — and
+        /// the sentence falls back to "Somebody else" rather than to nothing.
+        /// </summary>
+        public string? MainOwner;
     }
 
     /// <summary>What somebody may do from here, and why not when they may not.</summary>
