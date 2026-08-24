@@ -172,6 +172,9 @@ namespace UnityGameTranslator.Common.Checks
             Section("Badges");
             BadgesChecks.Run(Check);
 
+            Section("Origins");
+            OriginsChecks.Run(Check);
+
             Section("Contributions");
             ContributionsChecks.Run(Check);
 

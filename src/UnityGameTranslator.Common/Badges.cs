@@ -39,6 +39,17 @@ namespace UnityGameTranslator.Common
         Role,
         BranchesWaiting,
         MainMissing,
+
+        /// <summary>
+        /// Which translation this one was forked from.
+        ///
+        /// 🔴 In the lineage group and not among the measurements, because it answers "whose is
+        /// this" and not "what is it worth". A fork IS a Main — <c>lineageRole()</c> says so —
+        /// so the role chip alone leaves out the one thing that distinguishes it from a Main
+        /// somebody started from nothing.
+        /// </summary>
+        Origin,
+
         Sync,
 
         /// <summary>
@@ -137,12 +148,21 @@ namespace UnityGameTranslator.Common
         /// How many lines those contributions hold, counted once each. Null when unknown — an older
         /// server — and the chip then says how many contributions without saying what they carry.
         /// </param>
+        /// <param name="origin">
+        /// Which translation this one was forked from, when it was forked from one at all. Null on
+        /// anything that started from nothing, and on a server too old to have said.
+        ///
+        /// ⚠ Not derivable from the other arguments. A fork reads as a Main in every other respect
+        /// — that is deliberate, a fork owner leads their own lineage — so nothing else here can
+        /// tell one apart from a translation somebody wrote from scratch.
+        /// </param>
         public static List<Badge> For(Publication publication, bool? isMain, int? branchesWaiting,
                                       bool mainMissing, SyncDirection? sync, ReviewStage? stage,
                                       double? completeness, int votes, int downloads,
                                       bool? finished = null,
                                       bool? acceptsContributions = null,
-                                      int? linesAvailable = null)
+                                      int? linesAvailable = null,
+                                      Origin? origin = null)
         {
             var badges = new List<Badge>();
 
@@ -211,6 +231,20 @@ namespace UnityGameTranslator.Common
                     Kind = BadgeKind.MainMissing,
                     Tone = BadgeTone.Wrong,
                     Tip = "The translation yours contributes to is no longer on the site.",
+                });
+            }
+
+            // ⚠ Last of the lineage group, and quiet. It is a credit, not a warning: a fork is an
+            // ordinary and legitimate way for a translation to exist, and colouring its provenance
+            // would read as a reproach to whoever made it.
+            if (origin.HasValue)
+            {
+                badges.Add(new Badge
+                {
+                    Text = Origins.Name(origin.Value),
+                    Kind = BadgeKind.Origin,
+                    Tone = BadgeTone.Quiet,
+                    Tip = Origins.Effect(origin.Value),
                 });
             }
 
