@@ -127,6 +127,10 @@ namespace UnityGameTranslator.Common
         /// </param>
         /// <param name="branchesWaiting">Contributions sent to your Main and not settled.</param>
         /// <param name="mainMissing">A branch whose Main is no longer on the site.</param>
+        /// <param name="mainAbandoned">
+        /// A branch whose Main is still on the site and whose owner erased their account. Ignored
+        /// when <paramref name="mainMissing"/> is set: a Main that is gone is the whole story.
+        /// </param>
         /// <param name="sync">Where this file stands against the published version, if known.</param>
         /// <param name="stage">How far the review got, from <see cref="Quality.Stage"/>.</param>
         /// <param name="completeness">Share of what the file met in game that is translated.</param>
@@ -168,7 +172,8 @@ namespace UnityGameTranslator.Common
                                       bool? acceptsContributions = null,
                                       int? linesAvailable = null,
                                       Origin? origin = null,
-                                      string? mainOwner = null)
+                                      string? mainOwner = null,
+                                      bool mainAbandoned = false)
         {
             var badges = new List<Badge>();
 
@@ -246,6 +251,25 @@ namespace UnityGameTranslator.Common
                     Kind = BadgeKind.MainMissing,
                     Tone = BadgeTone.Wrong,
                     Tip = "The translation yours contributes to is no longer on the site.",
+                });
+            }
+
+            // ⚠ **Else, not a second chip.** Both say the same thing about what can be done — this
+            // work will never be merged — and wearing two would suggest two problems. When the Main
+            // is gone, that is the whole story and the account behind it no longer matters.
+            //
+            // 🔴 Its own wording rather than reusing the one above, because the difference is the
+            // one thing a reader actually needs: the translation is still on the site, still
+            // downloadable, and still good to play with. "Main is gone" would say the opposite.
+            else if (mainAbandoned)
+            {
+                badges.Add(new Badge
+                {
+                    Text = "No owner",
+                    Kind = BadgeKind.MainMissing,
+                    Tone = BadgeTone.Wrong,
+                    Tip = "The account behind the translation yours contributes to has been "
+                        + "deleted. The translation itself is still there.",
                 });
             }
 
