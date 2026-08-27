@@ -41,6 +41,18 @@ namespace UnityGameTranslator.Common
         MainMissing,
 
         /// <summary>
+        /// The Main this branch hangs from has closed its contributions.
+        ///
+        /// 🔴 Its own kind rather than a variant of <see cref="MainMissing"/>, because the two lead
+        /// somewhere different: a Main that is GONE takes the translation with it, a Main that has
+        /// CLOSED is still published and still worth playing with. A reader needs to know which.
+        ///
+        /// ⚠ And not <see cref="Contributions"/> either: that one is the Main's own declaration,
+        /// shown on the Main's card. This is what the declaration DOES to somebody else's branch.
+        /// </summary>
+        BranchFrozen,
+
+        /// <summary>
         /// Which translation this one was forked from.
         ///
         /// 🔴 In the lineage group and not among the measurements, because it answers "whose is
@@ -165,6 +177,13 @@ namespace UnityGameTranslator.Common
         /// <see cref="Publication.NotYours"/>. Null is fine — an account can be gone, or a server
         /// too old to say — and the sentence then says "Somebody else" rather than nothing.
         /// </param>
+        /// <param name="branchFrozen">
+        /// This branch's Main still exists and has stopped taking contributions.
+        ///
+        /// ⚠ Never true at the same time as <paramref name="mainMissing"/>: a Main that is gone
+        /// refused nobody anything. The caller decides which of the two it is; this class only
+        /// guarantees that one chip comes out rather than two.
+        /// </param>
         public static List<Badge> For(Publication publication, bool? isMain, int? branchesWaiting,
                                       bool mainMissing, SyncDirection? sync, ReviewStage? stage,
                                       double? completeness, int votes, int downloads,
@@ -173,7 +192,8 @@ namespace UnityGameTranslator.Common
                                       int? linesAvailable = null,
                                       Origin? origin = null,
                                       string? mainOwner = null,
-                                      bool mainAbandoned = false)
+                                      bool mainAbandoned = false,
+                                      bool branchFrozen = false)
         {
             var badges = new List<Badge>();
 
@@ -270,6 +290,31 @@ namespace UnityGameTranslator.Common
                     Tone = BadgeTone.Wrong,
                     Tip = "The account behind the translation yours contributes to has been "
                         + "deleted. The translation itself is still there.",
+                });
+            }
+
+            // ⚠ **Third of the same else-chain, and never a chip of its own alongside them.** The
+            // three answer one question — can this work still be merged — and wearing two would
+            // suggest two problems. The order is by finality: gone, then ownerless, then closed.
+            //
+            // 🔴 It is here at all because the state was reachable NOWHERE on a branch's card. The
+            // "Accepts contributions / Solo work" chip just below is deliberately Main-only (a
+            // branch does not lead a lineage and does not decide this), so from the branch side the
+            // door closing was invisible — readable only one screen deeper, or in a notification
+            // that a person can now delete.
+            //
+            // ⚠ Attention, not Wrong. Nothing is broken and nothing is lost: the translation is
+            // still published, still downloadable, and the work is still its author's. What changed
+            // is the road it was on, and the way forward is one step away.
+            else if (branchFrozen)
+            {
+                badges.Add(new Badge
+                {
+                    Text = "Main closed",
+                    Kind = BadgeKind.BranchFrozen,
+                    Tone = BadgeTone.Attention,
+                    Tip = "Its author no longer takes contributions. Your work is untouched — "
+                        + "publishing it as your own version is the way to carry on.",
                 });
             }
 

@@ -13,6 +13,8 @@ namespace UnityGameTranslator.Common.Checks
     {
         public static void Run(Action<bool, string, string> check)
         {
+            FrozenBranch(check);
+
             // ── The author's own word ─────────────────────────────────────────
             //
             // 🔴 A DECLARATION, not a measurement. The review stage and the completeness are read
@@ -58,6 +60,44 @@ namespace UnityGameTranslator.Common.Checks
 
                 check(!string.IsNullOrEmpty(badge.Tip),
                     badge.Kind + " explains itself", "a chip nobody can expand is a chip nobody trusts");
+            }
+        }
+
+        /// <summary>
+        /// A branch whose Main closed its contributions says so, once.
+        ///
+        /// 🔴 The state was reachable nowhere on a branch's card: "Accepts contributions" is the
+        /// Main's own declaration and is shown on the Main only, so from the branch side the door
+        /// closing was invisible. It mattered the day notifications became deletable — a fact that
+        /// lives only in a message somebody can delete does not live anywhere.
+        /// </summary>
+        private static void FrozenBranch(Action<bool, string, string> check)
+        {
+            var frozen = Badges.For(Publication.Published, false, null, false,
+                                    null, null, null, 0, 0, branchFrozen: true);
+
+            check(Has(frozen, BadgeKind.BranchFrozen),
+                "a frozen branch says its Main closed",
+                "the only other place saying so is a notification, which can now be deleted");
+
+            // ⚠ Never both. They answer the same question — can this still be merged — and two
+            // chips would read as two problems.
+            var gone = Badges.For(Publication.Published, false, null, true,
+                                  null, null, null, 0, 0, branchFrozen: true);
+
+            check(Has(gone, BadgeKind.MainMissing) && !Has(gone, BadgeKind.BranchFrozen),
+                "a Main that is gone outranks a Main that closed",
+                "nobody refused anything when the translation itself is no longer there");
+
+            // ⚠ Attention, not Wrong: nothing is broken. The translation is still published and the
+            // work is still its author's; what changed is the road it was on.
+            foreach (var badge in frozen)
+            {
+                if (badge.Kind != BadgeKind.BranchFrozen) continue;
+
+                check(badge.Tone == BadgeTone.Attention,
+                    "a closed Main is worth noticing, not an error",
+                    "colouring it as a fault would read as a reproach to whoever closed it");
             }
         }
 
