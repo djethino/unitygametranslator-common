@@ -4,7 +4,7 @@
 // Do not edit: change the catalogue and run that script. The build refuses to compile
 // when this file no longer matches the catalogue it names below.
 //
-// catalogue-sha256: ef44180d91f5d2d8f8f7b147841c6f6c10ae965c1d51cbff909e00913ee478ee
+// catalogue-sha256: b32005aed5bc6363bed4a866f4a42dd6fe7fce148a2ff006ccbf896b1f16efbe
 // </auto-generated>
 
 namespace UnityGameTranslator.Common
@@ -70,7 +70,7 @@ namespace UnityGameTranslator.Common
             new[] { "ie", "ggggggwwwwwooooo", "ggggggwwwwwooooo", "ggggggwwwwwooooo", "ggggggwwwwwooooo", "ggggggwwwwwooooo", "ggggggwwwwwooooo", "ggggggwwwwwooooo", "ggggggwwwwwooooo", "ggggggwwwwwooooo", "ggggggwwwwwooooo", "ggggggwwwwwooooo" },
             new[] { "il", "wwwwwwwwwwwwwwww", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "wwwwwwwbwwwwwwww", "wwwwwbbwbbwwwwww", "wwwwwbwwwbwwwwww", "wwwwwwbwbwwwwwww", "wwwwwbwbwbwwwwww", "bbbbbbbbbbbbbbbb", "bbbbbbbbbbbbbbbb", "wwwwwwwwwwwwwwww" },
             new[] { "im", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrwrrwwrrawwrrrr", "rrrwwrwrrrwrrrrr", "rrrarrwwrrwrrrrr", "rrrrrrrwwwwrrrrr", "rrrrrwwwrrrrrrrr", "rrrrwrrrrrrrrrrr", "rrrrrarrrrrrrrrr", "rrrrwrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
-            new[] { "in", "oooooooooooooooo", "oooooooooooooooo", "oooooooooooooooo", "oooooooooooooooo", "wwwwwwbbbbwwwwww", "wwwwwwbwwbwwwwww", "wwwwwwbbbbwwwwww", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg" },
+            new[] { "in", "oooooooooooooooo", "oooooooooooooooo", "oooooooooooooooo", "wwwwwwwbbwwwwwww", "wwwwwwbwwbwwwwww", "wwwwwbwbbwbwwwww", "wwwwwwbwwbwwwwww", "wwwwwwwbbwwwwwww", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg" },
             new[] { "iq", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "wwwwwwwgwgwwggww", "wwwwwgggwgwgggww", "wwwwwwwwwwwwwwww", "kkkkkkkkkkkkkkkk", "kkkkkkkkkkkkkkkk", "kkkkkkkkkkkkkkkk", "kkkkkkkkkkkkkkkk" },
             new[] { "ir", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "wwwwwwrwrwrwwwww", "wwwwwrwrrrwrwwww", "wwwwwrwwrwwrwwww", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr" },
             new[] { "is", "bbbbwrrwbbbbbbbb", "bbbbwrrwbbbbbbbb", "bbbbwrrwbbbbbbbb", "bbbbwrrwbbbbbbbb", "wwwwwrrwwwwwwwww", "rrrrrrrrrrrrrrrr", "rrrrrrrrrrrrrrrr", "wwwwwrrwwwwwwwww", "bbbbwrrwbbbbbbbb", "bbbbwrrwbbbbbbbb", "bbbbwrrwbbbbbbbb" },
