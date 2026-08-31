@@ -239,7 +239,7 @@ namespace UnityGameTranslator.Common
         /// 🔴 And it is a declaration, never a proof: it decides wording, never permission. The one
         /// thing that authorises anything here is the 64-character key.
         /// </summary>
-        public static EditSessionHolder ParseHolder(string written)
+        public static EditSessionHolder ParseHolder(string? written)
         {
             return string.Equals(written, "manager",
                                  System.StringComparison.OrdinalIgnoreCase)
