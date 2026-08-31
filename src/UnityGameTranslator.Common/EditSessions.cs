@@ -185,10 +185,84 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>How a holder is named to somebody, in either product.</summary>
+        ///
+        /// ⚠ **English, and therefore for the mod and the manager only.** The site says the same
+        /// fact in twenty languages and keys its own wording; it takes <see cref="Serialize"/> —
+        /// the VALUE — and never this. A translated string must not come from here.
         public static string HolderName(EditSessionHolder holder)
         {
             return holder == EditSessionHolder.Manager ? "the manager" : "the game";
         }
+
+        /// <summary>
+        /// Field naming the holder when a session is opened on the site.
+        ///
+        /// ⚠ Deliberately NOT <see cref="MarkerHolderField"/>, though both carry the same fact: one
+        /// is a key in a JSON file on this machine, the other a field in a request body. Naming
+        /// them apart is what lets either move without silently renaming the other.
+        /// </summary>
+        public const string HolderField = "holder";
+
+        /// <summary>
+        /// The holder as it is WRITTEN DOWN — in the marker, and in the request that opens a
+        /// session.
+        ///
+        /// 🔴 **One spelling, three writers.** The mod and the manager each grew their own copy of
+        /// this (`Holder.ToString()` on the way out, a case-insensitive compare on the way back),
+        /// written on different days, neither aware of the other. Adding the site's request body
+        /// would have made three. They agree today by luck, and luck is not a contract: the day one
+        /// of them writes something the others do not recognise, a session silently changes owner.
+        ///
+        /// ⚠ Lower case, and that is not cosmetic: it is what a JSON field carries everywhere else
+        /// in this project, and both existing readers compare case-insensitively — so markers
+        /// already on disk, written "Game" and "Manager", keep parsing exactly as before.
+        /// </summary>
+        public static string Serialize(EditSessionHolder holder)
+        {
+            return holder == EditSessionHolder.Manager ? "manager" : "game";
+        }
+
+        /// <summary>
+        /// Read back what <see cref="Serialize"/> wrote.
+        ///
+        /// ⚠ **Anything unrecognised — absent, empty, misspelt, planted — reads as the game**, and
+        /// this is the same decision the marker reader already documents: the field did not always
+        /// exist, and the mod was the only writer when it did not, so that is the honest reading
+        /// rather than a guess.
+        ///
+        /// ⚠ It also covers what no rule can prevent: a mod or a manager PUBLISHED BEFORE this
+        /// field existed says nothing, and must not be refused a session over a label. It is read
+        /// as the game, which is right for one of the two and wrong for the other until it updates
+        /// itself — a wrong word, never a wrong behaviour, because what the session DOES never
+        /// depends on this value.
+        ///
+        /// 🔴 And it is a declaration, never a proof: it decides wording, never permission. The one
+        /// thing that authorises anything here is the 64-character key.
+        /// </summary>
+        public static EditSessionHolder ParseHolder(string written)
+        {
+            return string.Equals(written, "manager",
+                                 System.StringComparison.OrdinalIgnoreCase)
+                ? EditSessionHolder.Manager
+                : EditSessionHolder.Game;
+        }
+
+        /// <summary>
+        /// How long one sign of life counts for, in seconds, when presence is shown by POLLING
+        /// rather than by holding a stream open.
+        ///
+        /// ⚠ **Derived from <see cref="PollSeconds"/>, never chosen** — exactly as the site derives
+        /// its stream presence from the heartbeat that renews it. Two things bound it, and the
+        /// multiplier is what satisfies both: several polls may be lost before somebody is called
+        /// absent, and it must outlive the editor page's own refresh, or the light would go out
+        /// between two of its readings and come back on at the next.
+        ///
+        /// 🔴 **What it must stay far below is a save.** What the page calls "Saved" is not
+        /// "applied": until the other end fetches the file, the session is the only place that work
+        /// exists. So somebody must learn that nobody is listening BEFORE they save again — which
+        /// is a matter of seconds, not of minutes.
+        /// </summary>
+        public const int PresenceTtlSeconds = PollSeconds * 5;
 
         /// <summary>
         /// What to ask before taking over a session somebody else's window left open.

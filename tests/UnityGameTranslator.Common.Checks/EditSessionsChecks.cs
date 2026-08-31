@@ -81,6 +81,58 @@ namespace UnityGameTranslator.Common.Checks
                 "the game and the manager are named differently",
                 "the question is only answerable if it says WHO is holding the session");
 
+            // ── How the holder is written down ────────────────────────────────
+            // 🔴 Three writers now put this fact in a file or a request body: the mod's marker,
+            // the manager's marker, and the request that opens a session. They each had their own
+            // copy of the spelling before this existed.
+            foreach (EditSessions.EditSessionHolder holder in
+                     Enum.GetValues(typeof(EditSessions.EditSessionHolder)))
+            {
+                check(EditSessions.ParseHolder(EditSessions.Serialize(holder)) == holder,
+                    $"{holder} survives being written down and read back",
+                    "a holder that changes on the way through is a session changing owner");
+            }
+
+            check(EditSessions.Serialize(EditSessions.EditSessionHolder.Game)
+                  != EditSessions.Serialize(EditSessions.EditSessionHolder.Manager),
+                "and the two are not written the same",
+                "one spelling for both would make the field say nothing at all");
+
+            // ⚠ Markers already on disk were written with .ToString() — "Game" and "Manager".
+            // Reading must stay case-insensitive or every one of them changes owner on upgrade.
+            check(EditSessions.ParseHolder("Manager") == EditSessions.EditSessionHolder.Manager
+                  && EditSessions.ParseHolder("MANAGER") == EditSessions.EditSessionHolder.Manager
+                  && EditSessions.ParseHolder("Game") == EditSessions.EditSessionHolder.Game,
+                "the spellings already written on disk still read correctly",
+                "markers written before this existed must not change hands on an update");
+
+            // 🔴 Absent is not unknown — it is a mod or a manager published before the field
+            // existed, and it must be given a session rather than refused over a label.
+            check(EditSessions.ParseHolder(null) == EditSessions.EditSessionHolder.Game
+                  && EditSessions.ParseHolder("") == EditSessions.EditSessionHolder.Game
+                  && EditSessions.ParseHolder("  ") == EditSessions.EditSessionHolder.Game
+                  && EditSessions.ParseHolder("gestionnaire") == EditSessions.EditSessionHolder.Game,
+                "anything unrecognised reads as the game",
+                "a client that says nothing predates the field; refusing it would break what shipped");
+
+            // ── Presence, when it is shown by polling ─────────────────────────
+            check(EditSessions.PresenceTtlSeconds >= EditSessions.PollSeconds * 3,
+                "several polls can be lost before anybody is called absent",
+                "one dropped request must not put out a light that says work is arriving");
+
+            // 🔴 The bound that matters, and it is about somebody's work rather than about a
+            // number: what the page calls "Saved" is not "applied", so the absence has to show
+            // before the next save — seconds, not minutes.
+            check(EditSessions.PresenceTtlSeconds < EditSessions.KeepAliveSeconds,
+                "absence shows far sooner than the session's own renewal",
+                "learning after a keepalive that nobody was listening is learning after the saves");
+
+            // ⚠ The editor page refreshes its own view on a cycle of its own. A presence that
+            // expires between two of its readings makes the light blink for no reason.
+            check(EditSessions.PresenceTtlSeconds >= 10,
+                "and it outlives one refresh of the page that displays it",
+                "a light that flickers is a light nobody reads");
+
             foreach (EditSessions.EditSessionHolder holder in
                      Enum.GetValues(typeof(EditSessions.EditSessionHolder)))
             {
