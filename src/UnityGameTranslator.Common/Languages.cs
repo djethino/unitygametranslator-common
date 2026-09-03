@@ -174,6 +174,51 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// The value every product writes when a language is not settled: detect it, or follow the
+        /// system. It is a MODE, never a language, and it must never travel as one.
+        /// </summary>
+        public const string Undecided = "auto";
+
+        /// <summary>
+        /// True when a stored value actually names a language, rather than deferring the answer.
+        ///
+        /// 🔴 **"auto" is not a language, and it is not "no language" either — it is "ask later".**
+        /// The distinction decides a real thing: a translation identified by a uuid HAS a source
+        /// and a target, settled as soon as its first line is written and immutable once published,
+        /// so a stored "auto" past that point is a value nobody ever filled in, not a choice. It is
+        /// resolved from what the server holds — never treated as a disagreement with it, which
+        /// would turn a legitimate translation into one nobody may publish.
+        ///
+        /// ⚠ Deliberately does NOT require the catalogue to know the name. A language it has never
+        /// heard of is still an answer somebody gave; refusing it here would quietly reclassify
+        /// their translation as undecided.
+        /// </summary>
+        public static bool IsSettled(string? language) =>
+            language != null
+            && language.Trim().Length > 0
+            && !string.Equals(language.Trim(), Undecided, StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// True when two stored values name DIFFERENT languages — the only case anything may act on.
+        ///
+        /// 🔴 **Unsettled on either side is never a disagreement.** A file whose source still reads
+        /// "auto" beside a server that states one is the ordinary result of a version that forgot to
+        /// write it back; the answer is to take the server's, not to refuse the translation. Reading
+        /// that as a conflict would block the very translations this rule exists to protect.
+        ///
+        /// ⚠ Compared through <see cref="Matches"/>, never as text: the same language arrives as a
+        /// name from one side and as a code from the other, and comparing raw answers "different
+        /// language" for a language against itself.
+        /// </summary>
+        public static bool Disagree(string? a, string? b)
+        {
+            if (!IsSettled(a) || !IsSettled(b)) return false;
+
+            return !Matches(a, b) && !Matches(b, a)
+                   && !string.Equals(a!.Trim(), b!.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
         /// What language an operating system or a browser is asking for.
         ///
         /// ⚠ Locales arrive longer than a language code, and in shapes that differ per system:

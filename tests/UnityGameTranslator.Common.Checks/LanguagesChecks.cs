@@ -19,6 +19,34 @@ namespace UnityGameTranslator.Common.Checks
     {
         public static void Run(Action<bool, string, string> check)
         {
+            // ── Settled, or still deferred ────────────────────────────────
+            // 🔴 A translation has a source and a target; they settle at its first line and are
+            // frozen once published. "auto" is what a product writes when the answer is deferred —
+            // detect it, or follow the system — and reading it as a language is how a mode came to
+            // outrank what a server stated.
+            check(Languages.IsSettled("French") && Languages.IsSettled("fr"),
+                "a name and a code are answers", "both forms are stored across this project");
+            check(!Languages.IsSettled(Languages.Undecided) && !Languages.IsSettled("AUTO"),
+                "'auto' is not, in any case", "it is a mode, and it must never travel as a language");
+            check(!Languages.IsSettled("") && !Languages.IsSettled(null) && !Languages.IsSettled("   "),
+                "nor empty, absent or blank", "absent means 'nobody has said', never 'no language'");
+            check(Languages.IsSettled("Klingon"),
+                "a language the catalogue never heard of still counts",
+                "refusing it would reclassify somebody's translation as undecided");
+
+            // ── Disagreement, which is what anything may act on ───────────
+            check(Languages.Disagree("Thai", "French"), "two languages disagree", "the acting case");
+            check(!Languages.Disagree("French", "fr") && !Languages.Disagree("fr", "French"),
+                "a name and its code do not",
+                "compared as text, a language disagrees with itself — and blocks its own author");
+            check(!Languages.Disagree(Languages.Undecided, "French")
+                  && !Languages.Disagree("French", Languages.Undecided)
+                  && !Languages.Disagree(null, "French") && !Languages.Disagree("French", null),
+                "unsettled on either side is never a disagreement",
+                "🔴 a source left at 'auto' is the commonest state there is — repair it, never refuse it");
+            check(!Languages.Disagree(null, null),
+                "and two silences agree", "nothing has been claimed, so nothing can be contradicted");
+
             // Codes in, names out.
             check(Languages.NameOf("fr") == "French", "fr -> French", "the ordinary case");
             check(Languages.NameOf("FR") == "French", "FR -> French", "a system locale can arrive upper-cased");
