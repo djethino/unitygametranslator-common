@@ -186,6 +186,9 @@ namespace UnityGameTranslator.Common.Checks
 
             Section("Backups");
             BackupsChecks.Run(Check);
+
+            Section("Mod interface");
+            ModUiChecks.Run(Check);
         }
 
         /// <summary>The stored-secret format, checked against its own specification.</summary>

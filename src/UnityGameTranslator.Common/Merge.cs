@@ -80,14 +80,18 @@ namespace UnityGameTranslator.Common
         /// <summary>
         /// Is this a line OF THE GAME — the only kind a merge arbitrates and a count counts?
         ///
-        /// 🔴 **M is the mod's own interface, and it is not one.** It travels in the same file today
-        /// and will get a file of its own; until then it is carried, never weighed. It has no author
-        /// in the sense H does, it is not what a player came to read, and counting it would inflate
-        /// every measure of what a translation covers.
+        /// 🔴 **M is the mod's own interface, and it is not one.** It has no author in the sense H
+        /// does, it is not what a player came to read, and counting it would inflate every measure
+        /// of what a translation covers.
+        ///
+        /// ⚠ It now has a file of its own (<see cref="ModUi.FileName"/>), so a current mod writes
+        /// none of these into a translation at all. This stays, and stays load-bearing, for every
+        /// file written before that — and because a rule that only holds while nobody makes a
+        /// mistake is not a rule.
         /// </summary>
         public static bool IsGameLine(string tag)
         {
-            return tag != "M";
+            return tag != ModUi.Tag;
         }
 
         /// <summary>
