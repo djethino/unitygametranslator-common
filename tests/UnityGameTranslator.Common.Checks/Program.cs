@@ -30,6 +30,7 @@ namespace UnityGameTranslator.Common.Checks
             MergeDecisions();
             EditingSides();
             HasItBeenPublished();
+            WhatOneButtonDoes();
             WhoMayRate();
             WhereSomebodyStands();
             HowMuchStripFits();
@@ -74,6 +75,13 @@ namespace UnityGameTranslator.Common.Checks
         {
             Section("Publication");
             PublicationChecks.Run(Check);
+        }
+
+        /// <summary>What sending a file becomes, the word for it, and where the act is taken.</summary>
+        private static void WhatOneButtonDoes()
+        {
+            Section("Uploads");
+            UploadsChecks.Run(Check);
         }
 
         /// <summary>Who may rate a translation, and why the arrows are sometimes absent.</summary>
