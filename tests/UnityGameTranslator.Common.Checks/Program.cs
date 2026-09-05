@@ -85,6 +85,9 @@ namespace UnityGameTranslator.Common.Checks
 
             Section("The language of a translation");
             TranslationLanguagesChecks.Run(Check);
+
+            Section("Which game a publication names");
+            GameCandidatesChecks.Run(Check);
         }
 
         /// <summary>Who may rate a translation, and why the arrows are sometimes absent.</summary>
