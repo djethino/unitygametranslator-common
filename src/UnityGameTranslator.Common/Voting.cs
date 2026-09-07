@@ -9,7 +9,7 @@ namespace UnityGameTranslator.Common
         /// <summary>Nobody is signed in. A vote has to belong to someone.</summary>
         SignedOut,
 
-        /// <summary>Nothing of this lineage is published, so there is nothing to rate.</summary>
+        /// <summary>Nothing of this lineage is published, so there is nothing to vote on.</summary>
         NothingPublished,
 
         /// <summary>It is yours. The server refuses this too — it is not only a matter of taste.</summary>
@@ -23,7 +23,12 @@ namespace UnityGameTranslator.Common
     }
 
     /// <summary>
-    /// Who may rate a translation, decided the same way wherever the arrows appear.
+    /// Who may vote on a translation, decided the same way wherever the arrows appear.
+    ///
+    /// 🔴 **The word is "vote", the website's** (decided 2026-09-07). It counts votes, its buttons
+    /// say Upvote and Downvote, and it refuses with "You cannot vote on your own translation". This
+    /// said "rate" while the mod's card said "vote": one act, one object, two words — and the
+    /// Manager, which reads its sentences here, was the product saying the odd one.
     ///
     /// ⚠ **The first three mirror the server** (`Translation::canBeVotedBy`): signed in, published,
     /// and never your own. Drawing live arrows the server will refuse with a 403 is how a product
@@ -111,9 +116,9 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static string ArrowTip(int arrow, int? myVote)
         {
-            if (myVote == arrow) return "Click again to withdraw your rating.";
+            if (myVote == arrow) return "Click again to withdraw your vote.";
 
-            return arrow > 0 ? "Rate this translation up." : "Rate this translation down.";
+            return arrow > 0 ? "Vote this translation up." : "Vote this translation down.";
         }
 
         /// <summary>
@@ -127,13 +132,13 @@ namespace UnityGameTranslator.Common
             switch (block)
             {
                 case RateBlock.SignedOut:
-                    return "Sign in to rate this translation.";
+                    return "Sign in to vote on this translation.";
                 case RateBlock.NothingPublished:
-                    return "Nothing is published for this game yet — there is nothing to rate.";
+                    return "Nothing is published for this game yet — there is nothing to vote on.";
                 case RateBlock.YourOwn:
-                    return "You cannot rate your own translation.";
+                    return "You cannot vote on your own translation.";
                 case RateBlock.NotUsedYet:
-                    return "Play with it a little, then rate it.";
+                    return "Play with it a little, then vote.";
                 default:
                     return "";
             }
