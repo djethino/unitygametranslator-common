@@ -27,6 +27,7 @@ namespace UnityGameTranslator.Common.Checks
             UpdateVerdicts();
             StoredSecrets();
             SyncState();
+            WhatSitsBesideATranslation();
             MergeDecisions();
             EditingSides();
             HasItBeenPublished();
@@ -54,6 +55,13 @@ namespace UnityGameTranslator.Common.Checks
 
             Console.WriteLine($"{_failures} check(s) FAILED.");
             return 1;
+        }
+
+        /// <summary>The files a translation keeps beside itself, and the section two products read by name.</summary>
+        private static void WhatSitsBesideATranslation()
+        {
+            Section("Translation files");
+            TranslationFilesChecks.Run(Check);
         }
 
         /// <summary>Settling one line between here, there, and what both came from.</summary>

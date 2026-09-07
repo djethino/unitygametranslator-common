@@ -178,7 +178,8 @@ namespace UnityGameTranslator.Common
         /// The asset files a copy must carry, relative to the mod's data folder.
         ///
         /// 🔴 **Only what the translation NAMES.** A translation file lists the images it puts in
-        /// place (`_images[].file`) and the fonts it asks for, so the set is computable — which is
+        /// place (`_image_replacements[].file`, see <see cref="TranslationFiles.ImagesSection"/>) and
+        /// the fonts it asks for, so the set is computable — which is
         /// what makes a copy of "the translation and its assets" possible at all rather than a copy
         /// of the whole folder.
         ///
@@ -189,7 +190,9 @@ namespace UnityGameTranslator.Common
         /// ⚠ Parsing stays with the caller: both products already read that file with their own
         /// JSON library, and this one has neither.
         /// </summary>
-        /// <param name="imageFiles">Values of `_images[].file`, in any order. Nulls tolerated.</param>
+        /// <param name="imageFiles">Values of `_image_replacements[].file`, in any order. Nulls tolerated.
+        /// ⚠ Read under the key <see cref="TranslationFiles.ImagesSection"/>: both products once read
+        /// `_images`, a key the file never writes, and every saved copy silently carried no image.</param>
         /// <param name="fontFiles">Font FILE names the translation asks for. Nulls tolerated.</param>
         public static List<string> AssetsToCopy(IEnumerable<string?>? imageFiles,
                                                 IEnumerable<string?>? fontFiles)
