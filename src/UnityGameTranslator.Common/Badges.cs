@@ -333,57 +333,35 @@ namespace UnityGameTranslator.Common
             }
 
             // ── 3. Up to date? ────────────────────────────────────────────────
+            //
+            // ⚠ **The words and the sentence come from <see cref="Sync"/>, which owns them.** They
+            // were written out here, and again in the manager's game list, under a comment saying
+            // "one verdict, one vocabulary" — the verdict was shared and the vocabulary was not.
+            // Only the TONE is decided here, because it is a property of the strip: how loudly a
+            // chip reads is a rendering question, what it says is not.
             if (sync.HasValue)
             {
+                BadgeTone syncTone;
                 switch (sync.Value)
                 {
-                    // ⚠ **The words a program uses, not the words a novel uses.** These read
-                    // "In step", "Behind", "Ahead" and "Diverged" — precise, and nobody outside a
-                    // version-control habit says any of them. Somebody looking at a game wants to
-                    // know whether there is an update, in the four words every piece of software
-                    // has used for thirty years.
-                    case SyncDirection.InSync:
-                        badges.Add(new Badge
-                        {
-                            Text = "Up to date",
-                    Kind = BadgeKind.Sync,
-                            Tone = BadgeTone.Good,
-                            Tip = "This file and the published version hold the same content.",
-                        });
-                        break;
+                    // Nothing to do and nothing at risk.
+                    case SyncDirection.InSync: syncTone = BadgeTone.Good; break;
 
-                    case SyncDirection.Download:
-                        badges.Add(new Badge
-                        {
-                            Text = "Update available",
-                    Kind = BadgeKind.Sync,
-                            Tone = BadgeTone.Notice,
-                            Tip = "The published version has moved on. Nothing of yours is at risk "
-                                + "— you have no unpublished changes here.",
-                        });
-                        break;
+                    // Taking it costs nothing, so it is news rather than a warning.
+                    case SyncDirection.Download: syncTone = BadgeTone.Notice; break;
 
-                    case SyncDirection.Upload:
-                        badges.Add(new Badge
-                        {
-                            Text = "Unpublished changes",
-                    Kind = BadgeKind.Sync,
-                            Tone = BadgeTone.Attention,
-                            Tip = "You have changes here that the published version does not have.",
-                        });
-                        break;
-
-                    default:
-                        badges.Add(new Badge
-                        {
-                            Text = "Conflict",
-                    Kind = BadgeKind.Sync,
-                            Tone = BadgeTone.Attention,
-                            Tip = "Both this file and the published one have moved. Settling that "
-                                + "is done line by line.",
-                        });
-                        break;
+                    // Work that exists in one place only, and a settling that needs somebody:
+                    // both are worth catching an eye, neither is a fault.
+                    default: syncTone = BadgeTone.Attention; break;
                 }
+
+                badges.Add(new Badge
+                {
+                    Text = Sync.Name(sync.Value),
+                    Kind = BadgeKind.Sync,
+                    Tone = syncTone,
+                    Tip = Sync.Explain(sync.Value),
+                });
             }
 
             // ── 3b. What its author says about it ─────────────────────────────

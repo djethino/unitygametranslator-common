@@ -58,6 +58,10 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("sync", "decide", typeof(Sync), nameof(Sync.Decide),
                 e => Sync.Decide(Str(e, "local_content")!, Str(e, "server_content")!,
                                  Str(e, "last_synced")!, Bool(e, "has_local_changes"))),
+            new Operation("sync", "name", typeof(Sync), nameof(Sync.Name),
+                e => Sync.Name(EnumRequired<SyncDirection>(e, "direction"))),
+            new Operation("sync", "explain", typeof(Sync), nameof(Sync.Explain),
+                e => Sync.Explain(EnumRequired<SyncDirection>(e, "direction"))),
 
             // ── merge ─────────────────────────────────────────────────────────
             new Operation("merge", "priority_of", typeof(Merge), nameof(Merge.PriorityOf),

@@ -247,6 +247,64 @@ namespace UnityGameTranslator.Common
     public static class Sync
     {
         /// <summary>
+        /// The verdict in the words a player reads. Two or three of them, the same on a badge, in
+        /// a game list and on a card.
+        ///
+        /// 🔴 **Here because they were typed twice.** The badge strip wrote them and the manager's
+        /// game list wrote them again — with a comment above it saying "one verdict, one
+        /// vocabulary", which is how one can tell it was known and still not mechanical. The
+        /// VERDICT was already shared; only the words were not, so a change to one of them would
+        /// have reached a badge and left a game row saying the old thing.
+        ///
+        /// 🔴 **Plain international English, because there is no other.** These read "In step",
+        /// "Behind", "Ahead" and "Diverged" until 2026-08-14, when somebody pointed out that
+        /// nobody outside a version-control habit says any of them. The mod and the manager ship
+        /// no translations: what is written here is what a Polish, Brazilian or Korean player
+        /// reads, so the words are the ones every program has used for thirty years.
+        ///
+        /// ⚠ <see cref="SyncDirection.InSync"/> has a word too, and it is not silence: a game list
+        /// says "Up to date" where a badge strip may choose to show nothing. Which chips a screen
+        /// shows is a rendering decision; what a shown one SAYS is not.
+        /// </summary>
+        public static string Name(SyncDirection direction)
+        {
+            switch (direction)
+            {
+                case SyncDirection.Download: return "Update available";
+                case SyncDirection.Upload: return "Unpublished changes";
+                case SyncDirection.Merge: return "Conflict";
+                default: return "Up to date";
+            }
+        }
+
+        /// <summary>
+        /// What follows from it, in one sentence — for a tooltip, a card, a status line.
+        ///
+        /// ⚠ Each says what is AT RISK, because that is the question behind the word: taking an
+        /// update costs nothing when nothing of yours is unpublished, and it is not the same act
+        /// when both sides have moved.
+        /// </summary>
+        public static string Explain(SyncDirection direction)
+        {
+            switch (direction)
+            {
+                case SyncDirection.Download:
+                    return "The published version has moved on. Nothing of yours is at risk — you "
+                         + "have no unpublished changes here.";
+
+                case SyncDirection.Upload:
+                    return "You have changes here that the published version does not have.";
+
+                case SyncDirection.Merge:
+                    return "Both this file and the published one have moved. Settling that is done "
+                         + "line by line.";
+
+                default:
+                    return "This file and the published version hold the same content.";
+            }
+        }
+
+        /// <summary>
         /// </summary>
         /// <param name="localContent">
         /// The hash of what is on disk right now, from <see cref="ContentHash.Of"/>.

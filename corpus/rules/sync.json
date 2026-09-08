@@ -5,7 +5,9 @@
   "operations": {
     "content_hash": { "in": { "lines": "object keyed by the game's text, each a line in the file's form", "uuid": "string" }, "out": "64 lowercase hex, the sha-256 of the canonical document" },
     "is_metadata_key": { "in": { "key": "string" }, "out": "bool: a key the tools write about a file, not a line of it" },
-    "decide": { "in": { "local_content": "hash of what is on disk", "server_content": "file_hash the server reports, or null when unknown", "last_synced": "the server hash this file was last in step with, or null when never synced", "has_local_changes": "bool" }, "out": "InSync | Download | Upload | Merge" }
+    "decide": { "in": { "local_content": "hash of what is on disk", "server_content": "file_hash the server reports, or null when unknown", "last_synced": "the server hash this file was last in step with, or null when never synced", "has_local_changes": "bool" }, "out": "InSync | Download | Upload | Merge" },
+    "name": { "in": { "direction": "InSync | Download | Upload | Merge" }, "out": "the two or three words a player reads" },
+    "explain": { "in": { "direction": "InSync | Download | Upload | Merge" }, "out": "what follows from it, in one sentence" }
   },
   "cases": [
     { "id": "sync/content_hash/empty-still-hashes", "op": "content_hash",
@@ -112,6 +114,28 @@
       "why": "no ancestor and nothing of mine is still a download — there is nothing to lose" },
     { "id": "sync/decide/nothing-published-is-in-sync", "op": "decide",
       "in": { "local_content": "mine", "server_content": null, "last_synced": null, "has_local_changes": true }, "out": "InSync",
-      "why": "nothing published means nothing to reconcile — not an upload nobody asked for" }
+      "why": "nothing published means nothing to reconcile — not an upload nobody asked for" },
+
+    { "id": "sync/name/in-step", "op": "name", "in": { "direction": "InSync" }, "out": "Up to date",
+      "why": "the four words every piece of software has used for thirty years: this read 'In step' until somebody pointed out that nobody outside a version-control habit says it" },
+    { "id": "sync/name/behind", "op": "name", "in": { "direction": "Download" }, "out": "Update available",
+      "why": "'Behind' said the same thing to nobody" },
+    { "id": "sync/name/ahead", "op": "name", "in": { "direction": "Upload" }, "out": "Unpublished changes",
+      "why": "'Ahead' said the same thing to nobody" },
+    { "id": "sync/name/diverged", "op": "name", "in": { "direction": "Merge" }, "out": "Conflict",
+      "why": "'Diverged' is the version-control word; 'Conflict' is the one every program uses" },
+
+    { "id": "sync/explain/in-step", "op": "explain", "in": { "direction": "InSync" },
+      "out": "This file and the published version hold the same content.",
+      "why": "nothing to do and nothing at risk, said rather than left to be inferred from silence" },
+    { "id": "sync/explain/behind", "op": "explain", "in": { "direction": "Download" },
+      "out": "The published version has moved on. Nothing of yours is at risk — you have no unpublished changes here.",
+      "why": "what is AT RISK is the question behind the word, and here the answer is nothing" },
+    { "id": "sync/explain/ahead", "op": "explain", "in": { "direction": "Upload" },
+      "out": "You have changes here that the published version does not have.",
+      "why": "work that exists in exactly one place" },
+    { "id": "sync/explain/diverged", "op": "explain", "in": { "direction": "Merge" },
+      "out": "Both this file and the published one have moved. Settling that is done line by line.",
+      "why": "says the ACT it leads to, because it is not the same act as taking an update" }
   ]
 }
