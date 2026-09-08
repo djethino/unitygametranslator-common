@@ -40,6 +40,34 @@ namespace UnityGameTranslator.Common.Checks.Corpus
         public static double? NullableDouble(JsonElement e, string key) =>
             e.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetDouble() : (double?)null;
 
+        /// <summary>An enum by its C# name; absent or null is "not asked".</summary>
+        public static T? EnumOf<T>(JsonElement e, string key) where T : struct
+        {
+            string? name = Str(e, key);
+            if (name == null) return null;
+            if (!Enum.TryParse<T>(name, out var value))
+                throw new InvalidOperationException($"'{name}' is not a {typeof(T).Name}");
+            return value;
+        }
+
+        /// <summary>
+        /// The same, for an argument the rule has no default for: a case that forgets it must fail
+        /// loudly rather than quietly exercise whatever the first enum member happens to be.
+        /// </summary>
+        public static T EnumRequired<T>(JsonElement e, string key) where T : struct
+        {
+            var value = EnumOf<T>(e, key);
+            if (value == null) throw new InvalidOperationException($"'{key}' is required");
+            return value.Value;
+        }
+
+        /// <summary>Where a fork came from: <c>{"author": "alice", "lines": 3120}</c>, or null.</summary>
+        public static Origin? OriginOf(JsonElement e, string key)
+        {
+            if (!e.TryGetProperty(key, out var v) || v.ValueKind != JsonValueKind.Object) return null;
+            return new Origin(Str(v, "author"), NullableInt(v, "lines"));
+        }
+
         /// <summary>
         /// One translation line, in the file's own form: an object <c>{"v", "t"}</c> (no "t" =
         /// no tag; <c>"v": null</c> = a null value), a bare JSON string = the pre-tag form, and

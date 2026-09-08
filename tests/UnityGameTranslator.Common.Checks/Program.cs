@@ -185,9 +185,6 @@ namespace UnityGameTranslator.Common.Checks
             Section("Flags");
             FlagChecks.Run(Check);
 
-            Section("Badges");
-            BadgesChecks.Run(Check);
-
             Section("Origins");
             OriginsChecks.Run(Check);
 

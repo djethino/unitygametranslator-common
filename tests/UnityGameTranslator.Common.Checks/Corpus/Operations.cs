@@ -72,6 +72,29 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => Merge.Decide(Line(e, "local"), Line(e, "remote"), Line(e, "ancestor"))),
             new Operation("merge", "same", typeof(Merge), nameof(Merge.Same),
                 e => Merge.Same(LineRequired(e, "a"), LineRequired(e, "b"))),
+
+            // ── badges ────────────────────────────────────────────────────────
+            //
+            // ⚠ Sixteen arguments, nine of them optional: named keys are not a nicety here. An
+            // absent key is the C# default, which is what a caller that does not know passes.
+            new Operation("badges", "for", typeof(Badges), nameof(Badges.For),
+                e => Badges.For(
+                    EnumRequired<Publication>(e, "publication"),
+                    NullableBool(e, "is_main"),
+                    NullableInt(e, "branches_waiting"),
+                    Bool(e, "main_missing"),
+                    EnumOf<SyncDirection>(e, "sync"),
+                    EnumOf<ReviewStage>(e, "stage"),
+                    NullableDouble(e, "completeness"),
+                    Int(e, "votes"),
+                    Int(e, "downloads"),
+                    NullableBool(e, "finished"),
+                    NullableBool(e, "accepts_contributions"),
+                    NullableInt(e, "lines_available"),
+                    OriginOf(e, "origin"),
+                    Str(e, "main_owner"),
+                    Bool(e, "main_abandoned"),
+                    Bool(e, "branch_frozen"))),
         };
 
         private static readonly Dictionary<string, Operation> ById = Index();
