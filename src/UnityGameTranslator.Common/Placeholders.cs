@@ -102,11 +102,11 @@ namespace UnityGameTranslator.Common
                     errors.Add($"token {entry.Key} appears {found} time(s) instead of {entry.Value}");
             }
 
-            foreach (var entry in inAnswer)
-            {
-                if (!inSource.ContainsKey(entry.Key))
-                    errors.Add($"token {entry.Key} does not exist in the source");
-            }
+            // ⚠ Through Invented, so this clause and the belt the mod puts after the backends are
+            // one implementation. Only the wording is decided here: these lines go to the model on
+            // the next attempt, and the belt has no model to talk to.
+            foreach (string token in Invented(source, translation))
+                errors.Add($"token {token} does not exist in the source");
 
             foreach (char bracket in new[] { '{', '}', '[', ']' })
             {
@@ -194,6 +194,38 @@ namespace UnityGameTranslator.Common
 
             foreach (Match match in TokenPattern.Matches(text))
                 yield return match.Value;
+        }
+
+        /// <summary>
+        /// The placeholders an answer carries that its source never had, in the order they appear,
+        /// each named once. Empty when nothing was invented.
+        ///
+        /// 🔴 **Its own question because it is asked where <see cref="Accepts"/> is not.** That one
+        /// runs only when the source HAS placeholders — no placeholder, nothing to keep, single
+        /// attempt, no validation. So the one answer nobody was checking is the answer to a source
+        /// with none: a small model replying with a bare "[!STR*0]", or appending one to an
+        /// otherwise correct sentence. Such an entry replaces the text on screen AND is shared with
+        /// everyone on upload.
+        ///
+        /// ⚠ It was a loop of its own in the mod, testing tokens against the raw source with a
+        /// substring search. Same answers, but written twice — and this is exactly the file whose
+        /// own comment says two literals of one pattern are two chances to teach only one of them a
+        /// new token form.
+        /// </summary>
+        public static List<string> Invented(string source, string translation)
+        {
+            var invented = new List<string>();
+            if (string.IsNullOrEmpty(translation)) return invented;
+
+            Dictionary<string, int> inSource = Tally(source);
+
+            foreach (string token in Tokens(translation))
+            {
+                if (inSource.ContainsKey(token)) continue;
+                if (!invented.Contains(token)) invented.Add(token);
+            }
+
+            return invented;
         }
 
         /// <summary>How many times each placeholder appears.</summary>

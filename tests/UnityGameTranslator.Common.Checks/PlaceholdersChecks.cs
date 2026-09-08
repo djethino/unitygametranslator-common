@@ -16,6 +16,8 @@ namespace UnityGameTranslator.Common.Checks
     {
         public static void Run(Action<bool, string, string> check)
         {
+            Inventions(check);
+
             // What has to come back untouched, brackets included.
             check(Frozen("Hello [!v*0]").SequenceEqual(new[] { "[!v*0]" }),
                 "a bare token is frozen as itself", "nothing around it to keep");
@@ -69,6 +71,51 @@ namespace UnityGameTranslator.Common.Checks
                 "the last attempt spells the sequences out", "a fresh start, with nothing left implicit");
 
             check(Placeholders.MaxAttempts == 3, "three attempts", "plain, corrected, then restated");
+        }
+
+        /// <summary>
+        /// What an answer carries that its source never had.
+        ///
+        /// 🔴 **Asked where <see cref="Placeholders.Accepts"/> is not.** That one runs only when the
+        /// source HAS placeholders — no placeholder, nothing to keep, no validation at all — so the
+        /// answer nobody was checking is the one to a source with none. A small model replying with
+        /// a bare "[!STR*0]" put that on screen AND shared it with everyone on upload.
+        ///
+        /// ⚠ The mod kept its own loop for this until 2026-09-08, testing tokens against the raw
+        /// source with a substring search. Same answers, written twice, in the very file whose own
+        /// comment says two literals of one pattern are two chances to teach only one of them a new
+        /// token form.
+        /// </summary>
+        private static void Inventions(Action<bool, string, string> check)
+        {
+            check(Placeholders.Invented("Hello", "Bonjour [!STR*0]").SequenceEqual(new[] { "[!STR*0]" }),
+                "a token the source never had is invented",
+                "the source has none at all, so nothing else asks this question");
+
+            check(Placeholders.Invented("Hello [!v*0]", "Bonjour [!v*0]").Count == 0,
+                "one the source did have is not",
+                "keeping a placeholder is the whole point; flagging it would refuse every correct answer");
+
+            check(Placeholders.Invented("Hello [!v*0]", "Bonjour [!v*1]").SequenceEqual(new[] { "[!v*1]" }),
+                "and a token of the same family but another index is",
+                "slot 1 is not slot 0: put back, it would show a value that belongs elsewhere");
+
+            check(Placeholders.Invented("A [!v*0]", "B [!t*3] [!t*3] [!v*0]").SequenceEqual(new[] { "[!t*3]" }),
+                "each invented token is named once",
+                "the list goes into a sentence a person reads, not into a tally");
+
+            check(Placeholders.Invented("Hello", "Bonjour").Count == 0
+                  && Placeholders.Invented("Hello", "").Count == 0
+                  && Placeholders.Invented("Hello", null).Count == 0,
+                "and a plain answer invents nothing",
+                "the overwhelming majority, which must cost nothing to establish");
+
+            // ⚠ Same question, from inside the strict gate: Accepts words it for the model, and
+            // both now read one implementation.
+            check(ErrorsOf("Hello [!v*0]", "Bonjour [!v*0] [!STR*9]")
+                    .Any(e => e.Contains("[!STR*9]") && e.Contains("does not exist in the source")),
+                "the strict gate says the same thing in its own words",
+                "its lines are handed to the model on the next attempt, so they name the token");
         }
 
         private static List<string> Frozen(string source) => Placeholders.FrozenSequences(source);
