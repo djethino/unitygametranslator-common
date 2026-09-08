@@ -95,6 +95,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
         /// </summary>
         private static bool Play(Operation op, Case c, Dictionary<string, Case> byId, out string detail)
         {
+            detail = "";
             object? actual;
             try
             {
