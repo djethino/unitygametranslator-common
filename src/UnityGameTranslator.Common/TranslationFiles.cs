@@ -53,8 +53,13 @@ namespace UnityGameTranslator.Common
         /// The section of the translation file that lists the images it puts in place. Each entry
         /// names its file under <see cref="ImageFileField"/>; entries written by earlier versions
         /// may still use one of <see cref="ImageFileLegacyFields"/>, and readers accept those too.
+        ///
+        /// ⚠ An ALIAS, not a second spelling: it is the images row of
+        /// <see cref="SettingsSections.JsonKey"/>, kept under this name because the code that reads
+        /// it is looking for images and not for a settings section — and because the two fields
+        /// below only make sense beside it. The string itself is written once, in that table.
         /// </summary>
-        public const string ImagesSection = "_image_replacements";
+        public const string ImagesSection = SettingsSections.ImagesKey;
 
         /// <summary>Field of an image entry holding the file name, relative to the mod's <c>images/</c> folder.</summary>
         public const string ImageFileField = "file";

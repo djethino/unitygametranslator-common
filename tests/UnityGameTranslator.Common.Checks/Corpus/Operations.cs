@@ -95,6 +95,29 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     Str(e, "main_owner"),
                     Bool(e, "main_abandoned"),
                     Bool(e, "branch_frozen"))),
+
+            // ── mod_ui_migration ──────────────────────────────────────────────
+            new Operation("mod_ui_migration", "decide", typeof(ModUiMigration), nameof(ModUiMigration.Decide),
+                e => ModUiMigration.Decide(Bool(e, "in_ancestor"), Bool(e, "already_held"), Bool(e, "is_empty"),
+                                           Str(e, "line_language")!, Str(e, "interface_language")!)),
+            new Operation("mod_ui_migration", "still_counts_as_published",
+                typeof(ModUiMigration), nameof(ModUiMigration.StillCountsAsPublished),
+                e => ModUiMigration.StillCountsAsPublished(Str(e, "ancestor_tag")!, Bool(e, "present_locally"))),
+
+            // ── settings ──────────────────────────────────────────────────────
+            new Operation("settings", "all", typeof(SettingsSections), nameof(SettingsSections.All),
+                e => SettingsSections.All),
+            new Operation("settings", "json_key", typeof(SettingsSections), nameof(SettingsSections.JsonKey),
+                e => SettingsSections.JsonKey(Str(e, "section")!)),
+            new Operation("settings", "name", typeof(SettingsSections), nameof(SettingsSections.Name),
+                e => SettingsSections.Name(Str(e, "section")!)),
+            new Operation("settings", "description", typeof(SettingsSections), nameof(SettingsSections.Description),
+                e => SettingsSections.Description(Str(e, "section")!)),
+            new Operation("settings", "classify", typeof(SettingsSections), nameof(SettingsSections.Classify),
+                e => SettingsSections.Classify(Bool(e, "ours_matches_theirs"), Bool(e, "has_ancestor"),
+                                               Bool(e, "ours_matches_ancestor"), Bool(e, "theirs_matches_ancestor"))),
+            new Operation("settings", "needs_decision", typeof(SettingsSections), nameof(SettingsSections.NeedsDecision),
+                e => SettingsSections.NeedsDecision(EnumRequired<SettingsSectionState>(e, "state"))),
         };
 
         private static readonly Dictionary<string, Operation> ById = Index();
