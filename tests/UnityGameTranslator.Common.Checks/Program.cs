@@ -27,7 +27,18 @@ namespace UnityGameTranslator.Common.Checks
 
         private static int Main()
         {
-            Corpus.CorpusRunner.Run(Check);
+            // ⚠ The corpus prints its own headings, so it is guarded here rather than by
+            // Section() below — same reason, same wording: a throw must not end the run silently.
+            try
+            {
+                Corpus.CorpusRunner.Run(Check);
+            }
+            catch (Exception ex)
+            {
+                _failures++;
+                Console.WriteLine($"  FAIL  {"the corpus stopped here",-52}  "
+                                  + $"{ex.GetType().Name}: {ex.Message} — every case below it went UNRUN");
+            }
             StoredSecrets();
             WhatSitsBesideATranslation();
             EditingSides();
@@ -61,157 +72,129 @@ namespace UnityGameTranslator.Common.Checks
         /// <summary>The files a translation keeps beside itself, and the section two products read by name.</summary>
         private static void WhatSitsBesideATranslation()
         {
-            Section("Translation files");
-            TranslationFilesChecks.Run(Check);
+            Section("Translation files", TranslationFilesChecks.Run);
         }
 
         /// <summary>Which copy an editor is about to change, and what is reachable from where.</summary>
         private static void EditingSides()
         {
-            Section("Edit scope");
-            EditScopeChecks.Run(Check);
+            Section("Edit scope", EditScopeChecks.Run);
         }
 
         /// <summary>Whether a translation has ever left this machine.</summary>
         private static void HasItBeenPublished()
         {
-            Section("Publication");
-            PublicationChecks.Run(Check);
+            Section("Publication", PublicationChecks.Run);
         }
 
         /// <summary>What sending a file becomes, the word for it, and where the act is taken.</summary>
         private static void WhatOneButtonDoes()
         {
-            Section("Uploads");
-            UploadsChecks.Run(Check);
+            Section("Uploads", UploadsChecks.Run);
 
-            Section("The language of a translation");
-            TranslationLanguagesChecks.Run(Check);
+            Section("The language of a translation", TranslationLanguagesChecks.Run);
 
-            Section("Which game a publication names");
-            GameCandidatesChecks.Run(Check);
+            Section("Which game a publication names", GameCandidatesChecks.Run);
         }
 
         /// <summary>Who may rate a translation, and why the arrows are sometimes absent.</summary>
         private static void WhoMayRate()
         {
-            Section("Voting");
-            VotingChecks.Run(Check);
+            Section("Voting", VotingChecks.Run);
         }
 
         /// <summary>The durations and the words of a browser edit session.</summary>
         private static void BrowserSessions()
         {
-            Section("Edit sessions");
-            EditSessionsChecks.Run(Check);
+            Section("Edit sessions", EditSessionsChecks.Run);
         }
 
         /// <summary>Which form of the scope strip fits beside a title.</summary>
         private static void HowMuchStripFits()
         {
-            Section("Scope strip");
-            ScopeStripChecks.Run(Check);
+            Section("Scope strip", ScopeStripChecks.Run);
         }
 
         /// <summary>The four independent questions a screen answers, and who may write.</summary>
         private static void WhereSomebodyStands()
         {
-            Section("Standing");
-            StandingChecks.Run(Check);
+            Section("Standing", StandingChecks.Run);
         }
 
         /// <summary>The palette, against what the website actually renders.</summary>
         private static void ProductColours()
         {
-            Section("Theme");
-            ThemeChecks.Run(Check);
+            Section("Theme", ThemeChecks.Run);
         }
 
         /// <summary>What a provider will accept, learned by being refused.</summary>
         private static void ProviderNegotiation()
         {
-            Section("Negotiation");
-            NegotiationChecks.Run(Check);
+            Section("Negotiation", NegotiationChecks.Run);
         }
 
         /// <summary>Why a request never arrived, in words that point at the right culprit.</summary>
         private static void WhyItNeverArrived()
         {
-            Section("Connectivity");
-            ConnectivityChecks.Run(Check);
+            Section("Connectivity", ConnectivityChecks.Run);
         }
 
         /// <summary>Where a request really goes, from whatever address somebody pasted.</summary>
         private static void EndpointAddresses()
         {
-            Section("Endpoints");
-            EndpointsChecks.Run(Check);
+            Section("Endpoints", EndpointsChecks.Run);
         }
 
         /// <summary>What a model is actually told, and how a text is sorted before being asked for.</summary>
         private static void PromptWording()
         {
-            Section("Prompts");
-            PromptsChecks.Run(Check);
+            Section("Prompts", PromptsChecks.Run);
         }
 
         /// <summary>What a game will accept back from a model, and what it says when it will not.</summary>
         private static void PlaceholderRules()
         {
-            Section("Placeholder rules");
-            PlaceholdersChecks.Run(Check);
+            Section("Placeholder rules", PlaceholdersChecks.Run);
         }
 
         /// <summary>What a player is told about a file, checked against the website's rules.</summary>
         private static void QualityMeasures()
         {
-            Section("Quality measures");
-            QualityChecks.Run(Check);
+            Section("Quality measures", QualityChecks.Run);
         }
 
         /// <summary>How a keyboard shortcut is spelled — silent when wrong, hence the cases.</summary>
         private static void HotkeySpelling()
         {
-            Section("Hotkeys");
-            HotkeysChecks.Run(Check);
+            Section("Hotkeys", HotkeysChecks.Run);
         }
 
         /// <summary>Codes, names, and the two inventories that must not be collapsed.</summary>
         private static void LanguageLookup()
         {
-            Section("Languages");
-            LanguagesChecks.Run(Check);
+            Section("Languages", LanguagesChecks.Run);
 
-            Section("Flags");
-            FlagChecks.Run(Check);
+            Section("Flags", FlagChecks.Run);
 
-            Section("Origins");
-            OriginsChecks.Run(Check);
+            Section("Origins", OriginsChecks.Run);
 
-            Section("Composition");
-            CompositionChecks.Run(Check);
+            Section("Composition", CompositionChecks.Run);
 
-            Section("Contributions");
-            ContributionsChecks.Run(Check);
+            Section("Contributions", ContributionsChecks.Run);
 
-            Section("People");
-            PeopleChecks.Run(Check);
+            Section("People", PeopleChecks.Run);
 
-            Section("Backups");
-            BackupsChecks.Run(Check);
+            Section("Backups", BackupsChecks.Run);
 
-            Section("Mod interface");
-            ModUiChecks.Run(Check);
+            Section("Mod interface", ModUiChecks.Run);
 
-            Section("Game names");
-            GameNamesChecks.Run(Check);
+            Section("Game names", GameNamesChecks.Run);
         }
 
         /// <summary>The stored-secret format, checked against its own specification.</summary>
         private static void StoredSecrets()
         {
-            Section("Stored secrets");
-            SecretsChecks.Run(Check);
+            Section("Stored secrets", SecretsChecks.Run);
         }
 
         private static void Check(bool passed, string what, string why)
@@ -220,11 +203,35 @@ namespace UnityGameTranslator.Common.Checks
             Console.WriteLine($"  {(passed ? "ok  " : "FAIL")}  {what,-52}  {why}");
         }
 
-        private static void Section(string title)
+        /// <summary>
+        /// Print a section heading and run its cases.
+        ///
+        /// 🔴 **The catch is not defensive, it is the alarm working.** A case that throws ends the
+        /// method it is in, so every case after it goes UNRUN — and the output looks merely
+        /// shorter, which is indistinguishable from a section that was always that long. That cost
+        /// a wrong conclusion twice on 2026-09-08, in the mod's suite: deliberately broken rules
+        /// showed one red, which reads exactly like cases that prove nothing. They had never run.
+        ///
+        /// ⚠ So the throw is reported as a FAILED case, named, with what is lost said out loud.
+        /// Nothing is swallowed and the exit code still turns non-zero — see
+        /// analyse/pieges-projet.md §9. Same guard as tests/UnityGameTranslator.Core.Checks.
+        /// </summary>
+        private static void Section(string title, Action<Action<bool, string, string>> run)
         {
             Console.WriteLine();
             Console.WriteLine(title);
             Console.WriteLine(new string('-', title.Length));
+
+            try
+            {
+                run(Check);
+            }
+            catch (Exception ex)
+            {
+                _failures++;
+                Console.WriteLine($"  FAIL  {"the section stopped here",-52}  "
+                                  + $"{ex.GetType().Name}: {ex.Message} — every case below it went UNRUN");
+            }
         }
     }
 }
