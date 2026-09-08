@@ -17,6 +17,7 @@ namespace UnityGameTranslator.Common.Checks
         public static void Run(Action<bool, string, string> check)
         {
             Inventions(check);
+            TypedByHand(check);
 
             // What has to come back untouched, brackets included.
             check(Frozen("Hello [!v*0]").SequenceEqual(new[] { "[!v*0]" }),
@@ -118,7 +119,60 @@ namespace UnityGameTranslator.Common.Checks
                 "its lines are handed to the model on the next attempt, so they name the token");
         }
 
+        /// <summary>
+        /// A translation somebody typed in an editor, with the result in front of them.
+        ///
+        /// 🔴 **Held to the same rule about placeholders as a model.** The mod checked missing and
+        /// unknown tokens and nothing else, so a person could duplicate a placeholder — or drop the
+        /// bracket the game wrapped around one — and save it, where a model doing the same was
+        /// refused. The game substitutes at runtime and does not care who was at the keyboard.
+        ///
+        /// ⚠ **One check less, and it is named**: the count of brackets over the whole text. It
+        /// guards against a model wrapping a placeholder in a pair of its own, which the frozen
+        /// sequences already cover for the placeholders; applied to a person it refuses an addition
+        /// that is theirs to make.
+        /// </summary>
+        private static void TypedByHand(Action<bool, string, string> check)
+        {
+            check(Edit("Level [!v*0]", "Niveau [!v*0]"),
+                "a translation that keeps its placeholder is saved",
+                "the ordinary case, and the one everything else is measured against");
+
+            check(!Edit("Level [!v*0]", "Niveau"),
+                "one that drops it is not",
+                "the game substitutes at runtime and would show a level with no number");
+
+            // 🔴 What the looser rule let through until 2026-09-08.
+            check(!Edit("Level [!v*0]", "Niveau [!v*0] sur [!v*0]"),
+                "and neither is one that duplicates it",
+                "the same value written twice is not the same line, and this used to be accepted from a person and refused from a model");
+
+            check(!Edit("Cost: ({[!v*0]})", "Prix : ({[!v*0]}"),
+                "dropping a bracket the GAME put around a placeholder refuses too",
+                "the token survives and the line still breaks — which is why frozen sequences are checked as sequences");
+
+            check(!Edit("Hello", "Bonjour [!STR*0]"),
+                "inventing one refuses",
+                "a token the source never had substitutes to nothing anybody wrote");
+
+            // ⚠ The check a person is NOT held to, and the reason there are two questions.
+            check(Edit("Save", "Save [F5]"),
+                "but a bracket somebody adds themselves is theirs to add",
+                "it is not a placeholder, it breaks nothing, and refusing it would make the editor argue with its user");
+
+            check(!Accepts("Save", "Save [F5]"),
+                "while a model gets refused for the same thing",
+                "there is nobody to ask what it meant, and a model wrapping text in brackets is how a placeholder gets buried");
+
+            check(Edit("plain", "tout simple") && Edit("", ""),
+                "a text with no placeholder is accepted whatever is typed",
+                "there is nothing to keep, so there is nothing to refuse");
+        }
+
         private static List<string> Frozen(string source) => Placeholders.FrozenSequences(source);
+
+        private static bool Edit(string source, string edited) =>
+            Placeholders.AcceptsEdit(source, edited, Frozen(source), out _);
 
         private static bool Accepts(string source, string translation) =>
             Placeholders.Accepts(source, translation, Frozen(source), out _);

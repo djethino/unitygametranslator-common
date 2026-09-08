@@ -83,6 +83,54 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static bool Accepts(string source, string translation, List<string> frozen, out List<string> errors)
         {
+            KeepsEveryPlaceholder(source, translation, frozen, out errors);
+
+            // ⚠ The one check a PERSON is not held to — see AcceptsEdit. It exists for a model that
+            // wraps a placeholder in a pair of its own, which the frozen sequences catch for the
+            // placeholders themselves; over the whole text it also refuses a bracket somebody added
+            // on purpose, and a model cannot be asked what it meant.
+            foreach (char bracket in new[] { '{', '}', '[', ']' })
+            {
+                int expected = source.Count(c => c == bracket);
+                int found = translation.Count(c => c == bracket);
+                if (expected != found)
+                    errors.Add($"character '{bracket}' appears {found} time(s) instead of {expected}");
+            }
+
+            return errors.Count == 0;
+        }
+
+        /// <summary>
+        /// Whether a game would accept a translation somebody typed HERE, in an editor, with the
+        /// result in front of them.
+        ///
+        /// 🔴 **The same rule about placeholders as a model is held to, and that is the point.** A
+        /// dropped, duplicated or invented token breaks the line whoever wrote it: the game
+        /// substitutes at runtime and does not care that a human was at the keyboard. This used to
+        /// be a looser rule of the mod's own — missing and unknown only — so a person could
+        /// duplicate a placeholder where a model would have been refused, and save it.
+        ///
+        /// ⚠ **One check is deliberately left out: the count of brackets over the whole text.** It
+        /// guards against a model wrapping a placeholder in a pair of its own, and the frozen
+        /// sequences already cover that for the placeholders. Applied to a person it would refuse
+        /// an edit like "Save" → "Save [F5]", which is theirs to make and breaks nothing.
+        ///
+        /// ⚠ The lines it returns are read on a screen rather than sent to a model, so they name
+        /// the token and the count and stop there — <see cref="Correction"/> is the other audience.
+        /// </summary>
+        public static bool AcceptsEdit(string source, string edited, List<string> frozen, out List<string> errors)
+        {
+            KeepsEveryPlaceholder(source, edited, frozen, out errors);
+            return errors.Count == 0;
+        }
+
+        /// <summary>
+        /// What both audiences are held to: the frozen sequences verbatim, then the tokens as the
+        /// same multiset — nothing missing, duplicated or invented.
+        /// </summary>
+        private static void KeepsEveryPlaceholder(string source, string translation,
+                                                  List<string> frozen, out List<string> errors)
+        {
             errors = new List<string>();
 
             foreach (string sequence in frozen)
@@ -107,16 +155,6 @@ namespace UnityGameTranslator.Common
             // the next attempt, and the belt has no model to talk to.
             foreach (string token in Invented(source, translation))
                 errors.Add($"token {token} does not exist in the source");
-
-            foreach (char bracket in new[] { '{', '}', '[', ']' })
-            {
-                int expected = source.Count(c => c == bracket);
-                int found = translation.Count(c => c == bracket);
-                if (expected != found)
-                    errors.Add($"character '{bracket}' appears {found} time(s) instead of {expected}");
-            }
-
-            return errors.Count == 0;
         }
 
         /// <summary>
