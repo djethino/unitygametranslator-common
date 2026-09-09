@@ -86,6 +86,59 @@ namespace UnityGameTranslator.Common.Checks
             check(Uploads.DecidedInTheGame(UploadAct.Contribute) && Uploads.DecidedInTheGame(UploadAct.Fork)
                   && !Uploads.DecidedInTheGame(UploadAct.Upload) && !Uploads.DecidedInTheGame(UploadAct.Update),
                 "contributing and forking are the game's acts", "creating and updating are anybody's");
+
+            WhyItIsClosed(check);
+        }
+
+        /// <summary>
+        /// The refusal every screen that offers publishing has to say BEFORE the click.
+        ///
+        /// 🔴 It lives here because more than one place offers the act, and one of them used to
+        /// work it out for itself — badly: the mod's corner notification opened the upload window
+        /// with no account in place, and the refusal only arrived once the form had been filled in.
+        /// </summary>
+        private static void WhyItIsClosed(Action<bool, string, string> check)
+        {
+            string Closed(UploadAct act, int lines = 40, bool copy = false,
+                          bool online = true, bool signedIn = true, bool inSync = false) =>
+                Uploads.ClosedReason(act, lines, copy, online, signedIn, inSync);
+
+            check(Closed(UploadAct.Update) == null,
+                "an update with work to send is open",
+                "the ordinary case: signed in, online, something to say");
+
+            check(Closed(UploadAct.Contribute, signedIn: false) == "Login required",
+                "contributing asks for an account, and says so",
+                "this is the one that was found out only after the window was filled in");
+
+            check(Closed(UploadAct.Update, online: false) == "Offline mode - upload disabled",
+                "nothing is sent from an install that talks to nobody",
+                "the account is beside the point when the network is off");
+
+            check(Closed(UploadAct.Update, inSync: true) == "Up to date — nothing to send",
+                "and nothing is sent when there is nothing to send",
+                "an offer to publish what is already published reads as the mod losing track");
+
+            // 🔴 A fork is local from end to end — a new lineage on this machine, nothing sent —
+            // and it is the way ON when the walls are up. Asking it for an account or a network
+            // would close the one door that answers them.
+            check(Closed(UploadAct.Fork, online: false, signedIn: false) == null,
+                "a fork asks for neither the network nor an account",
+                "it writes one local file, and it is what a closed lineage leaves open");
+
+            check(Closed(UploadAct.Fork, lines: 0) == "No translations to upload",
+                "but a fork of nothing is still nothing",
+                "the two refusals above it are about the file, not about sending it");
+
+            check(Closed(UploadAct.Fork, copy: true).StartsWith("This copy is unchanged"),
+                "and a copy nobody has touched is not somebody's work",
+                "publishing it puts a second identical entry on the site under a new name");
+
+            // ⚠ Order, and it is the one thing a reader would get wrong: telling somebody to sign
+            // in for an upload that would be empty sends them round a loop back to the same place.
+            check(Closed(UploadAct.Contribute, lines: 0, signedIn: false) == "No translations to upload",
+                "the emptier reason is said first",
+                "signing in would not change the answer");
         }
     }
 }

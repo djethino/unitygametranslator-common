@@ -155,6 +155,53 @@ namespace UnityGameTranslator.Common
         public static bool DecidedInTheGame(UploadAct act) =>
             act == UploadAct.Contribute || act == UploadAct.Fork;
 
+        /// <summary>
+        /// Why the act cannot be taken right now, or null when it can.
+        ///
+        /// 🔴 **A refusal known BEFORE the click is said before the click.** Every product here
+        /// offers publishing from more than one place — the mod from its panel and from the corner
+        /// notification, the Manager from a game's card — and each place used to work out for
+        /// itself whether the act was open. One of them did not: the notification's Contribute
+        /// button opened the upload window unconditionally, and somebody with no account learnt
+        /// they needed one only after filling it in and pressing Upload.
+        ///
+        /// ⚠ **It answers with the REASON, never with a bool**, and that is the whole point: a
+        /// control that cannot act has to say why, right there. A caller that only wants to know
+        /// whether it may act asks whether this is null.
+        ///
+        /// ⚠ **Order matters, most-explaining first.** "There is nothing to send" outranks "you
+        /// are not signed in": telling somebody to sign in for an upload that would be empty sends
+        /// them round a loop that ends in the same place.
+        ///
+        /// ⚠ **A fork asks for neither the network nor an account**, so the last three do not
+        /// apply to it: it is local from end to end — a new lineage on this machine, nothing sent
+        /// — and it is precisely the way on when the walls above are up.
+        /// </summary>
+        /// <param name="act">What would be taken; see <see cref="ActOf"/>.</param>
+        /// <param name="lines">How many lines the file holds. Nothing to send is nothing to send.</param>
+        /// <param name="untouchedCopy">A fork still holding, line for line, the file it came from.</param>
+        /// <param name="online">Whether this install talks to the site at all.</param>
+        /// <param name="signedIn">Whether an account is in place here.</param>
+        /// <param name="inSync">Whether what is here is already what is published.</param>
+        public static string? ClosedReason(UploadAct act, int lines, bool untouchedCopy,
+                                           bool online, bool signedIn, bool inSync)
+        {
+            if (lines == 0) return "No translations to upload";
+
+            // The fact, then the way out. Naming the author would need a lookup nobody has after
+            // a fork — the lineage is gone — and the sentence works without it.
+            if (untouchedCopy)
+                return "This copy is unchanged. Translate or correct a line to publish it as yours.";
+
+            if (act == UploadAct.Fork) return null;
+
+            if (!online) return "Offline mode - upload disabled";
+            if (!signedIn) return "Login required";
+            if (inSync) return "Up to date — nothing to send";
+
+            return null;
+        }
+
         /// <summary>Said by a tool that cannot take the act, after the wall when there is one.</summary>
         public const string OnlyInTheGame =
             "Contributing and forking are decided in the game: open it and choose there.";
