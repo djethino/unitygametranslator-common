@@ -108,6 +108,22 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 typeof(ModUiMigration), nameof(ModUiMigration.StillCountsAsPublished),
                 e => ModUiMigration.StillCountsAsPublished(Str(e, "ancestor_tag")!, Bool(e, "present_locally"))),
 
+            // ── answers ───────────────────────────────────────────────────────
+            new Operation("answers", "read", typeof(Answers), nameof(Answers.Read),
+                e => Answers.Read(Str(e, "answer"))),
+            new Operation("answers", "read_rating", typeof(Answers), nameof(Answers.ReadRating),
+                e => Answers.ReadRating(Str(e, "answer"))),
+            new Operation("answers", "clean", typeof(Answers), nameof(Answers.Clean),
+                e => Answers.Clean(Str(e, "answer")!)),
+            new Operation("answers", "store", typeof(Answers), nameof(Answers.Store),
+                e => Answers.Store(Bool(e, "from_own_ui"), EnumRequired<AnswerKind>(e, "kind"))),
+            new Operation("answers", "capture", typeof(Answers), nameof(Answers.Capture),
+                e => Answers.Capture(Bool(e, "from_own_ui"))),
+            new Operation("answers", "tag_of", typeof(Answers), nameof(Answers.TagOf),
+                e => Answers.TagOf(EnumRequired<Filing>(e, "filing"))),
+            new Operation("answers", "stores_the_source", typeof(Answers), nameof(Answers.StoresTheSource),
+                e => Answers.StoresTheSource(EnumRequired<Filing>(e, "filing"))),
+
             // ── settings ──────────────────────────────────────────────────────
             new Operation("settings", "all", typeof(SettingsSections), nameof(SettingsSections.All),
                 e => SettingsSections.All),
