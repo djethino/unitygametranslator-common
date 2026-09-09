@@ -159,6 +159,57 @@ namespace UnityGameTranslator.Common.Checks
             check(Answers.Clean("") == "" && Answers.Clean(null!) == null, "nothing in, nothing out",
                 "no work to do");
 
+            // ── What becomes of the line, once the answer has been read ───────────────
+            // 🔴 Where it comes FROM outranks what came back, and the two defects this pins were
+            // both the other way round.
+            check(Answers.Store(false, AnswerKind.Translation) == Filing.Machine,
+                "a game line that came back translated is the machine's work",
+                "the ordinary case, and the only one anybody thinks about");
+            check(Answers.Store(false, AnswerKind.Skip) == Filing.KeptAsIs,
+                "a game line the model declined is kept as it is",
+                "recorded, so nothing asks again for a line that is already in the target language");
+            check(Answers.Store(true, AnswerKind.Translation) == Filing.Interface,
+                "an interface line goes to the interface",
+                "never into the game's file, whatever else is true of it");
+            check(Answers.Store(true, AnswerKind.Skip) == Filing.Nothing,
+                "🔴 an interface line the model declined is stored NOWHERE",
+                "it used to be filed S in the GAME's file — a tag meaning a person ruled on it — counted and merged like a game line");
+            check(Answers.Store(true, AnswerKind.Unusable) == Filing.Nothing
+                  && Answers.Store(false, AnswerKind.Unusable) == Filing.Nothing,
+                "and an unusable answer stores nothing, wherever it came from",
+                "there is no line to store; the origin cannot rescue it");
+
+            check(Answers.Capture(false) == Filing.Captured,
+                "collecting the game's text files the line with nothing in it",
+                "somebody translates it later, on the site or in the browser");
+            check(Answers.Capture(true) == Filing.Nothing,
+                "🔴 and the mod's own interface is not collected",
+                "it filed our menu labels in the game's file as empty human captures: no editor, no destination, nothing to become");
+
+            // The letters, none of them spelled out twice.
+            check(Answers.TagOf(Filing.Machine) == Composition.Letter(TagBand.Machine)
+                  && Answers.TagOf(Filing.KeptAsIs) == Composition.Letter(TagBand.Skipped)
+                  && Answers.TagOf(Filing.Captured) == Composition.Letter(TagBand.Human),
+                "every tag comes from the band table",
+                "a fifth spelling of \"A\" is how two products come to disagree about what a file says");
+            check(Answers.TagOf(Filing.Interface) == ModUi.Tag,
+                "and the interface's from the interface",
+                "M is not a band: it is not a line of the game at all");
+            check(Answers.TagOf(Filing.Nothing) == null,
+                "storing nothing has no tag",
+                "a tag would invite somebody to write the entry anyway");
+            check(Answers.TagOf(Filing.Captured) == "H" && Answers.TagOf(Filing.Captured) != Composition.Letter(TagBand.Captured),
+                "⚠ a captured line is tagged H with an empty value, not the Captured band's letter",
+                "the band describes a line on a screen and has no letter; the file has always carried this pair, ranked below everything by Merge.PriorityOf");
+
+            check(Answers.StoresTheSource(Filing.KeptAsIs),
+                "kept as it is stores the source text",
+                "the game's own words, which is what the tag promises");
+            check(!Answers.StoresTheSource(Filing.Machine) && !Answers.StoresTheSource(Filing.Interface)
+                  && !Answers.StoresTheSource(Filing.Captured) && !Answers.StoresTheSource(Filing.Nothing),
+                "and nothing else does",
+                "writing the source anywhere else would store an untranslated line as a translation");
+
             // The mod's own interface: a different job, different rules.
             string ui = Prompts.ForOwnInterface("French", TextType.Phrase, none);
             check(ui.Contains("from English to French"), "its source is always English", "the interface is written in it");

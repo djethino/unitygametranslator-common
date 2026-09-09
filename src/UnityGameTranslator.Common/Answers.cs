@@ -3,6 +3,32 @@ using System.Text.RegularExpressions;
 
 namespace UnityGameTranslator.Common
 {
+    /// <summary>
+    /// What becomes of one line — the four things a translator can do with it, and nothing else.
+    ///
+    /// 🔴 **The name says what is stored AND under which tag**, because the two have never been
+    /// separable: a line kept as it is only means anything tagged S, and an interface line is only
+    /// out of the game's file because it is tagged M. Splitting them is how a refused interface
+    /// label came to be filed S in the game's file.
+    /// </summary>
+    public enum Filing
+    {
+        /// <summary>Store nothing at all. The line stays as the game wrote it.</summary>
+        Nothing,
+
+        /// <summary>Store what came back, as the machine's work — tag A.</summary>
+        Machine,
+
+        /// <summary>Store the SOURCE text, as a line somebody ruled must not be translated — tag S.</summary>
+        KeptAsIs,
+
+        /// <summary>Store what came back in the mod's own interface — tag M, and never the game's file.</summary>
+        Interface,
+
+        /// <summary>Store an empty value: met in game, nobody has written it yet — tag H.</summary>
+        Captured,
+    }
+
     /// <summary>What came back, once the refusal marker has been taken into account.</summary>
     public enum AnswerKind
     {
@@ -99,6 +125,85 @@ namespace UnityGameTranslator.Common
             return trimmed.IndexOf(SkipMarker, StringComparison.Ordinal) >= 0
                 ? AnswerKind.Unusable
                 : AnswerKind.Translation;
+        }
+
+        /// <summary>
+        /// What becomes of a line the backend answered for.
+        ///
+        /// 🔴 **Where a line comes from outranks what came back**, and getting that the wrong way
+        /// round has cost twice. The refusal marker used to win over the origin, so a declined
+        /// interface label was filed S — a tag that means "a person ruled this line must stay as it
+        /// is" — in the GAME's file, counted in its contributions and merged like any game line.
+        /// An interface line is an interface line whatever the model answered.
+        ///
+        /// ⚠ **A declined interface label is stored NOWHERE.** The source of the mod's own labels
+        /// is always English, so a refusal there is the model declining a job it was handed
+        /// wrongly, not a decision worth recording. Storing it would also make the refusal
+        /// permanent: nothing would ask again.
+        ///
+        /// ⚠ In the socle because a Core in another language has to reach the same five answers, and
+        /// because <see cref="AnswerKind"/>, <see cref="ModUi.Tag"/> and
+        /// <see cref="Composition.Letter"/> — the three things this combines — already live here.
+        /// </summary>
+        /// <param name="fromOwnUi">The line is one of the mod's own labels, settled when it was queued.</param>
+        /// <param name="kind">What came back, as <see cref="Read"/> judged it.</param>
+        public static Filing Store(bool fromOwnUi, AnswerKind kind)
+        {
+            if (kind == AnswerKind.Unusable) return Filing.Nothing;
+
+            if (fromOwnUi)
+                return kind == AnswerKind.Skip ? Filing.Nothing : Filing.Interface;
+
+            return kind == AnswerKind.Skip ? Filing.KeptAsIs : Filing.Machine;
+        }
+
+        /// <summary>
+        /// What becomes of a line met while only COLLECTING the game's text — no backend is asked.
+        ///
+        /// 🔴 **The mod's own interface is not collected**, and a branch that ignored this filed the
+        /// mod's menu labels in the GAME's file as empty human captures. Collecting gathers the
+        /// game's strings for somebody to translate later, on the site or in the browser editor;
+        /// the interface goes to neither, so an entry for it would have no editor, no destination
+        /// and nothing to become.
+        /// </summary>
+        public static Filing Capture(bool fromOwnUi)
+        {
+            return fromOwnUi ? Filing.Nothing : Filing.Captured;
+        }
+
+        /// <summary>
+        /// The tag a filing writes into the file, or null when it writes nothing.
+        ///
+        /// ⚠ Every letter comes from <see cref="Composition.Letter"/> or <see cref="ModUi.Tag"/> —
+        /// none is spelled out here. A fifth spelling of "A" is how two products come to disagree
+        /// about what a file says.
+        ///
+        /// ⚠ <see cref="Filing.Captured"/> is tagged H with an EMPTY value, which is what the file
+        /// has always carried for a line nobody has written yet — see <see cref="Merge.PriorityOf"/>,
+        /// which ranks that pair below everything. It is not <see cref="TagBand.Captured"/>, whose
+        /// letter is empty because that band describes a line on a screen, not one in a file.
+        /// </summary>
+        public static string? TagOf(Filing filing)
+        {
+            switch (filing)
+            {
+                case Filing.Machine: return Composition.Letter(TagBand.Machine);
+                case Filing.KeptAsIs: return Composition.Letter(TagBand.Skipped);
+                case Filing.Interface: return ModUi.Tag;
+                case Filing.Captured: return Composition.Letter(TagBand.Human);
+                default: return null;
+            }
+        }
+
+        /// <summary>
+        /// Whether this filing stores the SOURCE text rather than what came back.
+        ///
+        /// ⚠ Asked separately because it is the one place the stored value is not the answer: a
+        /// line kept as it is holds the game's own words, and the tag alone does not say so.
+        /// </summary>
+        public static bool StoresTheSource(Filing filing)
+        {
+            return filing == Filing.KeptAsIs;
         }
 
         /// <summary>
