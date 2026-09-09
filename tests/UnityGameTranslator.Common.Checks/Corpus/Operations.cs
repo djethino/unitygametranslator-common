@@ -113,6 +113,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => SettingsSections.All),
             new Operation("settings", "json_key", typeof(SettingsSections), nameof(SettingsSections.JsonKey),
                 e => SettingsSections.JsonKey(Str(e, "section")!)),
+            new Operation("settings", "section_of", typeof(SettingsSections), nameof(SettingsSections.SectionOf),
+                e => SettingsSections.SectionOf(Str(e, "json_key")!)),
             new Operation("settings", "name", typeof(SettingsSections), nameof(SettingsSections.Name),
                 e => SettingsSections.Name(Str(e, "section")!)),
             new Operation("settings", "description", typeof(SettingsSections), nameof(SettingsSections.Description),

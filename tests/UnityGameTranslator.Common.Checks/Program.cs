@@ -73,6 +73,7 @@ namespace UnityGameTranslator.Common.Checks
         private static void WhatSitsBesideATranslation()
         {
             Section("Translation files", TranslationFilesChecks.Run);
+            Section("The settings sections a translation carries", SettingsSectionsChecks.Run);
         }
 
         /// <summary>Which copy an editor is about to change, and what is reachable from where.</summary>

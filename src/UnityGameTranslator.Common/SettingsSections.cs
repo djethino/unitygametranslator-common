@@ -95,6 +95,33 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// Which section a key in the translation file belongs to, or null if it belongs to none.
+        ///
+        /// 🔴 **The reverse of <see cref="JsonKey"/>, and it exists so that READING a file can be
+        /// driven by this table the way WRITING one already is.** The mod builds a file by walking
+        /// <see cref="All"/> and asking <see cref="JsonKey"/> for each name; it read one back with
+        /// a hand-written branch per key. So a seventh section added here would be written by
+        /// everybody and read by nobody — in silence, since nothing compares the two lists.
+        ///
+        /// ⚠ A key it does not know is not an error: a translation file carries other underscore
+        /// keys (`_uuid`, `_source`, `_game`…) and the lines themselves. Null means "not one of
+        /// mine", which the caller goes on to handle.
+        /// </summary>
+        public static string SectionOf(string jsonKey)
+        {
+            switch (jsonKey)
+            {
+                case FontsKey: return Fonts;
+                case FontRulesKey: return FontRules;
+                case ImagesKey: return Images;
+                case ExclusionsKey: return Exclusions;
+                case VariablesKey: return Variables;
+                case GameSettingsKey: return GameSettings;
+                default: return null;
+            }
+        }
+
+        /// <summary>
         /// The short label shown to a player. An unknown section is written as it arrived rather
         /// than dropped: a screen listing five of six sections says nothing about the sixth.
         /// </summary>

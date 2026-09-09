@@ -5,6 +5,7 @@
   "operations": {
     "all": { "in": {}, "out": "the six section names, in display order" },
     "json_key": { "in": { "section": "string" }, "out": "the key it uses inside the translation file, or null" },
+    "section_of": { "in": { "json_key": "a key met inside a translation file" }, "out": "the section it belongs to, or null for anything else the file carries" },
     "name": { "in": { "section": "string" }, "out": "the short label shown to a player" },
     "description": { "in": { "section": "string" }, "out": "one line saying what replacing it costs or gains" },
     "classify": {
@@ -39,6 +40,23 @@
       "why": "the file says _settings where the section says game_settings" },
     { "id": "settings/json_key/an-unknown-section-has-no-key", "op": "json_key", "in": { "section": "sounds" }, "out": null,
       "why": "null rather than a guessed key: writing under an invented name would put content somewhere nothing reads" },
+
+    { "id": "settings/section_of/fonts", "op": "section_of", "in": { "json_key": "_fonts" }, "out": "fonts",
+      "why": "the way back from the file to the table: a Core BUILDS a file by walking the six names, and must be able to READ one the same way instead of holding a second list of keys" },
+    { "id": "settings/section_of/font-rules-comes-back-under-its-own-name", "op": "section_of", "in": { "json_key": "_font_overrides" }, "out": "font_rules",
+      "why": "the divergence read the other way: the file says _font_overrides and the table says font_rules, and only this makes the two one thing" },
+    { "id": "settings/section_of/images-comes-back-under-its-own-name", "op": "section_of", "in": { "json_key": "_image_replacements" }, "out": "images",
+      "why": "the same divergence that once cost every backup its images, now unable to be spelt two ways" },
+    { "id": "settings/section_of/exclusions", "op": "section_of", "in": { "json_key": "_exclusions" }, "out": "exclusions", "why": "the ordinary case" },
+    { "id": "settings/section_of/variables", "op": "section_of", "in": { "json_key": "_variables" }, "out": "variables", "why": "likewise" },
+    { "id": "settings/section_of/game-settings", "op": "section_of", "in": { "json_key": "_settings" }, "out": "game_settings",
+      "why": "the shortest key of the six, and the one most easily read as something generic" },
+    { "id": "settings/section_of/another-metadata-key-is-not-a-section", "op": "section_of", "in": { "json_key": "_uuid" }, "out": null,
+      "why": "a translation file carries plenty of underscore keys that belong to nobody here; claiming one would hand the lineage identity to a section owner" },
+    { "id": "settings/section_of/a-translated-line-is-not-a-section", "op": "section_of", "in": { "json_key": "Play" }, "out": null,
+      "why": "the reader asks about every key it meets, lines included, so somebody's text must never come back as a section" },
+    { "id": "settings/section_of/nothing-is-not-a-section", "op": "section_of", "in": { "json_key": "" }, "out": null,
+      "why": "an empty key is not a section, and the reader must not have to test for it before asking" },
 
     { "id": "settings/name/fonts", "op": "name", "in": { "section": "fonts" }, "out": "Fonts", "why": "the label a player reads" },
     { "id": "settings/name/font-rules", "op": "name", "in": { "section": "font_rules" }, "out": "Font rules", "why": "words, not the file key" },
