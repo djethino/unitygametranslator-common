@@ -4,6 +4,7 @@
   "note": "Settling one line between what is here, what was published, and what both came from. These answers are written out from the rule as stated, not read back from the code that implements it: this rule has two readers — a running game and a tool that never opens one — which must never settle the same line differently. Every wrong answer here is somebody's translation silently replaced by somebody else's, or a review nobody performed being claimed.",
   "operations": {
     "priority_of": { "in": { "tag": "string?", "value": "string?" }, "out": "int: the line's standing on the ladder; only the ORDER is specified, through above/below/level" },
+    "is_by_hand": { "in": { "tag": "string?", "value": "string?" }, "out": "bool: a person wrote this line, reviewed it, or ruled it must stay as it is" },
     "is_game_line": { "in": { "tag": "string?" }, "out": "bool" },
     "can_replace": { "in": { "candidate": "line", "existing": "line | null" }, "out": "bool" },
     "contribution_wins": { "in": { "main": "line | null", "contribution": "line" }, "out": "bool" },
@@ -29,6 +30,19 @@
     { "id": "merge/priority_of/no-tag-reads-as-a", "op": "priority_of",
       "in": { "tag": null, "value": "x" }, "out": { "level": { "tag": "A", "value": "x" } },
       "why": "no tag reads as A — the older file format wrote none and meant exactly that" },
+
+    { "id": "merge/is_by_hand/written-by-a-person", "op": "is_by_hand", "in": { "tag": "H", "value": "Jouer" }, "out": true,
+      "why": "somebody typed those words" },
+    { "id": "merge/is_by_hand/read-by-a-person", "op": "is_by_hand", "in": { "tag": "V", "value": "Jouer" }, "out": true,
+      "why": "somebody stood behind what the machine wrote, which is work too" },
+    { "id": "merge/is_by_hand/settled-by-a-person", "op": "is_by_hand", "in": { "tag": "S", "value": "Play" }, "out": true,
+      "why": "ruling that a line must stay as it is, is a decision about it — the same kind as writing one" },
+    { "id": "merge/is_by_hand/the-machines-own-work-is-not", "op": "is_by_hand", "in": { "tag": "A", "value": "Jouer" }, "out": false,
+      "why": "nobody has looked at it; that is the whole difference the count is drawing" },
+    { "id": "merge/is_by_hand/a-capture-is-not", "op": "is_by_hand", "in": { "tag": "H", "value": "" }, "out": false,
+      "why": "🔴 H with nothing in it means met in game and not yet written — asked on the tag alone, a session in capture-only mode reported a hundred and twenty-eight lines by hand that nobody had touched" },
+    { "id": "merge/is_by_hand/no-tag-is-not", "op": "is_by_hand", "in": { "tag": null, "value": "Jouer" }, "out": false,
+      "why": "the older format wrote none and meant the machine's" },
 
     { "id": "merge/is_game_line/m-is-not", "op": "is_game_line", "in": { "tag": "M" }, "out": false,
       "why": "M is not a line of the game: it is the mod's own interface, carried but not weighed" },

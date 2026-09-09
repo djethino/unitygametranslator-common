@@ -131,6 +131,21 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>Whether one line may take another's place with nobody asked.</summary>
+        /// <summary>
+        /// Whether a person wrote this line, reviewed it, or ruled that it must stay as it is.
+        ///
+        /// 🔴 **The value matters, and leaving it out is what made this wrong.** A counter asked
+        /// the tag alone — H, V or S — and so counted every CAPTURED line as somebody's work: a
+        /// capture is tagged H with nothing in it, which is the file's way of saying "met in game,
+        /// nobody has written it yet". A game played once in capture-only mode then reported a
+        /// hundred and twenty-eight lines "by hand" that nobody had touched.
+        ///
+        /// ⚠ Read off <see cref="PriorityOf"/> rather than listing tags again: that ladder already
+        /// knows an empty H is the bottom of it, and a second list would be a second chance to
+        /// forget.
+        /// </summary>
+        public static bool IsByHand(string tag, string value) => PriorityOf(tag, value) >= 2;
+
         public static bool CanReplace(TranslationLine candidate, TranslationLine? existing)
         {
             // ⚠ The mod's interface neither takes a game line's place nor gives up its own: it is

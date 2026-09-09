@@ -108,6 +108,9 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 typeof(ModUiMigration), nameof(ModUiMigration.StillCountsAsPublished),
                 e => ModUiMigration.StillCountsAsPublished(Str(e, "ancestor_tag")!, Bool(e, "present_locally"))),
 
+            new Operation("merge", "is_by_hand", typeof(Merge), nameof(Merge.IsByHand),
+                e => Merge.IsByHand(Str(e, "tag")!, Str(e, "value")!)),
+
             // ── answers ───────────────────────────────────────────────────────
             new Operation("answers", "read", typeof(Answers), nameof(Answers.Read),
                 e => Answers.Read(Str(e, "answer"))),
