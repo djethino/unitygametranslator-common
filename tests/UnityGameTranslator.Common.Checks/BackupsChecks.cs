@@ -88,13 +88,39 @@ namespace UnityGameTranslator.Common.Checks
             var full = new List<BackupEntry>();
             for (var i = 0; i < Backups.SavedKept; i++) full.Add(Saved("202608" + (10 + i) + "-090000"));
 
-            check(!Backups.CanSaveAnother(full) && Backups.WhyCannotSave(full) is { Length: > 0 },
+            check(!Backups.CanSaveAnother(full) && Backups.WhyCannotSave(full, 3227) is { Length: > 0 },
                 "full means refused, with a reason in words",
                 "a greyed button without words is a dead end; a silent eviction is worse");
 
-            check(Backups.CanSaveAnother(five) && Backups.WhyCannotSave(five) is null,
+            check(Backups.CanSaveAnother(five) && Backups.WhyCannotSave(five, 3227) is null,
                 "automatic copies do not fill the deliberate slots",
                 "the two families are counted apart or the ceiling arrives early");
+
+            // ── An empty translation has nothing to back up ────────────────
+            //
+            // 🔴 The stake is not the wasted folder: an empty backup reads on the row exactly like
+            // one holding work, takes one of the ten slots nothing ever evicts, and restores to
+            // nothing. Both products offered it — the manager on a file holding zero lines, the mod
+            // on anything at all.
+            check(!Backups.HasAnythingToBackUp(0) && Backups.HasAnythingToBackUp(1),
+                "one line is worth keeping, none is not",
+                "the threshold is \"is there work here\", and one line is work");
+
+            check(Backups.WhyCannotSave(five, 0) == Backups.NothingToBackUp,
+                "an empty translation refuses, with room to spare",
+                "a backup that restores to nothing is indistinguishable on the row from one that does not");
+
+            check(Backups.WhyCannotSave(full, 0) == Backups.NothingToBackUp,
+                "and when it is ALSO full, emptiness is the reason given",
+                "\"delete one to make room\" would send somebody to do something that cannot help");
+
+            check(Backups.WhyNoRoom(five) is null && Backups.WhyNoRoom(full) is { Length: > 0 },
+                "the slot ceiling answers on its own, for Keep",
+                "Keep duplicates an existing backup, so today's line count has no say in it");
+
+            check(Backups.NowLine(3227).Contains("3227") && Backups.NowLine(0) != Backups.NowLine(1),
+                "the screen states where the game stands, and zero is not a count",
+                "a backup of 312 lines is neither good nor bad news until you know what the game holds");
 
             // ── What a copy carries ───────────────────────────────────────
             var assets = Backups.AssetsToCopy(new[] { "title.png", (string?)null, "  " },
@@ -177,7 +203,8 @@ namespace UnityGameTranslator.Common.Checks
                 Backups.AutomaticNote, Backups.PrivacyNote, Backups.AnotherLineageNote,
                 Backups.ConfirmRestoreTitle, Backups.ConfirmRestoreVerb,
                 Backups.ConfirmDeleteTitle, Backups.ConfirmDeleteVerb,
-                restore, delete, Backups.WhyCannotSave(Full()) ?? "",
+                restore, delete, Backups.WhyCannotSave(Full(), 3227) ?? "",
+                Backups.NothingToBackUp,
                 Backups.Describe(BackupReason.Saved), Backups.Describe(BackupReason.Restored),
                 Backups.Describe(BackupReason.Installed, "@someone"),
                 Backups.Describe(BackupReason.Unknown),

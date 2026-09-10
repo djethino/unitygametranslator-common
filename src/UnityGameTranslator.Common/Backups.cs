@@ -292,14 +292,69 @@ namespace UnityGameTranslator.Common
             SavedCount(all) < SavedKept;
 
         /// <summary>
-        /// Why the button is unavailable, or null when it is available.
+        /// Why the slots refuse another one, or null when there is room.
         ///
-        /// ⚠ Never a greyed control without words — the rule this project holds everywhere.
+        /// ⚠ Apart from <see cref="WhyCannotSave"/> because Keep answers to this question ALONE:
+        /// it duplicates a backup that already exists, so how many lines the game holds today has
+        /// nothing to do with it.
         /// </summary>
-        public static string? WhyCannotSave(IEnumerable<BackupEntry> all) =>
+        public static string? WhyNoRoom(IEnumerable<BackupEntry> all) =>
             CanSaveAnother(all)
                 ? null
                 : $"{SavedKept} backups kept. Delete one to make room.";
+
+        /// <summary>
+        /// Whether there is anything to back up at all.
+        ///
+        /// 🔴 **An empty backup is worse than no backup.** It restores to nothing, it reads on the
+        /// row exactly like one holding work — same date, same two verbs — and a deliberate one
+        /// takes a slot out of ten that nothing ever evicts. The automatic family is worse still:
+        /// five empty ones rotate the real ones out.
+        /// </summary>
+        public static bool HasAnythingToBackUp(int lines) => lines > 0;
+
+        /// <summary>
+        /// Why the Backup button is unavailable, or null when it is available.
+        ///
+        /// ⚠ Never a greyed control without words — the rule this project holds everywhere.
+        ///
+        /// 🔴 **Both products ask this, so both refuse alike.** The manager used to carry its own
+        /// half of the answer (a `hasTranslation` flag and a sentence of its own) and the mod had
+        /// none at all: the same empty game offered the button in one window and refused it in the
+        /// other, with two different words for the refusal.
+        ///
+        /// ⚠ Nothing-to-back-up comes FIRST when both apply. "Delete one to make room" invites an
+        /// act that would not help: the button would still refuse afterwards.
+        /// </summary>
+        /// <param name="lines">What the translation holds right now — the figure the screen shows.</param>
+        public static string? WhyCannotSave(IEnumerable<BackupEntry> all, int lines) =>
+            !HasAnythingToBackUp(lines)
+                ? NothingToBackUp
+                : WhyNoRoom(all);
+
+        /// <summary>
+        /// Said by the refusal above, and on the row of a game that holds nothing.
+        ///
+        /// ⚠ "Nothing to back up" is the sentence every backup tool has written for thirty years;
+        /// it needs no explaining in a fourth language.
+        /// </summary>
+        public const string NothingToBackUp = "Nothing to back up yet — this translation has no lines.";
+
+        /// <summary>
+        /// What the screen states before any row can be read: where this game stands today.
+        ///
+        /// 🔴 **No row means anything without it.** A backup of 312 lines is neither good nor bad
+        /// news until you know whether the game holds 300 or 3 000.
+        ///
+        /// ⚠ Here because both products head the same screen with it, and they said it differently:
+        /// the manager answered "This game holds no translation yet." on a MISSING file and
+        /// "Now: 0 lines" on an empty one — two sentences for one situation — while the mod only ever
+        /// had the second. One question, one answer.
+        /// </summary>
+        public static string NowLine(int lines) =>
+            HasAnythingToBackUp(lines)
+                ? "Now: " + lines + " lines"
+                : "This game holds no translation yet.";
 
         // ── Words ─────────────────────────────────────────────────────────
 
