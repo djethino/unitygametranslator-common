@@ -304,14 +304,26 @@ namespace UnityGameTranslator.Common
                 : $"{SavedKept} backups kept. Delete one to make room.";
 
         /// <summary>
+        /// What a reader reports when the file is there and it could not count — a translation too
+        /// damaged to parse. Anything below zero means the same thing.
+        /// </summary>
+        public const int UnknownLineCount = -1;
+
+        /// <summary>
         /// Whether there is anything to back up at all.
         ///
         /// 🔴 **An empty backup is worse than no backup.** It restores to nothing, it reads on the
         /// row exactly like one holding work — same date, same two verbs — and a deliberate one
         /// takes a slot out of ten that nothing ever evicts. The automatic family is worse still:
         /// five empty ones rotate the real ones out.
+        ///
+        /// 🔴 **But only a KNOWN zero refuses.** A file that exists and cannot be parsed counts as
+        /// <see cref="UnknownLineCount"/>, and it is the single most valuable thing here to back up
+        /// — somebody is about to try to repair it. Refusing on "not counted" would withhold the
+        /// copy exactly when the work is most at risk, which is the same reason a backup from
+        /// another lineage is not accused on a missing uuid.
         /// </summary>
-        public static bool HasAnythingToBackUp(int lines) => lines > 0;
+        public static bool HasAnythingToBackUp(int lines) => lines != 0;
 
         /// <summary>
         /// Why the Backup button is unavailable, or null when it is available.
@@ -351,10 +363,17 @@ namespace UnityGameTranslator.Common
         /// "Now: 0 lines" on an empty one — two sentences for one situation — while the mod only ever
         /// had the second. One question, one answer.
         /// </summary>
+        /// <param name="lines">
+        /// ⚠ <see cref="UnknownLineCount"/> gets a sentence of its own rather than a number: the
+        /// manager printed "Now: -1 lines" on a damaged file, which reads as a bug rather than as
+        /// the one thing somebody needs to know before they touch that file.
+        /// </param>
         public static string NowLine(int lines) =>
-            HasAnythingToBackUp(lines)
-                ? "Now: " + lines + " lines"
-                : "This game holds no translation yet.";
+            lines < 0
+                ? "This game holds a translation that could not be read."
+                : lines > 0
+                    ? "Now: " + lines + " lines"
+                    : "This game holds no translation yet.";
 
         // ── Words ─────────────────────────────────────────────────────────
 

@@ -122,6 +122,17 @@ namespace UnityGameTranslator.Common.Checks
                 "the screen states where the game stands, and zero is not a count",
                 "a backup of 312 lines is neither good nor bad news until you know what the game holds");
 
+            // 🔴 A file that exists and cannot be parsed is the one thing here most worth keeping:
+            // somebody is about to try to repair it.
+            check(Backups.HasAnythingToBackUp(Backups.UnknownLineCount)
+                  && Backups.WhyCannotSave(five, Backups.UnknownLineCount) is null,
+                "a translation that could not be counted is still backed up",
+                "refusing on \"not counted\" withholds the copy exactly when the work is most at risk");
+
+            check(!Backups.NowLine(Backups.UnknownLineCount).Contains("-1"),
+                "and the screen says so in words, never as a count",
+                "\"Now: -1 lines\" reads as a bug instead of as the one thing to know before touching that file");
+
             // ── What a copy carries ───────────────────────────────────────
             var assets = Backups.AssetsToCopy(new[] { "title.png", (string?)null, "  " },
                                               new[] { "arial.ttf" });
