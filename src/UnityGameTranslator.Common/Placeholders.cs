@@ -57,11 +57,16 @@ namespace UnityGameTranslator.Common
                 int start = match.Index;
                 int end = match.Index + match.Length; // exclusive
 
-                while (start > 0 && (source[start - 1] == '{' || source[start - 1] == '(' || source[start - 1] == '['))
+                // Outward one PAIR at a time: a bracket the game wrapped around the token sits on
+                // both sides of it — "({[!v*0]})". A bracket on one side only belongs to the
+                // sentence, not to the token: "boltcutters ([!v*0] off)" wraps a phrase, and the
+                // phrase moves with the language — « coupe-boulons (Promo [!v*0]) » is right.
+                // Freezing the single side refused every such translation (seen 2026-09-12).
+                while (start > 0 && end < source.Length && Wraps(source[start - 1], source[end]))
+                {
                     start--;
-
-                while (end < source.Length && (source[end] == '}' || source[end] == ')' || source[end] == ']'))
                     end++;
+                }
 
                 string sequence = source.Substring(start, end - start);
                 if (!sequences.Contains(sequence)) sequences.Add(sequence);
@@ -69,6 +74,10 @@ namespace UnityGameTranslator.Common
 
             return sequences;
         }
+
+        /// <summary>An opening bracket and the closing one that answers it.</summary>
+        private static bool Wraps(char before, char after) =>
+            (before == '(' && after == ')') || (before == '{' && after == '}') || (before == '[' && after == ']');
 
         /// <summary>
         /// Whether a game would accept this answer.
