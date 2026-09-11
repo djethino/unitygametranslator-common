@@ -87,11 +87,10 @@ or hiding them.
 | a reload re-runs the whole chain | `ReloadChainChecks` (mod) | lexical, on the reload path |
 | the fork deletes the ancestors, by their real names | `CompanionFilesChecks` (mod) | on a real folder |
 | the sync verdict from the three facts | `SyncChecks` (socle) | `Sync.Decide` cases |
-| the merge's three facts (Manager) | `InstallLedgerChecks`? — **no**: `WriteMerged`/`StampMerged` are held by no case | — |
-| download and upload stamps (mod and Manager) | **no case** | `SaveAncestorCache`, `StampSource` write to disk inside impure classes |
+| the moments themselves, as sequences (mod) | `TranslationStoreChecks` over `Engine/TranslationStore` | `moments.json` replayed on a real folder: download, edit, remove, merge, upload, main merge, fork, write, load — 12 cases |
+| the merge's three facts and the download stamp (Manager) | ⚠ **not yet**: `moments.json` holds 2 cases for the Manager (`held_by: manager`), the executor over `TranslationInstaller.Install` / `WriteMerged` is still to write | — |
 
-⚠ The last two rows are the honest gap: the stamps are a few lines each inside classes that
-touch the disk and the network. Making them checkable means extracting a `TranslationStore`
-(what `TODO.md` lists as the next cut of `TranslatorCore`, and its mirror in the Manager), so
-that "after a merge, the ancestor is the published content" becomes a replayed sequence rather
-than a sentence here.
+⚠ Since 2026-09-12 the mod's side is closed: the stamps and the ancestors live in
+`Engine/TranslationStore.cs`, one call per moment, and `TranslatorCore` keeps its old names as a
+façade over it. The Manager's `StampSource` / `StampMerged` are held by the same cases once its
+executor exists (`TODO.md`).
