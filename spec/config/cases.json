@@ -24,8 +24,8 @@
       "input": { "system_language": "French" },
       "written": true,
       "read": { "translation_backend": "none", "enable_ai": false, "IsTranslationEnabled": false, "config_version": 3, "TargetLanguage": "French", "SourceLanguage": null, "sync.update_check_frequency": "1h", "sync.realtime_own_translation": true, "AttemptsAllowed": 3, "TemperatureNormal": 0.0 },
-      "manager": { "Exists": true, "FirstRunCompleted": false, "InGameHotkey": "F10", "AutoTranslate": false, "Values.TargetLanguage": null, "Values.TranslationBackend": "none", "Values.Channel": "stable", "Values.AiApiKey": null },
-      "why": "the current written form, every key present: a Core must produce this shape. ⚠ `target_language: auto` is a mode the Manager reads as 'nothing said' (null), and a hotkey of F10 already counts as a key the game carries"
+      "manager": { "Exists": true, "FirstRunCompleted": false, "InGameHotkey": "F10", "AutoTranslate": false, "Values.TargetLanguage": "auto", "Values.TranslationBackend": "none", "Values.Channel": "stable", "Values.AiApiKey": null },
+      "why": "the current written form, every key present: a Core must produce this shape. ⚠ The Manager reads it as a CONFIGURED game — the hotkey the mod wrote by default counts as a key the game carries — and `auto` as a mode of its own (follow the system), never as a language nor as 'nothing said'"
     },
     {
       "id": "config/nothing-at-all",
@@ -163,8 +163,8 @@
       "input": { "system_language": "Polish" },
       "written": true,
       "read": { "target_language": "auto", "TargetLanguage": "Polish", "SourceLanguage": null },
-      "manager": { "Values.TargetLanguage": null },
-      "why": "`auto` is a MODE: it answers differently on the next machine, and a source of auto is 'unknown', never a language"
+      "manager": { "Values.TargetLanguage": "auto" },
+      "why": "`auto` is a MODE: the mod resolves it on each machine, the Manager keeps the word and offers it as the 'follow the system' choice; a source of auto is 'unknown', never a language"
     },
     {
       "id": "config/a-secret-in-the-clear-still-reads",
