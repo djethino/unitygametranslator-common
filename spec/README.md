@@ -28,7 +28,26 @@ spec/
   <artefact>/cases.json    the documents, and the verdicts
   api-v1/openapi.json      OpenAPI 3.1 of the site's API: routes, bodies, headers, closed words
   api-v1/cases.json        contract cases: a setup, a request, the response — replayed and read
+  sse-events/sse-events.json  the four streams: wire format, channels, stored replays, events and their data
+  sse-events/cases.json    what the site publishes, what a parser yields from the wire, what a reader derives
 ```
+
+## `sse-events` — the streams
+
+What the relay (`website/sse-server/server.js`) writes on its four streams and how the site feeds
+it through Redis: channels, the messages stored for a client that was not listening (delivered
+once, or replayed), the wire grammar (`retry: 3000`, `id:` per connection, `: heartbeat` every
+15 s), the refusals, and the client's own contract (backoff, heartbeat timeout, what is final,
+`code: revoked`). Three kinds of case:
+
+| kind | who runs it | what it proves |
+|---|---|---|
+| `publish` | `tests/Unit/SsePublisherContractTest.php` | for each `SsePublisher` method, the channel, the message and what is stored, with which TTL |
+| `frame` | `SseEventsChecks` over `Engine/SseStream` | bytes in the relay's own format yield these events, this retry, this last id, and stop for this reason |
+| `read` | `SseEventsChecks` over `Engine/ApiReaders` | an event's data derives these values — including `state` read OVER a previous state, the sequence rule the stream imposes |
+
+⚠ The relay itself has no executor: it is one file without exports. Its format is described from
+a reading of `server.js` and proved from the other end, by the frames the parser is held to.
 
 ## `api-v1` — the contract over HTTP
 
