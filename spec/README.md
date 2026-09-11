@@ -26,7 +26,36 @@ spec/
   manifest.json            schema_version, the artefacts every checker must load
   <artefact>/schema.json   JSON Schema 2020-12 of the WRITTEN form — what a Core must produce
   <artefact>/cases.json    the documents, and the verdicts
+  api-v1/openapi.json      OpenAPI 3.1 of the site's API: routes, bodies, headers, closed words
+  api-v1/cases.json        contract cases: a setup, a request, the response — replayed and read
 ```
+
+## `api-v1` — the contract over HTTP
+
+The 29 routes of `website/routes/api.php`, each with its parameters, bodies, headers, refusals
+and throttle, and the four rules every client applies (in the document's own description: absent
+means unknown, errors carry a sentence, names never codes, declarations never proofs). Its cases
+are **contract cases** rather than documents:
+
+```json
+{ "id": "api-v1/check-uuid/somebody-elses-main",
+  "setup": "lineage",
+  "request": { "method": "GET", "path": "/translations/check-uuid", "as": "carol", "query": { "uuid": "…" } },
+  "response": { "status": 200, "body": { "exists": true, "role": "none", "main": { "uploader": "alice" } } },
+  "read": { "reader": "check_uuid", "expects": { "IsOwner": false, "MainUsername": "alice" } },
+  "why": "told BEFORE the click, to the one person it is for" }
+```
+
+| side | what it runs | what it proves |
+|---|---|---|
+| the spec itself | `check-spec.py` | every case's request and response body fits the operation's schema, and every case names a route the document has |
+| the site | `tests/Feature/ApiContractTest.php` | built from `setup`, the site answers `request` with `response` — and the whole answer fits the schema (`required`, types, closed words) |
+| the mod | `ApiContractChecks` over `Engine/ApiReaders` | the mod's reader derives from `response.body` what `read.expects` says |
+| the routes | `ApiContractTest::the_document_names_every_route_and_no_other` | `Route::getRoutes()` under `api/v1` and the document's paths are the same set |
+
+Bodies match **partially** (the keys a case names must match, the rest is not judged) so that an
+additive field never breaks a case; `{"$absent": true}` says a key must NOT be there. The markers
+(`$is`, `$ref`, `$contains`, `$json`) and the setup shape are described at the top of the file.
 
 ## Two verdicts per case, and they can differ
 
