@@ -30,7 +30,29 @@ spec/
   api-v1/cases.json        contract cases: a setup, a request, the response — replayed and read
   sse-events/sse-events.json  the four streams: wire format, channels, stored replays, events and their data
   sse-events/cases.json    what the site publishes, what a parser yields from the wire, what a reader derives
+  config/schema.json       config.json: every key, its default, who writes it (x-writer), the migrations
+  config/cases.json        files as written today and by older builds: written / read (mod) / manager verdicts
+  translation-file/moments.md  WHEN each `_` key and the ancestors move — download, upload, merge, fork, restore — and what holds each moment
 ```
+
+## `config` — the mod's settings for one game
+
+`schema.json` is the written form at `config_version` 3 with, on every key, `x-writer`: `mod`,
+`both` (the Manager writes it too — the sub-contract a Core must honour to be configurable by the
+Manager), `manager-reads`, or `migration`. `x-migrations` lists every older shape and what it
+becomes; `x-secrets` the at-rest format. Three verdicts per case:
+
+| verdict | who runs it | what it proves |
+|---|---|---|
+| `written` | `check-spec.py` | the document is the current form (`false` for an older shape that is still read) |
+| `read` | `ConfigSpecChecks` (mod) over `Engine/ModConfig` | what the mod derives once parsed and migrated — Newtonsoft, then `CompleteSyncFromRaw`, in LoadConfig's order |
+| `manager` | `ConfigContractChecks` (Manager) over `GameConfigWriter.Read` | what the Manager shows of a game's setup, read off a game folder made for the case |
+
+## The moments
+
+`translation-file/moments.md` is prose on purpose: a schema says what a file looks like, not
+when `_source.hash`, `_local_changes` and the ancestors move. Each moment names its field, the
+code that implements it today, and the check that holds it — or says that none does.
 
 ## `sse-events` — the streams
 
