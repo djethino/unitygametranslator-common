@@ -76,6 +76,24 @@ Relations, when a value would only restate the implementation:
 | no line on this side | `null`, or the key absent |
 | the lines of a file (`content_hash`) | `{"lines": {"Hello": {"v": "Bonjour", "t": "H"}}, "uuid": "…"}` — exactly a `translations.json` excerpt; metadata keys may appear, the rule excludes them |
 
+## Sides — which operations a product other than the C# consumers must hold
+
+The C# executor covers every rule in `rules`. A product that cannot consume C# — the website —
+re-implements some of them in its own language, and the manifest says which:
+
+```json
+"sides": { "site": { "sync": ["content_hash"], "settings": ["all", "json_key", "section_of"] } }
+```
+
+🔴 **This is the coverage rule for that side, and it exists because a rule ABSENT from one side
+is the defect no case can see.** The site's executor (`website/tests/Unit/CorpusTest.php`) fails
+when an operation listed here has no dispatch, and when a dispatch exists that is not listed here
+— the manifest is the one place that says what the site holds. Adding a rule the site must hold
+means adding it here first, then writing the site's thirty lines, then watching it go green.
+
+The site reads a **copy**, `website/resources/corpus/`, put there by `sync-common.ps1` and refused
+by `check-spec.py` when it diverges — the same road as the catalogue and the spec.
+
 ## Running
 
 ```
