@@ -88,9 +88,10 @@ or hiding them.
 | the fork deletes the ancestors, by their real names | `CompanionFilesChecks` (mod) | on a real folder |
 | the sync verdict from the three facts | `SyncChecks` (socle) | `Sync.Decide` cases |
 | the moments themselves, as sequences (mod) | `TranslationStoreChecks` over `Engine/TranslationStore` | `moments.json` replayed on a real folder: download, edit, remove, merge, upload, main merge, fork, write, load — 12 cases |
-| the merge's three facts and the download stamp (Manager) | ⚠ **not yet**: `moments.json` holds 2 cases for the Manager (`held_by: manager`), the executor over `TranslationInstaller.Install` / `WriteMerged` is still to write | — |
+| the merge's three facts and the download stamp (Manager) | `MomentsContractChecks` over `TranslationInstaller.Install` / `WriteMerged` | the same `moments.json`, the 3 cases marked `held_by: manager`, on a game folder made for the case; the facts read off `translations.json` and `.ancestor` as the mod would |
 
-⚠ Since 2026-09-12 the mod's side is closed: the stamps and the ancestors live in
-`Engine/TranslationStore.cs`, one call per moment, and `TranslatorCore` keeps its old names as a
-façade over it. The Manager's `StampSource` / `StampMerged` are held by the same cases once its
-executor exists (`TODO.md`).
+⚠ Since 2026-09-12 both sides are closed: the mod's stamps and ancestors live in
+`Engine/TranslationStore.cs`, one call per moment, with `TranslatorCore` as a façade over it; the
+Manager's `StampSource` / `StampMerged` / ancestor write are held by the same cases. An act one
+side does not take part in (upload, fork, main merge for the Manager) is a case that side skips
+and says so.

@@ -33,7 +33,7 @@ spec/
   config/schema.json       config.json: every key, its default, who writes it (x-writer), the migrations
   config/cases.json        files as written today and by older builds: written / read (mod) / manager verdicts
   translation-file/moments.md  WHEN each `_` key and the ancestors move — download, upload, merge, fork, restore — and what holds each moment
-  translation-file/moments.json  the same moments as sequences of acts, replayed by the mod's TranslationStoreChecks (and the Manager's, to come)
+  translation-file/moments.json  the same moments as sequences of acts, replayed by the mod's TranslationStoreChecks and the Manager's MomentsContractChecks
 ```
 
 ## `config` — the mod's settings for one game
