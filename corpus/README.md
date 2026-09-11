@@ -94,6 +94,12 @@ when an operation listed here has no dispatch, and when a dispatch exists that i
 — the manifest is the one place that says what the site holds. Adding a rule the site must hold
 means adding it here first, then writing the site's thirty lines, then watching it go green.
 
+Two sides today, because the site is two languages: `site` is the PHP (the door, the merges),
+`editor` the JavaScript that runs in the browser while somebody types
+(`website/resources/js/rules/`, executed by `node --test`, no framework). A rule the editor
+enforces while typing must be listed for BOTH, or the door and the screen disagree — which is how
+the placeholder rule came to warn on one and block on the other.
+
 The site reads a **copy**, `website/resources/corpus/`, put there by `sync-common.ps1` and refused
 by `check-spec.py` when it diverges — the same road as the catalogue and the spec.
 
