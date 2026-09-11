@@ -190,15 +190,18 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static string Correction(List<string> errors, List<string> frozen)
         {
+            // ⚠ Line breaks are "\n", never the platform's: the message is frozen verbatim in the
+            // corpus (rules/placeholders.json) and a port on another system must produce it byte
+            // for byte. A model reads either the same.
             var message = new StringBuilder();
-            message.AppendLine("Your translation is INVALID:");
+            message.Append("Your translation is INVALID:").Append('\n');
 
-            foreach (string error in errors) message.AppendLine($"- {error}");
+            foreach (string error in errors) message.Append($"- {error}").Append('\n');
 
             if (frozen.Count > 0)
             {
-                message.AppendLine("These exact character sequences from the source must appear unchanged in your translation:");
-                message.AppendLine(string.Join(", ", frozen.Select(sequence => $"\"{sequence}\"")));
+                message.Append("These exact character sequences from the source must appear unchanged in your translation:").Append('\n');
+                message.Append(string.Join(", ", frozen.Select(sequence => $"\"{sequence}\""))).Append('\n');
             }
 
             message.Append("Reply with ONLY the corrected translation, nothing else.");
@@ -210,11 +213,12 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static string MandatorySequences(List<string> frozen)
         {
+            // Same "\n" as Correction, for the same reason.
             var section = new StringBuilder();
-            section.AppendLine("=== MANDATORY EXACT SEQUENCES ===");
-            section.AppendLine("The text contains technical placeholders. Your output MUST contain these exact character sequences, copied character-for-character, unmodified:");
+            section.Append("=== MANDATORY EXACT SEQUENCES ===").Append('\n');
+            section.Append("The text contains technical placeholders. Your output MUST contain these exact character sequences, copied character-for-character, unmodified:").Append('\n');
 
-            foreach (string sequence in frozen) section.AppendLine($"\"{sequence}\"");
+            foreach (string sequence in frozen) section.Append($"\"{sequence}\"").Append('\n');
 
             return section.ToString();
         }

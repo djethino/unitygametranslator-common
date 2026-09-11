@@ -155,7 +155,7 @@ namespace UnityGameTranslator.Common.Checks
         /// <summary>What a game will accept back from a model, and what it says when it will not.</summary>
         private static void PlaceholderRules()
         {
-            Section("Placeholder rules", PlaceholdersChecks.Run);
+
         }
 
         /// <summary>What a player is told about a file, checked against the website's rules.</summary>

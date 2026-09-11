@@ -37,6 +37,16 @@ namespace UnityGameTranslator.Common.Checks.Corpus
 
         public static int Int(JsonElement e, string key, int fallback = 0) => NullableInt(e, key) ?? fallback;
 
+        /// <summary>A list of strings; absent or not a list reads as empty.</summary>
+        public static List<string> Strings(JsonElement e, string key)
+        {
+            var result = new List<string>();
+            if (!e.TryGetProperty(key, out var v) || v.ValueKind != JsonValueKind.Array) return result;
+            foreach (var item in v.EnumerateArray())
+                if (item.ValueKind == JsonValueKind.String) result.Add(item.GetString()!);
+            return result;
+        }
+
         public static double? NullableDouble(JsonElement e, string key) =>
             e.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetDouble() : (double?)null;
 

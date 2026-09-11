@@ -111,6 +111,32 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("merge", "is_by_hand", typeof(Merge), nameof(Merge.IsByHand),
                 e => Merge.IsByHand(Str(e, "tag")!, Str(e, "value")!)),
 
+            // ── placeholders ──────────────────────────────────────────────────
+            // The frozen sequences are derived from the source inside the operation: a case that
+            // handed them in would be restating the implementation it is meant to hold.
+            new Operation("placeholders", "frozen_sequences", typeof(Placeholders), nameof(Placeholders.FrozenSequences),
+                e => Placeholders.FrozenSequences(Str(e, "source") ?? "")),
+            new Operation("placeholders", "accepts", typeof(Placeholders), nameof(Placeholders.Accepts),
+                e => Gate(Placeholders.Accepts(Str(e, "source") ?? "", Str(e, "translation") ?? "",
+                                               Placeholders.FrozenSequences(Str(e, "source") ?? ""), out var errors), errors)),
+            new Operation("placeholders", "accepts_edit", typeof(Placeholders), nameof(Placeholders.AcceptsEdit),
+                e => Gate(Placeholders.AcceptsEdit(Str(e, "source") ?? "", Str(e, "edited") ?? "",
+                                                   Placeholders.FrozenSequences(Str(e, "source") ?? ""), out var errors), errors)),
+            new Operation("placeholders", "repair_trailing_breaks", typeof(Placeholders), nameof(Placeholders.RepairTrailingBreaks),
+                e => Placeholders.RepairTrailingBreaks(Str(e, "source") ?? "", Str(e, "translation") ?? "")),
+            new Operation("placeholders", "correction", typeof(Placeholders), nameof(Placeholders.Correction),
+                e => Placeholders.Correction(Strings(e, "errors"), Strings(e, "frozen"))),
+            new Operation("placeholders", "mandatory_sequences", typeof(Placeholders), nameof(Placeholders.MandatorySequences),
+                e => Placeholders.MandatorySequences(Strings(e, "frozen"))),
+            new Operation("placeholders", "tokens", typeof(Placeholders), nameof(Placeholders.Tokens),
+                e => Placeholders.Tokens(Str(e, "text") ?? "")),
+            new Operation("placeholders", "invented", typeof(Placeholders), nameof(Placeholders.Invented),
+                e => Placeholders.Invented(Str(e, "source") ?? "", Str(e, "translation"))),
+            new Operation("placeholders", "tally", typeof(Placeholders), nameof(Placeholders.Tally),
+                e => Placeholders.Tally(Str(e, "text") ?? "")),
+            new Operation("placeholders", "max_attempts", typeof(Placeholders), nameof(Placeholders.MaxAttempts),
+                e => Placeholders.MaxAttempts),
+
             // ── answers ───────────────────────────────────────────────────────
             new Operation("answers", "read", typeof(Answers), nameof(Answers.Read),
                 e => Answers.Read(Str(e, "answer"))),
@@ -153,6 +179,10 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             foreach (var op in All) index[op.Id] = op;
             return index;
         }
+
+        /// <summary>A gate's verdict as the corpus writes it: the answer and the lines it would send.</summary>
+        private static Dictionary<string, object?> Gate(bool accepted, List<string> errors) =>
+            new Dictionary<string, object?> { ["accepted"] = accepted, ["errors"] = errors };
 
         public static Operation? Find(string rule, string op) =>
             ById.TryGetValue(rule + "/" + op, out var found) ? found : null;

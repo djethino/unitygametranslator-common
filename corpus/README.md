@@ -56,6 +56,9 @@ A rule file:
 | a double | `{"approx": 0.8, "tol": 1e-9}` (`tol` optional) |
 | `MergeDecision` | `{"verdict", "conflict", "kind", "reason"}` — `kind` is `null` unless `conflict` |
 | `Badge` | `{"kind", "text", "tone", "tip"}`, in a list, in order |
+| a gate's verdict (`Placeholders.Accepts`, `AcceptsEdit`) | `{"accepted": bool, "errors": [the lines, in order]}` — the lines are frozen: a model receives them verbatim |
+| a `Dictionary<string, int>` (`Tally`) | an object of numbers |
+| a message with line breaks | a string with `\n` — never the platform's line ending |
 
 Objects are compared **partially**: the keys a case names must match, keys it does not name are
 not judged. Lists are exact, in length and in order.
