@@ -117,9 +117,21 @@ namespace UnityGameTranslator.Common
         ///
         /// ⚠ The lines it returns are read on a screen rather than sent to a model, so they name
         /// the token and the count and stop there — <see cref="Correction"/> is the other audience.
+        ///
+        /// ⚠ **An empty edit is accepted, whatever the source holds.** It is not a translation but
+        /// a capture: the game shows its source and substitutes nothing, so there is no placeholder
+        /// to keep. The mod never stores one; the site keeps the line as a capture. Held to the
+        /// rule, an untranslated line opened on every marker "missing" before a word was typed.
+        /// A model's empty answer is another matter and stays with <see cref="Accepts"/>.
         /// </summary>
         public static bool AcceptsEdit(string source, string edited, List<string> frozen, out List<string> errors)
         {
+            if (string.IsNullOrEmpty(edited))
+            {
+                errors = new List<string>();
+                return true;
+            }
+
             KeepsEveryPlaceholder(source, edited, frozen, out errors);
             return errors.Count == 0;
         }
