@@ -256,6 +256,36 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         detail = $"expected ≈{approx.GetRawText()} (±{tol}), got {Show(actual)}";
                         return false;
                     }
+
+                    // 🔴 **A bound, where a value cannot be written down.** Some rules are stated as
+                    // a limit rather than an answer — "the edge must not saw up and down by more
+                    // than a fifth of a notch" — and a rule of that shape has no exact result to
+                    // freeze: it is physics in floating point, so a port in another language is
+                    // right and writes different decimals. `approx` above cannot express it either,
+                    // since what the specification demands is not a particular number.
+                    //
+                    // ⚠ Only ever a bound the SPECIFICATION states. A bound invented to make a
+                    // measurement pass is a case that tests nothing, and `why` has to say which
+                    // rule the limit comes from.
+                    if (expected.TryGetProperty("at_most", out var most)
+                        || expected.TryGetProperty("at_least", out var least))
+                    {
+                        double got = actual is double gd ? gd : actual is long gl ? gl : double.NaN;
+
+                        if (expected.TryGetProperty("at_most", out most) && !(got <= most.GetDouble()))
+                        {
+                            detail = $"expected at most {most.GetRawText()}, got {Show(actual)}";
+                            return false;
+                        }
+
+                        if (expected.TryGetProperty("at_least", out least) && !(got >= least.GetDouble()))
+                        {
+                            detail = $"expected at least {least.GetRawText()}, got {Show(actual)}";
+                            return false;
+                        }
+
+                        return true;
+                    }
                     if (!(actual is Dictionary<string, object?> dict))
                     {
                         detail = $"expected an object, got {Show(actual)}";

@@ -50,6 +50,15 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("versions", "is_newer", typeof(Versions), nameof(Versions.IsNewer),
                 e => Versions.IsNewer(Str(e, "current"), Str(e, "candidate"))),
 
+            // ── edge_give ─────────────────────────────────────────────────────
+            // 🔴 **One operation, and it replays a gesture.** Everything else in this corpus asks a
+            // question and compares the answer; this rule is a physical one, whose statement is a
+            // LIMIT — "an uneven wheel must not saw the edge up and down". There is no exact number
+            // to freeze: it is floating point, so a port in another language is right and writes
+            // different decimals. So a case describes a wheel, and the measurements come back.
+            new Operation("edge_give", "replay", typeof(EdgeGive), nameof(EdgeGive.Advance),
+                e => ReplayWheel(e)),
+
             // ── dropdown_fit ──────────────────────────────────────────────────
             // ⚠ The cases are chosen so every answer lands on a whole number: the share of a
             // window is a multiplication by 0.45, and a port in another language will not write
@@ -198,6 +207,103 @@ namespace UnityGameTranslator.Common.Checks.Corpus
         /// <summary>A gate's verdict as the corpus writes it: the answer and the lines it would send.</summary>
         private static Dictionary<string, object?> Gate(bool accepted, List<string> errors) =>
             new Dictionary<string, object?> { ["accepted"] = accepted, ["errors"] = errors };
+
+        /// <summary>
+        /// Turns a wheel over an edge and reports what the gesture looked like.
+        ///
+        /// The case says how many frames pass between notches (`gaps`, walked in order and
+        /// repeated), how long a frame is (`frame`, or a list under `frames` for an uneven clock),
+        /// and how many notches to ignore before measuring (`warmup` — the opening climb is not a
+        /// state). `settle` then lets go and counts the frames home.
+        ///
+        /// What comes back is what the rule is stated in:
+        ///   worst_fall  the largest run of backwards travel WHILE the wheel is still turning —
+        ///               the sawtooth, which is what a tremble is
+        ///   band        highest minus lowest in the steady turn — a held edge is narrow
+        ///   jolt        the largest change in per-frame step — what the eye reads as a judder
+        ///   crossings   times the edge changed sign on the way home — a critically damped return
+        ///               has none
+        ///   frames_home how long the return took, once the wheel stopped
+        /// </summary>
+        private static Dictionary<string, object?> ReplayWheel(JsonElement e)
+        {
+            var gaps = new List<int>();
+            if (e.TryGetProperty("gaps", out var g) && g.ValueKind == JsonValueKind.Array)
+                foreach (var item in g.EnumerateArray()) gaps.Add(item.GetInt32());
+            if (gaps.Count == 0) gaps.Add(3);
+
+            var frames = new List<double>();
+            if (e.TryGetProperty("frames", out var f) && f.ValueKind == JsonValueKind.Array)
+                foreach (var item in f.EnumerateArray()) frames.Add(item.GetDouble());
+            if (frames.Count == 0) frames.Add(NullableDouble(e, "frame") ?? (1.0 / 60));
+
+            int notches = Int(e, "notches", 40);
+            int warmup = Int(e, "warmup", 12);
+
+            var give = new EdgeGive();
+
+            double worstFall = 0, falling = 0, previous = 0, previousStep = 0;
+            double low = double.MaxValue, high = double.MinValue, jolt = 0;
+            bool first = true;
+            int tick = 0;
+
+            for (int notch = 0; notch < notches; notch++)
+            {
+                give.Push(1);
+
+                for (int f2 = 0; f2 < gaps[notch % gaps.Count]; f2++)
+                {
+                    give.Advance(frames[tick++ % frames.Count]);
+
+                    double step = give.Offset - previous;
+
+                    if (!first)
+                    {
+                        // A run of falls counts once and at full size: one long slide is one fall.
+                        if (step < 0) falling += -step;
+                        else { worstFall = Math.Max(worstFall, falling); falling = 0; }
+
+                        if (notch >= warmup)
+                        {
+                            jolt = Math.Max(jolt, Math.Abs(step - previousStep));
+                            low = Math.Min(low, give.Offset);
+                            high = Math.Max(high, give.Offset);
+                        }
+                    }
+
+                    previousStep = step;
+                    previous = give.Offset;
+                    first = false;
+                }
+            }
+
+            worstFall = Math.Max(worstFall, falling);
+
+            long framesHome = 0;
+            long crossings = 0;
+
+            if (Bool(e, "settle", true))
+            {
+                int sign = Math.Sign(give.Offset);
+                while (give.Advance(frames[tick++ % frames.Count]))
+                {
+                    int now = Math.Sign(give.Offset);
+                    if (now != 0 && now != sign) crossings++;
+                    sign = now;
+                    if (++framesHome > 600) break;
+                }
+            }
+
+            return new Dictionary<string, object?>
+            {
+                ["worst_fall"] = Math.Round(worstFall, 3),
+                ["band"] = high >= low ? Math.Round(high - low, 3) : 0d,
+                ["jolt"] = Math.Round(jolt, 3),
+                ["crossings"] = crossings,
+                ["frames_home"] = framesHome,
+                ["at_rest"] = give.AtRest,
+            };
+        }
 
         public static Operation? Find(string rule, string op) =>
             ById.TryGetValue(rule + "/" + op, out var found) ? found : null;
