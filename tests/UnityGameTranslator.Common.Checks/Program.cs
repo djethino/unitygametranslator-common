@@ -190,6 +190,8 @@ namespace UnityGameTranslator.Common.Checks
             Section("Mod interface", ModUiChecks.Run);
 
             Section("Game names", GameNamesChecks.Run);
+
+            Section("The give at the end of a scroll", EdgeGiveChecks.Run);
         }
 
         /// <summary>The stored-secret format, checked against its own specification.</summary>
