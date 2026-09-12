@@ -194,6 +194,8 @@ namespace UnityGameTranslator.Common.Checks
             Section("The give at the end of a scroll", EdgeGiveChecks.Run);
 
             Section("How a dropdown fits", DropdownFitChecks.Run);
+
+            Section("How lists share a panel", ListSharesChecks.Run);
         }
 
         /// <summary>The stored-secret format, checked against its own specification.</summary>
