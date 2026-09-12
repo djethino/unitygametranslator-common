@@ -74,6 +74,21 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => DropdownFit.Overflows(Int(e, "count"), NullableDouble(e, "row_height") ?? 0,
                                            NullableDouble(e, "list_height") ?? 0)),
 
+            // ── list_room ─────────────────────────────────────────────────────
+            // ⚠ Two operations read the same inputs because the answer is a pair — what a list
+            // holds and what it may be squeezed to — and the corpus compares one value at a time.
+            new Operation("list_room", "whole", typeof(ListRooms), nameof(ListRooms.For),
+                e => ListRooms.For(Int(e, "rows"), NullableDouble(e, "row_space") ?? 0,
+                                   NullableDouble(e, "chrome") ?? 0).Whole),
+            new Operation("list_room", "least", typeof(ListRooms), nameof(ListRooms.For),
+                e => ListRooms.For(Int(e, "rows"), NullableDouble(e, "row_space") ?? 0,
+                                   NullableDouble(e, "chrome") ?? 0).Least),
+            new Operation("list_room", "least_measured", typeof(ListRooms), nameof(ListRooms.Of),
+                e => ListRooms.Of(NullableDouble(e, "whole") ?? 0, Int(e, "rows"),
+                                  NullableDouble(e, "row_space") ?? 0).Least),
+            new Operation("list_room", "least_surface", typeof(ListRooms), nameof(ListRooms.LeastSurface),
+                e => ListRooms.LeastSurface(RoomsOf(e), NullableDouble(e, "around") ?? 0)),
+
             // ── sync ──────────────────────────────────────────────────────────
             new Operation("sync", "content_hash", typeof(ContentHash), nameof(ContentHash.Of),
                 e => ContentHash.Of(Lines(e, "lines"), Str(e, "uuid")!)),
@@ -225,6 +240,25 @@ namespace UnityGameTranslator.Common.Checks.Corpus
         ///               has none
         ///   frames_home how long the return took, once the wheel stopped
         /// </summary>
+        /// <summary>
+        /// The lists on one surface, described by their row counts — every one of them measured
+        /// with the same row height and chrome, because they are drawn by the same product.
+        /// </summary>
+        private static List<ListRoom> RoomsOf(JsonElement e)
+        {
+            var rowSpace = NullableDouble(e, "row_space") ?? 0;
+            var chrome = NullableDouble(e, "chrome") ?? 0;
+
+            var rooms = new List<ListRoom>();
+            if (!e.TryGetProperty("rows", out var rows) || rows.ValueKind != JsonValueKind.Array)
+                return rooms;
+
+            foreach (var item in rows.EnumerateArray())
+                rooms.Add(ListRooms.For(item.GetInt32(), rowSpace, chrome));
+
+            return rooms;
+        }
+
         private static Dictionary<string, object?> ReplayWheel(JsonElement e)
         {
             var gaps = new List<int>();

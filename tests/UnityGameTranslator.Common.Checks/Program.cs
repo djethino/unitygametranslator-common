@@ -195,7 +195,7 @@ namespace UnityGameTranslator.Common.Checks
 
             Section("How a dropdown fits", DropdownFitChecks.Run);
 
-            Section("How lists share a panel", ListSharesChecks.Run);
+            Section("What a list asks of its surface", ListRoomChecks.Run);
         }
 
         /// <summary>The stored-secret format, checked against its own specification.</summary>
