@@ -65,18 +65,23 @@ namespace UnityGameTranslator.Common.Checks
             // 🔴 A short list above a long one, in a window shrunk hard. Proportionally the short
             // one would get a handful of pixels: its heading there, its rows gone, which reads as
             // a bug rather than as a small window.
+            // ⚠ The floor is in pixels and covers the chrome too — a heading and padding around
+            // the rows — because a floor that only counts rows buys no visible row at all.
             const double row = 56;
-            var crushed = ListShares.Split(new List<double> { 2 * row, 20 * row }, 240, row);
+            const double chrome = 90;
+            const double floor = chrome + row;
 
-            check(crushed[0].Preferred >= row * ListShares.FloorRows - 0.001,
-                "a squeezed list keeps a row and a half",
+            var crushed = ListShares.Split(new List<double> { chrome + 2 * row, chrome + 20 * row },
+                                           300, floor);
+
+            check(crushed[0].Preferred >= floor - 0.001,
+                "a squeezed list keeps its heading AND a row",
                 "a list showing its heading and none of its rows is there while showing nothing");
 
-            // ⚠ And the floor never hands a list room it has nothing to fill: a one-row list in a
-            // cramped window asks for one row, not for one and a half.
-            var tiny = ListShares.Split(new List<double> { row, 20 * row }, 240, row);
+            // ⚠ And the floor never hands a list room it has nothing to fill.
+            var tiny = ListShares.Split(new List<double> { chrome, chrome + 20 * row }, 300, floor);
 
-            check(tiny[0].Preferred <= row + 0.001,
+            check(tiny[0].Preferred <= chrome + 0.001,
                 "but never more than it holds",
                 "a floor that overshoots the content is the gap under the last row, again");
 

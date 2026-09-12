@@ -47,32 +47,29 @@ namespace UnityGameTranslator.Common
     public static class ListShares
     {
         /// <summary>
-        /// The least a list may be squeezed to, as a fraction of what one row needs.
-        ///
-        /// 🔴 **Without it a list can be squeezed to nothing.** Shrink the window with a short list
-        /// above a long one and the proportional share hands the short one a few pixels: its
-        /// heading survives, its rows do not, and the list is there while showing nothing — which
-        /// reads as a bug, not as a small window. Reported on the Manager: "je peux me retrouver
-        /// avec le tableau du haut complètement caché".
-        ///
-        /// ⚠ Expressed against the caller's own row height rather than in pixels, because a row is
-        /// not the same height in a game's overlay and in a desktop window.
-        /// </summary>
-        public const double FloorRows = 1.5;
-
-        /// <summary>
         /// Divides <paramref name="available"/> between lists whose whole contents would need
         /// <paramref name="natural"/> pixels each.
         ///
-        /// <paramref name="row"/> is what one row comes to, and sets the floor no list goes under
-        /// — see <see cref="FloorRows"/>. Zero asks for no floor at all.
+        /// <paramref name="floor"/> is the least any of them may be squeezed to, in the same units
+        /// as <paramref name="natural"/>. Zero asks for no floor.
+        ///
+        /// 🔴 **Without a floor a list can be squeezed to nothing.** Shrink the window with a short
+        /// list above a long one and the proportional share hands the short one a few pixels: its
+        /// heading survives, its rows do not, and a list that is there while showing nothing reads
+        /// as a bug rather than as a small window.
+        ///
+        /// ⚠ **In pixels, and the caller works it out** — it was a number of rows here, and that
+        /// was wrong: what a list asks for includes its heading and its padding, so one and a half
+        /// rows did not even cover the chrome and the floor bought no visible row at all. A row is
+        /// not the same height in a game's overlay as in a desktop window, and neither is what
+        /// surrounds it.
         ///
         /// ⚠ A list with nothing in it is not a list here: pass only the ones that have rows. An
         /// empty one is a sentence, not a scroll area, and sizing it as one is how a panel ends up
         /// holding room for something that is not there.
         /// </summary>
         public static List<ListShare> Split(IReadOnlyList<double> natural, double available,
-                                            double row = 0)
+                                            double floor = 0)
         {
             var shares = new List<ListShare>();
             if (natural == null || natural.Count == 0) return shares;
@@ -149,12 +146,11 @@ namespace UnityGameTranslator.Common
                 // Still over: it takes its share of what the others left, and the spare room too.
                 var portion = asking > 0 ? room * (wants[i] / asking) : room;
 
-                // ⚠ Never squeezed below a row and a half, whatever the arithmetic says — a list
-                // showing its heading and none of its rows reads as broken. Never above its own
-                // content either: the floor must not hand it room it cannot fill.
-                var floor = Math.Min(row * FloorRows, wants[i]);
+                // ⚠ Never squeezed below the floor, whatever the arithmetic says — and never above
+                // its own content either, or the floor becomes the gap under the last row.
+                var least = Math.Min(floor, wants[i]);
 
-                shares.Add(new ListShare { Preferred = Math.Max(portion, floor), Weight = wants[i] });
+                shares.Add(new ListShare { Preferred = Math.Max(portion, least), Weight = wants[i] });
             }
 
             return shares;
