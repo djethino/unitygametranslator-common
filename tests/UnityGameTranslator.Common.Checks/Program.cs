@@ -192,6 +192,8 @@ namespace UnityGameTranslator.Common.Checks
             Section("Game names", GameNamesChecks.Run);
 
             Section("The give at the end of a scroll", EdgeGiveChecks.Run);
+
+            Section("How a dropdown fits", DropdownFitChecks.Run);
         }
 
         /// <summary>The stored-secret format, checked against its own specification.</summary>
