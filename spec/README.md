@@ -34,6 +34,21 @@ spec/
   config/cases.json        files as written today and by older builds: written / read (mod) / manager verdicts
   translation-file/moments.md  WHEN each `_` key and the ancestors move — download, upload, merge, fork, restore — and what holds each moment
   translation-file/moments.json  the same moments as sequences of acts, replayed by the mod's TranslationStoreChecks and the Manager's MomentsContractChecks
+  screens/schema.json      the closed vocabulary a screen of the mod is described in (card, stack, row, spacer, label, button — slots and acts)
+  screens/<screen>.json    one document per screen described in data, embedded in the mod and built by its ScreenBuilder; a second Core draws the same file with its own
+```
+
+## `screens` — a screen described in data
+
+A document says the SHAPE of a window — identity, size, chrome, the tree of its body, the row of
+its footer — in a closed vocabulary, plus what it asks of the code: `bind` slots written at show
+time and `act` verbs handled. It never says a rule: what a label shows or whether a verb is
+offered is decided in code from the facts. `check-spec.py` holds every document to the schema and
+the schema's `kind` list to the mod's `ScreenDocument.Kinds`; `ScreenDocumentChecks` (mod) parses
+every document and holds the refusals. Framing, pilot and what remains: `analyse/ecrans-en-donnees.md`.
+
+```
+
 ```
 
 ## `config` — the mod's settings for one game
