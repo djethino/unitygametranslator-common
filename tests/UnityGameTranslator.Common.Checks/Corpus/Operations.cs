@@ -50,6 +50,21 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("versions", "is_newer", typeof(Versions), nameof(Versions.IsNewer),
                 e => Versions.IsNewer(Str(e, "current"), Str(e, "candidate"))),
 
+            // ── dropdown_fit ──────────────────────────────────────────────────
+            // ⚠ The cases are chosen so every answer lands on a whole number: the share of a
+            // window is a multiplication by 0.45, and a port in another language will not write
+            // the same decimals for it. What the boundary cases assert is `needs_search`, which is
+            // a yes or a no and travels intact.
+            new Operation("dropdown_fit", "height", typeof(DropdownFit), nameof(DropdownFit.Height),
+                e => DropdownFit.Height(Int(e, "count"), NullableDouble(e, "row_height") ?? 0,
+                                        NullableDouble(e, "available") ?? 0)),
+            new Operation("dropdown_fit", "needs_search", typeof(DropdownFit), nameof(DropdownFit.NeedsSearch),
+                e => DropdownFit.NeedsSearch(Int(e, "count"), NullableDouble(e, "row_height") ?? 0,
+                                             NullableDouble(e, "available") ?? 0)),
+            new Operation("dropdown_fit", "overflows", typeof(DropdownFit), nameof(DropdownFit.Overflows),
+                e => DropdownFit.Overflows(Int(e, "count"), NullableDouble(e, "row_height") ?? 0,
+                                           NullableDouble(e, "list_height") ?? 0)),
+
             // ── sync ──────────────────────────────────────────────────────────
             new Operation("sync", "content_hash", typeof(ContentHash), nameof(ContentHash.Of),
                 e => ContentHash.Of(Lines(e, "lines"), Str(e, "uuid")!)),
