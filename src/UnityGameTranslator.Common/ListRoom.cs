@@ -121,6 +121,112 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// Divides a MEASURED height between lists, for a layout that cannot be told a ceiling.
+        ///
+        /// 🔴 **Only one of the two engines needs this, and that is the whole reason it exists.**
+        /// Avalonia takes the three facts and arbitrates: a star row weighted by
+        /// <see cref="ListRoom.Whole"/>, clamped by MinHeight and MaxHeight, and the spare falls to
+        /// a spacer. uGUI has a minimum, a preferred and a flexible height — and **no maximum**: a
+        /// flexible child grows without bound, and a preferred height large enough to hold the whole
+        /// content makes the panel's own scroll area grow to the sum of them, which is a scrollbar
+        /// around the screen on top of the one inside each list. So on that side the answer is
+        /// worked out and written as fixed heights.
+        ///
+        /// ⚠ **This is NOT the arithmetic that was removed on 2026-09-12.** That one took a GUESS at
+        /// the available room, at draw time, and settled the heights once. This takes a height that
+        /// has been measured off a laid-out viewport, and is asked again whenever that height
+        /// changes. The estimate was the defect, never the division.
+        ///
+        /// Three passes, and each one answers a complaint that was reported:
+        ///
+        ///   1. **whoever fits in an EQUAL part is served whole** — judged proportionally, a short
+        ///      list is refused its content precisely because it is short, and BOTH lists end up
+        ///      scrolling where one could have been complete;
+        ///   2. **whoever would fall under their floor is put at it** — and what they did not take
+        ///      is shared again, or the floors push the total past the room that was there;
+        ///   3. **the rest is shared in proportion to what is left to show**, so the longer list
+        ///      gets the larger part of a short window.
+        ///
+        /// ⚠ A list ALONE is not divided with anybody: it takes the height it is given, whatever its
+        /// content comes to. There is nobody to leave the spare room to, and a window enlarged to
+        /// show more that then draws small does nothing.
+        /// </summary>
+        public static List<double> Share(IReadOnlyList<ListRoom> lists, double available)
+        {
+            var heights = new List<double>();
+            if (lists == null || lists.Count == 0) return heights;
+
+            var room = Math.Max(0, available);
+
+            if (lists.Count == 1)
+            {
+                heights.Add(room);
+                return heights;
+            }
+
+            var settled = new double[lists.Count];
+            var done = new bool[lists.Count];
+            var pending = lists.Count;
+
+            // 1 — an EQUAL part, and whoever fits in it takes their content and leaves the table.
+            bool served;
+            do
+            {
+                served = false;
+                for (var i = 0; i < lists.Count; i++)
+                {
+                    if (done[i] || pending <= 0) continue;
+                    if (lists[i].Whole > room / pending) continue;
+
+                    settled[i] = lists[i].Whole;
+                    done[i] = true;
+                    room -= lists[i].Whole;
+                    pending--;
+                    served = true;
+                }
+            }
+            while (served);
+
+            // 2 — of those still over, whoever a proportional part would put under their floor is
+            // put AT their floor, and drops out: what they did not take goes back in the pot.
+            // ⚠ One at a time, then start again: serving somebody changes the pot, so the next
+            // list's share is not the one it had at the top of the pass.
+            do
+            {
+                served = false;
+
+                double asking = 0;
+                for (var i = 0; i < lists.Count; i++) if (!done[i]) asking += lists[i].Whole;
+                if (asking <= 0) break;
+
+                for (var i = 0; i < lists.Count && !served; i++)
+                {
+                    if (done[i]) continue;
+                    if (lists[i].Least < room * (lists[i].Whole / asking)) continue;
+
+                    settled[i] = lists[i].Least;
+                    done[i] = true;
+                    room -= lists[i].Least;
+                    served = true;
+                }
+            }
+            while (served);
+
+            // 3 — and the rest, in proportion to what each still has to show.
+            double over = 0;
+            for (var i = 0; i < lists.Count; i++) if (!done[i]) over += lists[i].Whole;
+
+            for (var i = 0; i < lists.Count; i++)
+            {
+                if (done[i]) { heights.Add(settled[i]); continue; }
+
+                heights.Add(over > 0 ? Math.Max(0, room) * (lists[i].Whole / over) : Math.Max(0, room));
+            }
+
+            return heights;
+        }
+
+        /// <summary>
         /// The height a surface must be able to reach for every one of these lists to keep showing
         /// <see cref="LeastRows"/> rows — that is, the minimum size the window or panel holding
         /// them has to declare.

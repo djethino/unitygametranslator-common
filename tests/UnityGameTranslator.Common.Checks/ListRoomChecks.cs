@@ -68,6 +68,41 @@ namespace UnityGameTranslator.Common.Checks
                 "the longer list asks for more, so it is cut less",
                 "🔴 both asking equally is what gave a list of three half of a tall window");
 
+            // ── Dividing a measured height ──────────────────────────────────────────────────────
+            // 🔴 For the engine that has no ceiling to declare. The one that has takes the three
+            // facts and arbitrates by itself — see Share's own note.
+            var both = new List<ListRoom> { three, ListRooms.For(8, row, chrome) };
+
+            var plenty = ListRooms.Share(both, 900);
+
+            check(Math.Abs(plenty[0] - three.Whole) < 0.001 && Math.Abs(plenty[1] - both[1].Whole) < 0.001,
+                "when everything fits, each stops at its last row",
+                "🔴 what neither took goes to the spacer below them, never into a list that cannot fill it");
+
+            var tight = ListRooms.Share(both, 600);
+
+            check(Math.Abs(tight[0] - three.Whole) < 0.001,
+                "an equal part first: a short list that fits takes its content whole",
+                "🔴 judged proportionally it is refused its content BECAUSE it is short, and both lists scroll");
+
+            check(Math.Abs(tight[0] + tight[1] - 600) < 0.001,
+                "and what it left goes to the one still scrolling",
+                "a division that does not add up is either a gap or an overflow");
+
+            var crushed = ListRooms.Share(both, 450);
+
+            check(Math.Abs(crushed[0] - three.Least) < 0.001,
+                "a list that would fall under its floor is put at it",
+                "a heading over no rows reads as a defect rather than as a small window");
+
+            check(Math.Abs(crushed[0] + crushed[1] - 450) < 0.001,
+                "and what it gave up is shared again",
+                "🔴 without that second pass the floors push the total past the room there was");
+
+            check(Math.Abs(ListRooms.Share(new List<ListRoom> { three }, 900)[0] - 900) < 0.001,
+                "a list on its own takes the surface",
+                "there is nobody to leave it to, and a window enlarged to show more that then draws small does nothing");
+
             // ── What the surface costs ──────────────────────────────────────────────────────────
             const double around = 200;
             var surface = ListRooms.LeastSurface(new List<ListRoom> { three, eight }, around);

@@ -88,6 +88,10 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                                   NullableDouble(e, "row_space") ?? 0).Least),
             new Operation("list_room", "least_surface", typeof(ListRooms), nameof(ListRooms.LeastSurface),
                 e => ListRooms.LeastSurface(RoomsOf(e), NullableDouble(e, "around") ?? 0)),
+            // ⚠ One height at a time, named by `of`: the corpus compares one value per case, and a
+            // case that asserts a whole list is a case nobody can read when it goes red.
+            new Operation("list_room", "share", typeof(ListRooms), nameof(ListRooms.Share),
+                e => ListRooms.Share(RoomsOf(e), NullableDouble(e, "available") ?? 0)[Int(e, "of")]),
 
             // ── sync ──────────────────────────────────────────────────────────
             new Operation("sync", "content_hash", typeof(ContentHash), nameof(ContentHash.Of),
