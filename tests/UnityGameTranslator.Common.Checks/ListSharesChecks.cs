@@ -61,6 +61,25 @@ namespace UnityGameTranslator.Common.Checks
                 "and the eight automatic ones take what is left",
                 "the room freed by the first has somewhere useful to go");
 
+            // ── Squeezed to nothing ─────────────────────────────────────────────────────────────
+            // 🔴 A short list above a long one, in a window shrunk hard. Proportionally the short
+            // one would get a handful of pixels: its heading there, its rows gone, which reads as
+            // a bug rather than as a small window.
+            const double row = 56;
+            var crushed = ListShares.Split(new List<double> { 2 * row, 20 * row }, 240, row);
+
+            check(crushed[0].Preferred >= row * ListShares.FloorRows - 0.001,
+                "a squeezed list keeps a row and a half",
+                "a list showing its heading and none of its rows is there while showing nothing");
+
+            // ⚠ And the floor never hands a list room it has nothing to fill: a one-row list in a
+            // cramped window asks for one row, not for one and a half.
+            var tiny = ListShares.Split(new List<double> { row, 20 * row }, 240, row);
+
+            check(tiny[0].Preferred <= row + 0.001,
+                "but never more than it holds",
+                "a floor that overshoots the content is the gap under the last row, again");
+
             // ── Degenerate ──────────────────────────────────────────────────────────────────────
             check(ListShares.Split(new List<double>(), 800).Count == 0,
                 "no lists, no shares",
