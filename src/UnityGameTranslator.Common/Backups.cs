@@ -76,6 +76,32 @@ namespace UnityGameTranslator.Common
         public bool WithAssets;
 
         /// <summary>
+        /// What the copy translates, and into what. Either may be null — "not settled yet".
+        ///
+        /// 🔴 **Written into the description, but READ from the translation the first time.** The
+        /// languages live in the saved file, not in the note beside it, so every backup taken
+        /// before this existed has them on disk and not in its description. Opening each file on
+        /// every draw would be an access per row for a decoration; leaving the old ones blank for
+        /// ever would make the screen say two different things about two identical backups.
+        ///
+        /// So they are filled in when a description that has never been asked is read, and written
+        /// back. Once done it is never done again — see <see cref="LanguagesKnown"/>, which is what
+        /// tells "not asked yet" from "asked, and the file did not say".
+        /// </summary>
+        public string? SourceLanguage;
+
+        public string? TargetLanguage;
+
+        /// <summary>
+        /// Whether the two above have been looked for — NOT whether they were found.
+        ///
+        /// ⚠ Without it, a backup whose translation names no language is opened again on every
+        /// draw, for ever: absent and empty would be the same answer. A file is read once and its
+        /// description then answers for it, whatever the answer was.
+        /// </summary>
+        public bool LanguagesKnown;
+
+        /// <summary>
         /// Somebody decided this copy stays — it is out of the automatic rotation's reach.
         ///
         /// 🔴 **A second axis, and squeezing it into <see cref="Reason"/> broke both.** Why a copy
@@ -441,6 +467,21 @@ namespace UnityGameTranslator.Common
         /// The name of the screen, in both products — and the reason its buttons read `Backup` and
         /// `Restore` with nothing after them: the subject is written once, up here.
         /// </summary>
+        /// <summary>
+        /// Whether a language on a backup is an answer or an absence.
+        ///
+        /// 🔴 **"auto" is not a language**, and this is the distinction the row is drawn from: a
+        /// copy whose source says "auto" was taken before anybody settled what it translates FROM,
+        /// which is a different thing from a copy that names English. The first gets an arrow with
+        /// nothing before it; the second gets a flag.
+        ///
+        /// ⚠ Here rather than in each screen because both products draw this row, and "is auto a
+        /// language" answered twice is answered differently the day one of them grows a case.
+        /// </summary>
+        public static bool IsSettledLanguage(string? language) =>
+            !string.IsNullOrWhiteSpace(language)
+            && !string.Equals(language, "auto", StringComparison.OrdinalIgnoreCase);
+
         public const string ScreenTitle = "Translation backups";
 
         /// <summary>Headings, so the two lists are named identically in both products.</summary>
