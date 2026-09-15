@@ -79,14 +79,30 @@ namespace UnityGameTranslator.Common.Checks
                 "when everything fits, each stops at its last row",
                 "🔴 what neither took goes to the spacer below them, never into a list that cannot fill it");
 
+            // 🔴 In proportion to what each holds, as a star row does — and CONTINUOUS in the room.
+            // The rule before this served whole any list that fitted in an EQUAL part, so one
+            // pixel of resize across that threshold moved both lists by a whole row.
+            var rows3 = ListRooms.For(3, 50, 0);
+            var rows6 = ListRooms.For(6, 50, 0);
+            var pair = new List<ListRoom> { rows3, rows6 };
+
+            var shared = ListRooms.Share(pair, 360);
+
+            check(Math.Abs(shared[0] - 120) < 0.001 && Math.Abs(shared[1] - 240) < 0.001,
+                "short of room, each is cut in proportion to what it holds",
+                "the longer list keeps the larger part of a short window");
+
+            var edge = ListRooms.Share(pair, 300);
+            var past = ListRooms.Share(pair, 301);
+
+            check(Math.Abs(edge[0] - 100) < 0.001 && Math.Abs(past[0] - edge[0]) < 1 && Math.Abs(past[1] - edge[1]) < 1,
+                "and one pixel more gives one pixel more, never a row",
+                "🔴 a share that follows a handle moves by what it was given; a jump is what was reported");
+
             var tight = ListRooms.Share(both, 600);
 
-            check(Math.Abs(tight[0] - three.Whole) < 0.001,
-                "an equal part first: a short list that fits takes its content whole",
-                "🔴 judged proportionally it is refused its content BECAUSE it is short, and both lists scroll");
-
-            check(Math.Abs(tight[0] + tight[1] - 600) < 0.001,
-                "and what it left goes to the one still scrolling",
+            check(Math.Abs(tight[0] - three.Least) < 0.001 && Math.Abs(tight[1] - 398) < 0.001,
+                "a list whose proportional part falls under its floor is held at it, and the rest goes to the other",
                 "a division that does not add up is either a gap or an overflow");
 
             var crushed = ListRooms.Share(both, 450);

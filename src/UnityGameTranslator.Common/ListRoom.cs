@@ -132,24 +132,28 @@ namespace UnityGameTranslator.Common
         /// around the screen on top of the one inside each list. So on that side the answer is
         /// worked out and written as fixed heights.
         ///
+        /// 🔴 **And it is the SAME arbitration a star row makes, so the two windows divide alike**
+        /// (2026-09-15). Each list is handed its share of the room in proportion to what it holds;
+        /// whoever is handed more than they hold stops at their content and what they did not take
+        /// is shared again; whoever would fall under their floor is held at it, and the rest is
+        /// shared again among those still at the table. It replaced a rule that first served whole
+        /// any list fitting in an EQUAL part of the room — which read well and was not continuous:
+        /// one pixel of resize across that threshold moved both lists by a whole row, reported as
+        /// the window not growing or shrinking "de façon proportionnelle et agréable". A share that
+        /// follows a handle must move by the pixel it was given, never by a jump.
+        ///
         /// ⚠ **This is NOT the arithmetic that was removed on 2026-09-12.** That one took a GUESS at
         /// the available room, at draw time, and settled the heights once. This takes a height that
         /// has been measured off a laid-out viewport, and is asked again whenever that height
         /// changes. The estimate was the defect, never the division.
         ///
-        /// Three passes, and each one answers a complaint that was reported:
-        ///
-        ///   1. **whoever fits in an EQUAL part is served whole** — judged proportionally, a short
-        ///      list is refused its content precisely because it is short, and BOTH lists end up
-        ///      scrolling where one could have been complete;
-        ///   2. **whoever would fall under their floor is put at it** — and what they did not take
-        ///      is shared again, or the floors push the total past the room that was there;
-        ///   3. **the rest is shared in proportion to what is left to show**, so the longer list
-        ///      gets the larger part of a short window.
-        ///
         /// ⚠ A list ALONE is not divided with anybody: it takes the height it is given, whatever its
         /// content comes to. There is nobody to leave the spare room to, and a window enlarged to
         /// show more that then draws small does nothing.
+        ///
+        /// ⚠ Room under the sum of the floors is not made to fit: everybody is at their floor and the
+        /// total overflows, which is what <see cref="LeastSurface"/> exists to keep the surface from
+        /// asking. Room over the sum of the wholes is nobody's: each stops at its last row.
         /// </summary>
         public static List<double> Share(IReadOnlyList<ListRoom> lists, double available)
         {
@@ -166,62 +170,58 @@ namespace UnityGameTranslator.Common
 
             var settled = new double[lists.Count];
             var done = new bool[lists.Count];
-            var pending = lists.Count;
+            var left = room;
 
-            // 1 — an EQUAL part, and whoever fits in it takes their content and leaves the table.
-            bool served;
+            bool changed;
             do
             {
-                served = false;
+                changed = false;
+
+                // A proportional share for everybody still at the table.
+                double weight = 0;
+                var pending = 0;
                 for (var i = 0; i < lists.Count; i++)
                 {
-                    if (done[i] || pending <= 0) continue;
-                    if (lists[i].Whole > room / pending) continue;
-
-                    settled[i] = lists[i].Whole;
-                    done[i] = true;
-                    room -= lists[i].Whole;
-                    pending--;
-                    served = true;
+                    if (done[i]) continue;
+                    weight += Math.Max(0, lists[i].Whole);
+                    pending++;
                 }
-            }
-            while (served);
+                if (pending == 0) break;
 
-            // 2 — of those still over, whoever a proportional part would put under their floor is
-            // put AT their floor, and drops out: what they did not take goes back in the pot.
-            // ⚠ One at a time, then start again: serving somebody changes the pot, so the next
-            // list's share is not the one it had at the top of the pass.
-            do
-            {
-                served = false;
-
-                double asking = 0;
-                for (var i = 0; i < lists.Count; i++) if (!done[i]) asking += lists[i].Whole;
-                if (asking <= 0) break;
-
-                for (var i = 0; i < lists.Count && !served; i++)
+                for (var i = 0; i < lists.Count; i++)
                 {
                     if (done[i]) continue;
-                    if (lists[i].Least < room * (lists[i].Whole / asking)) continue;
+                    settled[i] = weight > 0 ? left * Math.Max(0, lists[i].Whole) / weight : left / pending;
+                }
 
-                    settled[i] = lists[i].Least;
+                // Whoever is handed more than they hold stops at their content, and what they did
+                // not take goes back in the pot. Ceilings before floors: freeing room can only lift
+                // the others, so nobody is held at a floor they would have cleared.
+                for (var i = 0; i < lists.Count; i++)
+                {
+                    if (done[i] || settled[i] <= lists[i].Whole) continue;
+                    settled[i] = Math.Max(0, lists[i].Whole);
                     done[i] = true;
-                    room -= lists[i].Least;
-                    served = true;
+                    left -= settled[i];
+                    changed = true;
+                }
+                if (changed) continue;
+
+                // Whoever would fall under their floor is held at it — a heading over no rows reads
+                // as a defect rather than as a small window — and drops out, so the others share
+                // what is left rather than what was there.
+                for (var i = 0; i < lists.Count; i++)
+                {
+                    if (done[i] || settled[i] >= lists[i].Least) continue;
+                    settled[i] = Math.Max(0, lists[i].Least);
+                    done[i] = true;
+                    left -= settled[i];
+                    changed = true;
                 }
             }
-            while (served);
+            while (changed);
 
-            // 3 — and the rest, in proportion to what each still has to show.
-            double over = 0;
-            for (var i = 0; i < lists.Count; i++) if (!done[i]) over += lists[i].Whole;
-
-            for (var i = 0; i < lists.Count; i++)
-            {
-                if (done[i]) { heights.Add(settled[i]); continue; }
-
-                heights.Add(over > 0 ? Math.Max(0, room) * (lists[i].Whole / over) : Math.Max(0, room));
-            }
+            for (var i = 0; i < lists.Count; i++) heights.Add(settled[i]);
 
             return heights;
         }
