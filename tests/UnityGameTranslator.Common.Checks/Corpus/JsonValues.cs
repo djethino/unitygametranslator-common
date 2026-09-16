@@ -163,6 +163,19 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         ["tone"] = badge.Tone.ToString(),
                         ["tip"] = badge.Tip,
                     };
+                case SyncNotice notice:
+                    return new Dictionary<string, object?>
+                    {
+                        ["show"] = notice.Show,
+                        ["message"] = notice.Message,
+                        ["mention"] = notice.Mention,
+                        ["action"] = notice.Action.ToString(),
+                        ["verb"] = notice.Verb,
+                        ["offers_branch"] = notice.OffersBranch,
+                        ["branch_closed"] = notice.BranchClosed,
+                        ["fork_closed"] = notice.ForkClosed,
+                        ["wall"] = notice.Wall,
+                    };
                 case UploadButton button:
                     return new Dictionary<string, object?>
                     {

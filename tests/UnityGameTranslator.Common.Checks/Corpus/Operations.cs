@@ -143,6 +143,11 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => Uploads.Button(Standings.From(LocalFactsOf(e), ServerFactsOf(e), AccountFactsOf(e)),
                                     LocalFactsOf(e), ServerFactsOf(e), AccountFactsOf(e))),
 
+            // ── notices ───────────────────────────────────────────────────────
+            new Operation("notices", "sync", typeof(Notices), nameof(Notices.Sync),
+                e => Notices.Sync(SyncWorkOf(e), Standings.From(LocalFactsOf(e), ServerFactsOf(e), AccountFactsOf(e)),
+                                  LocalFactsOf(e), ServerFactsOf(e), AccountFactsOf(e))),
+
             // ── merge ─────────────────────────────────────────────────────────
             new Operation("merge", "priority_of", typeof(Merge), nameof(Merge.PriorityOf),
                 e => Merge.PriorityOf(Str(e, "tag")!, Str(e, "value")!)),
@@ -316,6 +321,18 @@ namespace UnityGameTranslator.Common.Checks.Corpus
         {
             SignedIn = Bool(e, "signed_in"),
             Online = Bool(e, "online", fallback: true),
+        };
+
+        /// <summary>What is waiting, as the product that watches the translation reports it.</summary>
+        private static SyncWork SyncWorkOf(JsonElement e) => new SyncWork
+        {
+            WaitingForAccount = Bool(e, "waiting_for_account"),
+            HasLocalChanges = Bool(e, "has_local_changes"),
+            HasMetadataChanges = Bool(e, "has_metadata_changes"),
+            HasServerUpdate = Bool(e, "has_server_update"),
+            NeedsMerge = Bool(e, "needs_merge"),
+            HasMainUpdate = Bool(e, "has_main_update"),
+            BranchesPendingReview = Int(e, "branches_pending_review"),
         };
 
         /// <summary>A standing stated directly, for the questions asked of one.</summary>
