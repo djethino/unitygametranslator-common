@@ -195,6 +195,9 @@ namespace UnityGameTranslator.Common
         /// <summary>The Main closed its contributions since this branch was sent. Null when unknown.</summary>
         public bool? BranchFrozen;
 
+        /// <summary>The Main was told of this branch's work, came back, and took nothing in. Null when unknown.</summary>
+        public bool? MainIgnoring;
+
         /// <summary>"in_progress" or "complete", as published. Null when unknown.</summary>
         public string? Status;
     }

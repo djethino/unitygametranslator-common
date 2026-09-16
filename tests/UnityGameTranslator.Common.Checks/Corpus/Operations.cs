@@ -148,6 +148,14 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => Notices.Sync(SyncWorkOf(e), Standings.From(LocalFactsOf(e), ServerFactsOf(e), AccountFactsOf(e)),
                                   LocalFactsOf(e), ServerFactsOf(e), AccountFactsOf(e))),
 
+            // ── status_card ───────────────────────────────────────────────────
+            new Operation("status_card", "secondary", typeof(StatusCards), nameof(StatusCards.Secondary),
+                e => StatusCards.Secondary(Standings.From(LocalFactsOf(e), ServerFactsOf(e), AccountFactsOf(e)),
+                                           ServerFactsOf(e), Int(e, "local_changes"))),
+            new Operation("status_card", "notice", typeof(StatusCards), nameof(StatusCards.Notice),
+                e => StatusCards.Notice(Standings.From(LocalFactsOf(e), ServerFactsOf(e), AccountFactsOf(e)),
+                                        ServerFactsOf(e), Bool(e, "ignoring_dismissed"), Bool(e, "capture_only"))),
+
             // ── merge ─────────────────────────────────────────────────────────
             new Operation("merge", "priority_of", typeof(Merge), nameof(Merge.PriorityOf),
                 e => Merge.PriorityOf(Str(e, "tag")!, Str(e, "value")!)),
@@ -314,6 +322,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             MainMissing = NullableBool(e, "main_missing"),
             MainAbandoned = NullableBool(e, "main_abandoned"),
             BranchFrozen = NullableBool(e, "branch_frozen"),
+            MainIgnoring = NullableBool(e, "main_ignoring"),
             Status = Str(e, "status"),
         };
 

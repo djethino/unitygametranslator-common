@@ -163,6 +163,21 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         ["tone"] = badge.Tone.ToString(),
                         ["tip"] = badge.Tip,
                     };
+                case CardLine line:
+                    return new Dictionary<string, object?>
+                    {
+                        ["text"] = line.Text,
+                        ["mention"] = line.Mention,
+                        ["needs_attention"] = line.NeedsAttention,
+                    };
+                case CardNotice cardNotice:
+                    return new Dictionary<string, object?>
+                    {
+                        ["text"] = cardNotice.Text,
+                        ["tone"] = cardNotice.Tone.ToString(),
+                        ["dismissable"] = cardNotice.Dismissable,
+                        ["verb"] = cardNotice.Verb,
+                    };
                 case SyncNotice notice:
                     return new Dictionary<string, object?>
                     {
