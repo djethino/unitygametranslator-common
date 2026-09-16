@@ -57,7 +57,8 @@ A rule file:
 | `MergeDecision` | `{"verdict", "conflict", "kind", "reason"}` — `kind` is `null` unless `conflict` |
 | `Badge` | `{"kind", "text", "tone", "tip"}`, in a list, in order |
 | `Standing` | `{"publication", "sync", "account", "role", "branches_waiting", "lines_available", "main_missing", "main_abandoned", "branch_frozen", "finished", "main_owner"}` — `sync`, the counts, `finished` and `main_owner` are `null` when the question does not apply |
-| `UploadButton` | `{"act", "verb", "hint", "hint_is_translatable", "mention", "closed", "enabled"}` — `act` is `null` with nothing to send, `closed` is `null` when the button is open |
+| `UploadButton` | `{"act", "verb", "hint", "hint_is_translatable", "mention", "closed", "wall", "enabled"}` — `act` is `null` with nothing to send, `closed` is `null` when the button is open, `wall` is the whole wall when one turned the act into a fork |
+| `WallText` | `{"fact", "way_out", "whole"}`, or `null` when nothing closes the road — the fact for a status card, the way out beside the button, both for a corner or a window |
 | `SyncNotice` | `{"show", "message", "mention", "action", "verb", "offers_branch", "branch_closed", "fork_closed", "wall"}` — the doors and the wall are `null` unless the action is `ChooseBranchOrFork` |
 | `CardLine` | `{"text", "mention", "needs_attention"}` — `text` is `null` for no line |
 | `CardNotice` | `{"text", "tone", "dismissable", "verb"}`, or `null` when there is nothing to say |

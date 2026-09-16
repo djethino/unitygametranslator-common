@@ -200,7 +200,15 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         ["hint_is_translatable"] = button.HintIsTranslatable,
                         ["mention"] = button.Mention,
                         ["closed"] = button.Closed,
+                        ["wall"] = button.Wall,
                         ["enabled"] = button.Enabled,
+                    };
+                case WallText wall:
+                    return new Dictionary<string, object?>
+                    {
+                        ["fact"] = wall.Fact,
+                        ["way_out"] = wall.WayOut,
+                        ["whole"] = wall.Whole,
                     };
                 case Standing standing:
                     return new Dictionary<string, object?>

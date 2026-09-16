@@ -49,7 +49,57 @@ namespace UnityGameTranslator.Common
         /// <summary>Why it cannot act, said under the button instead of the hint — or null when it can.</summary>
         public string? Closed;
 
+        /// <summary>
+        /// The wall in full — the fact, then the way out — when a wall is what turned the act
+        /// into a fork; null otherwise. For a screen with no status card beside the button (the
+        /// upload window, a tool's list), where <see cref="Hint"/> may carry the way out alone.
+        /// </summary>
+        public string? Wall;
+
         public bool Enabled => Closed == null;
+    }
+
+    /// <summary>
+    /// A wall, in two halves: the fact that closed the road, and the way out. Where the eye reads
+    /// the fact first (a status card) it gets the fact; beside the button it gets the way out;
+    /// alone in a corner or a window, both — so the same event is never told twice in two
+    /// wordings on one screen.
+    /// </summary>
+    public struct WallText
+    {
+        public string Fact;
+        public string WayOut;
+        public string Whole => Fact + " " + WayOut;
+    }
+
+    /// <summary>The four walls, each written once. The words every product reads.</summary>
+    internal static class Walls
+    {
+        public static readonly WallText MainMissing = new WallText
+        {
+            Fact = "The Main was removed by its author.",
+            WayOut = "Contributions cannot be sent there any more. Fork keeps your lines as your own version.",
+        };
+
+        public static readonly WallText MainAbandoned = new WallText
+        {
+            Fact = "The account behind the Main was deleted. The Main is still published and still works.",
+            WayOut = "Contributions will not be read any more. Fork keeps your lines as your own version.",
+        };
+
+        public static readonly WallText BranchFrozen = new WallText
+        {
+            Fact = "The Main no longer accepts contributions.",
+            WayOut = "Contributions cannot be sent there any more. Fork keeps your lines as your own version.",
+        };
+
+        /// <param name="owner">Who leads the lineage, when known. Named when it can be — "somebody" leaves nowhere to look.</param>
+        public static WallText WorksAlone(string? owner) => new WallText
+        {
+            Fact = (string.IsNullOrWhiteSpace(owner) ? "The author" : People.Mention(owner))
+                 + " works alone on this one and does not take contributions.",
+            WayOut = "Fork keeps your lines as your own version.",
+        };
     }
 
     /// <summary>
@@ -133,49 +183,36 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
-        /// Why the natural act is closed, with the way on — or null when nothing closes it.
-        ///
-        /// ⚠ One wall at a time, the one that explains the most first: a Main that is gone makes
-        /// its refusal of contributions beside the point. Each sentence is the fact, then what to
-        /// do, in the words the mod already used for it.
+        /// Why the natural act is closed, with the way on — or null when nothing closes it. The
+        /// two halves of <see cref="WallOf"/> in one sentence, for a place that shows nothing else
+        /// about it (a corner notification, a tool's list).
         /// </summary>
-        /// <param name="owner">Who leads the lineage, when known. Named when it can be — "somebody" leaves nowhere to look.</param>
         public static string? Wall(Publication publication, bool onABranch, string? owner,
                                    bool? acceptsBranches, bool? mainMissing,
                                    bool? mainAbandoned, bool? branchFrozen)
+            => WallOf(publication, onABranch, owner, acceptsBranches, mainMissing, mainAbandoned, branchFrozen)?.Whole;
+
+        /// <summary>
+        /// The wall in two halves — the fact, and the way out — or null when nothing closes the road.
+        ///
+        /// ⚠ One wall at a time, the one that explains the most first: a Main that is gone makes
+        /// its refusal of contributions beside the point.
+        /// </summary>
+        /// <param name="owner">Who leads the lineage, when known. Named when it can be — "somebody" leaves nowhere to look.</param>
+        public static WallText? WallOf(Publication publication, bool onABranch, string? owner,
+                                       bool? acceptsBranches, bool? mainMissing,
+                                       bool? mainAbandoned, bool? branchFrozen)
         {
             if (publication != Publication.NotYours && !(publication == Publication.Published && onABranch))
                 return null;
 
-            if (mainMissing == true)
-            {
-                return "The translation this contributes to has been removed by its author. Your "
-                     + "lines are safe, and your copy is now the only one: Fork publishes it as "
-                     + "your own version.";
-            }
-
-            if (mainAbandoned == true)
-            {
-                return "The account that owned this translation has been deleted, so no "
-                     + "contribution will ever be read. The translation itself is still published "
-                     + "and still works. Your lines are safe: Fork publishes them as your own version.";
-            }
+            if (mainMissing == true) return Walls.MainMissing;
+            if (mainAbandoned == true) return Walls.MainAbandoned;
 
             if (onABranch)
-            {
-                return branchFrozen == true
-                    ? "The translation you contribute to no longer accepts contributions, so this "
-                      + "can no longer be sent. Your lines are safe: Fork keeps them and publishes "
-                      + "them under your own name."
-                    : null;
-            }
+                return branchFrozen == true ? Walls.BranchFrozen : (WallText?)null;
 
-            if (acceptsBranches == false)
-            {
-                string who = string.IsNullOrWhiteSpace(owner) ? "The author" : People.Mention(owner);
-                return who + " works alone on this one and does not take contributions. Your "
-                     + "lines are safe: Fork keeps them and publishes them under your own name.";
-            }
+            if (acceptsBranches == false) return Walls.WorksAlone(owner);
 
             return null;
         }
@@ -258,6 +295,7 @@ namespace UnityGameTranslator.Common
             string hint;
             bool translatable = true;
             string? mention = null;
+            string? wholeWall = null;
 
             if (bothMoved)
             {
@@ -265,14 +303,20 @@ namespace UnityGameTranslator.Common
             }
             else if (taken == UploadAct.Fork)
             {
-                // The wall in the socle's words — the sentence the card shows — followed by the
-                // way on, which this button now is. The wall names the Main's owner, so it is
+                // The wall in the socle's words. On a screen whose status card already states the
+                // fact — an author looking at their own published branch, which is exactly when
+                // StatusCards.Notice speaks — the button says only the way out, which this button
+                // now is; anywhere else, the fact too. A wall may name the Main's owner, so it is
                 // written as it is.
                 string? owner = string.IsNullOrEmpty(server.MainUsername) ? server.Uploader : server.MainUsername;
-                string? wall = Wall(standing.Publication, onABranch, owner, server.AcceptsBranches,
-                                    server.MainMissing, server.MainAbandoned, server.BranchFrozen);
+                var wall = WallOf(standing.Publication, onABranch, owner, server.AcceptsBranches,
+                                  server.MainMissing, server.MainAbandoned, server.BranchFrozen);
+                bool cardStatesTheFact = standing.Publication == Publication.Published && server.IsOwner;
                 translatable = wall == null;
-                hint = wall ?? "Leave this translation and publish your lines as your own";
+                wholeWall = wall?.Whole;
+                hint = wall == null
+                    ? "Leave this translation and publish your lines as your own"
+                    : cardStatesTheFact ? wall.Value.WayOut : wall.Value.Whole;
             }
             else if (taken == UploadAct.Update)
             {
@@ -310,6 +354,7 @@ namespace UnityGameTranslator.Common
                 Mention = mention,
                 Closed = ClosedReason(taken, local.Lines, untouchedCopy, account.Online, account.SignedIn,
                                       standing.Sync == SyncDirection.InSync),
+                Wall = wholeWall,
             };
         }
 

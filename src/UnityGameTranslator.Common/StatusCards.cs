@@ -134,33 +134,17 @@ namespace UnityGameTranslator.Common
         {
             if (standing.Publication != Publication.Published || !server.IsOwner) return null;
 
+            // The FACT half of the wall, the same words as everywhere else. The way out is said
+            // beside the button that is the way out (Uploads.Button), not here: the card states
+            // where the translation stands, it offers no act on it.
             if (standing.MainMissing)
-            {
-                return new CardNotice
-                {
-                    Text = "The translation you contribute to is gone: nobody can merge this work any more.",
-                    Tone = NoticeTone.Error, Verb = "Manage online",
-                };
-            }
+                return new CardNotice { Text = Walls.MainMissing.Fact, Tone = NoticeTone.Error, Verb = "Manage online" };
 
             if (standing.MainAbandoned)
-            {
-                return new CardNotice
-                {
-                    Text = "The account behind the translation you contribute to is gone: nobody can "
-                         + "merge this work any more. The translation itself still works.",
-                    Tone = NoticeTone.Error, Verb = "Manage online",
-                };
-            }
+                return new CardNotice { Text = Walls.MainAbandoned.Fact, Tone = NoticeTone.Error, Verb = "Manage online" };
 
             if (standing.BranchFrozen)
-            {
-                return new CardNotice
-                {
-                    Text = "The translation you contribute to no longer takes contributions: this can no longer be sent.",
-                    Tone = NoticeTone.Error, Verb = "Manage online",
-                };
-            }
+                return new CardNotice { Text = Walls.BranchFrozen.Fact, Tone = NoticeTone.Error, Verb = "Manage online" };
 
             if (server.MainIgnoring == true && !ignoringDismissed)
             {
