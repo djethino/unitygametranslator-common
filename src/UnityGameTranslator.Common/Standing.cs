@@ -91,6 +91,18 @@ namespace UnityGameTranslator.Common
         /// <summary>A Branch whose Main is no longer on the site.</summary>
         public bool MainMissing;
 
+        /// <summary>The Main is still there and its owner erased their account.</summary>
+        public bool MainAbandoned;
+
+        /// <summary>The Main still exists and has closed its contributions since this branch was sent.</summary>
+        public bool BranchFrozen;
+
+        /// <summary>
+        /// The author's own declaration that the translation is complete. Null when the server did
+        /// not say — an older server, or a lineage nobody has asked about — which is not "no".
+        /// </summary>
+        public bool? Finished;
+
         /// <summary>
         /// Who leads this lineage, when somebody else does.
         ///
@@ -101,9 +113,168 @@ namespace UnityGameTranslator.Common
         public string? MainOwner;
     }
 
+    /// <summary>
+    /// What this machine knows about the translation on its own — read off the file and the
+    /// engine, without asking anybody.
+    /// </summary>
+    public struct LocalFacts
+    {
+        /// <summary>How many lines the file holds. Zero is "nothing here".</summary>
+        public int Lines;
+
+        /// <summary>Lines changed since the last sync, as the mod counts them.</summary>
+        public int LocalChanges;
+
+        /// <summary>The file's own settings changed since the last sync, lines aside.</summary>
+        public bool MetadataDirty;
+
+        /// <summary>The server content last agreed with, or null for a file that never synced.</summary>
+        public string? LastSyncedHash;
+
+        /// <summary>The content as it stands, hashed as <see cref="ContentHash"/> does. Null when nobody computed it.</summary>
+        public string? ContentHash;
+    }
+
+    /// <summary>
+    /// What the server last said about this lineage — one cached answer, never a request.
+    ///
+    /// ⚠ <see cref="Role"/> is only an answer when <see cref="IsOwner"/> holds: the public
+    /// endpoint answers about a translation and never about a person, and fills the role with
+    /// what an anonymous caller can be told.
+    /// </summary>
+    public struct ServerFacts
+    {
+        /// <summary>The server has been asked at all — even to learn that it knows nothing.</summary>
+        public bool Checked;
+
+        /// <summary>Something of this lineage is on the site.</summary>
+        public bool Exists;
+
+        /// <summary>The account reading this holds a row in the lineage.</summary>
+        public bool IsOwner;
+
+        /// <summary>That row's role. Meaningful only when <see cref="IsOwner"/>.</summary>
+        public LineageRole Role;
+
+        /// <summary>The published content's hash, to compare with the local one.</summary>
+        public string? Hash;
+
+        /// <summary>Who published the row the server described.</summary>
+        public string? Uploader;
+
+        /// <summary>Who leads the lineage, when the server names them apart from the uploader.</summary>
+        public string? MainUsername;
+
+        /// <summary>How many contributions exist on this Main, whatever their state.</summary>
+        public int BranchesCount;
+
+        /// <summary>How many of them hold something a merge would offer. Null on an older server.</summary>
+        public int? BranchesWithWork;
+
+        /// <summary>How many distinct lines those contributions hold. Null when not counted.</summary>
+        public int? LinesAvailable;
+
+        /// <summary>Whether the Main takes contributions. Null when unknown.</summary>
+        public bool? AcceptsBranches;
+
+        /// <summary>The Main this branch hangs from is gone. Null when unknown.</summary>
+        public bool? MainMissing;
+
+        /// <summary>The Main's owner erased their account. Null when unknown.</summary>
+        public bool? MainAbandoned;
+
+        /// <summary>The Main closed its contributions since this branch was sent. Null when unknown.</summary>
+        public bool? BranchFrozen;
+
+        /// <summary>"in_progress" or "complete", as published. Null when unknown.</summary>
+        public string? Status;
+    }
+
+    /// <summary>Under whose name this screen acts, and whether it can reach the site at all.</summary>
+    public struct AccountFacts
+    {
+        /// <summary>An account is signed in on this screen.</summary>
+        public bool SignedIn;
+
+        /// <summary>The product may talk to the site at all.</summary>
+        public bool Online;
+    }
+
     /// <summary>What somebody may do from here, and why not when they may not.</summary>
     public static class Standings
     {
+        /// <summary>
+        /// Where somebody stands with a translation, composed from the facts — the one reading of
+        /// them every screen shares.
+        ///
+        /// 🔴 **Written because one screen read the same facts twice** (2026-09-16). The mod's main
+        /// screen derived a layout state from the server state, then rebuilt a Standing from the
+        /// same state PLUS that layout state — two passes, two chances to disagree, and they did:
+        /// the Standing it built never carried MainMissing, so the chip announcing a vanished Main
+        /// never appeared in a game while the notice beside it, reading the server state directly,
+        /// did. Every field is filled here or nowhere.
+        ///
+        /// ⚠ **The role is this account's role, or none.** The public endpoint answers about a
+        /// translation and never about a person: read by somebody signed out, its "role" is what an
+        /// anonymous caller can be told. So a role is taken only from an answer that concerns the
+        /// reader — <see cref="ServerFacts.IsOwner"/> — and is None otherwise.
+        ///
+        /// ⚠ **What is waiting is asked only of a Main.** A branch has nobody waiting on it, and a
+        /// count carried over from the lineage would send its author to review other people's
+        /// work. Unknown is not zero: an older server that cannot say which contributions hold
+        /// work gives the raw count rather than nothing, since "nothing waiting" is a claim.
+        /// </summary>
+        public static Standing From(LocalFacts local, ServerFacts server, AccountFacts account)
+        {
+            bool here = local.Lines > 0;
+            var publication = Publications.Of(here, server.Exists, server.Exists ? server.IsOwner : (bool?)null);
+            var role = server.IsOwner ? server.Role : LineageRole.None;
+            bool leads = server.IsOwner && (role == LineageRole.Main || role == LineageRole.Fork);
+
+            return new Standing
+            {
+                Publication = publication,
+
+                // Nothing published to compare against is not "in sync": it is no comparison at all.
+                Sync = server.Exists
+                    ? Sync.Decide(local.ContentHash ?? "", server.Hash ?? "", local.LastSyncedHash ?? "",
+                                  local.LocalChanges > 0 || local.MetadataDirty)
+                    : (SyncDirection?)null,
+
+                Account = account.SignedIn ? AccountStanding.Ours : AccountStanding.Anonymous,
+                Role = role,
+                BranchesWaiting = leads ? (server.BranchesWithWork ?? server.BranchesCount) : (int?)null,
+                LinesAvailable = leads ? server.LinesAvailable : null,
+                MainMissing = server.MainMissing == true,
+                MainAbandoned = server.MainAbandoned == true,
+                BranchFrozen = server.BranchFrozen == true,
+                Finished = server.Status == null
+                    ? (bool?)null
+                    : string.Equals(server.Status, "complete", System.StringComparison.OrdinalIgnoreCase),
+
+                // Somebody else leads it: named when the server named them, the uploader otherwise.
+                MainOwner = server.Exists && !server.IsOwner
+                    ? (string.IsNullOrEmpty(server.MainUsername) ? server.Uploader : server.MainUsername)
+                    : null,
+            };
+        }
+
+        /// <summary>
+        /// This account leads the lineage — a Main, or a Fork, which is a Main that left another.
+        /// What a screen used to call "owner of a Main": the state that reviews contributions.
+        /// </summary>
+        public static bool LeadsTheLineage(Standing standing)
+        {
+            return standing.Publication == Publication.Published
+                   && (standing.Role == LineageRole.Main || standing.Role == LineageRole.Fork);
+        }
+
+        /// <summary>This account holds a contribution to somebody else's Main — it has sent something.</summary>
+        public static bool OnABranch(Standing standing)
+        {
+            return standing.Publication == Publication.Published && standing.Role == LineageRole.Branch;
+        }
+
         /// <summary>
         /// May this screen change the translation FILE on this machine — merging, taking the Main's
         /// version again, editing it?

@@ -163,6 +163,21 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         ["tone"] = badge.Tone.ToString(),
                         ["tip"] = badge.Tip,
                     };
+                case Standing standing:
+                    return new Dictionary<string, object?>
+                    {
+                        ["publication"] = standing.Publication.ToString(),
+                        ["sync"] = standing.Sync?.ToString(),
+                        ["account"] = standing.Account.ToString(),
+                        ["role"] = standing.Role.ToString(),
+                        ["branches_waiting"] = standing.BranchesWaiting is int waiting ? (long?)waiting : null,
+                        ["lines_available"] = standing.LinesAvailable is int lines ? (long?)lines : null,
+                        ["main_missing"] = standing.MainMissing,
+                        ["main_abandoned"] = standing.MainAbandoned,
+                        ["branch_frozen"] = standing.BranchFrozen,
+                        ["finished"] = standing.Finished,
+                        ["main_owner"] = standing.MainOwner,
+                    };
                 case TranslationLine line:
                     return line.BareString
                         ? (object?)line.Value

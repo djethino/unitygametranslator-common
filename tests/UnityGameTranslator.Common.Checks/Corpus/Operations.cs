@@ -106,6 +106,20 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("sync", "explain", typeof(Sync), nameof(Sync.Explain),
                 e => Sync.Explain(EnumRequired<SyncDirection>(e, "direction"))),
 
+            // ── standing ──────────────────────────────────────────────────────
+            new Operation("standing", "from", typeof(Standings), nameof(Standings.From),
+                e => Standings.From(LocalFactsOf(e), ServerFactsOf(e), AccountFactsOf(e))),
+            new Operation("standing", "leads_the_lineage", typeof(Standings), nameof(Standings.LeadsTheLineage),
+                e => Standings.LeadsTheLineage(StandingOf(e))),
+            new Operation("standing", "on_a_branch", typeof(Standings), nameof(Standings.OnABranch),
+                e => Standings.OnABranch(StandingOf(e))),
+            new Operation("standing", "may_write_locally", typeof(Standings), nameof(Standings.MayWriteLocally),
+                e => Standings.MayWriteLocally(EnumRequired<AccountStanding>(e, "account"))),
+            new Operation("standing", "may_write_to_server", typeof(Standings), nameof(Standings.MayWriteToServer),
+                e => Standings.MayWriteToServer(EnumRequired<AccountStanding>(e, "account"))),
+            new Operation("standing", "explain_refusal", typeof(Standings), nameof(Standings.ExplainRefusal),
+                e => Standings.ExplainRefusal(EnumRequired<AccountStanding>(e, "account"), Bool(e, "to_server"))),
+
             // ── merge ─────────────────────────────────────────────────────────
             new Operation("merge", "priority_of", typeof(Merge), nameof(Merge.PriorityOf),
                 e => Merge.PriorityOf(Str(e, "tag")!, Str(e, "value")!)),
@@ -244,6 +258,49 @@ namespace UnityGameTranslator.Common.Checks.Corpus
         ///               has none
         ///   frames_home how long the return took, once the wheel stopped
         /// </summary>
+        /// <summary>The three fact sheets a standing is composed from, each key the snake_case of its field.</summary>
+        private static LocalFacts LocalFactsOf(JsonElement e) => new LocalFacts
+        {
+            Lines = Int(e, "lines"),
+            LocalChanges = Int(e, "local_changes"),
+            MetadataDirty = Bool(e, "metadata_dirty"),
+            LastSyncedHash = Str(e, "last_synced"),
+            ContentHash = Str(e, "content_hash"),
+        };
+
+        private static ServerFacts ServerFactsOf(JsonElement e) => new ServerFacts
+        {
+            Checked = Bool(e, "checked"),
+            Exists = Bool(e, "exists"),
+            IsOwner = Bool(e, "is_owner"),
+            Role = EnumOf<LineageRole>(e, "role") ?? LineageRole.None,
+            Hash = Str(e, "server_hash"),
+            Uploader = Str(e, "uploader"),
+            MainUsername = Str(e, "main_username"),
+            BranchesCount = Int(e, "branches_count"),
+            BranchesWithWork = NullableInt(e, "branches_with_work"),
+            LinesAvailable = NullableInt(e, "lines_available"),
+            AcceptsBranches = NullableBool(e, "accepts_branches"),
+            MainMissing = NullableBool(e, "main_missing"),
+            MainAbandoned = NullableBool(e, "main_abandoned"),
+            BranchFrozen = NullableBool(e, "branch_frozen"),
+            Status = Str(e, "status"),
+        };
+
+        private static AccountFacts AccountFactsOf(JsonElement e) => new AccountFacts
+        {
+            SignedIn = Bool(e, "signed_in"),
+            Online = Bool(e, "online", fallback: true),
+        };
+
+        /// <summary>A standing stated directly, for the questions asked of one.</summary>
+        private static Standing StandingOf(JsonElement e) => new Standing
+        {
+            Publication = EnumRequired<Publication>(e, "publication"),
+            Role = EnumOf<LineageRole>(e, "role") ?? LineageRole.None,
+            Account = EnumOf<AccountStanding>(e, "account") ?? AccountStanding.Anonymous,
+        };
+
         /// <summary>
         /// The lists on one surface, described by their row counts — every one of them measured
         /// with the same row height and chrome, because they are drawn by the same product.

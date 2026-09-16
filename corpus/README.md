@@ -56,6 +56,7 @@ A rule file:
 | a double | `{"approx": 0.8, "tol": 1e-9}` (`tol` optional) |
 | `MergeDecision` | `{"verdict", "conflict", "kind", "reason"}` — `kind` is `null` unless `conflict` |
 | `Badge` | `{"kind", "text", "tone", "tip"}`, in a list, in order |
+| `Standing` | `{"publication", "sync", "account", "role", "branches_waiting", "lines_available", "main_missing", "main_abandoned", "branch_frozen", "finished", "main_owner"}` — `sync`, the counts, `finished` and `main_owner` are `null` when the question does not apply |
 | a gate's verdict (`Placeholders.Accepts`, `AcceptsEdit`) | `{"accepted": bool, "errors": [the lines, in order]}` — the lines are frozen: a model receives them verbatim |
 | a `Dictionary<string, int>` (`Tally`) | an object of numbers |
 | a message with line breaks | a string with `\n` — never the platform's line ending |
