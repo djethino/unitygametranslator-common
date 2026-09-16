@@ -163,6 +163,17 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         ["tone"] = badge.Tone.ToString(),
                         ["tip"] = badge.Tip,
                     };
+                case UploadButton button:
+                    return new Dictionary<string, object?>
+                    {
+                        ["act"] = button.Act?.ToString(),
+                        ["verb"] = button.Verb,
+                        ["hint"] = button.Hint,
+                        ["hint_is_translatable"] = button.HintIsTranslatable,
+                        ["mention"] = button.Mention,
+                        ["closed"] = button.Closed,
+                        ["enabled"] = button.Enabled,
+                    };
                 case Standing standing:
                     return new Dictionary<string, object?>
                     {

@@ -21,6 +21,38 @@ namespace UnityGameTranslator.Common
     }
 
     /// <summary>
+    /// The publish button as a screen draws it: what it would do, the word on it, the line under
+    /// it, and why it is closed when it is.
+    ///
+    /// ⚠ <see cref="Hint"/> is a sentence for the interface's own translation; a username never
+    /// goes through that, so it travels apart in <see cref="Mention"/> and the screen appends it.
+    /// The one hint that already embeds a name — the wall — says so with
+    /// <see cref="HintIsTranslatable"/> false.
+    /// </summary>
+    public struct UploadButton
+    {
+        /// <summary>What pressing it would do; null when there is nothing on this machine to send.</summary>
+        public UploadAct? Act;
+
+        /// <summary>The word on the button. "Sync" when both sides moved: that exchange comes first.</summary>
+        public string Verb;
+
+        /// <summary>What pressing it does, said under the button while it is open.</summary>
+        public string Hint;
+
+        /// <summary>Whether <see cref="Hint"/> may go through the interface's translation.</summary>
+        public bool HintIsTranslatable;
+
+        /// <summary>A username the screen appends to <see cref="Hint"/>, as data, or null.</summary>
+        public string? Mention;
+
+        /// <summary>Why it cannot act, said under the button instead of the hint — or null when it can.</summary>
+        public string? Closed;
+
+        public bool Enabled => Closed == null;
+    }
+
+    /// <summary>
     /// What one button does with a translation file, and the word on it — decided once for the
     /// mod, the Manager and whatever comes next.
     ///
@@ -200,6 +232,85 @@ namespace UnityGameTranslator.Common
             if (inSync) return "Up to date — nothing to send";
 
             return null;
+        }
+
+        /// <summary>
+        /// The publish button, whole, from where the translation stands and the facts around it.
+        ///
+        /// 🔴 **Written because two screens of the mod derived it for themselves** (2026-09-16):
+        /// the main screen's Actions row and the upload window's mode check each composed
+        /// <see cref="ActOf"/>, <see cref="Wall"/> and <see cref="ClosedReason"/> with their own
+        /// glue — the verb, the hint, when "Sync" replaces the verb, which wall to show — and the
+        /// corner notification did it a third way. One composition, held by the corpus.
+        ///
+        /// ⚠ **"Sync" comes before any act.** When both sides moved, the button settles that
+        /// exchange first, whatever the act would have been; the act is still returned, since it
+        /// is what follows.
+        /// </summary>
+        public static UploadButton Button(Standing standing, LocalFacts local, ServerFacts server, AccountFacts account)
+        {
+            bool onABranch = Standings.OnABranch(standing);
+            var act = ActOf(standing.Publication, onABranch, server.AcceptsBranches,
+                            server.MainMissing, server.MainAbandoned, server.BranchFrozen);
+            var taken = act ?? UploadAct.Upload;
+            bool bothMoved = standing.Sync == SyncDirection.Merge;
+
+            string hint;
+            bool translatable = true;
+            string? mention = null;
+
+            if (bothMoved)
+            {
+                hint = "Both local (" + local.LocalChanges + " changes) and server were updated. Click to sync.";
+            }
+            else if (taken == UploadAct.Fork)
+            {
+                // The wall in the socle's words — the sentence the card shows — followed by the
+                // way on, which this button now is. The wall names the Main's owner, so it is
+                // written as it is.
+                string? owner = string.IsNullOrEmpty(server.MainUsername) ? server.Uploader : server.MainUsername;
+                string? wall = Wall(standing.Publication, onABranch, owner, server.AcceptsBranches,
+                                    server.MainMissing, server.MainAbandoned, server.BranchFrozen);
+                translatable = wall == null;
+                hint = wall ?? "Leave this translation and publish your lines as your own";
+            }
+            else if (taken == UploadAct.Update)
+            {
+                // Say WHICH kind of change is pending, otherwise an update offered after a mere
+                // font or exclusion edit looks like the mod lost track of what was synced.
+                string id = server.SiteId is int site ? " #" + site : "";
+                if (local.LocalChanges > 0)
+                    hint = "Update" + id + " (" + local.LocalChanges + " local changes)";
+                else if (local.MetadataDirty)
+                    hint = "Update" + id + " — settings changed (fonts, images, exclusions)";
+                else
+                    hint = "Update your translation" + id;
+            }
+            else if (taken == UploadAct.Contribute)
+            {
+                hint = "Contribute as a branch to";
+                mention = server.Uploader;
+            }
+            else
+            {
+                hint = "Create a new translation";
+            }
+
+            // A fork that has not been touched holds somebody else's file, line for line — and
+            // only while it has never been published: the marker travels inside the file, so
+            // whoever downloads a fork carries it too, in a lineage where other rules answer.
+            bool untouchedCopy = !server.Exists && local.ForkStillTheCopy;
+
+            return new UploadButton
+            {
+                Act = act,
+                Verb = bothMoved ? "Sync" : Verb(taken),
+                Hint = hint,
+                HintIsTranslatable = translatable,
+                Mention = mention,
+                Closed = ClosedReason(taken, local.Lines, untouchedCopy, account.Online, account.SignedIn,
+                                      standing.Sync == SyncDirection.InSync),
+            };
         }
 
         /// <summary>Said by a tool that cannot take the act, after the wall when there is one.</summary>

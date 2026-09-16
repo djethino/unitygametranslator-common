@@ -133,6 +133,12 @@ namespace UnityGameTranslator.Common
 
         /// <summary>The content as it stands, hashed as <see cref="ContentHash"/> does. Null when nobody computed it.</summary>
         public string? ContentHash;
+
+        /// <summary>
+        /// A fork still holding, line for line, the file it came from. Publishing it would put a
+        /// second identical entry on the site under a new name.
+        /// </summary>
+        public bool ForkStillTheCopy;
     }
 
     /// <summary>
@@ -155,6 +161,9 @@ namespace UnityGameTranslator.Common
 
         /// <summary>That row's role. Meaningful only when <see cref="IsOwner"/>.</summary>
         public LineageRole Role;
+
+        /// <summary>The row's id on the site, to name it — "Update #123". Null when there is none.</summary>
+        public int? SiteId;
 
         /// <summary>The published content's hash, to compare with the local one.</summary>
         public string? Hash;

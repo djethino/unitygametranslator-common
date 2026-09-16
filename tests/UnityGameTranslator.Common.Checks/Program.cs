@@ -91,7 +91,8 @@ namespace UnityGameTranslator.Common.Checks
         /// <summary>What sending a file becomes, the word for it, and where the act is taken.</summary>
         private static void WhatOneButtonDoes()
         {
-            Section("Uploads", UploadsChecks.Run);
+            // ⚠ The upload rules moved to corpus/rules/uploads.json on 2026-09-16, with the button
+            // that composes them — one case set, held by every port.
 
             Section("The language of a translation", TranslationLanguagesChecks.Run);
 

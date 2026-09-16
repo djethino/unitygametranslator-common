@@ -120,6 +120,29 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("standing", "explain_refusal", typeof(Standings), nameof(Standings.ExplainRefusal),
                 e => Standings.ExplainRefusal(EnumRequired<AccountStanding>(e, "account"), Bool(e, "to_server"))),
 
+            // ── uploads ───────────────────────────────────────────────────────
+            new Operation("uploads", "act_of", typeof(Uploads), nameof(Uploads.ActOf),
+                e => Uploads.ActOf(EnumRequired<Publication>(e, "publication"), Bool(e, "on_a_branch"),
+                                   NullableBool(e, "accepts_branches"), NullableBool(e, "main_missing"),
+                                   NullableBool(e, "main_abandoned"), NullableBool(e, "branch_frozen"))),
+            new Operation("uploads", "verb", typeof(Uploads), nameof(Uploads.Verb),
+                e => Uploads.Verb(EnumRequired<UploadAct>(e, "act"))),
+            new Operation("uploads", "wall", typeof(Uploads), nameof(Uploads.Wall),
+                e => Uploads.Wall(EnumRequired<Publication>(e, "publication"), Bool(e, "on_a_branch"), Str(e, "owner"),
+                                  NullableBool(e, "accepts_branches"), NullableBool(e, "main_missing"),
+                                  NullableBool(e, "main_abandoned"), NullableBool(e, "branch_frozen"))),
+            new Operation("uploads", "decided_in_the_game", typeof(Uploads), nameof(Uploads.DecidedInTheGame),
+                e => Uploads.DecidedInTheGame(EnumRequired<UploadAct>(e, "act"))),
+            new Operation("uploads", "closed_reason", typeof(Uploads), nameof(Uploads.ClosedReason),
+                e => Uploads.ClosedReason(EnumRequired<UploadAct>(e, "act"), Int(e, "lines"), Bool(e, "untouched_copy"),
+                                          Bool(e, "online", fallback: true), Bool(e, "signed_in", fallback: true),
+                                          Bool(e, "in_sync"))),
+            // The button composes the standing from the same facts it is then judged on, so a case
+            // states the facts once and the two rules are held together.
+            new Operation("uploads", "button", typeof(Uploads), nameof(Uploads.Button),
+                e => Uploads.Button(Standings.From(LocalFactsOf(e), ServerFactsOf(e), AccountFactsOf(e)),
+                                    LocalFactsOf(e), ServerFactsOf(e), AccountFactsOf(e))),
+
             // ── merge ─────────────────────────────────────────────────────────
             new Operation("merge", "priority_of", typeof(Merge), nameof(Merge.PriorityOf),
                 e => Merge.PriorityOf(Str(e, "tag")!, Str(e, "value")!)),
@@ -266,6 +289,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             MetadataDirty = Bool(e, "metadata_dirty"),
             LastSyncedHash = Str(e, "last_synced"),
             ContentHash = Str(e, "content_hash"),
+            ForkStillTheCopy = Bool(e, "fork_still_the_copy"),
         };
 
         private static ServerFacts ServerFactsOf(JsonElement e) => new ServerFacts
@@ -274,6 +298,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             Exists = Bool(e, "exists"),
             IsOwner = Bool(e, "is_owner"),
             Role = EnumOf<LineageRole>(e, "role") ?? LineageRole.None,
+            SiteId = NullableInt(e, "site_id"),
             Hash = Str(e, "server_hash"),
             Uploader = Str(e, "uploader"),
             MainUsername = Str(e, "main_username"),
