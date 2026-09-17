@@ -34,6 +34,14 @@ namespace UnityGameTranslator.Common.Checks
                 "the two ancestors never share a name",
                 "one fed to the other's merge reads every owned line as a remote deletion");
 
+            check(TranslationFiles.FailuresOf(path) == path + ".failures"
+                  && TranslationFiles.FailuresOf(path).StartsWith(path, StringComparison.Ordinal)
+                  && !TranslationFiles.FailuresOf(path).EndsWith(".json", StringComparison.Ordinal)
+                  && TranslationFiles.FailuresOf(path) != TranslationFiles.AncestorOf(path)
+                  && TranslationFiles.FailuresOf(path) != TranslationFiles.MainAncestorOf(path),
+                "the failed lines are the path plus .failures — a third companion, same rule",
+                "swept with the translation, never mistaken for it or for a baseline");
+
             check(TranslationFiles.AncestorOf(path).StartsWith(path, StringComparison.Ordinal)
                   && TranslationFiles.MainAncestorOf(path).StartsWith(path, StringComparison.Ordinal),
                 "both names begin with the whole translation path",

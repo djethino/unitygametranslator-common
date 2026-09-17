@@ -49,6 +49,19 @@ namespace UnityGameTranslator.Common
             return translationPath + MainAncestorSuffix;
         }
 
+        public const string FailuresSuffix = ".failures";
+
+        /// <summary>
+        /// The lines the AI gave up on, beside the translation, same rule — kept across launches
+        /// so they are skipped at once instead of failing again for minutes, until somebody
+        /// settles them by hand.
+        /// </summary>
+        public static string FailuresOf(string translationPath)
+        {
+            if (translationPath == null) throw new ArgumentNullException(nameof(translationPath));
+            return translationPath + FailuresSuffix;
+        }
+
         /// <summary>
         /// The section of the translation file that lists the images it puts in place. Each entry
         /// names its file under <see cref="ImageFileField"/>; entries written by earlier versions
