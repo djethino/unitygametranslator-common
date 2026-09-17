@@ -196,6 +196,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     Str(e, "main_owner"),
                     Bool(e, "main_abandoned"),
                     Bool(e, "branch_frozen"))),
+            new Operation("badges", "in_listing", typeof(Badges), nameof(Badges.InListing),
+                e => Badges.InListing(Bool(e, "installed"), NullableBool(e, "yours_is_main"))),
 
             // ── mod_ui_migration ──────────────────────────────────────────────
             new Operation("mod_ui_migration", "decide", typeof(ModUiMigration), nameof(ModUiMigration.Decide),

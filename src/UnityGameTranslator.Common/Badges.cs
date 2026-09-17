@@ -91,6 +91,13 @@ namespace UnityGameTranslator.Common
         Completeness,
         Votes,
         Downloads,
+
+        /// <summary>
+        /// The lineage this game holds right now — a fact about THIS MACHINE, which is why it has
+        /// no place in <see cref="Badges.For"/>: a card describes the one file the game holds, a
+        /// list describes candidates, and only the list has to say which of them is already here.
+        /// </summary>
+        Installed,
     }
 
     /// <summary>One chip: what it says, how loudly, and what it means in full.</summary>
@@ -184,6 +191,65 @@ namespace UnityGameTranslator.Common
         /// refused nobody anything. The caller decides which of the two it is; this class only
         /// guarantees that one chip comes out rather than two.
         /// </param>
+        /// <summary>
+        /// What one row of a listing is to the reader, in chips: whether it is the translation this
+        /// game holds, and who they are in its lineage — nothing else, because the row's own lines
+        /// already say what the translation IS.
+        ///
+        /// 🔴 The same order <see cref="For"/> reads in: what is on this machine first, then who you
+        /// are. The role chips carry "(you)" because a list of published translations is a list
+        /// of other people's work: a bare "Main" on one row of it would read as a claim about the
+        /// row, not about the reader — and it is the reader's side that decides what Download and
+        /// Upload would do from there. A reader may lead several lineages of one game and
+        /// contribute to several others; each row answers for its own.
+        /// </summary>
+        /// <param name="installed">This lineage is the one the game holds.</param>
+        /// <param name="yoursIsMain">
+        /// True when the reader leads this lineage, false when they hold a branch of it, null when
+        /// they hold nothing in it — or when the site has not said yet, which must never be shown
+        /// as "nothing": an answer not yet read is not an answer.
+        /// </param>
+        public static List<Badge> InListing(bool installed, bool? yoursIsMain)
+        {
+            var badges = new List<Badge>();
+
+            if (installed)
+            {
+                badges.Add(new Badge
+                {
+                    Text = "Installed",
+                    Kind = BadgeKind.Installed,
+                    Tone = BadgeTone.Notice,
+                    Tip = "The translation this game holds right now.",
+                });
+            }
+
+            if (yoursIsMain == true)
+            {
+                badges.Add(new Badge
+                {
+                    Text = "Main (you)",
+                    Kind = BadgeKind.Role,
+                    Tone = BadgeTone.Plain,
+                    Tip = "You lead this lineage. Contributions arrive as branches for you to take "
+                        + "or leave.",
+                });
+            }
+            else if (yoursIsMain == false)
+            {
+                badges.Add(new Badge
+                {
+                    Text = "Branch (you)",
+                    Kind = BadgeKind.Role,
+                    Tone = BadgeTone.Attention,
+                    Tip = "You hold a contribution to this translation. Its author decides what "
+                        + "they keep.",
+                });
+            }
+
+            return badges;
+        }
+
         public static List<Badge> For(Publication publication, bool? isMain, int? branchesWaiting,
                                       bool mainMissing, SyncDirection? sync, ReviewStage? stage,
                                       double? completeness, int votes, int downloads,
