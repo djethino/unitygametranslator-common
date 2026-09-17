@@ -255,7 +255,7 @@ namespace UnityGameTranslator.Common
         public static string? ClosedReason(UploadAct act, int lines, bool untouchedCopy,
                                            bool online, bool signedIn, bool inSync)
         {
-            if (lines == 0) return "No translations to upload";
+            if (lines == 0) return "Nothing to upload";
 
             // The fact, then the way out. Naming the author would need a lookup nobody has after
             // a fork — the lineage is gone — and the sentence works without it.
@@ -264,7 +264,7 @@ namespace UnityGameTranslator.Common
 
             if (act == UploadAct.Fork) return null;
 
-            if (!online) return "Offline mode - upload disabled";
+            if (!online) return "Offline mode: nothing is sent";
             if (!signedIn) return "Login required";
             if (inSync) return "Up to date — nothing to send";
 

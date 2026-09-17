@@ -125,7 +125,7 @@ namespace UnityGameTranslator.Common
 
             if (work.NeedsMerge)
             {
-                if (ours) notice.Message = "Both local and server changed. Sync needed!";
+                if (ours) notice.Message = "Changed here and on the site. Sync needed.";
                 else { notice.Message = "Sync needed — translation updated by"; notice.Mention = server.Uploader; }
                 notice.Action = SyncAction.Sync;
                 notice.Verb = "Sync";
@@ -134,7 +134,7 @@ namespace UnityGameTranslator.Common
             {
                 // Ours, Main or branch alike: it is our OWN published version that moved — another
                 // machine, or the site editor. Somebody else's: the Main we downloaded from moved.
-                if (ours) notice.Message = "Server update available!";
+                if (ours) notice.Message = "Update available on the site.";
                 else { notice.Message = "Translation updated by"; notice.Mention = server.Uploader; }
                 notice.Action = SyncAction.Download;
                 notice.Verb = "Download";
@@ -142,7 +142,7 @@ namespace UnityGameTranslator.Common
             else if (work.HasMainUpdate)
             {
                 // Genuinely upstream: merged into the branch, never downloaded over it.
-                notice.Message = "The original translation has been updated by";
+                notice.Message = "The Main was updated by";
                 notice.Mention = server.Uploader;
                 notice.Action = SyncAction.MergeFromMain;
                 notice.Verb = "Update";
@@ -151,7 +151,7 @@ namespace UnityGameTranslator.Common
             {
                 if (ours)
                 {
-                    notice.Message = "You have " + local.LocalChanges + " local changes to upload!";
+                    notice.Message = local.LocalChanges + " local changes to upload.";
                     notice.Action = SyncAction.Update;
                     notice.Verb = "Update";
                 }
