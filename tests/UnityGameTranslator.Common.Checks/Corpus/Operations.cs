@@ -140,7 +140,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("uploads", "closed_reason", typeof(Uploads), nameof(Uploads.ClosedReason),
                 e => Uploads.ClosedReason(EnumRequired<UploadAct>(e, "act"), Int(e, "lines"), Bool(e, "untouched_copy"),
                                           Bool(e, "online", fallback: true), Bool(e, "signed_in", fallback: true),
-                                          Bool(e, "in_sync"))),
+                                          Bool(e, "in_sync"), Bool(e, "server_moved"))),
             // The button composes the standing from the same facts it is then judged on, so a case
             // states the facts once and the two rules are held together.
             new Operation("uploads", "button", typeof(Uploads), nameof(Uploads.Button),

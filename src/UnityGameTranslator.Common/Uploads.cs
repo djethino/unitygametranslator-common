@@ -252,8 +252,14 @@ namespace UnityGameTranslator.Common
         /// <param name="online">Whether this install talks to the site at all.</param>
         /// <param name="signedIn">Whether an account is in place here.</param>
         /// <param name="inSync">Whether what is here is already what is published.</param>
+        /// <param name="serverMoved">
+        /// The published copy moved since this machine last synced, and nothing here did — the
+        /// socle's Download verdict. Publishing then would put this machine's older file back on
+        /// the site over what somebody, maybe oneself elsewhere, published since.
+        /// </param>
         public static string? ClosedReason(UploadAct act, int lines, bool untouchedCopy,
-                                           bool online, bool signedIn, bool inSync)
+                                           bool online, bool signedIn, bool inSync,
+                                           bool serverMoved = false)
         {
             if (lines == 0) return "Nothing to upload";
 
@@ -267,6 +273,7 @@ namespace UnityGameTranslator.Common
             if (!online) return "Offline mode: nothing is sent";
             if (!signedIn) return "Login required";
             if (inSync) return "Up to date — nothing to send";
+            if (serverMoved) return "Update available on the site: download it first";
 
             return null;
         }
@@ -353,7 +360,8 @@ namespace UnityGameTranslator.Common
                 HintIsTranslatable = translatable,
                 Mention = mention,
                 Closed = ClosedReason(taken, local.Lines, untouchedCopy, account.Online, account.SignedIn,
-                                      standing.Sync == SyncDirection.InSync),
+                                      standing.Sync == SyncDirection.InSync,
+                                      serverMoved: standing.Sync == SyncDirection.Download),
                 Wall = wholeWall,
             };
         }
