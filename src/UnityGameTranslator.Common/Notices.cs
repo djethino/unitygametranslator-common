@@ -158,15 +158,18 @@ namespace UnityGameTranslator.Common
             }
             else if (work.HasLocalChanges)
             {
+                // Lines and settings both unsent: said together, or the settings went unsaid
+                // behind the lines — an exclusion added a minute earlier was not in the sentence.
+                string andSettings = work.HasMetadataChanges ? " and settings" : "";
                 if (ours)
                 {
-                    notice.Message = local.LocalChanges + " local changes to upload.";
+                    notice.Message = local.LocalChanges + " local changes" + andSettings + " to upload.";
                     notice.Action = SyncAction.Update;
                     notice.Verb = "Update";
                 }
                 else
                 {
-                    notice.Message = "You changed " + local.LocalChanges + " line(s). Share them?";
+                    notice.Message = "You changed " + local.LocalChanges + " line(s)" + andSettings + ". Share them?";
                     notice.Action = SyncAction.ChooseBranchOrFork;
                 }
             }
