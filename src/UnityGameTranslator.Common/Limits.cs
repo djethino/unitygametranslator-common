@@ -23,7 +23,15 @@ namespace UnityGameTranslator.Common
         /// Sized from the largest known real file (about 40 MB of JSON) with room to spare, and
         /// mirrored by the site in <c>DecodeGzipRequest::MAX_DECOMPRESSED_SIZE</c> and the upload
         /// rules — see <c>check-limits.py</c>.
+        ///
+        /// 🔴 **Bounded by what the server can HOLD, not by what files weigh.** It was 100 MB, a
+        /// promise the site could not keep: accepting a file costs PHP about 5.2 times its size
+        /// (inflate, decode the body, parse the content — measured 2026-09-17, 60 MB → 328 MB,
+        /// 90 MB → 468 MB above the framework), under a 512 MB memory limit. Past ~70 MB the
+        /// answer was a 500, never the "too large" this figure lets a client say beforehand. 64 MB
+        /// is 1.6× the largest known file and is held with margin. Raising it means raising the
+        /// server's memory first.
         /// </summary>
-        public const long TranslationFileBytes = 100L * 1024 * 1024;
+        public const long TranslationFileBytes = 64L * 1024 * 1024;
     }
 }
