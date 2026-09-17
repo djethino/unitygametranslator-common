@@ -208,6 +208,15 @@ namespace UnityGameTranslator.Common
         /// by how much is not known yet", never zero.
         /// </summary>
         public int? LinesChanged;
+
+        /// <summary>
+        /// How many lines HERE differ from the published copy — added or rewritten on this
+        /// machine and not on the site the same way. Counted with LinesChanged, from the same
+        /// fetched copy. ⚠ Not LocalFacts.LocalChanges: that one counts against the last sync,
+        /// and a line added here that the site also added, identically, is a local change and
+        /// not a difference. Null until counted; the mod's own count stands in until then.
+        /// </summary>
+        public int? LinesChangedHere;
     }
 
     /// <summary>Under whose name this screen acts, and whether it can reach the site at all.</summary>

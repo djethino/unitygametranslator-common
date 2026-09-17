@@ -130,7 +130,11 @@ namespace UnityGameTranslator.Common
 
             if (work.NeedsMerge)
             {
-                if (ours) notice.Message = "Changed here (" + local.LocalChanges + ") and on the site" + onTheSite + ". Sync needed.";
+                // Both counts from the same comparison once it exists: what differs here and what
+                // differs there. Before it, the mod's own count of what changed since the sync.
+                int here = server.LinesChangedHere ?? local.LocalChanges;
+                string there = server.LinesChanged is int changedThere ? " (" + changedThere + ")" : "";
+                if (ours) notice.Message = "Changed here (" + here + ") and on the site" + there + ". Sync needed.";
                 else { notice.Message = "Sync needed — translation updated" + onTheSite + " by"; notice.Mention = server.Uploader; }
                 notice.Action = SyncAction.Sync;
                 notice.Verb = "Sync";

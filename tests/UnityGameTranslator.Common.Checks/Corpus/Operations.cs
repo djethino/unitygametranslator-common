@@ -331,6 +331,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             MainIgnoring = NullableBool(e, "main_ignoring"),
             Status = Str(e, "status"),
             LinesChanged = NullableInt(e, "lines_changed"),
+            LinesChangedHere = NullableInt(e, "lines_changed_here"),
         };
 
         private static AccountFacts AccountFactsOf(JsonElement e) => new AccountFacts
