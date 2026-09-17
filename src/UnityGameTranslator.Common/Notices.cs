@@ -123,10 +123,15 @@ namespace UnityGameTranslator.Common
             bool canBranch = offered == UploadAct.Contribute;
             bool ours = server.IsOwner;
 
+            // The count of what moved on the site, when the client has it: the one thing somebody
+            // asks before deciding — "what changes?" — and a sentence that only says "moved" sends
+            // them to look. Numbers stay inline: the pipeline placeholders them.
+            string onTheSite = server.LinesChanged is int changed ? " (" + changed + " lines)" : "";
+
             if (work.NeedsMerge)
             {
-                if (ours) notice.Message = "Changed here and on the site. Sync needed.";
-                else { notice.Message = "Sync needed — translation updated by"; notice.Mention = server.Uploader; }
+                if (ours) notice.Message = "Changed here (" + local.LocalChanges + ") and on the site" + onTheSite + ". Sync needed.";
+                else { notice.Message = "Sync needed — translation updated" + onTheSite + " by"; notice.Mention = server.Uploader; }
                 notice.Action = SyncAction.Sync;
                 notice.Verb = "Sync";
             }
@@ -134,8 +139,8 @@ namespace UnityGameTranslator.Common
             {
                 // Ours, Main or branch alike: it is our OWN published version that moved — another
                 // machine, or the site editor. Somebody else's: the Main we downloaded from moved.
-                if (ours) notice.Message = "Update available on the site.";
-                else { notice.Message = "Translation updated by"; notice.Mention = server.Uploader; }
+                if (ours) notice.Message = "Update available on the site" + onTheSite + ".";
+                else { notice.Message = "Translation updated" + onTheSite + " by"; notice.Mention = server.Uploader; }
                 notice.Action = SyncAction.Download;
                 notice.Verb = "Download";
             }

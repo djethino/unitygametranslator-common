@@ -330,6 +330,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             BranchFrozen = NullableBool(e, "branch_frozen"),
             MainIgnoring = NullableBool(e, "main_ignoring"),
             Status = Str(e, "status"),
+            LinesChanged = NullableInt(e, "lines_changed"),
         };
 
         private static AccountFacts AccountFactsOf(JsonElement e) => new AccountFacts

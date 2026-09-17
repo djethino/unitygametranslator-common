@@ -200,6 +200,14 @@ namespace UnityGameTranslator.Common
 
         /// <summary>"in_progress" or "complete", as published. Null when unknown.</summary>
         public string? Status;
+
+        /// <summary>
+        /// How many lines the published copy changed since this machine last synced with it —
+        /// added, rewritten or removed there. The site only says THAT its copy moved; the count is
+        /// the client's, from the copy it fetched once. Null until counted, and null is "moved,
+        /// by how much is not known yet", never zero.
+        /// </summary>
+        public int? LinesChanged;
     }
 
     /// <summary>Under whose name this screen acts, and whether it can reach the site at all.</summary>
