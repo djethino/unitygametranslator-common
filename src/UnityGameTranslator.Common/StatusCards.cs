@@ -136,6 +136,14 @@ namespace UnityGameTranslator.Common
         /// </summary>
         /// <param name="ignoringDismissed">The person has put the "not taking it in" notice away.</param>
         /// <param name="captureOnly">The file holds captured lines and not one translated.</param>
+        /// <summary>
+        /// The one judgement among the notices, in its own words: the Main was told and worked on
+        /// since without taking anything in. Public so the Manager's game card — which reads the
+        /// account's library rather than a standing — says it in the same words as the mod's card.
+        /// </summary>
+        public const string MainIgnoringText =
+            "The Main does not seem to be taking the new work into account. You can publish your own version whenever you like.";
+
         public static CardNotice? Notice(Standing standing, ServerFacts server, bool ignoringDismissed, bool captureOnly)
         {
             if (standing.Publication != Publication.Published || !server.IsOwner) return null;
@@ -156,7 +164,7 @@ namespace UnityGameTranslator.Common
             {
                 return new CardNotice
                 {
-                    Text = "The Main does not seem to be taking the new work into account. You can publish your own version whenever you like.",
+                    Text = MainIgnoringText,
                     Tone = NoticeTone.Warning, Dismissable = true, Verb = "Manage online",
                 };
             }
