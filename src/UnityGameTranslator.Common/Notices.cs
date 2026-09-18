@@ -28,10 +28,34 @@ namespace UnityGameTranslator.Common
         /// <summary>Main only: contributions never reviewed, or changed since.</summary>
         public int BranchesPendingReview;
 
+        /// <summary>
+        /// Nothing of this lineage has ever been published, and there is enough here to be worth
+        /// offering to share.
+        ///
+        /// 🔴 **The one state nothing could ever say** (2026-09-19). Every field above describes a
+        /// translation that already has a row on the site; the mod's corner asked
+        /// `existsOnServer &amp;&amp; …` on each of them, so a brand-new translation — or a fork that has
+        /// just taken its own uuid — could grow for a hundred hours and never be mentioned. The
+        /// sentence for it existed all along, in <see cref="StatusCards"/>, on a card behind a
+        /// hotkey.
+        ///
+        /// ⚠ **"Enough" is the caller's measure, and it is not a number invented for this.**
+        /// <see cref="Quality.Completeness"/> against <see cref="Quality.TranslationFloor"/> — the
+        /// same gate this library already uses to decide there is enough matter to say anything at
+        /// all about a translation, and the same one the website computes. A file that is nothing
+        /// but capture scores zero and is silent, which is right: captured text is the game's own
+        /// words handed back, not work to share.
+        ///
+        /// ⚠ Whether it may actually be sent is NOT asked here — `Uploads.ClosedReason` already
+        /// answers that, fork-still-a-copy and no-account included.
+        /// </summary>
+        public bool NeverPublished;
+
         /// <summary>Anything at all worth showing.</summary>
         public bool Any => !WaitingForAccount
                            && (HasLocalChanges || HasMetadataChanges || HasServerUpdate
-                               || NeedsMerge || HasMainUpdate || BranchesPendingReview > 0);
+                               || NeedsMerge || HasMainUpdate || BranchesPendingReview > 0
+                               || NeverPublished);
     }
 
     /// <summary>What the notification's one button does, when it has one.</summary>
@@ -49,6 +73,19 @@ namespace UnityGameTranslator.Common
         Update,
         /// <summary>Open the contributions waiting on this Main.</summary>
         Review,
+        /// <summary>Publish a translation nothing of whose lineage is on the site: it CREATES one.</summary>
+        Upload,
+        /// <summary>
+        /// The same offer, to somebody with no account: publishing needs one, so the button goes
+        /// to the sign-in rather than to a window that would refuse.
+        ///
+        /// ⚠ **A door, not a wall, and that is a decision** (user, 2026-09-19). `ClosedReason`
+        /// answers "Login required" and greying the verb would have been defensible — but the
+        /// person most likely to be sitting on unpublished work is exactly the one who never made
+        /// an account. It is offered once per session and one click silences it, which is what
+        /// keeps it an offer instead of a recruitment drive.
+        /// </summary>
+        SignIn,
         /// <summary>Two buttons instead of one: contribute (branch) or go independent (fork).</summary>
         ChooseBranchOrFork,
     }
@@ -194,6 +231,28 @@ namespace UnityGameTranslator.Common
                 notice.Message = work.BranchesPendingReview + " contribution(s) waiting for your review";
                 notice.Action = SyncAction.Review;
                 notice.Verb = "Review";
+            }
+            else if (work.NeverPublished)
+            {
+                // The only state here about a translation with NO row on the site: every branch
+                // above compares two sides, and this one has a single side. Last, because any of
+                // the others being true would mean there is a row after all.
+                //
+                // ⚠ The verb is the socle's own (Uploads.Verb), never a word chosen here: this
+                // offer and the publish button on every screen have to read the same.
+                //
+                // ⚠ Being able to send is not re-derived — Uploads.ClosedReason already refuses a
+                // fork that is still its copy and an offline product. The caller raises this flag
+                // only when the product may talk to the site, exactly as it already gates
+                // HasServerUpdate on "notify me about updates".
+                notice.Message = local.Lines + " line(s) here, not published yet.";
+
+                // 🔴 The one refusal turned into a door: ClosedReason answers "Login required",
+                // and greying the verb would have been defensible — but the person most likely to
+                // be sitting on unpublished work is the one who never made an account. Offered
+                // once per session, silenced by one click.
+                notice.Action = account.SignedIn ? SyncAction.Upload : SyncAction.SignIn;
+                notice.Verb = account.SignedIn ? Uploads.Verb(UploadAct.Upload) : "Sign in";
             }
             else
             {

@@ -351,6 +351,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             NeedsMerge = Bool(e, "needs_merge"),
             HasMainUpdate = Bool(e, "has_main_update"),
             BranchesPendingReview = Int(e, "branches_pending_review"),
+            NeverPublished = Bool(e, "never_published"),
         };
 
         /// <summary>A standing stated directly, for the questions asked of one.</summary>
