@@ -82,9 +82,9 @@ namespace UnityGameTranslator.Common
                 // What is waiting before where it goes: a contributor opening this is answering
                 // "have I got work nobody has seen yet".
                 bool waiting = localChanges > 0;
-                string state = waiting
-                    ? localChanges + " changes not sent yet"
-                    : "Everything sent";
+                string state = !waiting ? "Everything sent"
+                    : localChanges == 1 ? "1 change not sent yet"
+                    : localChanges + " changes not sent yet";
                 // 🔴 The Main's name comes from the Main's row and nowhere else. On one's own
                 // branch, `Uploader` is the branch's own author — the reader — and falling back
                 // to it named them as the owner of their own contribution the moment the Main was
@@ -121,7 +121,9 @@ namespace UnityGameTranslator.Common
                 // of them (2026-09-18) — and it is the one figure that decides between the three
                 // buttons below: contribute them, keep them as a fork, or set them aside.
                 bool named = !string.IsNullOrEmpty(standing.MainOwner);
-                string? own = localChanges > 0 ? localChanges + " unpublished changes" : null;
+                string? own = localChanges <= 0 ? null
+                    : localChanges == 1 ? "1 unpublished change"
+                    : localChanges + " unpublished changes";
                 string? whose = named ? "Based on the translation of" : null;
                 return new CardLine
                 {
