@@ -90,7 +90,7 @@ namespace UnityGameTranslator.Common
             if (!origin.Lines.HasValue || origin.Lines.Value <= 0)
                 return who + "." + separate;
 
-            string much = origin.Lines.Value == 1 ? "1 line of it" : origin.Lines.Value + " lines of it";
+            string much = Composition.Amount(origin.Lines.Value, "line of it", "lines of it");
 
             return who + ", " + much + " at the time." + separate;
         }

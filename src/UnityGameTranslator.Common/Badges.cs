@@ -563,7 +563,7 @@ namespace UnityGameTranslator.Common
             {
                 badges.Add(new Badge
                 {
-                    Text = votes + (votes == 1 ? " vote" : " votes"),
+                    Text = Composition.Amount(votes, "vote", "votes"),
                     Kind = BadgeKind.Votes,
                     Tone = BadgeTone.Plain,
                     Tip = "What players thought of it on the site.",
@@ -574,7 +574,7 @@ namespace UnityGameTranslator.Common
             {
                 badges.Add(new Badge
                 {
-                    Text = downloads + (downloads == 1 ? " download" : " downloads"),
+                    Text = Composition.Amount(downloads, "download", "downloads"),
                     Kind = BadgeKind.Downloads,
                     Tone = BadgeTone.Quiet,
                     Tip = "How many times it has been taken from the site.",

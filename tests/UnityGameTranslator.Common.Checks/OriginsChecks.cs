@@ -44,7 +44,7 @@ namespace UnityGameTranslator.Common.Checks
                 "the credit stands without a name rather than not at all");
 
             // ── The tip carries the count, and only when there is one ─────────
-            check(Origins.Effect(known).Contains("3120"),
+            check(Origins.Effect(known).Contains("3,120"),
                 "the tip says how many lines were handed over",
                 "the snapshot is the whole point of recording it");
 

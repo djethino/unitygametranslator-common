@@ -181,6 +181,22 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// The same number with the word for what it counts: <c>1 line</c>, <c>1,068 lines</c>.
+        ///
+        /// 🔴 **Both words are given because English has no rule a machine can apply** — and
+        /// because the alternative every product reached for is worse: <c>1 line(s)</c>, which
+        /// nobody says out loud and which a reader in their fourth language has to decode.
+        ///
+        /// ⚠ Here rather than at each call site, beside the bare count, because it is the same
+        /// question: how this ecosystem prints a number. Split, one screen grouped its thousands
+        /// and the dialog beside it did not.
+        /// </summary>
+        public static string Amount(int count, string singular, string plural)
+        {
+            return Amount(count) + " " + (count == 1 ? singular : plural);
+        }
+
+        /// <summary>
         /// What a band means, for a tooltip or a key nobody has met before.
         ///
         /// ⚠ Says what happened to the line, never why. An S can mean "a proper noun stays as it

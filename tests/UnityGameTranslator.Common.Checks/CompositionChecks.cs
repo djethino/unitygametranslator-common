@@ -83,6 +83,21 @@ namespace UnityGameTranslator.Common.Checks
                     "a coloured band nobody can name is a decoration");
             }
 
+            // ── A count carries the word for what it counts ───────────────────
+            //
+            // 🔴 The alternative every product had reached for was "1 line(s)", which nobody says
+            // out loud and which a reader in their fourth language has to decode. Both words are
+            // given because English has no rule a machine can apply.
+            check(Composition.Amount(1, "line", "lines") == "1 line"
+                  && Composition.Amount(2, "line", "lines") == "2 lines"
+                  && Composition.Amount(0, "line", "lines") == "0 lines",
+                "one is singular, everything else is plural",
+                "including zero, which reads as a plural in English");
+
+            check(Composition.Amount(1068, "line", "lines") == "1,068 lines",
+                "and the number is grouped like every other count on screen",
+                "a card grouping its thousands beside a dialog that does not is two measurements");
+
             // ── The shares add up to 100, whoever draws them ──────────────────
             //
             // 🔴 The file that showed it: 14 human, 15 validated, 2,498 AI. Rounded on their own

@@ -33,13 +33,13 @@ namespace UnityGameTranslator.Common
         {
             if (branches <= 0) return "";
 
-            string who = branches == 1
-                ? "1 contribution you have not been through"
-                : branches + " contributions you have not been through";
+            string who = Composition.Amount(branches,
+                "contribution you have not been through",
+                "contributions you have not been through");
 
             if (!lines.HasValue || lines.Value <= 0) return who + ".";
 
-            string what = lines.Value == 1 ? "1 line to take" : lines.Value + " lines to take";
+            string what = Composition.Amount(lines.Value, "line to take", "lines to take");
 
             return who + ", holding " + what + ".";
         }
