@@ -1,3 +1,4 @@
+using System;
 namespace UnityGameTranslator.Common
 {
     /// <summary>
@@ -125,6 +126,46 @@ namespace UnityGameTranslator.Common
         public static string EntryNamed(string name, int count, int percent)
         {
             return name + ": " + Amount(count) + " (" + percent + "%)";
+        }
+
+        /// <summary>
+        /// The share of each band, in whole percents that add up to exactly 100.
+        ///
+        /// 🔴 **Three copies of this arithmetic disagreed on one file** (2026-09-18): the mod
+        /// rounded every band on its own and let the CAPTURED band absorb the remainder — a band
+        /// it hides when empty — so 14, 15 and 2,498 lines read "1%, 1%, 99%", a key adding up to
+        /// 101; the Manager and the website let the last band SHOWN absorb it and read "98%".
+        /// Same bar, same file, two figures. One rule now, and it is theirs: every band is rounded
+        /// on its own, and the last band holding anything takes what is left, so the figures
+        /// always read 100 — a key adding up to 99 or 101 invites the reader to look for the
+        /// mistake.
+        ///
+        /// ⚠ An empty band gets 0, whether or not the caller draws it: an absent entry and a "0%"
+        /// entry must agree, since the website draws the first three bands even empty and the
+        /// Manager draws none that is.
+        /// </summary>
+        /// <param name="counts">The bands' line counts, in the bar's order.</param>
+        public static int[] Shares(int[] counts)
+        {
+            var shares = new int[counts.Length];
+            int total = 0;
+            foreach (var count in counts) total += count;
+            if (total <= 0) return shares;
+
+            int last = -1;
+            for (int i = 0; i < counts.Length; i++)
+                if (counts[i] > 0) last = i;
+
+            int running = 0;
+            for (int i = 0; i < counts.Length; i++)
+            {
+                if (counts[i] <= 0) continue;
+                shares[i] = i == last
+                    ? 100 - running
+                    : (int)Math.Round(counts[i] * 100.0 / total, MidpointRounding.AwayFromZero);
+                running += shares[i];
+            }
+            return shares;
         }
 
         /// <summary>

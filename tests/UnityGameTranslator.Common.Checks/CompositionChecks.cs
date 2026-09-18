@@ -83,6 +83,35 @@ namespace UnityGameTranslator.Common.Checks
                     "a coloured band nobody can name is a decoration");
             }
 
+            // ── The shares add up to 100, whoever draws them ──────────────────
+            //
+            // 🔴 The file that showed it: 14 human, 15 validated, 2,498 AI. Rounded on their own
+            // the three read 1, 1 and 99 — 101 in the mod — while the Manager and the website,
+            // letting the last band shown absorb the remainder, read 98.
+            var seen = Composition.Shares(new[] { 14, 15, 2498, 0, 0 });
+            check(seen[0] == 1 && seen[1] == 1 && seen[2] == 98 && seen[3] == 0 && seen[4] == 0,
+                "14 / 15 / 2,498 lines read 1%, 1%, 98%",
+                "the last band holding anything takes the remainder; the mod said 99");
+
+            // The absorber is the last band HOLDING something, not the last band: trailing empty
+            // bands stay at 0 whether a product draws them or not.
+            var trailing = Composition.Shares(new[] { 1, 1, 0, 1, 0 });
+            check(trailing[0] == 33 && trailing[1] == 33 && trailing[2] == 0 && trailing[3] == 34 && trailing[4] == 0,
+                "an empty band stays at 0 and the last full one absorbs",
+                "the website draws the first three even empty, the Manager none that is — the figures must agree");
+
+            foreach (var counts in new[] { new[] { 1, 1, 1, 1, 1 }, new[] { 7, 0, 0, 0, 0 }, new[] { 3, 3, 3, 0, 0 }, new[] { 0, 0, 0, 0, 5 } })
+            {
+                int sum = 0;
+                foreach (var share in Composition.Shares(counts)) sum += share;
+                check(sum == 100, "the shares of " + string.Join("/", counts) + " add up to 100",
+                    "a key adding up to 99 or 101 invites the reader to look for the mistake");
+            }
+
+            var empty = Composition.Shares(new[] { 0, 0, 0, 0, 0 });
+            check(empty[0] == 0 && empty[4] == 0, "nothing at all is five zeros, not a division",
+                "a bar with no line has no share to state");
+
             // ── The stage words live in ONE place ─────────────────────────────
             //
             // 🔴 They were moved to Quality.StageName after existing twice, and the Manager still
