@@ -195,7 +195,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     OriginOf(e, "origin"),
                     Str(e, "main_owner"),
                     Bool(e, "main_abandoned"),
-                    Bool(e, "branch_frozen"))),
+                    Bool(e, "branch_frozen"),
+                    Bool(e, "capture_only"))),
             new Operation("badges", "in_listing", typeof(Badges), nameof(Badges.InListing),
                 e => Badges.InListing(Bool(e, "installed"), NullableBool(e, "yours_is_main"))),
 

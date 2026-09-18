@@ -89,6 +89,18 @@ namespace UnityGameTranslator.Common
 
         ReviewStage,
         Completeness,
+
+        /// <summary>
+        /// Captured text and not one translated line: the mod has met these lines in game and
+        /// nobody has dealt with them yet.
+        ///
+        /// 🔴 Its own chip, in place of the two measurements: a stage has nothing to judge, and
+        /// "0% translated" would grade a file that is not a translation at all. The site said it
+        /// in three views by hand and the two clients said nothing (2026-09-18) — the same file
+        /// read "Capture only" in a browser and a bare "Main" in the game.
+        /// </summary>
+        CaptureOnly,
+
         Votes,
         Downloads,
 
@@ -184,6 +196,10 @@ namespace UnityGameTranslator.Common
         /// <see cref="Publication.NotYours"/>. Null is fine — an account can be gone, or a server
         /// too old to say — and the sentence then says "Somebody else" rather than nothing.
         /// </param>
+        /// <param name="captureOnly">
+        /// The file holds captured lines and not one translated (<see cref="Quality.IsCaptureOnly"/>).
+        /// Said as a chip of its own; the stage and the completeness are then not shown.
+        /// </param>
         /// <param name="branchFrozen">
         /// This branch's Main still exists and has stopped taking contributions.
         ///
@@ -259,7 +275,8 @@ namespace UnityGameTranslator.Common
                                       Origin? origin = null,
                                       string? mainOwner = null,
                                       bool mainAbandoned = false,
-                                      bool branchFrozen = false)
+                                      bool branchFrozen = false,
+                                      bool captureOnly = false)
         {
             var badges = new List<Badge>();
 
@@ -489,7 +506,21 @@ namespace UnityGameTranslator.Common
             }
 
             // ── 4. What the file is made of ───────────────────────────────────
-            if (stage.HasValue)
+            //
+            // ⚠ Nothing translated: one chip in place of the two measurements below. The words
+            // are the site's (`progress.capture_only`), and quiet — pending work is not a fault.
+            if (captureOnly)
+            {
+                badges.Add(new Badge
+                {
+                    Text = "Capture only",
+                    Kind = BadgeKind.CaptureOnly,
+                    Tone = BadgeTone.Quiet,
+                    Tip = "This file only contains captured text, no translations yet.",
+                });
+            }
+
+            if (stage.HasValue && !captureOnly)
             {
                 BadgeTone tone;
                 if (stage.Value == ReviewStage.Reviewed) tone = BadgeTone.Good;
@@ -507,7 +538,7 @@ namespace UnityGameTranslator.Common
 
             // ⚠ Silent at 100%, like the website: a number is worth showing when it says
             // something, and "everything it met is translated" is the ordinary state.
-            if (completeness.HasValue && completeness.Value < 1.0)
+            if (completeness.HasValue && completeness.Value < 1.0 && !captureOnly)
             {
                 badges.Add(new Badge
                 {
