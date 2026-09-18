@@ -104,10 +104,19 @@ namespace UnityGameTranslator.Common
             {
                 // Whose work this is. The three buttons offering the ways out sit immediately
                 // below, each with its own label, so this names nothing they already say.
+                //
+                // What is unpublished comes first, as on a branch. The Manager's card counts the
+                // lines this file holds that the published one does not; this line said nothing
+                // of them (2026-09-18) — and it is the one figure that decides between the three
+                // buttons below: contribute them, keep them as a fork, or set them aside.
                 bool named = !string.IsNullOrEmpty(standing.MainOwner);
+                string? own = localChanges > 0 ? localChanges + " unpublished changes" : null;
+                string? whose = named ? "Based on the translation of" : null;
                 return new CardLine
                 {
-                    Text = named ? "Based on the translation of" : null,
+                    Text = own == null ? whose
+                         : named ? own + " · based on the translation of"
+                         : own,
                     Mention = named ? standing.MainOwner : null,
                 };
             }
