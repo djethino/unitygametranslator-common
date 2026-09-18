@@ -84,7 +84,13 @@ namespace UnityGameTranslator.Common
                 string state = localChanges > 0
                     ? localChanges + " changes not sent yet"
                     : "Everything sent";
-                string? owner = string.IsNullOrEmpty(server.MainUsername) ? server.Uploader : server.MainUsername;
+                // 🔴 The Main's name comes from the Main's row and nowhere else. On one's own
+                // branch, `Uploader` is the branch's own author — the reader — and falling back
+                // to it named them as the owner of their own contribution the moment the Main was
+                // gone: "your branch of @you" under "The Main was removed by its author"
+                // (2026-09-18). With no Main to name, the state stands alone; the notice above
+                // says what became of it.
+                string? owner = server.MainUsername;
                 bool named = !string.IsNullOrEmpty(owner);
 
                 return new CardLine
