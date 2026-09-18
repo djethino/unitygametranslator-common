@@ -246,7 +246,10 @@ namespace UnityGameTranslator.Common
                 {
                     Text = "Main (you)",
                     Kind = BadgeKind.Role,
-                    Tone = BadgeTone.Plain,
+                    // 🔴 Coloured, like "Branch (you)" — and not less. Plain, the row that was the
+                    // reader's own Main was the hardest one to find in a list where their branch
+                    // stood out in amber (2026-09-18, user's decision).
+                    Tone = BadgeTone.Notice,
                     Tip = "You lead this lineage. Contributions arrive as branches for you to take "
                         + "or leave.",
                 });
@@ -313,7 +316,9 @@ namespace UnityGameTranslator.Common
                 {
                     Text = "Main",
                     Kind = BadgeKind.Role,
-                    Tone = BadgeTone.Plain,
+                    // Same tone as "Main (you)" in a listing: leading a lineage is at least as
+                    // worth seeing as contributing to one.
+                    Tone = BadgeTone.Notice,
                     Tip = "You lead this lineage. Contributions arrive as branches for you to take "
                         + "or leave.",
                 });
