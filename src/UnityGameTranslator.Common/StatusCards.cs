@@ -81,7 +81,8 @@ namespace UnityGameTranslator.Common
             {
                 // What is waiting before where it goes: a contributor opening this is answering
                 // "have I got work nobody has seen yet".
-                string state = localChanges > 0
+                bool waiting = localChanges > 0;
+                string state = waiting
                     ? localChanges + " changes not sent yet"
                     : "Everything sent";
                 // 🔴 The Main's name comes from the Main's row and nowhere else. On one's own
@@ -97,6 +98,16 @@ namespace UnityGameTranslator.Common
                 {
                     Text = named ? state + " · your branch of" : state,
                     Mention = named ? owner : null,
+
+                    // 🔴 **Work nobody has seen is work waiting, and it is coloured as such**
+                    // (2026-09-18, the user's words: "le nombre de lignes à upload est gris et
+                    // presque invisible au milieu d'autres infos"). A Main's contributions
+                    // waiting already carried this flag; the two lines that say what is
+                    // unsent did not, and sat muted between two other muted lines.
+                    //
+                    // ⚠ The count, never the mere fact of being a branch: "Everything sent" is
+                    // a footnote, and a card permanently amber teaches people to stop reading it.
+                    NeedsAttention = waiting,
                 };
             }
 
@@ -118,6 +129,10 @@ namespace UnityGameTranslator.Common
                          : named ? own + " · based on the translation of"
                          : own,
                     Mention = named ? standing.MainOwner : null,
+
+                    // Same rule as the branch above: a count of lines nobody else has is the
+                    // one thing on this card asking for a decision.
+                    NeedsAttention = own != null,
                 };
             }
 
