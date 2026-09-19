@@ -123,9 +123,27 @@ namespace UnityGameTranslator.Common
             }
         }
 
+        /// <summary>
+        /// The key, derived once per process.
+        ///
+        /// 🔴 **It was derived again for every value, both ways** — a hundred thousand PBKDF2
+        /// rounds per secret, measured at 38 ms each on .NET 8 and slower under Unity's managed
+        /// SHA-1. The mod writes its config on every Apply, every hotkey toggle and every time a
+        /// window stops moving, with up to five secrets in it: the game froze on each for a result
+        /// that cannot change while the process lives.
+        ///
+        /// ⚠ **Same key, same format, same threat model.** It is computed from the machine
+        /// identity alone, which does not move under a running process; and holding it in memory
+        /// gives a local attacker nothing — the class summary already says any process of the same
+        /// user can rebuild it from public values. Lazy with its default mode, so two threads
+        /// asking at once still derive it once.
+        /// </summary>
+        private static readonly Lazy<byte[]> Key =
+            new Lazy<byte[]>(() => DeriveKey(MachineSecret(), MachineSalt()));
+
         private static string Encrypt(string plainText)
         {
-            byte[] key = DeriveKey(MachineSecret(), MachineSalt());
+            byte[] key = Key.Value;
 
             using (var aes = Aes.Create())
             {
@@ -151,7 +169,7 @@ namespace UnityGameTranslator.Common
 
         private static string Decrypt(string encryptedText)
         {
-            byte[] key = DeriveKey(MachineSecret(), MachineSalt());
+            byte[] key = Key.Value;
             byte[] combined = Convert.FromBase64String(encryptedText);
 
             using (var aes = Aes.Create())

@@ -71,6 +71,23 @@ namespace UnityGameTranslator.Common.Checks
             // And the reverse, so the library cannot merely be self-consistent.
             check(Secrets.Unprotect(Secrets.Prefix + EncryptWithSpecKey(probe)) == probe,
                 "and it reads back what the specification produces", "the format is a contract, not a habit");
+
+            // ⚠ The key is derived once per process and kept (Secrets.Key) — a hundred thousand
+            // PBKDF2 rounds were being paid per value, on the interface thread of a game. Held
+            // here against the oracle several times over: a cached key that drifted, or one
+            // written once and then reused wrongly, would decrypt the first value and not the
+            // fifth, which is the shape of defect memoisation invites.
+            bool everyRoundTrip = true;
+            for (int i = 0; i < 5 && everyRoundTrip; i++)
+            {
+                string value = "ugt_repeat_" + i;
+                string stored = Secrets.Protect(value)!;
+                everyRoundTrip = Secrets.Unprotect(stored) == value
+                                 && DecryptWithSpecKey(stored.Substring(Secrets.Prefix.Length)) == value
+                                 && Secrets.Unprotect(Secrets.Prefix + EncryptWithSpecKey(value)) == value;
+            }
+            check(everyRoundTrip, "the kept key is the specification's, call after call",
+                "derived once per process: the fifth value must read exactly like the first");
         }
 
         /// <summary>Key rebuilt from the documented constants alone.</summary>
