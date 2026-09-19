@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace UnityGameTranslator.Common.Checks
 {
@@ -71,6 +72,41 @@ namespace UnityGameTranslator.Common.Checks
                 "the local default is the literal address", "a name resolves, and resolves to ::1 first");
             check(Endpoints.LocalServer(1234) == "http://127.0.0.1:1234",
                 "and every other local port is spelled the same way", "one rule, whatever the server");
+
+            // ⚠ An older "localhost" is respelled silently — so every case where it must NOT be is
+            // the half that matters. The host, whole, and nothing else.
+            check(Endpoints.Canonical("http://localhost:11434") == "http://127.0.0.1:11434",
+                "a typed localhost becomes the one spelling", "files written before the rule carry it");
+            check(Endpoints.Canonical("http://LocalHost:1234/v1/chat/completions?x=1#f")
+                  == "http://127.0.0.1:1234/v1/chat/completions?x=1#f",
+                "whatever its case, and the rest is kept as typed", "only the host differs");
+            // ⚠ Not an Ollama rule, and NOT a list of accepted ports: the port and the server are
+            // never read. Whatever engine somebody runs and whatever port they moved it to, the
+            // port comes back exactly as typed — these are arbitrary values, not a whitelist.
+            check(new[] { 1, 1234, 11434, 43219, 65535 }.All(port =>
+                      Endpoints.Canonical("http://localhost:" + port + "/v1") == "http://127.0.0.1:" + port + "/v1")
+                  && Endpoints.Canonical("https://localhost/v1/chat/completions") == "https://127.0.0.1/v1/chat/completions",
+                "any local engine, any port it was moved to, any scheme",
+                "the host alone changes; nothing about the setup is imposed");
+            check(Endpoints.Canonical("localhost:11434") == "127.0.0.1:11434",
+                "with no scheme too", "people type what they remember");
+            check(Endpoints.Canonical("http://user:secret@localhost:8080/v1") == "http://user:secret@127.0.0.1:8080/v1",
+                "credentials in front are kept", "the host is after the last @");
+            check(Endpoints.Canonical("https://localhost.com/v1") == "https://localhost.com/v1"
+                  && Endpoints.Canonical("http://mylocalhost:11434") == "http://mylocalhost:11434"
+                  && Endpoints.Canonical("http://localhost.example.org") == "http://localhost.example.org",
+                "a host merely containing the word is another machine", "compared whole, never as a substring");
+            check(Endpoints.Canonical("https://api.example.com/localhost/v1?h=localhost")
+                  == "https://api.example.com/localhost/v1?h=localhost",
+                "a path or query saying localhost is left alone", "it is somebody else's text");
+            check(Endpoints.Canonical("http://localhost@api.example.com/v1") == "http://localhost@api.example.com/v1",
+                "a user NAMED localhost is not the host", "the host is api.example.com");
+            check(Endpoints.Canonical("http://[::1]:11434") == "http://[::1]:11434",
+                "the IPv6 loopback typed on purpose is kept", "the one server 127.0.0.1 would not reach");
+            check(Endpoints.Canonical("http://127.0.0.1:11434") == "http://127.0.0.1:11434"
+                  && Endpoints.Canonical("") == "" && Endpoints.Canonical(null) == null
+                  && Endpoints.Canonical("http://") == "http://" && Endpoints.Canonical("/v1") == "/v1",
+                "anything else comes back untouched", "no host to rename, nothing to throw");
 
             // ⚠ Three localities, because each carries a different consequence. Folding any two of
             // them together produces a sentence that is wrong for somebody.

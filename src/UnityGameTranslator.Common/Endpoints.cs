@@ -54,6 +54,60 @@ namespace UnityGameTranslator.Common
         /// <summary>Ollama where it installs itself. The default both programs offer.</summary>
         public const string OllamaDefault = "http://" + LocalHost + ":11434";
 
+        /// <summary>
+        /// The same address with a host named "localhost" spelled <see cref="LocalHost"/>, and
+        /// every other character left exactly as it was.
+        ///
+        /// 🔴 **Applied without asking, wherever an address is read** — the user's decision,
+        /// 2026-09-19: files written before the single spelling carry "localhost", and asking
+        /// somebody to retype a working address to suit a convention is noise. It is the one
+        /// rewrite of a typed value this project does silently, and it is safe because of what it
+        /// refuses to touch:
+        ///
+        /// ⚠ **The HOST, whole, and nothing else.** "localhost.com", "mylocalhost",
+        /// "localhost.example.org" are other machines, and a path or a query that happens to say
+        /// "localhost" is somebody else's text: none of them is changed. Scheme, credentials,
+        /// port, path, query and case are kept as typed — the output differs from the input by the
+        /// host alone, or not at all.
+        ///
+        /// ⚠ **What it costs, said once:** a server listening ONLY on the IPv6 loopback (::1). Such
+        /// a server answered "localhost" and does not answer 127.0.0.1. None of the local AI servers
+        /// we know of does that by default, and "[::1]" is still accepted as typed — the same trade
+        /// <see cref="LocalHost"/> already made for the default.
+        /// </summary>
+        public static string Canonical(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return url;
+
+            int schemeEnd = url.IndexOf("://", StringComparison.Ordinal);
+            int start = schemeEnd >= 0 ? schemeEnd + 3 : 0;
+
+            // The authority ends at the first of /, ? or # after it — or at the end.
+            int end = start < url.Length ? url.IndexOfAny(new[] { '/', '?', '#' }, start) : -1;
+            if (end < 0) end = url.Length;
+
+            // No authority at all ("http://", "/v1"): there is no host to rename.
+            if (end <= start) return url;
+
+            // Credentials come before the LAST @ of the authority; the host after it.
+            int at = url.LastIndexOf('@', end - 1, end - start);
+            int hostStart = at >= 0 ? at + 1 : start;
+
+            // An IPv6 literal is bracketed and is never "localhost".
+            if (hostStart < url.Length && url[hostStart] == '[') return url;
+
+            int colon = url.IndexOf(':', hostStart, end - hostStart);
+            int hostEnd = colon >= 0 ? colon : end;
+
+            if (!string.Equals(url.Substring(hostStart, hostEnd - hostStart), "localhost",
+                               StringComparison.OrdinalIgnoreCase))
+            {
+                return url;
+            }
+
+            return url.Substring(0, hostStart) + LocalHost + url.Substring(hostEnd);
+        }
+
         /// <summary>Where a translation request goes.</summary>
         public static string Chat(string baseUrl) => Resolve(baseUrl, "chat/completions");
 
