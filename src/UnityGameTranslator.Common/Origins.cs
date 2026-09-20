@@ -21,11 +21,37 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public readonly int? Lines;
 
+        /// <summary>
+        /// Whether anybody has asked the site who this came from.
+        ///
+        /// 🔴 **"Nobody asked" is not "the account is gone", and reading one as the other accuses
+        /// a living account of having vanished.** A fork the site knows about always carries an
+        /// answer — a name, or nothing because the account went. A fork that exists only in a
+        /// game's own file carries an id and no name at all: offline, or simply before the one
+        /// call that resolves it. The three states are told apart here rather than by each
+        /// product's own guess.
+        /// </summary>
+        public readonly bool AuthorAsked;
+
         public Origin(string? author, int? lines)
         {
             Author = author;
             Lines = lines;
+            AuthorAsked = true;
         }
+
+        private Origin(int? lines)
+        {
+            Author = null;
+            Lines = lines;
+            AuthorAsked = false;
+        }
+
+        /// <summary>
+        /// A fork whose source has not been named: what a game's own file holds — an id, and how
+        /// much was handed over — before anybody asks the site, or while offline.
+        /// </summary>
+        public static Origin NotAsked(int? lines) => new Origin(lines);
     }
 
     /// <summary>
@@ -64,6 +90,11 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static string Name(Origin origin)
         {
+            // Nobody has asked yet: the one word that is true anyway. It is also the whole point of
+            // showing it — a file that came from somebody else's work said nothing at all about it
+            // until it had been published, which is exactly when it stopped mattering.
+            if (!origin.AuthorAsked) return "Forked";
+
             if (string.IsNullOrWhiteSpace(origin.Author))
                 return "Forked from a removed account";
 
@@ -81,6 +112,20 @@ namespace UnityGameTranslator.Common
         public static string Effect(Origin origin)
         {
             string separate = " It has been a separate translation ever since.";
+
+            if (!origin.AuthorAsked)
+            {
+                string handed = origin.Lines.HasValue && origin.Lines.Value > 0
+                    ? ", " + Composition.Amount(origin.Lines.Value, "line of it", "lines of it") + " at the time"
+                    : "";
+
+                // ⚠ Says WHY there is no name rather than leaving the reader to suppose the work
+                // came from nowhere — and says it as a FACT about the file, not as an instruction.
+                // "Go online to see whose it was" was the first wording and it promises an answer
+                // nobody can guarantee: the source row may simply be gone.
+                return "Started from another translation" + handed + "." + separate
+                     + " The name is not recorded in this file.";
+            }
 
             if (string.IsNullOrWhiteSpace(origin.Author))
                 return "Started from work whose account is no longer on the site." + separate;
