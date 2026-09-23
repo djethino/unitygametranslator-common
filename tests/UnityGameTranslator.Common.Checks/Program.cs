@@ -139,6 +139,7 @@ namespace UnityGameTranslator.Common.Checks
         private static void WhyItNeverArrived()
         {
             Section("Connectivity", ConnectivityChecks.Run);
+            Section("Adult marks", AdultMarksChecks.Run);
         }
 
         /// <summary>Where a request really goes, from whatever address somebody pasted.</summary>
