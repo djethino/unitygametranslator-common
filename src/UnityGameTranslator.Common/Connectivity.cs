@@ -189,8 +189,38 @@ namespace UnityGameTranslator.Common
             string? said = Summarize(Classify(error));
             if (!string.IsNullOrEmpty(said)) return said!;
 
-            string? raw = error?.Message;
+            string? raw = Innermost(error)?.Message;
             return string.IsNullOrEmpty(raw) ? "the connection failed" : raw!;
+        }
+
+        /// <summary>
+        /// What was actually thrown, for a log: the innermost exception's type and message.
+        ///
+        /// 🔴 **Not the outer message.** A request made with `.Result` throws an AggregateException,
+        /// and on the older Mono of Unity 2018–2020 its message is only "One or more errors
+        /// occurred." — the cause sits two levels down. That sentence alone was the whole log of a
+        /// translation server blocked by a firewall (2026-09-23).
+        /// </summary>
+        public static string Cause(Exception? error)
+        {
+            var inner = Innermost(error);
+            return inner == null ? "no exception" : inner.GetType().Name + ": " + inner.Message;
+        }
+
+        /// <summary>
+        /// The sentence for a log line: what it means when that can be named, then what was thrown.
+        /// </summary>
+        public static string ForLog(Exception? error)
+        {
+            string? explained = Explain(error);
+            return string.IsNullOrEmpty(explained) ? Cause(error) : explained + " (" + Cause(error) + ")";
+        }
+
+        private static Exception? Innermost(Exception? error)
+        {
+            var e = error;
+            while (e?.InnerException != null) e = e.InnerException;
+            return e;
         }
 
         /// <summary>
@@ -204,7 +234,7 @@ namespace UnityGameTranslator.Common
             string? explained = Explain(error);
             if (!string.IsNullOrEmpty(explained)) return explained!;
 
-            string? raw = error?.Message;
+            string? raw = Innermost(error)?.Message;
             return string.IsNullOrEmpty(raw) ? "The connection failed." : raw!;
         }
     }

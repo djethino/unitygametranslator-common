@@ -87,6 +87,21 @@ namespace UnityGameTranslator.Common.Checks
             check(Connectivity.Summarize(new InvalidOperationException("raw")) == "raw",
                   "Summarize(unknown) falls back to the raw message", "better the original than a guess");
 
+            // 🔴 `.Result` wraps everything in an AggregateException whose message, on the Mono of
+            // Unity 2018–2020, is only "One or more errors occurred." — the cause is underneath.
+            var aggregate = new AggregateException("One or more errors occurred.",
+                                                   Wrapped(SocketError.AccessDenied));
+            Is(check, aggregate, ConnectionProblem.BlockedLocally, "found under the task wrapper too");
+            check(Connectivity.Cause(aggregate) == "SocketException: " + new SocketException((int)SocketError.AccessDenied).Message,
+                  "Cause names what was actually thrown", "the wrapper's own sentence says nothing");
+            check(Connectivity.ForLog(aggregate).StartsWith(Connectivity.Explain(ConnectionProblem.BlockedLocally)!)
+                  && Connectivity.ForLog(aggregate).Contains("SocketException"),
+                  "ForLog gives the meaning, then the cause", "a reader and a maintainer both need their half");
+            var unnamed = new AggregateException("One or more errors occurred.", new InvalidOperationException("deep"));
+            check(Connectivity.Describe(unnamed) == "deep" && Connectivity.Summarize(unnamed) == "deep"
+                  && Connectivity.ForLog(unnamed) == "InvalidOperationException: deep",
+                  "an unnamed failure falls back to the innermost message", "not to the wrapper's");
+
             // The wording is read by players in their fourth language: no mechanism words.
             foreach (ConnectionProblem p in Enum.GetValues(typeof(ConnectionProblem)))
             {
