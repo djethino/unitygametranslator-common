@@ -115,6 +115,17 @@ namespace UnityGameTranslator.Common
         public static string Models(string baseUrl) => Resolve(baseUrl, "models");
 
         /// <summary>
+        /// Google Translate v2 — where a line goes when the backend is "google". In the socle since
+        /// 2026-09-23: the Manager translates too, and one address written twice is one that gets
+        /// moved in a single place.
+        /// </summary>
+        public const string GoogleTranslate = "https://translation.googleapis.com/language/translate/v2";
+
+        /// <summary>DeepL's translate endpoint. Free and paid accounts are different hosts.</summary>
+        public static string DeepLTranslate(bool free) =>
+            (free ? "https://api-free.deepl.com" : "https://api.deepl.com") + "/v2/translate";
+
+        /// <summary>
         /// The five rules, in order. Each one exists because a real provider needed it.
         ///
         ///   "http://localhost:11434"                          → .../v1/chat/completions

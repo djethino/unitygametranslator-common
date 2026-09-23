@@ -266,6 +266,14 @@ namespace UnityGameTranslator.Common.Checks
             check(!LineTranslation.IsEnabled(true, "none") && !LineTranslation.IsEnabled(false, "llm") && LineTranslation.IsEnabled(true, "deepl"),
                 "translation runs only when switched on AND a backend is chosen",
                 "turning something off must never mean erasing how it was configured");
+
+            check(LineTranslation.BackendLabel(true, "llm", "gemma3") == "gemma3" && LineTranslation.BackendLabel(true, "llm", "") == "LLM"
+                  && LineTranslation.BackendLabel(true, "deepl", "gemma3") == "DeepL" && LineTranslation.BackendLabel(false, "llm", "gemma3") == null,
+                "the page is told the backend's name, and nothing when translation is off",
+                "a name for the button's tooltip — never the server's address, which can reveal a private machine");
+            check(Endpoints.DeepLTranslate(true) == "https://api-free.deepl.com/v2/translate"
+                  && Endpoints.DeepLTranslate(false) == "https://api.deepl.com/v2/translate",
+                "free and paid DeepL are different hosts", "a free key sent to the paid host is refused, and the reverse");
         }
 
         // ── Retranslation ──

@@ -167,6 +167,25 @@ namespace UnityGameTranslator.Common
         public static bool IsTranslationService(string? backend) => backend == "google" || backend == "deepl";
 
         /// <summary>
+        /// What the browser editor is told about the backend — the Retranslate button's tooltip.
+        /// Null when translation is off: there is nothing to name, and nothing will answer.
+        ///
+        /// 🔴 A NAME, never an address: the server's URL can reveal a machine on a private network,
+        /// and a web page has no business knowing it.
+        /// </summary>
+        public static string? BackendLabel(bool enableAi, string? backend, string? model)
+        {
+            if (!enableAi) return null;
+            switch (backend)
+            {
+                case "llm": return string.IsNullOrEmpty(model) ? "LLM" : model;
+                case "google": return "Google Translate";
+                case "deepl": return "DeepL";
+                default: return backend;
+            }
+        }
+
+        /// <summary>
         /// Which placeholders a text about to be sent actually carries.
         ///
         /// ⚠ Read from the text itself, never from what the caller happened to extract. The mod
