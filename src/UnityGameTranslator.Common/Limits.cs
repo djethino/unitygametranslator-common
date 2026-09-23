@@ -33,5 +33,14 @@ namespace UnityGameTranslator.Common
         /// server's memory first.
         /// </summary>
         public const long TranslationFileBytes = 64L * 1024 * 1024;
+
+        /// <summary>
+        /// The longest text, in characters, ever sent to a translation backend. Anything longer is
+        /// left alone rather than sent — a request of that size is a cost nobody chose, and a model
+        /// asked to reproduce it token for token fails more often than it succeeds.
+        ///
+        /// Was the mod's own constant until the Manager started translating lines too (2026-09-23).
+        /// </summary>
+        public const int AiTextLength = 15000;
     }
 }

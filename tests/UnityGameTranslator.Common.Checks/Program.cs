@@ -133,6 +133,8 @@ namespace UnityGameTranslator.Common.Checks
         private static void ProviderNegotiation()
         {
             Section("Negotiation", NegotiationChecks.Run);
+            Section("Translating one line", LineTranslationChecks.Run);
+            Section("Retranslating a line, and the page's requests", LineTranslationChecks.RunRetranslation);
         }
 
         /// <summary>Why a request never arrived, in words that point at the right culprit.</summary>
