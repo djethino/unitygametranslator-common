@@ -218,43 +218,77 @@ namespace UnityGameTranslator.Common
         /// ⚠ Applied before an answer is judged, in the game and on the bench alike. A model that
         /// wraps its answer in quotation marks is not a model that broke the rules — it is one a
         /// game copes with — and scoring it as a failure measures the bench.
+        ///
+        /// 🔴 **Nothing comes off that the SOURCE carries too.** A game line quoted as a whole
+        /// ("\"Hello\""), one that opens "Translation: English", one in a code block, one with
+        /// **emphasis** — its translation carries the same thing, and it is the game's, not the
+        /// model's. Each rule is therefore asked of the source first, with the same pattern, and
+        /// skipped when the source answers yes. Until 2026-09-25 only the answer was read, and
+        /// such a line lost its quotes or its first word.
         /// </summary>
-        public static string Clean(string text)
+        /// <param name="text">What the model sent back.</param>
+        /// <param name="source">What it was given — the text as sent, placeholders included. Null
+        /// or empty when there is none to compare with: every rule then applies.</param>
+        public static string Clean(string text, string? source)
         {
             if (string.IsNullOrEmpty(text)) return text;
+            // As sent, a line break is [!nl]; read as one here, so a blank line in the game's text
+            // is a blank line whichever way the model wrote it back.
+            string from = (source ?? "").Replace("[!nl]", "\n");
 
             // Reasoning models emit their working out first.
-            text = Regex.Replace(text, @"<think>[\s\S]*?</think>\s*", "", RegexOptions.IgnoreCase);
+            if (!Think.IsMatch(from)) text = Think.Replace(text, "");
 
             // ⚠ Only the literal form. The mod stopped sending these markers — reasoning is turned
             // off through a request field instead — but a model or a server-side template can still
             // echo one. Once a model TRANSLATES the marker it is unrecognisable, which is precisely
             // why sending it was abandoned.
-            text = text.Replace(" /no_think", "").Replace("/no_think", "");
-            text = text.Replace(" /think", "").Replace("/think", "");
+            if (from.IndexOf("/no_think", StringComparison.Ordinal) < 0)
+                text = text.Replace(" /no_think", "").Replace("/no_think", "");
+            if (from.IndexOf("/think", StringComparison.Ordinal) < 0)
+                text = text.Replace(" /think", "").Replace("/think", "");
 
-            text = Regex.Replace(text, @"\*\*([^*]+)\*\*", "$1");
+            if (!Emphasis.IsMatch(from)) text = Emphasis.Replace(text, "$1");
 
-            text = Regex.Replace(text, @"^(Translation|Traduction|Here'?s?|The translation is)\s*[:\-]?\s*", "",
-                                 RegexOptions.IgnoreCase);
+            if (!Announcing.IsMatch(from)) text = Announcing.Replace(text, "");
 
             // After a blank line, and only when it opens the way an explanation opens — otherwise
             // a translation that genuinely contains a blank line would lose everything after it.
-            Match explanation = Regex.Match(text, @"\n\n(Note:|I |This |Here |The above|Explanation:|Translation note:)",
-                                            RegexOptions.IgnoreCase);
-            if (explanation.Success) text = text.Substring(0, explanation.Index);
+            if (!Explaining.IsMatch(from))
+            {
+                Match explanation = Explaining.Match(text);
+                if (explanation.Success) text = text.Substring(0, explanation.Index);
+            }
 
             text = text.Trim();
-            text = Unfence(text);
+            string trimmedSource = from.Trim();
 
-            if ((text.StartsWith("\"", StringComparison.Ordinal) && text.EndsWith("\"", StringComparison.Ordinal)) ||
-                (text.StartsWith("'", StringComparison.Ordinal) && text.EndsWith("'", StringComparison.Ordinal)))
+            if (!IsFenced(trimmedSource)) text = Unfence(text);
+
+            foreach (string quote in new[] { "\"", "'" })
             {
-                text = text.Substring(1, text.Length - 2);
+                if (IsWrappedIn(trimmedSource, quote)) continue;
+                if (IsWrappedIn(text, quote)) { text = text.Substring(1, text.Length - 2); break; }
             }
 
             return text.Trim();
         }
+
+        // One pattern per rule, asked of the answer to take it off and of the source to know
+        // whether it is the game's own.
+        private static readonly Regex Think = new Regex(@"<think>[\s\S]*?</think>\s*", RegexOptions.IgnoreCase);
+        private static readonly Regex Emphasis = new Regex(@"\*\*([^*]+)\*\*");
+        private static readonly Regex Announcing = new Regex(
+            @"^(Translation|Traduction|Here'?s?|The translation is)\s*[:\-]?\s*", RegexOptions.IgnoreCase);
+        private static readonly Regex Explaining = new Regex(
+            @"\n\n(Note:|I |This |Here |The above|Explanation:|Translation note:)", RegexOptions.IgnoreCase);
+
+        private static bool IsWrappedIn(string text, string quote) =>
+            text.Length >= 2 * quote.Length
+            && text.StartsWith(quote, StringComparison.Ordinal) && text.EndsWith(quote, StringComparison.Ordinal);
+
+        private static bool IsFenced(string text) =>
+            text.StartsWith(Fence, StringComparison.Ordinal) || text.EndsWith(Fence, StringComparison.Ordinal);
 
         private const string Fence = "```";
 

@@ -300,7 +300,7 @@ namespace UnityGameTranslator.Common
                     return result;
                 }
 
-                string answer = Answers.Clean(said);
+                string answer = Answers.Clean(said, toSend);
                 result.Said = answer;
                 result.NeededCleaning |= !string.Equals(answer, said.Trim(), StringComparison.Ordinal);
 

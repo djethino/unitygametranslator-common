@@ -243,7 +243,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("answers", "read_rating", typeof(Answers), nameof(Answers.ReadRating),
                 e => Answers.ReadRating(Str(e, "answer"))),
             new Operation("answers", "clean", typeof(Answers), nameof(Answers.Clean),
-                e => Answers.Clean(Str(e, "answer")!)),
+                e => Answers.Clean(Str(e, "answer")!, Str(e, "source"))),
             new Operation("answers", "store", typeof(Answers), nameof(Answers.Store),
                 e => Answers.Store(Bool(e, "from_own_ui"), EnumRequired<AnswerKind>(e, "kind"))),
             new Operation("answers", "capture", typeof(Answers), nameof(Answers.Capture),

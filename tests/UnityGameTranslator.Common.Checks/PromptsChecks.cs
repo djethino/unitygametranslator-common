@@ -142,21 +142,23 @@ namespace UnityGameTranslator.Common.Checks
                 "and so is nothing at all", "there is no line to store");
 
             // Cleaning: each rule narrow enough not to eat real text.
-            check(Answers.Clean("**Démarrer**") == "Démarrer", "markdown emphasis comes off",
+            check(Answers.Clean("**Démarrer**", "Start") == "Démarrer", "markdown emphasis comes off",
                 "a game shows what comes back, verbatim");
-            check(Answers.Clean("Translation: Démarrer") == "Démarrer", "and an announcing prefix",
+            check(Answers.Clean("Translation: Démarrer", "Start") == "Démarrer", "and an announcing prefix",
                 "the model explaining itself");
-            check(Answers.Clean("\"Démarrer\"") == "Démarrer", "quotes wrapping the whole answer",
+            check(Answers.Clean("\"Démarrer\"", "Start") == "Démarrer", "quotes wrapping the whole answer",
                 "the model added them");
-            check(Answers.Clean("Il a dit \"non\" hier") == "Il a dit \"non\" hier",
+            check(Answers.Clean("\"Démarrer\"", "\"Start\"") == "\"Démarrer\"", "unless the source is quoted too",
+                "then the quotes are the game's");
+            check(Answers.Clean("Il a dit \"non\" hier", "He said \"no\" yesterday") == "Il a dit \"non\" hier",
                 "but quotes inside a line stay", "a line of dialogue may legitimately be quoted");
-            check(Answers.Clean("Démarrer\n\nNote: I kept the name") == "Démarrer",
+            check(Answers.Clean("Démarrer\n\nNote: I kept the name", "Start") == "Démarrer",
                 "an explanation after a blank line is cut", "the model talking about its own work");
-            check(Answers.Clean("Ligne un\n\nLigne deux") == "Ligne un\n\nLigne deux",
+            check(Answers.Clean("Ligne un\n\nLigne deux", "Line one\n\nLine two") == "Ligne un\n\nLigne deux",
                 "a genuine blank line is not", "cutting there would lose half a paragraph");
-            check(Answers.Clean("<think>hmm</think>Démarrer") == "Démarrer", "reasoning is removed",
+            check(Answers.Clean("<think>hmm</think>Démarrer", "Start") == "Démarrer", "reasoning is removed",
                 "models emit their working out");
-            check(Answers.Clean("") == "" && Answers.Clean(null!) == null, "nothing in, nothing out",
+            check(Answers.Clean("", "Start") == "" && Answers.Clean(null!, "Start") == null, "nothing in, nothing out",
                 "no work to do");
 
             // ── What becomes of the line, once the answer has been read ───────────────
