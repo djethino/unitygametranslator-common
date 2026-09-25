@@ -261,18 +261,44 @@ namespace UnityGameTranslator.Common
             }
 
             text = text.Trim();
-            string trimmedSource = from.Trim();
+            string trimmedSource = StripDirection(from.Trim(), out _, out _);
 
-            if (!IsFenced(trimmedSource)) text = Unfence(text);
+            // ⚠ A model writing right to left may put an invisible direction mark before or after
+            // everything, outside the fences or the quotes it added. The wrappers are judged
+            // inside those marks, and the marks are put back where they were: they order what is
+            // shown, and taking them off is not this method's business.
+            string inner = StripDirection(text, out string leading, out string trailing);
+
+            if (!IsFenced(trimmedSource)) inner = Unfence(inner);
 
             foreach (string quote in new[] { "\"", "'" })
             {
                 if (IsWrappedIn(trimmedSource, quote)) continue;
-                if (IsWrappedIn(text, quote)) { text = text.Substring(1, text.Length - 2); break; }
+                if (IsWrappedIn(inner, quote)) { inner = inner.Substring(1, inner.Length - 2); break; }
             }
 
-            return text.Trim();
+            return (leading + inner.Trim() + trailing).Trim();
         }
+
+        /// <summary>
+        /// The text without the direction marks and spacing at its two ends, and those ends.
+        /// The marks: LRM, RLM, ALM, the embeddings and overrides, the isolates — Unicode's
+        /// bidirectional controls, none of which is a character anybody reads.
+        /// </summary>
+        private static string StripDirection(string text, out string leading, out string trailing)
+        {
+            int start = 0, end = text.Length;
+            while (start < end && (IsDirectionMark(text[start]) || char.IsWhiteSpace(text[start]))) start++;
+            while (end > start && (IsDirectionMark(text[end - 1]) || char.IsWhiteSpace(text[end - 1]))) end--;
+
+            leading = text.Substring(0, start).Trim();
+            trailing = text.Substring(end).Trim();
+            return text.Substring(start, end - start);
+        }
+
+        private static bool IsDirectionMark(char c) =>
+            c == '\u200E' || c == '\u200F' || c == '\u061C'
+            || (c >= '\u202A' && c <= '\u202E') || (c >= '\u2066' && c <= '\u2069');
 
         // One pattern per rule, asked of the answer to take it off and of the source to know
         // whether it is the game's own.
