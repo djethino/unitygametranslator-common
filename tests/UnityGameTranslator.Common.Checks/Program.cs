@@ -202,6 +202,8 @@ namespace UnityGameTranslator.Common.Checks
             Section("What a list asks of its surface", ListRoomChecks.Run);
 
             Section("Text systems a game shows", TextSystemsChecks.Run);
+
+            Section("Freeing or keeping a model on a local server", ModelMemoryChecks.Run);
         }
 
         /// <summary>The stored-secret format, checked against its own specification.</summary>
