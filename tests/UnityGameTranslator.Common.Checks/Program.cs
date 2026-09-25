@@ -200,6 +200,8 @@ namespace UnityGameTranslator.Common.Checks
             Section("How a dropdown fits", DropdownFitChecks.Run);
 
             Section("What a list asks of its surface", ListRoomChecks.Run);
+
+            Section("Text systems a game shows", TextSystemsChecks.Run);
         }
 
         /// <summary>The stored-secret format, checked against its own specification.</summary>

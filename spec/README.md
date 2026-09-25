@@ -36,6 +36,8 @@ spec/
   translation-file/moments.json  the same moments as sequences of acts, replayed by the mod's TranslationStoreChecks and the Manager's MomentsContractChecks
   screens/schema.json      the closed vocabulary a screen of the mod is described in (card, stack, row, spacer, label, button — slots and acts)
   screens/<screen>.json    one document per screen described in data, embedded in the mod and built by its ScreenBuilder; a second Core draws the same file with its own
+  texts-seen/schema.json   the text systems a game SHOWED while the mod ran (texts-seen.json, beside config.json) — vocabulary in src/TextSystems.cs
+  texts-seen/cases.json    files and the line the Manager derives (`manager.line`, held by its TextsSeenContractChecks)
 ```
 
 ## `screens` — a screen described in data
