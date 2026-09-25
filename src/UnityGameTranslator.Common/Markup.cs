@@ -62,6 +62,90 @@ namespace UnityGameTranslator.Common
             return result.ToString();
         }
 
+        /// <summary>Whether a tag closes one: &lt;/b&gt;, &lt;/color&gt;.</summary>
+        public static bool IsClosing(string tag) => tag != null && tag.Length > 2 && tag[0] == '<' && tag[1] == '/';
+
+        /// <summary>
+        /// The name that pairs an opening tag with its closing one, lowercase: "color" for both
+        /// &lt;color=red&gt; and &lt;/COLOR&gt;.
+        ///
+        /// ⚠ TextMesh Pro's short colour form &lt;#RRGGBB&gt; has no name and is closed by
+        /// &lt;/color&gt;, so it is named "color" here. Left unnamed it was never paired, and a
+        /// right-to-left line coloured one letter instead of its span.
+        /// </summary>
+        public static string NameOf(string tag)
+        {
+            if (string.IsNullOrEmpty(tag) || tag[0] != '<') return "";
+            int from = IsClosing(tag) ? 2 : 1;
+            if (from < tag.Length && tag[from] == '#') return "color";
+
+            int end = from;
+            while (end < tag.Length && (char.IsLetterOrDigit(tag[end]) || tag[end] == '-')) end++;
+            return tag.Substring(from, end - from).ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// For each closing tag, the index of the opening tag it closes, or -1 — matched by name,
+        /// innermost first, the way a rich-text parser reads them.
+        /// </summary>
+        public static int[] Pairs(IList<string> tags)
+        {
+            var closes = new int[tags.Count];
+            var open = new List<int>();
+
+            for (int i = 0; i < tags.Count; i++)
+            {
+                closes[i] = -1;
+                if (!IsClosing(tags[i])) { open.Add(i); continue; }
+
+                string name = NameOf(tags[i]);
+                for (int s = open.Count - 1; s >= 0; s--)
+                {
+                    if (NameOf(tags[open[s]]) != name) continue;
+                    closes[i] = open[s];
+                    open.RemoveRange(s, open.Count - s);
+                    break;
+                }
+            }
+
+            return closes;
+        }
+
+        /// <summary>
+        /// The closing placeholders an answer puts before the opening one they close, as lines a
+        /// model can act on. Empty when every pair of the source comes back open-then-close.
+        ///
+        /// 🔴 **The placeholder check counts tokens and cannot see this.** An answer
+        /// "[!t*1]texte[!t*0]" carries each token once and passed; restored, the game got
+        /// "&lt;/color&gt;texte&lt;color=…&gt;" and coloured the wrong part or nothing. A model
+        /// writing right to left is the likeliest to do it.
+        ///
+        /// ⚠ Only ORDER within a pair is judged. Where a styled span goes in the sentence, and
+        /// which of two spans comes first, is the language's business.
+        /// </summary>
+        public static List<string> OutOfOrder(string answer, IList<string>? tags)
+        {
+            var errors = new List<string>();
+            if (string.IsNullOrEmpty(answer) || tags == null || tags.Count == 0) return errors;
+
+            int[] pairs = Pairs(tags);
+            for (int close = 0; close < pairs.Length; close++)
+            {
+                int open = pairs[close];
+                if (open < 0) continue;
+
+                string opening = PlaceholderPrefix + open + PlaceholderSuffix;
+                string closing = PlaceholderPrefix + close + PlaceholderSuffix;
+                int at = answer.IndexOf(opening, System.StringComparison.Ordinal);
+                int end = answer.IndexOf(closing, System.StringComparison.Ordinal);
+
+                if (at >= 0 && end >= 0 && end < at)
+                    errors.Add($"{closing} closes {opening}, so it must come after it");
+            }
+
+            return errors;
+        }
+
         /// <summary>Put each placeholder back as the tag it stood for.</summary>
         public static string Restore(string text, List<string>? tags)
         {

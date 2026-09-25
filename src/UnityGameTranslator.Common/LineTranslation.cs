@@ -316,7 +316,7 @@ namespace UnityGameTranslator.Common
                         return result;
                 }
 
-                if (!needsValidation || Placeholders.Accepts(toSend, answer, frozen, out errors))
+                if (!needsValidation || Keeps(prepared, answer, frozen, out errors))
                 {
                     result.Outcome = LineOutcome.Translated;
                     result.Text = Backends.Restore(prepared, answer);
@@ -325,7 +325,7 @@ namespace UnityGameTranslator.Common
 
                 // The repair a game makes for itself — and it has to pass the full check on its own.
                 string? mended = Placeholders.RepairTrailingBreaks(toSend, answer);
-                if (mended != null && Placeholders.Accepts(toSend, mended, frozen, out _))
+                if (mended != null && Keeps(prepared, mended, frozen, out _))
                 {
                     result.Outcome = LineOutcome.Translated;
                     result.Repaired = true;
@@ -341,6 +341,18 @@ namespace UnityGameTranslator.Common
             // text on screen and travel to everyone on upload.
             result.Outcome = LineOutcome.Refused;
             return result;
+        }
+
+        /// <summary>
+        /// Whether a game would accept this answer: its placeholders (<see cref="Placeholders.Accepts"/>)
+        /// and the order of the markup pairs it carries (<see cref="Markup.OutOfOrder"/>), which a
+        /// count of tokens cannot see. One judge for a model and for a service alike.
+        /// </summary>
+        private static bool Keeps(PreparedText prepared, string answer, List<string> frozen, out List<string> errors)
+        {
+            Placeholders.Accepts(prepared.ToSend, answer, frozen, out errors);
+            errors.AddRange(Markup.OutOfOrder(answer, prepared.Tags));
+            return errors.Count == 0;
         }
 
         /// <summary>
@@ -362,10 +374,10 @@ namespace UnityGameTranslator.Common
             }
 
             List<string> frozen = Placeholders.FrozenSequences(prepared.ToSend);
-            if (frozen.Count > 0 && !Placeholders.Accepts(prepared.ToSend, answer!, frozen, out var errors))
+            if (frozen.Count > 0 && !Keeps(prepared, answer!, frozen, out var errors))
             {
                 string? mended = Placeholders.RepairTrailingBreaks(prepared.ToSend, answer!);
-                if (mended == null || !Placeholders.Accepts(prepared.ToSend, mended, frozen, out _))
+                if (mended == null || !Keeps(prepared, mended, frozen, out _))
                 {
                     result.Outcome = LineOutcome.Refused;
                     result.Attempts.Add(new FailedAttempt { Value = answer!, Errors = new List<string>(errors) });

@@ -48,6 +48,31 @@ namespace UnityGameTranslator.Common.Checks
             check(Markup.Restore("[!t*0]x", null) == "[!t*0]x",
                 "with nothing to put back, the text is left alone",
                 "inventing a tag would be worse than leaving the slot visible");
+
+            // Which tag closes which — one answer for the model's check and for the screen.
+            var pairs = Markup.Pairs(new[] { "<color=red>", "<b>", "</b>", "</COLOR>" });
+            check(pairs[0] == -1 && pairs[1] == -1 && pairs[2] == 1 && pairs[3] == 0,
+                "a closing tag pairs with the innermost opening of its name, whatever the case",
+                "that is how a rich-text parser reads them");
+            check(Markup.Pairs(new[] { "<#FF0000>", "</color>" })[1] == 0,
+                "the short colour form is closed by </color>",
+                "left unnamed, it was never paired and a right-to-left line coloured one letter");
+            check(Markup.Pairs(new[] { "<br>", "<sprite=3>" })[0] == -1 && Markup.Pairs(new[] { "</b>" })[0] == -1,
+                "a tag nothing closes, and a closing nothing opened, pair with nothing",
+                "a guess there would move a tag the game placed");
+
+            var colour = new List<string> { "<color=red>", "</color>" };
+            check(Markup.OutOfOrder("[!t*0]texte[!t*1]", colour).Count == 0,
+                "open then close is in order", "the ordinary case");
+            check(Markup.OutOfOrder("texte [!t*0]rouge[!t*1]", colour).Count == 0,
+                "the styled span may move in the sentence", "where it goes is the language's business");
+            var swapped = Markup.OutOfOrder("[!t*1]texte[!t*0]", colour);
+            check(swapped.Count == 1 && swapped[0] == "[!t*1] closes [!t*0], so it must come after it",
+                "a closing slot before its opening one is named",
+                "each token is there once, so the count passed it — restored, the game got </color> before <color>");
+            var two = new List<string> { "<b>", "</b>", "<i>", "</i>" };
+            check(Markup.OutOfOrder("[!t*2]B[!t*3] et [!t*0]A[!t*1]", two).Count == 0,
+                "two styled spans may swap places", "each pair is still open-then-close");
         }
 
         private static void TakingItApart(Action<bool, string, string> check)
@@ -228,6 +253,14 @@ namespace UnityGameTranslator.Common.Checks
                 "a missing trailing line break is put back without asking again",
                 "the one repair a game can make on its own, and it saves a request");
 
+            var inverted = new ScriptedModel("[!t*1]Appuyez[!t*0] maintenant", "[!t*0]Appuyez[!t*1] maintenant");
+            var reordered = LineTranslation.AskModel("<color=red>Press</color> now", Job(), inverted.Send);
+            check(reordered.Outcome == LineOutcome.Translated && reordered.Text == "<color=red>Appuyez</color> maintenant"
+                  && inverted.Asked.Count == 2
+                  && inverted.Asked[1].Messages[3].Content.Contains("[!t*1] closes [!t*0], so it must come after it"),
+                "a closing tag put before its opening one is corrected on the second try, and named",
+                "each token was there once, so nothing refused it: the game got </color> before <color>");
+
             var warm = Job();
             warm.Temperature = 0.8;
             var warmModel = new ScriptedModel("a", "b", "Vous avez [!v*0] pièces");
@@ -249,6 +282,11 @@ namespace UnityGameTranslator.Common.Checks
             check(broken.Outcome == LineOutcome.Refused && broken.Attempts.Count == 1,
                 "a service that dropped a placeholder is refused, once",
                 "there is nothing to correct it with: it takes no instructions");
+
+            var reversed = LineTranslation.CheckServiceAnswer(prepared, "[!t*1]Appuyez[!t*0] [!v*0]");
+            check(reversed.Outcome == LineOutcome.Refused,
+                "a service that closed a tag before opening it is refused too",
+                "restored, the game would get </b> before <b>");
 
             check(LineTranslation.CheckServiceAnswer(prepared, null).Outcome == LineOutcome.NoAnswer,
                 "and no answer is not a refusal", "it is worth asking again later");
