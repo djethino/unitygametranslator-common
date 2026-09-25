@@ -35,9 +35,29 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public const int MaxAttempts = 3;
 
+        /// <summary>The grammar of a token, written once: [!v*N], [!t*N], [!STR*N], [!nl].</summary>
+        private const string TokenGrammar = @"\[!(?:v\*\d+|t\*\d+|STR\*\d+|nl)\]";
+
         /// <summary>Every frozen token: [!v*N], [!t*N], [!STR*N], [!nl].</summary>
-        private static readonly Regex TokenPattern = new Regex(
-            @"\[!(?:v\*\d+|t\*\d+|STR\*\d+|nl)\]", RegexOptions.Compiled);
+        private static readonly Regex TokenPattern = new Regex(TokenGrammar, RegexOptions.Compiled);
+
+        /// <summary>The same grammar, matched only where a scan stands.</summary>
+        private static readonly Regex TokenHere = new Regex(@"\G" + TokenGrammar, RegexOptions.Compiled);
+
+        /// <summary>
+        /// The length of the token starting at <paramref name="index"/>, or 0 when none does — for
+        /// a scanner walking a text character by character (the right-to-left composer and field).
+        ///
+        /// ⚠ They used to accept anything from "[!" to the next "]" within 32 characters, a bound
+        /// nobody derived: "[!note]" in a game's text was protected as a placeholder. Only what
+        /// this grammar names is one — the rule <see cref="Tokens"/> already applies.
+        /// </summary>
+        public static int LengthAt(string text, int index)
+        {
+            if (string.IsNullOrEmpty(text) || index < 0 || index >= text.Length || text[index] != '[') return 0;
+            Match match = TokenHere.Match(text, index);
+            return match.Success ? match.Length : 0;
+        }
 
         /// <summary>
         /// Each placeholder together with the delimiters the game wrapped around it, e.g. "({[!v*0]})".

@@ -234,6 +234,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => Placeholders.Invented(Str(e, "source") ?? "", Str(e, "translation"))),
             new Operation("placeholders", "tally", typeof(Placeholders), nameof(Placeholders.Tally),
                 e => Placeholders.Tally(Str(e, "text") ?? "")),
+            new Operation("placeholders", "length_at", typeof(Placeholders), nameof(Placeholders.LengthAt),
+                e => Placeholders.LengthAt(Str(e, "text") ?? "", Int(e, "index"))),
             new Operation("placeholders", "max_attempts", typeof(Placeholders), nameof(Placeholders.MaxAttempts),
                 e => Placeholders.MaxAttempts),
 

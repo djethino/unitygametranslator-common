@@ -346,8 +346,11 @@ namespace UnityGameTranslator.Common
             int lastBreak = inner.LastIndexOf('\n');
             if (inner.Substring(lastBreak + 1).Trim().Length > 0) return text;
 
+            // CommonMark: the opening line holds an "info string", whose first word names the
+            // language and which may not contain a backtick. Only that word, alone, is taken as
+            // one — a line of several words is text somebody wrote.
             string opening = inner.Substring(0, firstBreak).Trim();
-            if (!Regex.IsMatch(opening, @"^[A-Za-z0-9_+\-]*$")) return text;
+            if (!Regex.IsMatch(opening, @"^[^\s`]*$")) return text;
 
             return inner.Substring(firstBreak + 1).Trim();
         }
