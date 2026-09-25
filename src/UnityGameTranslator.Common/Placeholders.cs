@@ -106,7 +106,119 @@ namespace UnityGameTranslator.Common
                     errors.Add($"character '{bracket}' appears {found} time(s) instead of {expected}");
             }
 
+            // ⚠ Also a model-only check, for the same reason: a person who adds a letter meant it.
+            foreach (string error in LettersAddedBetween(source, translation)) errors.Add(error);
+
             return errors.Count == 0;
+        }
+
+        /// <summary>
+        /// In a source that holds no word, the letters a model slipped in between two placeholders
+        /// the source separates with no letter at all.
+        ///
+        /// 🔴 **Seen in a real file**: "v[!v*0].[!v*1]f[!v*2]", a version number, came back as
+        /// "v[!v*0].v[!v*1]f[!v*2]". Every placeholder was there once, so nothing refused it, and
+        /// the game showed a version that does not exist.
+        ///
+        /// ⚠ **Narrow on purpose, because each wider rule refuses real translations**:
+        /// · only a source with NO word — no two word characters side by side outside the
+        ///   placeholders. With a word, a language puts words between values ("[!v*0]-[!v*1]
+        ///   damage" → « de [!v*0] à [!v*1] dégâts »). One ideograph is a word, so a CJK source with
+        ///   single-character words falls under this; that is why the check stays this narrow;
+        /// · only BETWEEN two placeholders, never at the ends: a unit beside a value is translated
+        ///   ("[!v*0]m" → "[!v*0] мин" is right), and it sits at an end;
+        /// · only where the source has no letter between them: a letter there ("[!v*0]x[!v*1]")
+        ///   may be a word of its own, and may be translated;
+        /// · only LETTERS count: punctuation and spacing change with the language ("、" → ", ");
+        /// · only when both placeholders appear once on each side and follow each other in the
+        ///   answer too. Reordered, the answer says something the rule has no opinion about.
+        /// </summary>
+        private static List<string> LettersAddedBetween(string source, string translation)
+        {
+            var errors = new List<string>();
+            if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(translation)) return errors;
+
+            List<Match> inSource = TokenPattern.Matches(source).Cast<Match>().ToList();
+            if (inSource.Count < 2 || HasWord(TokenPattern.Replace(source, "\n"))) return errors;
+
+            List<Match> inAnswer = TokenPattern.Matches(translation).Cast<Match>().ToList();
+            Dictionary<string, int> sourceTally = Tally(source);
+            Dictionary<string, int> answerTally = Tally(translation);
+
+            for (int i = 0; i + 1 < inSource.Count; i++)
+            {
+                string first = inSource[i].Value, second = inSource[i + 1].Value;
+                if (!OnceEach(first, sourceTally, answerTally) || !OnceEach(second, sourceTally, answerTally)) continue;
+
+                string joint = Between(source, inSource[i], inSource[i + 1]);
+                if (HasLetter(joint)) continue;
+
+                int at = inAnswer.FindIndex(m => m.Value == first);
+                if (at < 0 || at + 1 >= inAnswer.Count || inAnswer[at + 1].Value != second) continue;
+
+                string answered = Between(translation, inAnswer[at], inAnswer[at + 1]);
+                if (HasLetter(answered))
+                    errors.Add($"between {first} and {second} the source has \"{joint}\" and no letter: \"{answered}\" adds some");
+            }
+
+            return errors;
+        }
+
+        private static bool OnceEach(string token, Dictionary<string, int> source, Dictionary<string, int> answer)
+        {
+            int inSource, inAnswer;
+            source.TryGetValue(token, out inSource);
+            answer.TryGetValue(token, out inAnswer);
+            return inSource == 1 && inAnswer == 1;
+        }
+
+        private static string Between(string text, Match before, Match after)
+        {
+            int start = before.Index + before.Length;
+            return text.Substring(start, after.Index - start);
+        }
+
+        /// <summary>Two word characters side by side — what makes a text carry a word.</summary>
+        private static bool HasWord(string text)
+        {
+            int run = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (IsWordCharacter(text, i)) { if (++run >= 2) return true; }
+                else run = 0;
+                if (char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1])) i++;
+            }
+            return false;
+        }
+
+        private static bool HasLetter(string text)
+        {
+            for (int i = 0; i < text.Length; i++)
+                if (IsWordCharacter(text, i)) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// A letter, or what rides on one (a vowel sign, a tone mark), judged by Unicode category
+        /// and never by script. ⚠ The same categories as the mod's TextNormalization.IsWordCategory,
+        /// which the socle cannot reach: the two answer the same question about a code point.
+        /// </summary>
+        private static bool IsWordCharacter(string text, int i)
+        {
+            switch (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(text, i))
+            {
+                case System.Globalization.UnicodeCategory.UppercaseLetter:
+                case System.Globalization.UnicodeCategory.LowercaseLetter:
+                case System.Globalization.UnicodeCategory.TitlecaseLetter:
+                case System.Globalization.UnicodeCategory.ModifierLetter:
+                case System.Globalization.UnicodeCategory.OtherLetter:
+                case System.Globalization.UnicodeCategory.NonSpacingMark:
+                case System.Globalization.UnicodeCategory.SpacingCombiningMark:
+                case System.Globalization.UnicodeCategory.PrivateUse:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>

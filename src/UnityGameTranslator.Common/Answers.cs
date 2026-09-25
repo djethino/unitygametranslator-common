@@ -212,7 +212,8 @@ namespace UnityGameTranslator.Common
         /// ⚠ Each rule below is narrow on purpose, because every one of them can eat real text.
         /// Quotes come off only when they wrap the WHOLE answer, since a line of dialogue may
         /// legitimately be quoted. An explanation is cut only after a blank line and only when it
-        /// opens the way models open one. A prefix is removed only at the very start.
+        /// opens the way models open one. A prefix is removed only at the very start. A code block
+        /// comes off only when it is the whole answer (see <see cref="Unfence"/>).
         ///
         /// ⚠ Applied before an answer is judged, in the game and on the bench alike. A model that
         /// wraps its answer in quotation marks is not a model that broke the rules — it is one a
@@ -244,6 +245,8 @@ namespace UnityGameTranslator.Common
             if (explanation.Success) text = text.Substring(0, explanation.Index);
 
             text = text.Trim();
+            text = Unfence(text);
+
             if ((text.StartsWith("\"", StringComparison.Ordinal) && text.EndsWith("\"", StringComparison.Ordinal)) ||
                 (text.StartsWith("'", StringComparison.Ordinal) && text.EndsWith("'", StringComparison.Ordinal)))
             {
@@ -251,6 +254,42 @@ namespace UnityGameTranslator.Common
             }
 
             return text.Trim();
+        }
+
+        private const string Fence = "```";
+
+        /// <summary>
+        /// A markdown code block wrapping the WHOLE answer, taken off; anything else left alone.
+        ///
+        /// ⚠ Seen in a real translation file: two lines stored as "```\n…\n```", shown so in game.
+        ///
+        /// ⚠ Two shapes only, both complete: the block as markdown writes it — the opening fence
+        /// with an optional language name on its own line, the closing fence on its own line — and
+        /// the fences on one line around a text with no line break. A fence anywhere inside, or a
+        /// shape that is neither, is text somebody may have written, and stays. In the block shape
+        /// the first line is dropped only when it is empty or a bare language name ("json"), which
+        /// is why the closing fence must stand on its own line too: "```Oui\nNon```" is not a
+        /// block, and dropping "Oui" as a language name would eat a word.
+        /// </summary>
+        private static string Unfence(string text)
+        {
+            if (text.Length < 2 * Fence.Length
+                || !text.StartsWith(Fence, StringComparison.Ordinal)
+                || !text.EndsWith(Fence, StringComparison.Ordinal)) return text;
+
+            string inner = text.Substring(Fence.Length, text.Length - 2 * Fence.Length);
+            if (inner.IndexOf(Fence, StringComparison.Ordinal) >= 0) return text;
+
+            int firstBreak = inner.IndexOf('\n');
+            if (firstBreak < 0) return inner.Trim();
+
+            int lastBreak = inner.LastIndexOf('\n');
+            if (inner.Substring(lastBreak + 1).Trim().Length > 0) return text;
+
+            string opening = inner.Substring(0, firstBreak).Trim();
+            if (!Regex.IsMatch(opening, @"^[A-Za-z0-9_+\-]*$")) return text;
+
+            return inner.Substring(firstBreak + 1).Trim();
         }
     }
 }
