@@ -304,13 +304,12 @@ namespace UnityGameTranslator.Common
                     return null;
 
                 case Locality.YourNetwork:
-                    return "This server is on your network, not on this machine. The text of your "
-                         + "game is sent to it as you play. Nothing is billed for that.";
+                    return "This server is on another computer on your network. The game's text is "
+                         + "sent to it while you play. Nothing is billed.";
 
                 default:
-                    return "This address is not on your machine or your network. The text of your "
-                         + "game is sent to it as you play, and a provider bills you directly for "
-                         + "what you use — we take no part in that and cannot know what it costs.";
+                    return "This server is online. The game's text is sent to it while you play, "
+                         + "and the provider bills you for what you use.";
             }
         }
     }
