@@ -216,17 +216,17 @@ namespace UnityGameTranslator.Common.Checks
             var sect = LineTranslation.AskModel("仙霞派<color=#8C8C8C>外门弟子</color>", Job(), emptied.Send);
             check(sect.Outcome == LineOutcome.Translated && emptied.Asked.Count == 2
                   && sect.Text == "<color=#8C8C8C>Disciple externe</color> de la secte Xianxia"
-                  && emptied.Asked[1].Messages[3].Content.Contains("[!t*0] and [!t*1] mark \"外门弟子\" in the source"),
+                  && emptied.Asked[1].Messages[3].Content.Contains("[!t*0] and [!t*1] surround words in the source"),
                 "a colour emptied of its words is refused, and the next attempt is told which",
                 "each token once and in order, it passed: the game got an empty colour (2026-09-26)");
-            check(Markup.Unfilled("[!t*0][!v*0][!t*1] gold", "[!t*0][!v*0][!t*1] or", new List<string> { "<b>", "</b>" }).Count == 0
-                  && Markup.Unfilled("A[!t*0][!t*1]B", "A[!t*0][!t*1]B", new List<string> { "<b>", "</b>" }).Count == 0,
+            check(Markup.Emptied("[!t*0][!v*0][!t*1] gold", "[!t*0][!v*0][!t*1] or", new List<string> { "<b>", "</b>" }).Count == 0
+                  && Markup.Emptied("A[!t*0][!t*1]B", "A[!t*0][!t*1]B", new List<string> { "<b>", "</b>" }).Count == 0,
                 "a pair around a number, or around nothing in the source, is not held to hold words",
                 "only what the source put inside has to stay inside");
-            var lost = Markup.Unfilled("武当派[!t*0]掌门[!t*1]", "Chef de la secte de Wudang", new List<string> { "<color=#FD1430>", "</color>" });
-            check(lost.Count == 1 && lost[0] == "[!t*0] and [!t*1] mark \"掌门\" in the source. In your translation, put [!t*0] just before the words that translate it and [!t*1] just after them.",
-                "a pair dropped altogether is named by the words it surrounded",
-                "told only that the tokens were missing, a model dropped them three times: the styled word moved to the front in French (2026-09-26)");
+            var lost = Markup.Emptied("武当派[!t*0]掌门[!t*1]", "Chef de la secte de Wudang", new List<string> { "<color=#FD1430>", "</color>" });
+            check(lost.Count == 0,
+                "a pair not there at all is left to the placeholder check, and its words are not quoted",
+                "quoted in the correction, small models copied the source words into the answer (2026-09-26)");
 
             // Compared with HTML in the instructions, a model may answer in real HTML: refused.
             var html = new ScriptedModel("<b>Chef</b> de la secte de Wudang", "[!t*0]Chef[!t*1] de la secte de Wudang");

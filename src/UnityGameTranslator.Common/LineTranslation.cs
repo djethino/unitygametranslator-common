@@ -370,14 +370,14 @@ namespace UnityGameTranslator.Common
         /// <summary>
         /// Whether a game would accept this answer: its placeholders (<see cref="Placeholders.Accepts"/>)
         /// the order of the markup pairs it carries (<see cref="Markup.OutOfOrder"/>) and whether a
-        /// pair that styled words still styles some (<see cref="Markup.Unfilled"/>) — two things a
+        /// pair that styled words still styles some (<see cref="Markup.Emptied"/>) — two things a
         /// count of tokens cannot see. One judge for a model and for a service alike.
         /// </summary>
         private static bool Keeps(PreparedText prepared, string answer, List<string> frozen, out List<string> errors)
         {
             Placeholders.Accepts(prepared.ToSend, answer, frozen, out errors);
             errors.AddRange(Markup.OutOfOrder(answer, prepared.Tags));
-            errors.AddRange(Markup.Unfilled(prepared.ToSend, answer, prepared.Tags));
+            errors.AddRange(Markup.Emptied(prepared.ToSend, answer, prepared.Tags));
             errors.AddRange(Markup.Invented(answer));
             return errors.Count == 0;
         }

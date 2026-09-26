@@ -319,16 +319,13 @@ namespace UnityGameTranslator.Common
             // a model kept both tokens of a colour and put them side by side at the end, empty:
             // every rule obeyed, the styled words unstyled.
             //
-            // ⚠ **The HTML comparison is what works, measured** (same day, qwen3.8:27b, a sect
-            // name then a coloured rank, "武当派<color>掌门</color>"): an opaque [!t*0] reads as a
-            // position to keep, like [!nl]; a pair "like <b>…</b>" reads as belonging to words.
-            // 3 of 12 lines kept their colour on the right words before, 12 of 12 after, with no
-            // change on the bench's coloured cases in seven source languages. Telling the model
-            // that word order may change made it move the pair onto the WRONG words (0 of 10
-            // right) — do not add it back. A model writing real HTML because of this example is
-            // refused (Markup.Invented).
+            // ⚠ **Not compared to HTML, measured** (2026-09-26, bench of nine models, French from
+            // Chinese and English): "like HTML tags (<b>...</b>)" put the colour on the right words
+            // for one model and moved it onto the WRONG ones for four; telling the model that word
+            // order changes did the same. What a model reads as a pair is decided by how the
+            // placeholders are WRITTEN, not by this sentence — see analyse/banc-routage-texte.md.
             if (markers.Tags && markers.TagPairs)
-                prompt.AppendLine("- IMPORTANT: [!t*0], [!t*1], etc. are formatting tags (colour, bold...). They come in pairs, like HTML tags (<b>...</b>): one opens, one closes. Keep each pair around the translation of the words it surrounds");
+                prompt.AppendLine("- IMPORTANT: [!t*0], [!t*1], etc. are formatting tags (colour, bold...). They come in pairs around words, like [!t*0]words[!t*1]: keep every tag, and put the translation of those words between the same two tags");
             else if (markers.Tags)
                 prompt.AppendLine("- IMPORTANT: [!t*0], [!t*1], etc. are formatting tags: keep them exactly as-is, do not modify or remove them");
             if (markers.Numbers)

@@ -101,13 +101,13 @@ namespace UnityGameTranslator.Common.Checks
             check(!full.Contains("come in pairs"), "no word about pairs when the text holds none",
                 "a lone tag — a line break, an icon — has no inside; describing pairs invites one");
             string paired = Game(TextType.Phrase, markers: new Prompts.Markers { Tags = true, TagPairs = true });
-            check(paired.Contains("They come in pairs, like HTML tags (<b>...</b>): one opens, one closes")
-                  && paired.Contains("Keep each pair around the translation of the words it surrounds"),
-                "a pair around words is explained as HTML is: one opens, one closes, and it stays with its words",
-                "an opaque token read as a position to keep: 3 of 12 coloured ranks right; compared with <b>, 12 of 12 (2026-09-26)");
-            check(!paired.Contains("order", StringComparison.OrdinalIgnoreCase),
-                "and nothing tells it that word order may change",
-                "told that, the model moved the pair onto the WRONG words: 0 of 10 right, measured the same day");
+            check(paired.Contains("They come in pairs around words, like [!t*0]words[!t*1]")
+                  && paired.Contains("put the translation of those words between the same two tags"),
+                "a pair around words is explained: what it is, and what stays inside it",
+                "told only to keep the tags, a model kept both and put them side by side at the end, empty (2026-09-26)");
+            check(!paired.Contains("HTML", StringComparison.Ordinal) && !paired.Contains("order", StringComparison.OrdinalIgnoreCase),
+                "and it is neither compared to HTML nor told that word order may change",
+                "both, measured on nine models, moved the colour onto the wrong words for several (2026-09-26)");
             var sectTags = new List<string> { "<color=#8C8C8C>", "</color>" };
             check(LineTranslation.MarkersOf("仙霞派[!t*0]外门弟子[!t*1]", sectTags).TagPairs
                   && !LineTranslation.MarkersOf("A[!t*0]B", new List<string> { "<br>" }).TagPairs
