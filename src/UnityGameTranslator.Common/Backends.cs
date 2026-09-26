@@ -78,13 +78,9 @@ namespace UnityGameTranslator.Common
                 return prepared;
             }
 
-            // 1. Line breaks → [!nl], so the answer has to give the shape back rather than
-            //    reflowing it. Before the trim, deliberately — see the note on order above.
-            string work = text.Replace("\n", LineBreak);
-
-            // 2. Markup tags → [!t*N]. The model never sees markup it could translate, reorder or
-            //    invent.
-            work = Markup.Extract(work, out List<string> tags);
+            // 1-2. Line breaks, then markup, into tokens — see WireForm. Before the trim,
+            //      deliberately — see the note on order above.
+            string work = WireForm(text, out List<string> tags);
             prepared.Tags = tags;
 
             // 3. Visual padding held back. A model asked to translate "  Play  " answers about the
@@ -117,6 +113,24 @@ namespace UnityGameTranslator.Common
             prepared.ToSend = work;
             prepared.NothingToSend = string.IsNullOrWhiteSpace(work);
             return prepared;
+        }
+
+        /// <summary>
+        /// A text in the form a model reads it, structure only: line breaks become [!nl] — so the
+        /// answer has to give the shape back rather than reflowing it — then markup becomes
+        /// [!t*N], so the model never sees a tag it could translate, reorder or invent. No
+        /// padding is cut and no enclosing pair is held back: that is <see cref="Prepare"/>'s.
+        ///
+        /// 🔴 **Also how a translation is READ back in token form** by whoever checks one against
+        /// what the game sent — the Manager's model bench. One conversion both ways: the bench
+        /// once counted [!nl] in answers the game had already turned back into line breaks, and
+        /// failed perfect ones (2026-09-26).
+        /// </summary>
+        public static string WireForm(string text, out List<string> tags)
+        {
+            tags = new List<string>();
+            if (string.IsNullOrEmpty(text)) return text;
+            return Markup.Extract(text.Replace("\n", LineBreak), out tags);
         }
 
         /// <summary>

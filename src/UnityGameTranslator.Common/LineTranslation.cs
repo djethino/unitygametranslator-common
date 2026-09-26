@@ -210,6 +210,26 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// The system prompt <see cref="AskModel"/> sends for this text — for whoever must show or
+        /// count it without sending it (the Manager's bench, its cost estimate). One builder, so
+        /// what is shown is what is sent.
+        /// </summary>
+        public static string InstructionsFor(string text, ModelJob job) =>
+            InstructionsFor(Backends.Prepare(text), text, job);
+
+        /// <summary>
+        /// Whether a line is checked, and so can be asked again, once a model answers it: it
+        /// carries something the answer has to keep. The very test <see cref="AskModel"/> applies.
+        /// </summary>
+        public static bool IsValidated(string text) =>
+            !string.IsNullOrEmpty(text) && Placeholders.FrozenSequences(Backends.Prepare(text).ToSend).Count > 0;
+
+        // Classified as the game wrote it — line breaks and markup are part of what makes a text
+        // a paragraph rather than a label; the markers from what is actually sent.
+        private static string InstructionsFor(PreparedText prepared, string text, ModelJob job) =>
+            job.Instructions(MarkersOf(prepared.ToSend, prepared.Tags), Prompts.Classify(text));
+
+        /// <summary>
         /// Translate one line with a model: a plain request; then, if the answer broke a
         /// placeholder, a corrective exchange carrying the failed answer back with targeted
         /// feedback; then a fresh request without it — to break the anchoring — with the required
@@ -252,7 +272,7 @@ namespace UnityGameTranslator.Common
             string toSend = prepared.ToSend;
             // Classified as the game wrote it — line breaks and markup are part of what makes a text
             // a paragraph rather than a label.
-            string instructions = job.Instructions(MarkersOf(toSend, prepared.Tags), Prompts.Classify(text));
+            string instructions = InstructionsFor(prepared, text, job);
             int maxTokens = Math.Max(200, text.Length * 2);
 
             // Placeholders plus the game's own delimiters around them. None → a single attempt,

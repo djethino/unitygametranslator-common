@@ -224,6 +224,24 @@ namespace UnityGameTranslator.Common.Checks
                 "a pair around a number, or around nothing in the source, is not held to hold words",
                 "only what the source put inside has to stay inside");
 
+            // What a bench shows and counts is what the loop sends — one builder, one test.
+            string seenPrompt = "";
+            var shown = new ModelJob { Instructions = (m, _) => m.TagPairs ? "PAIRS" : "PLAIN" };
+            LineTranslation.AskModel("仙霞派<color=#8C8C8C>外门弟子</color>",
+                                     new ModelJob { Instructions = (m, _) => seenPrompt = m.TagPairs ? "PAIRS" : "PLAIN" },
+                                     new ScriptedModel("[!t*0]Disciple[!t*1]").Send);
+            check(LineTranslation.InstructionsFor("仙霞派<color=#8C8C8C>外门弟子</color>", shown) == seenPrompt
+                  && seenPrompt == "PAIRS",
+                "the prompt a bench shows is the one the loop sends",
+                "the bench once built its own, and never announced what the game had started to");
+            check(LineTranslation.IsValidated("Save\n") && LineTranslation.IsValidated("<b>Go</b> now")
+                  && !LineTranslation.IsValidated("Play"),
+                "a line is checked when what is sent carries something to keep",
+                "the bench read this off pre-tokenised fixtures; read off the game's text, it is the loop's own test");
+            check(Backends.WireForm("<b>Go</b>\nnow", out var wireTags) == "[!t*0]Go[!t*1][!nl]now" && wireTags.Count == 2,
+                "a translation reads back in token form by the same conversion that sent it",
+                "counted in its restored form, a [!nl] the game had turned back into a line break was never found");
+
             var declined = new ScriptedModel(Answers.SkipMarker);
             var skip = LineTranslation.AskModel("Hola", Job(), declined.Send);
             check(skip.Outcome == LineOutcome.Declined && skip.Text == Answers.SkipMarker,
