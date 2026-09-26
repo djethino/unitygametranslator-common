@@ -319,11 +319,12 @@ namespace UnityGameTranslator.Common
             // a model kept both tokens of a colour and put them side by side at the end, empty:
             // every rule obeyed, the styled words unstyled.
             //
-            // ⚠ **Not compared to HTML, measured** (2026-09-26, bench of nine models, French from
-            // Chinese and English): "like HTML tags (<b>...</b>)" put the colour on the right words
-            // for one model and moved it onto the WRONG ones for four; telling the model that word
-            // order changes did the same. What a model reads as a pair is decided by how the
-            // placeholders are WRITTEN, not by this sentence — see analyse/banc-routage-texte.md.
+            // ⚠ **Measured before being left as it is** (2026-09-26, bench of nine models, French
+            // from Chinese and English): comparing the pair to HTML, saying that word order
+            // changes, quoting the source words, and writing the tags as <color1>…</color1> each
+            // moved the error around rather than removing it — a title the translation moves in
+            // front of a name gets its colour on the wrong words or none. Do not retry one of them
+            // without reading analyse/balises-ia.md: every one is recorded there with its numbers.
             if (markers.Tags && markers.TagPairs)
                 prompt.AppendLine("- IMPORTANT: [!t*0], [!t*1], etc. are formatting tags (colour, bold...). They come in pairs around words, like [!t*0]words[!t*1]: keep every tag, and put the translation of those words between the same two tags");
             else if (markers.Tags)
