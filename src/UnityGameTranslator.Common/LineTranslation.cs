@@ -202,6 +202,7 @@ namespace UnityGameTranslator.Common
                 Tags = toSend.Contains(Markup.PlaceholderPrefix),
                 Numbers = toSend.Contains("[!v*"),
                 Variables = toSend.Contains("[!STR*"),
+                Labels = Placeholders.Labels(toSend).Count > 0,
             };
         }
 

@@ -95,6 +95,33 @@ namespace UnityGameTranslator.Common
             return sequences;
         }
 
+        /// <summary>A pair of square brackets or braces with no bracket inside.</summary>
+        private static readonly Regex BracketedPattern = new Regex(@"\[[^\[\]{}]*\]|\{[^\[\]{}]*\}", RegexOptions.Compiled);
+
+        /// <summary>
+        /// The game's own bracketed labels in a text — "[攻]", "{Hard}" — once each, in order:
+        /// a pair of the brackets <see cref="Accepts"/> counts, holding a word, that is not a
+        /// placeholder.
+        ///
+        /// ⚠ **Not frozen**: the words inside are the game's text and get translated ("[攻]" →
+        /// "[Att]"). Only the brackets have to come back, which is what the count checks; this
+        /// list exists to NAME them — to the model, before and after it answers.
+        /// </summary>
+        public static List<string> Labels(string text)
+        {
+            var labels = new List<string>();
+            if (string.IsNullOrEmpty(text)) return labels;
+
+            foreach (Match match in BracketedPattern.Matches(text))
+            {
+                if (TokenPattern.IsMatch(match.Value)) continue;
+                if (!HasLetter(match.Value)) continue;
+                if (!labels.Contains(match.Value)) labels.Add(match.Value);
+            }
+
+            return labels;
+        }
+
         /// <summary>An opening bracket and the closing one that answers it.</summary>
         private static bool Wraps(char before, char after) =>
             (before == '(' && after == ')') || (before == '{' && after == '}') || (before == '[' && after == ']');
@@ -118,13 +145,26 @@ namespace UnityGameTranslator.Common
             // wraps a placeholder in a pair of its own, which the frozen sequences catch for the
             // placeholders themselves; over the whole text it also refuses a bracket somebody added
             // on purpose, and a model cannot be asked what it meant.
+            bool bracketsMoved = false;
             foreach (char bracket in new[] { '{', '}', '[', ']' })
             {
                 int expected = source.Count(c => c == bracket);
                 int found = translation.Count(c => c == bracket);
                 if (expected != found)
+                {
                     errors.Add($"character '{bracket}' appears {found} time(s) instead of {expected}");
+                    bracketsMoved = true;
+                }
             }
+
+            // 🔴 A count says THAT a bracket went missing, never WHICH. When the source carries a
+            // label of the game's own — "<color=orange>[攻]</color>" — a model that turned it into
+            // prose was told "'[' appears 3 times instead of 4" and nothing else, and failed the
+            // same way three times. Naming the label is what a second attempt can act on.
+            List<string> labels = Labels(source);
+            if (bracketsMoved && labels.Count > 0)
+                errors.Add("keep the brackets of " + string.Join(", ", labels.Select(label => $"\"{label}\""))
+                           + " and translate the words inside them");
 
             // ⚠ Also a model-only check, for the same reason: a person who adds a letter meant it.
             foreach (string error in LettersAddedBetween(source, translation)) errors.Add(error);

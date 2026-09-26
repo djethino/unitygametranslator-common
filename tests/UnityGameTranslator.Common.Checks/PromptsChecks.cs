@@ -97,6 +97,14 @@ namespace UnityGameTranslator.Common.Checks
                 "what Korean particles and gendered languages need in order not to guess");
             check(!full.Contains("are names"), "which is NOT called a name",
                 "it holds an item, a place or a turn of phrase just as often");
+            check(!full.Contains("are labels"), "no word about labels when the text holds none",
+                "the four placeholder kinds are not labels");
+            check(Game(TextType.Phrase, markers: new Prompts.Markers { Labels = true })
+                    .Contains("are labels: translate the words and keep the brackets"),
+                "a label of the game's own is announced before the first attempt",
+                "told only after failing, a model turned \"[攻]\" into prose three times running");
+            check(LineTranslation.MarkersOf("[!t*0][攻][!t*1]").Labels && !LineTranslation.MarkersOf("[!t*0]x[!v*0]").Labels,
+                "and it is read from the text", "placeholders alone are not a label");
 
             // The rating pass: the bench's second question, never a game's.
             string rate = Prompts.ForRating("English", "French", all);

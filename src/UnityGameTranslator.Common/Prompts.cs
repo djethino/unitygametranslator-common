@@ -90,6 +90,8 @@ namespace UnityGameTranslator.Common
             public bool Tags;
             public bool Numbers;
             public bool Variables;
+            /// <summary>A label of the game's own in brackets — "[攻]" — see Placeholders.Labels.</summary>
+            public bool Labels;
         }
 
         /// <summary>
@@ -313,6 +315,8 @@ namespace UnityGameTranslator.Common
                 prompt.AppendLine("- IMPORTANT: [!v*0], [!v*1], etc. are numbers: keep them exactly as-is, do not modify them");
             if (markers.Variables)
                 prompt.AppendLine("- IMPORTANT: [!STR*0], [!STR*1], etc. are text the game inserts: keep them exactly as-is, do not translate them");
+            if (markers.Labels)
+                prompt.AppendLine("- IMPORTANT: other words in [ ] or { } are labels: translate the words and keep the brackets");
         }
 
         private static void AppendSingleWordClosing(StringBuilder prompt, TextType textType)
