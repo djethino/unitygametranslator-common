@@ -146,6 +146,55 @@ namespace UnityGameTranslator.Common
             return errors;
         }
 
+        /// <summary>
+        /// The pairs that hold something in the source and nothing in the answer, as lines a
+        /// model can act on. Empty when every pair that styled text still styles some.
+        ///
+        /// 🔴 **Counting and ordering cannot see this either.** "仙霞派&lt;color&gt;外门弟子&lt;/color&gt;"
+        /// came back as "…Xianxia [!t*0][!t*1]": each token once, open before close — accepted,
+        /// and the game got an empty colour and the words it was meant to set apart unstyled
+        /// (2026-09-26). What sits between is compared as content, never as language: anything
+        /// but spacing, with the tags themselves left out and every other placeholder counting.
+        /// </summary>
+        public static List<string> Emptied(string source, string answer, IList<string>? tags)
+        {
+            var errors = new List<string>();
+            if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(answer) || tags == null || tags.Count == 0) return errors;
+
+            int[] pairs = Pairs(tags);
+            for (int close = 0; close < pairs.Length; close++)
+            {
+                int open = pairs[close];
+                if (open < 0) continue;
+
+                string opening = PlaceholderPrefix + open + PlaceholderSuffix;
+                string closing = PlaceholderPrefix + close + PlaceholderSuffix;
+                if (!HoldsSomething(source, opening, closing, out bool inSource) || !inSource) continue;
+                if (HoldsSomething(answer, opening, closing, out bool inAnswer) && !inAnswer)
+                    errors.Add($"{opening} and {closing} surround words in the source: put the translation of those words between them");
+            }
+
+            return errors;
+        }
+
+        private static readonly Regex TagToken = new Regex(@"\[!t\*\d+\]", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Whether both tokens are there in order (the return) and, if so, whether anything but
+        /// spacing and other tags stands between them.
+        /// </summary>
+        private static bool HoldsSomething(string text, string opening, string closing, out bool holds)
+        {
+            holds = false;
+            int at = text.IndexOf(opening, System.StringComparison.Ordinal);
+            if (at < 0) return false;
+            int from = at + opening.Length;
+            int end = text.IndexOf(closing, from, System.StringComparison.Ordinal);
+            if (end < 0) return false;
+            holds = TagToken.Replace(text.Substring(from, end - from), "").Trim().Length > 0;
+            return true;
+        }
+
         /// <summary>Put each placeholder back as the tag it stood for.</summary>
         public static string Restore(string text, List<string>? tags)
         {

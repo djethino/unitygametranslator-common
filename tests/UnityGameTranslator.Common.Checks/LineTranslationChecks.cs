@@ -210,6 +210,20 @@ namespace UnityGameTranslator.Common.Checks
                 "a colour around the whole line is not sent, and is on the answer",
                 "sent, it came back missing three times running and the line stayed untranslated (2026-09-26)");
 
+            // 🔴 A pair that styled words must still style some: counted and ordered, an empty one passed.
+            var emptied = new ScriptedModel("Disciple externe de la secte Xianxia [!t*0][!t*1]",
+                                            "[!t*0]Disciple externe[!t*1] de la secte Xianxia");
+            var sect = LineTranslation.AskModel("仙霞派<color=#8C8C8C>外门弟子</color>", Job(), emptied.Send);
+            check(sect.Outcome == LineOutcome.Translated && emptied.Asked.Count == 2
+                  && sect.Text == "<color=#8C8C8C>Disciple externe</color> de la secte Xianxia"
+                  && emptied.Asked[1].Messages[3].Content.Contains("[!t*0] and [!t*1] surround words in the source"),
+                "a colour emptied of its words is refused, and the next attempt is told which",
+                "each token once and in order, it passed: the game got an empty colour (2026-09-26)");
+            check(Markup.Emptied("[!t*0][!v*0][!t*1] gold", "[!t*0][!v*0][!t*1] or", new List<string> { "<b>", "</b>" }).Count == 0
+                  && Markup.Emptied("A[!t*0][!t*1]B", "A[!t*0][!t*1]B", new List<string> { "<b>", "</b>" }).Count == 0,
+                "a pair around a number, or around nothing in the source, is not held to hold words",
+                "only what the source put inside has to stay inside");
+
             var declined = new ScriptedModel(Answers.SkipMarker);
             var skip = LineTranslation.AskModel("Hola", Job(), declined.Send);
             check(skip.Outcome == LineOutcome.Declined && skip.Text == Answers.SkipMarker,
