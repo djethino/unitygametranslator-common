@@ -194,16 +194,18 @@ namespace UnityGameTranslator.Common
         /// key: its [!v*0] was lifted long ago, so the instructions stopped announcing it while the
         /// validation went on demanding it back.
         /// </summary>
-        public static Prompts.Markers MarkersOf(string toSend)
+        /// <param name="tags">The markup lifted out of it, when there was some: what tells a pair
+        /// from a lone tag. Without it, no pair is announced.</param>
+        public static Prompts.Markers MarkersOf(string toSend, IList<string>? tags = null)
         {
             return new Prompts.Markers
             {
                 LineBreaks = toSend.Contains(Backends.LineBreak),
-                Tags = Markup.HasTokens(toSend),
+                Tags = toSend.Contains(Markup.PlaceholderPrefix),
                 Numbers = toSend.Contains("[!v*"),
                 Variables = toSend.Contains("[!STR*"),
                 Labels = Placeholders.Labels(toSend).Count > 0,
-                TagPairs = Markup.HasFilledPair(toSend),
+                TagPairs = Markup.HasFilledPair(toSend, tags),
             };
         }
 
@@ -220,31 +222,12 @@ namespace UnityGameTranslator.Common
         /// carries something the answer has to keep. The very test <see cref="AskModel"/> applies.
         /// </summary>
         public static bool IsValidated(string text) =>
-            !string.IsNullOrEmpty(text) && Required(Backends.Prepare(text)).Count > 0;
-
-        /// <summary>
-        /// What an answer must give back, spelt as sent: the slot placeholders with the game's
-        /// delimiters around them (<see cref="Placeholders.FrozenSequences"/>), then the tag
-        /// placeholders (<see cref="Markup.Tokens"/>) the text carries. None → nothing to check.
-        ///
-        /// ⚠ The tags are listed here because they are no longer slots: written as &lt;color1&gt;
-        /// since 2026-09-26, the slot grammar does not see them, and a text holding only markup
-        /// would otherwise go unchecked.
-        /// </summary>
-        private static List<string> Required(PreparedText prepared)
-        {
-            var required = Placeholders.FrozenSequences(prepared.ToSend);
-            if (prepared.Tags != null)
-                foreach (string token in Markup.Tokens(prepared.Tags))
-                    if (prepared.ToSend.IndexOf(token, StringComparison.Ordinal) >= 0 && !required.Contains(token))
-                        required.Add(token);
-            return required;
-        }
+            !string.IsNullOrEmpty(text) && Placeholders.FrozenSequences(Backends.Prepare(text).ToSend).Count > 0;
 
         // Classified as the game wrote it — line breaks and markup are part of what makes a text
         // a paragraph rather than a label; the markers from what is actually sent.
         private static string InstructionsFor(PreparedText prepared, string text, ModelJob job) =>
-            job.Instructions(MarkersOf(prepared.ToSend), Prompts.Classify(text));
+            job.Instructions(MarkersOf(prepared.ToSend, prepared.Tags), Prompts.Classify(text));
 
         /// <summary>
         /// Translate one line with a model: a plain request; then, if the answer broke a
@@ -295,8 +278,7 @@ namespace UnityGameTranslator.Common
             // Placeholders plus the game's own delimiters around them. None → a single attempt,
             // nothing to validate.
             List<string> frozen = Placeholders.FrozenSequences(toSend);
-            List<string> required = Required(prepared);
-            bool needsValidation = required.Count > 0;
+            bool needsValidation = frozen.Count > 0;
 
             string? failedAsSaid = null;
             List<string> errors = new List<string>();
@@ -322,12 +304,12 @@ namespace UnityGameTranslator.Common
                     messages.Add(new ChatMessage("system", instructions));
                     messages.Add(new ChatMessage("user", toSend));
                     messages.Add(new ChatMessage("assistant", failedAsSaid ?? ""));
-                    messages.Add(new ChatMessage("user", Placeholders.Correction(errors ?? new List<string>(), required)));
+                    messages.Add(new ChatMessage("user", Placeholders.Correction(errors ?? new List<string>(), frozen)));
                 }
                 else
                 {
                     temperature = Math.Max(job.RepairTemperature, job.Temperature);
-                    messages.Add(new ChatMessage("system", instructions + "\n" + Placeholders.MandatorySequences(required)));
+                    messages.Add(new ChatMessage("system", instructions + "\n" + Placeholders.MandatorySequences(frozen)));
                     messages.Add(new ChatMessage("user", toSend));
                 }
 
@@ -394,10 +376,9 @@ namespace UnityGameTranslator.Common
         private static bool Keeps(PreparedText prepared, string answer, List<string> frozen, out List<string> errors)
         {
             Placeholders.Accepts(prepared.ToSend, answer, frozen, out errors);
-            errors.AddRange(Markup.Miscounted(prepared.ToSend, answer, prepared.Tags));
             errors.AddRange(Markup.OutOfOrder(answer, prepared.Tags));
             errors.AddRange(Markup.Emptied(prepared.ToSend, answer, prepared.Tags));
-            errors.AddRange(Markup.Invented(answer, prepared.Tags));
+            errors.AddRange(Markup.Invented(answer));
             return errors.Count == 0;
         }
 
@@ -420,7 +401,7 @@ namespace UnityGameTranslator.Common
             }
 
             List<string> frozen = Placeholders.FrozenSequences(prepared.ToSend);
-            if (Required(prepared).Count > 0 && !Keeps(prepared, answer!, frozen, out var errors))
+            if (frozen.Count > 0 && !Keeps(prepared, answer!, frozen, out var errors))
             {
                 string? mended = Placeholders.RepairTrailingBreaks(prepared.ToSend, answer!);
                 if (mended == null || !Keeps(prepared, mended, frozen, out _))

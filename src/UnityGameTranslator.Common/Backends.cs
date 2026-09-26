@@ -23,7 +23,7 @@ namespace UnityGameTranslator.Common
         public string Trailing;
 
         /// <summary>
-        /// The tag pairs that enclosed the whole text, in wire form ("<color1>" … "</color1>"), held
+        /// The tag pairs that enclosed the whole text, in wire form ("[!t*0]" … "[!t*1]"), held
         /// back rather than sent — see <see cref="Backends.Prepare"/>. Empty when none did.
         /// </summary>
         public string Opening;
@@ -118,7 +118,7 @@ namespace UnityGameTranslator.Common
         /// <summary>
         /// A text in the form a model reads it, structure only: line breaks become [!nl] — so the
         /// answer has to give the shape back rather than reflowing it — then markup becomes
-        /// a placeholder written like a tag (Markup.Tokens), so the model never sees one it could translate, reorder or invent. No
+        /// [!t*N], so the model never sees a tag it could translate, reorder or invent. No
         /// padding is cut and no enclosing pair is held back: that is <see cref="Prepare"/>'s.
         ///
         /// 🔴 **Also how a translation is READ back in token form** by whoever checks one against
@@ -172,16 +172,11 @@ namespace UnityGameTranslator.Common
             if (tags == null || tags.Count < 2) return work;
 
             int[] pairs = Markup.Pairs(tags);
-            List<string> tokens = Markup.Tokens(tags);
             while (true)
             {
-                int first = tokens.FindIndex(t => work.StartsWith(t, System.StringComparison.Ordinal));
-                int last = tokens.FindIndex(t => work.EndsWith(t, System.StringComparison.Ordinal));
-                if (first < 0 || last < 0 || pairs[last] != first) break;
-
-                int firstLength = tokens[first].Length;
-                int lastStart = work.Length - tokens[last].Length;
-                if (lastStart < firstLength) break;
+                if (!TokenAtStart(work, out int first, out int firstLength)) break;
+                if (!TokenBefore(work, work.Length, out int last, out int lastStart)) break;
+                if (lastStart < firstLength || last >= pairs.Length || pairs[last] != first) break;
 
                 string inner = work.Substring(firstLength, lastStart - firstLength);
                 string innerTrimmed = inner.Trim();
@@ -194,6 +189,30 @@ namespace UnityGameTranslator.Common
                 work = innerTrimmed;
             }
             return work;
+        }
+
+        /// <summary>The tag placeholder the text starts with, if it starts with one.</summary>
+        private static bool TokenAtStart(string text, out int index, out int length)
+        {
+            index = -1;
+            length = 0;
+            if (!text.StartsWith(Markup.PlaceholderPrefix, System.StringComparison.Ordinal)) return false;
+            int end = text.IndexOf(Markup.PlaceholderSuffix, Markup.PlaceholderPrefix.Length, System.StringComparison.Ordinal);
+            if (end < 0) return false;
+            if (!int.TryParse(text.Substring(Markup.PlaceholderPrefix.Length, end - Markup.PlaceholderPrefix.Length),
+                              System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out index))
+                return false;
+            length = end + Markup.PlaceholderSuffix.Length;
+            return true;
+        }
+
+        /// <summary>The tag placeholder ending exactly at <paramref name="end"/>, if one does.</summary>
+        private static bool TokenBefore(string text, int end, out int index, out int start)
+        {
+            index = -1;
+            start = text.LastIndexOf(Markup.PlaceholderPrefix, end - 1, System.StringComparison.Ordinal);
+            if (start < 0) return false;
+            return TokenAtStart(text.Substring(start, end - start), out index, out int length) && start + length == end;
         }
     }
 }

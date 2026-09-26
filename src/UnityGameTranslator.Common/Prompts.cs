@@ -248,7 +248,7 @@ namespace UnityGameTranslator.Common
             if (markers.LineBreaks || markers.Tags || markers.Numbers || markers.Variables)
             {
                 prompt.AppendLine("=== IGNORE THESE ===");
-                prompt.AppendLine("[!nl], <color1>, [!v*0], [!STR*0] and the like are slots and tags the game fills in.");
+                prompt.AppendLine("[!nl], [!t*0], [!v*0], [!STR*0] and the like are slots the game fills in.");
                 prompt.AppendLine("They are checked elsewhere. Do not judge them.");
                 prompt.AppendLine();
             }
@@ -319,15 +319,15 @@ namespace UnityGameTranslator.Common
             // a model kept both tokens of a colour and put them side by side at the end, empty:
             // every rule obeyed, the styled words unstyled.
             //
-            // ⚠ **What makes a model keep a pair on its words is how the tags are WRITTEN**,
-            // measured 2026-09-26 on nine models: as <color1>…</color1> (Markup.Tokens) rather
-            // than [!t*0]…[!t*1]. Sentences added here did not do it — comparing to HTML, or
-            // saying that word order changes, moved the colour onto the WRONG words for several
-            // models. See analyse/banc-routage-texte.md before touching this wording.
+            // ⚠ **Not compared to HTML, measured** (2026-09-26, bench of nine models, French from
+            // Chinese and English): "like HTML tags (<b>...</b>)" put the colour on the right words
+            // for one model and moved it onto the WRONG ones for four; telling the model that word
+            // order changes did the same. What a model reads as a pair is decided by how the
+            // placeholders are WRITTEN, not by this sentence — see analyse/banc-routage-texte.md.
             if (markers.Tags && markers.TagPairs)
-                prompt.AppendLine("- IMPORTANT: <color1>...</color1>, <b1>...</b1>, etc. are formatting tags: keep each pair around the translation of the words it surrounds, written exactly as in the source");
+                prompt.AppendLine("- IMPORTANT: [!t*0], [!t*1], etc. are formatting tags (colour, bold...). They come in pairs around words, like [!t*0]words[!t*1]: keep every tag, and put the translation of those words between the same two tags");
             else if (markers.Tags)
-                prompt.AppendLine("- IMPORTANT: <color1>, <br2/>, etc. are formatting tags: keep them exactly as written, do not modify or remove them");
+                prompt.AppendLine("- IMPORTANT: [!t*0], [!t*1], etc. are formatting tags: keep them exactly as-is, do not modify or remove them");
             if (markers.Numbers)
                 prompt.AppendLine("- IMPORTANT: [!v*0], [!v*1], etc. are numbers: keep them exactly as-is, do not modify them");
             if (markers.Variables)
