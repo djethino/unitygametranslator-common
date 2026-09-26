@@ -74,7 +74,7 @@ namespace UnityGameTranslator.Common
         /// most on the hardest shape, a title the translation moves in front of a name (23 → 32
         /// of 45). [!t*0] reads as a position to keep, like [!nl]; &lt;color1&gt; reads as a colour
         /// that opens and closes around words. The same number on both ends ([!t*0]…[/!t*0])
-        /// did worse than either. Detail: analyse/banc-routage-texte.md.
+        /// did worse than either. Detail: analyse/balises-ia.md.
         ///
         /// ⚠ The number is what ties the placeholder to its tag on the way back — the attribute
         /// (#FD1430) never travels. A name ending in a digit gets a hyphen (&lt;h1-3&gt;) so the
@@ -323,6 +323,74 @@ namespace UnityGameTranslator.Common
             int end = text.IndexOf(closing, from, System.StringComparison.Ordinal);
             if (end < 0) return null;
             return TokenPattern.Replace(text.Substring(from, end - from), "").Trim();
+        }
+
+        /// <summary>
+        /// An answer with every plain closing tag the model wrote — &lt;/color&gt; — tied back to the
+        /// placeholder it closes, &lt;/color1&gt;: the innermost one of that name still open, the way
+        /// any HTML parser reads it. Anything it cannot tie is left as it is, for
+        /// <see cref="Invented"/> to refuse.
+        ///
+        /// 🔴 **Measured, not assumed** (2026-09-26, bench of nine models): given
+        /// &lt;color1&gt;Warning&lt;/color1&gt;, small models answered
+        /// "&lt;color1&gt;Avertissement&lt;/color&gt;" — the pair understood and placed right, the
+        /// number dropped from the closing end as real HTML writes it. Refused, those lines stayed
+        /// untranslated. There is nothing to guess: a plain closing tag has exactly one reading.
+        /// Nothing a game wrote can be touched either — every tag is lifted out before a line is
+        /// sent, so a plain &lt;/color&gt; in an answer can only be the model's.
+        /// </summary>
+        public static string CloseUnnumbered(string answer, IList<string>? tags)
+        {
+            if (string.IsNullOrEmpty(answer) || tags == null || tags.Count == 0 || answer.IndexOf("</", System.StringComparison.Ordinal) < 0)
+                return answer;
+
+            var ours = new HashSet<string>(Tokens(tags));
+            var open = new List<string>();   // opening placeholders still open, innermost last
+            var result = new StringBuilder(answer.Length);
+            int last = 0;
+
+            foreach (Match match in TagPattern.Matches(answer))
+            {
+                string tag = match.Value;
+                string replacement = tag;
+
+                if (ours.Contains(tag))
+                {
+                    if (tag[1] == '/')
+                    {
+                        string opening = "<" + tag.Substring(2);
+                        int at = open.LastIndexOf(opening);
+                        if (at >= 0) open.RemoveAt(at);
+                    }
+                    else if (!tag.EndsWith("/>", System.StringComparison.Ordinal))
+                    {
+                        open.Add(tag);
+                    }
+                }
+                else if (tag.Length > 3 && tag[1] == '/' && tag.IndexOf(' ') < 0)
+                {
+                    string name = tag.Substring(2, tag.Length - 3).ToLowerInvariant();
+                    for (int i = open.Count - 1; i >= 0; i--)
+                    {
+                        string opening = open[i];
+                        string openName = opening.Substring(1, opening.Length - 2).TrimEnd('0', '1', '2', '3', '4', '5', '6', '7', '8', '9').TrimEnd('-');
+                        if (openName != name) continue;
+                        string closing = "</" + opening.Substring(1);
+                        if (ours.Contains(closing))
+                        {
+                            replacement = closing;
+                            open.RemoveAt(i);
+                        }
+                        break;
+                    }
+                }
+
+                result.Append(answer, last, match.Index - last).Append(replacement);
+                last = match.Index + match.Length;
+            }
+
+            result.Append(answer, last, answer.Length - last);
+            return result.ToString();
         }
 
         /// <summary>Put each placeholder back as the tag it stood for.</summary>

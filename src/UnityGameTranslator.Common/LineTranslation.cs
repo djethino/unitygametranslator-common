@@ -342,7 +342,9 @@ namespace UnityGameTranslator.Common
                     return result;
                 }
 
-                string answer = Answers.Clean(said, toSend);
+                // Cleaned, then a plain closing tag tied back to the pair it closes — both read the
+                // answer as it was meant, neither changes what it says.
+                string answer = Markup.CloseUnnumbered(Answers.Clean(said, toSend), prepared.Tags);
                 result.Said = answer;
                 result.NeededCleaning |= !string.Equals(answer, said.Trim(), StringComparison.Ordinal);
 
@@ -419,6 +421,7 @@ namespace UnityGameTranslator.Common
                 return result;
             }
 
+            answer = Markup.CloseUnnumbered(answer, prepared.Tags);
             List<string> frozen = Placeholders.FrozenSequences(prepared.ToSend);
             if (Required(prepared).Count > 0 && !Keeps(prepared, answer!, frozen, out var errors))
             {
