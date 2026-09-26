@@ -81,10 +81,33 @@ namespace UnityGameTranslator.Common.Checks
                 "a line break becomes a token",
                 "the shape belongs to the game's layout; a model free to reflow it returns a label that no longer fits");
 
-            var tagged = Backends.Prepare("<b>Play</b>");
-            check(tagged.ToSend == "[!t*0]Play[!t*1]" && tagged.Tags.Count == 2,
+            var tagged = Backends.Prepare("<b>Play</b> now");
+            check(tagged.ToSend == "[!t*0]Play[!t*1] now" && tagged.Tags.Count == 2,
                 "markup is lifted out and numbered",
                 "a model that sees markup translates it, reorders it or invents some");
+
+            // A pair around the whole text is held back, not sent (2026-09-26).
+            var enclosed = Backends.Prepare("<color=#00B400>Heal +[!v*0]</color>");
+            check(enclosed.ToSend == "Heal +[!v*0]" && enclosed.Opening == "[!t*0]" && enclosed.Closing == "[!t*1]",
+                "a tag pair enclosing the whole text is not sent",
+                "sent, a model dropped it on all three attempts and the line stayed untranslated");
+            check(Backends.Restore(enclosed, "Soin +[!v*0]") == "<color=#00B400>Soin +[!v*0]</color>",
+                "and it comes back around the whole answer",
+                "all of the translation belongs inside it, whatever the language or its direction");
+            var nested = Backends.Prepare("<i><color=red> Go </color></i>");
+            check(nested.ToSend == "Go" && Backends.Restore(nested, "Allez") == "<i><color=red> Allez </color></i>",
+                "nested enclosing pairs are held back together, with the padding inside them",
+                "outermost first, each put back where it was");
+            var twoSpans = Backends.Prepare("<b>A</b> and <b>B</b>");
+            check(twoSpans.ToSend == "[!t*0]A[!t*1] and [!t*2]B[!t*3]" && twoSpans.Opening == "",
+                "a text that starts and ends with a tag is not enclosed unless one pair does it",
+                "here the closing tag at the end closes the second span: peeling it would restyle the first");
+            var unclosed = Backends.Prepare("<b>Title");
+            check(unclosed.ToSend == "[!t*0]Title" && unclosed.Opening == "",
+                "a tag with nothing closing it is sent as it is", "there is no pair to put back");
+            check(Backends.Restore(enclosed, "[!t*0]Soin +[!v*0][!t*1]") == "<color=#00B400>Soin +[!v*0]</color>",
+                "an answer that already carries the pair is not wrapped twice",
+                "a failed proposal kept from before the pair was held back has it inside");
 
             var padded = Backends.Prepare("   Play   ");
             check(padded.ToSend == "Play" && padded.Leading == "   " && padded.Trailing == "   ",
@@ -177,6 +200,15 @@ namespace UnityGameTranslator.Common.Checks
             check(LineTranslation.AskModel("Credits\n\n", Job(), breaks.Send).Text == "Crédits\n\n",
                 "a model's quotes come off and the trailing line breaks stay",
                 "cleaned after the breaks were restored, the final trim took them away with the quotes");
+
+            // 🔴 The pair around the whole line never reaches the model, so it cannot be dropped.
+            var enclosing = new ScriptedModel("Efficacité de soin +[!v*0]");
+            var healed = LineTranslation.AskModel("<color=#00B400>疗伤效率+[!v*0]</color>", Job(), enclosing.Send);
+            check(healed.Outcome == LineOutcome.Translated && enclosing.Asked.Count == 1
+                  && enclosing.Asked[0].Messages[1].Content == "疗伤效率+[!v*0]"
+                  && healed.Text == "<color=#00B400>Efficacité de soin +[!v*0]</color>",
+                "a colour around the whole line is not sent, and is on the answer",
+                "sent, it came back missing three times running and the line stayed untranslated (2026-09-26)");
 
             var declined = new ScriptedModel(Answers.SkipMarker);
             var skip = LineTranslation.AskModel("Hola", Job(), declined.Send);

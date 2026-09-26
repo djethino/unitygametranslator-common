@@ -22,6 +22,15 @@ namespace UnityGameTranslator.Common
         /// <inheritdoc cref="Leading"/>
         public string Trailing;
 
+        /// <summary>
+        /// The tag pairs that enclosed the whole text, in wire form ("[!t*0]" … "[!t*1]"), held
+        /// back rather than sent — see <see cref="Backends.Prepare"/>. Empty when none did.
+        /// </summary>
+        public string Opening;
+
+        /// <inheritdoc cref="Opening"/>
+        public string Closing;
+
         /// <summary>True when nothing translatable is left. Nobody is asked.</summary>
         public bool NothingToSend;
     }
@@ -60,7 +69,7 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static PreparedText Prepare(string text)
         {
-            var prepared = new PreparedText { Leading = "", Trailing = "", Tags = new List<string>() };
+            var prepared = new PreparedText { Leading = "", Trailing = "", Opening = "", Closing = "", Tags = new List<string>() };
 
             if (string.IsNullOrEmpty(text))
             {
@@ -93,6 +102,18 @@ namespace UnityGameTranslator.Common
                 work = trimmed;
             }
 
+            // 4. A tag pair around the WHOLE text is held back too, and put on again around the
+            //    answer. 🔴 Sent, a model drops it as often as not — "<color=…>疗伤效率+5%</color>"
+            //    came back bare on all three attempts and the line stayed untranslated (2026-09-26)
+            //    — and there is nothing to decide about where it goes: all of the translation
+            //    belongs inside it, in any language and either direction. Only a real pair, the
+            //    closing tag answering the opening one (Markup.Pairs): "<b>A</b> and <b>B</b>"
+            //    starts and ends with a tag without one pair enclosing the rest, and is sent as
+            //    it is. The numbering is kept, so a placeholder means the same tag either way.
+            work = PeelEnclosingPairs(work, tags, out string opening, out string closing);
+            prepared.Opening = opening;
+            prepared.Closing = closing;
+
             prepared.ToSend = work;
             prepared.NothingToSend = string.IsNullOrWhiteSpace(work);
             return prepared;
@@ -109,6 +130,13 @@ namespace UnityGameTranslator.Common
         {
             if (string.IsNullOrEmpty(answer)) return answer;
 
+            // The enclosing pairs first, in wire form, so the rest runs exactly as before. ⚠ Not
+            // around an answer that already carries the opening one: a proposal recorded before
+            // the pair was held back (the failed lines keep them across launches) has it inside.
+            string opening = prepared.Opening ?? "", closing = prepared.Closing ?? "";
+            if (opening.Length > 0 && answer.IndexOf(opening, System.StringComparison.Ordinal) < 0)
+                answer = opening + answer + closing;
+
             string result = Markup.Restore(answer, prepared.Tags);
             result = result.Replace(LineBreak, "\n");
 
@@ -116,6 +144,61 @@ namespace UnityGameTranslator.Common
                 result = prepared.Leading + result + prepared.Trailing;
 
             return result;
+        }
+
+        /// <summary>
+        /// Take off, from both ends of a prepared text, every tag pair that encloses all of it —
+        /// outermost first — and hand them back as the wire text to put on again. The padding
+        /// found inside a pair goes with it: it was the game's, and it is not the model's to keep.
+        /// </summary>
+        private static string PeelEnclosingPairs(string work, List<string> tags, out string opening, out string closing)
+        {
+            opening = "";
+            closing = "";
+            if (tags == null || tags.Count < 2) return work;
+
+            int[] pairs = Markup.Pairs(tags);
+            while (true)
+            {
+                if (!TokenAtStart(work, out int first, out int firstLength)) break;
+                if (!TokenBefore(work, work.Length, out int last, out int lastStart)) break;
+                if (lastStart < firstLength || last >= pairs.Length || pairs[last] != first) break;
+
+                string inner = work.Substring(firstLength, lastStart - firstLength);
+                string innerTrimmed = inner.Trim();
+                if (innerTrimmed.Length == 0) break;
+
+                int lead = inner.Length - inner.TrimStart().Length;
+                int trail = inner.Length - inner.TrimEnd().Length;
+                opening += work.Substring(0, firstLength) + inner.Substring(0, lead);
+                closing = inner.Substring(inner.Length - trail) + work.Substring(lastStart) + closing;
+                work = innerTrimmed;
+            }
+            return work;
+        }
+
+        /// <summary>The tag placeholder the text starts with, if it starts with one.</summary>
+        private static bool TokenAtStart(string text, out int index, out int length)
+        {
+            index = -1;
+            length = 0;
+            if (!text.StartsWith(Markup.PlaceholderPrefix, System.StringComparison.Ordinal)) return false;
+            int end = text.IndexOf(Markup.PlaceholderSuffix, Markup.PlaceholderPrefix.Length, System.StringComparison.Ordinal);
+            if (end < 0) return false;
+            if (!int.TryParse(text.Substring(Markup.PlaceholderPrefix.Length, end - Markup.PlaceholderPrefix.Length),
+                              System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out index))
+                return false;
+            length = end + Markup.PlaceholderSuffix.Length;
+            return true;
+        }
+
+        /// <summary>The tag placeholder ending exactly at <paramref name="end"/>, if one does.</summary>
+        private static bool TokenBefore(string text, int end, out int index, out int start)
+        {
+            index = -1;
+            start = text.LastIndexOf(Markup.PlaceholderPrefix, end - 1, System.StringComparison.Ordinal);
+            if (start < 0) return false;
+            return TokenAtStart(text.Substring(start, end - start), out index, out int length) && start + length == end;
         }
     }
 }
