@@ -194,7 +194,9 @@ namespace UnityGameTranslator.Common
         /// key: its [!v*0] was lifted long ago, so the instructions stopped announcing it while the
         /// validation went on demanding it back.
         /// </summary>
-        public static Prompts.Markers MarkersOf(string toSend)
+        /// <param name="tags">The markup lifted out of it, when there was some: what tells a pair
+        /// from a lone tag. Without it, no pair is announced.</param>
+        public static Prompts.Markers MarkersOf(string toSend, IList<string>? tags = null)
         {
             return new Prompts.Markers
             {
@@ -203,6 +205,7 @@ namespace UnityGameTranslator.Common
                 Numbers = toSend.Contains("[!v*"),
                 Variables = toSend.Contains("[!STR*"),
                 Labels = Placeholders.Labels(toSend).Count > 0,
+                TagPairs = Markup.HasFilledPair(toSend, tags),
             };
         }
 
@@ -249,7 +252,7 @@ namespace UnityGameTranslator.Common
             string toSend = prepared.ToSend;
             // Classified as the game wrote it — line breaks and markup are part of what makes a text
             // a paragraph rather than a label.
-            string instructions = job.Instructions(MarkersOf(toSend), Prompts.Classify(text));
+            string instructions = job.Instructions(MarkersOf(toSend, prepared.Tags), Prompts.Classify(text));
             int maxTokens = Math.Max(200, text.Length * 2);
 
             // Placeholders plus the game's own delimiters around them. None → a single attempt,

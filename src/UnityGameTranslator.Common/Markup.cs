@@ -177,6 +177,25 @@ namespace UnityGameTranslator.Common
             return errors;
         }
 
+        /// <summary>
+        /// Whether some pair of tags in this text encloses something — the case where a model has
+        /// to be told that tags come in pairs and what sits between them stays between them.
+        /// </summary>
+        public static bool HasFilledPair(string text, IList<string>? tags)
+        {
+            if (string.IsNullOrEmpty(text) || tags == null || tags.Count < 2) return false;
+            int[] pairs = Pairs(tags);
+            for (int close = 0; close < pairs.Length; close++)
+            {
+                int open = pairs[close];
+                if (open < 0) continue;
+                if (HoldsSomething(text, PlaceholderPrefix + open + PlaceholderSuffix,
+                                   PlaceholderPrefix + close + PlaceholderSuffix, out bool holds) && holds)
+                    return true;
+            }
+            return false;
+        }
+
         private static readonly Regex TagToken = new Regex(@"\[!t\*\d+\]", RegexOptions.Compiled);
 
         /// <summary>

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace UnityGameTranslator.Common.Checks
 {
@@ -97,6 +98,19 @@ namespace UnityGameTranslator.Common.Checks
                 "what Korean particles and gendered languages need in order not to guess");
             check(!full.Contains("are names"), "which is NOT called a name",
                 "it holds an item, a place or a turn of phrase just as often");
+            check(!full.Contains("come in pairs"), "no word about pairs when the text holds none",
+                "a lone tag — a line break, an icon — has no inside; describing pairs invites one");
+            string paired = Game(TextType.Phrase, markers: new Prompts.Markers { Tags = true, TagPairs = true });
+            check(paired.Contains("They come in pairs around words, like [!t*0]words[!t*1]")
+                  && paired.Contains("put the translation of those words between the same two tags"),
+                "a pair around words is explained: what it is, and what stays inside it",
+                "told only to keep the tags, a model kept both and put them side by side at the end, empty (2026-09-26)");
+            var sectTags = new List<string> { "<color=#8C8C8C>", "</color>" };
+            check(LineTranslation.MarkersOf("仙霞派[!t*0]外门弟子[!t*1]", sectTags).TagPairs
+                  && !LineTranslation.MarkersOf("A[!t*0]B", new List<string> { "<br>" }).TagPairs
+                  && !LineTranslation.MarkersOf("仙霞派[!t*0]外门弟子[!t*1]").TagPairs,
+                "and it is read from the text and the tags lifted out of it",
+                "a pair is known from the tags themselves; a lone one is not a pair");
             check(!full.Contains("are labels"), "no word about labels when the text holds none",
                 "the four placeholder kinds are not labels");
             check(Game(TextType.Phrase, markers: new Prompts.Markers { Labels = true })

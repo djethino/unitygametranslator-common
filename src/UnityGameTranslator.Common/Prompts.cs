@@ -92,6 +92,12 @@ namespace UnityGameTranslator.Common
             public bool Variables;
             /// <summary>A label of the game's own in brackets — "[攻]" — see Placeholders.Labels.</summary>
             public bool Labels;
+            /// <summary>
+            /// A pair of tags around words (Markup.HasFilledPair). Said only then: a lone tag — a
+            /// line break, an icon — has no inside, and describing pairs to a text that has none
+            /// invites a model to make one.
+            /// </summary>
+            public bool TagPairs;
         }
 
         /// <summary>
@@ -309,7 +315,12 @@ namespace UnityGameTranslator.Common
         {
             if (markers.LineBreaks)
                 prompt.AppendLine("- IMPORTANT: [!nl] is a line break: keep it exactly where it is, do not remove or move it");
-            if (markers.Tags)
+            // 🔴 What a tag DOES, not only that it must be kept (2026-09-26). Told only to keep them,
+            // a model kept both tokens of a colour and put them side by side at the end, empty:
+            // every rule obeyed, the styled words unstyled.
+            if (markers.Tags && markers.TagPairs)
+                prompt.AppendLine("- IMPORTANT: [!t*0], [!t*1], etc. are formatting tags (colour, bold...). They come in pairs around words, like [!t*0]words[!t*1]: keep every tag, and put the translation of those words between the same two tags");
+            else if (markers.Tags)
                 prompt.AppendLine("- IMPORTANT: [!t*0], [!t*1], etc. are formatting tags: keep them exactly as-is, do not modify or remove them");
             if (markers.Numbers)
                 prompt.AppendLine("- IMPORTANT: [!v*0], [!v*1], etc. are numbers: keep them exactly as-is, do not modify them");
