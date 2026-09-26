@@ -318,8 +318,17 @@ namespace UnityGameTranslator.Common
             // 🔴 What a tag DOES, not only that it must be kept (2026-09-26). Told only to keep them,
             // a model kept both tokens of a colour and put them side by side at the end, empty:
             // every rule obeyed, the styled words unstyled.
+            //
+            // ⚠ **The HTML comparison is what works, measured** (same day, qwen3.8:27b, a sect
+            // name then a coloured rank, "武当派<color>掌门</color>"): an opaque [!t*0] reads as a
+            // position to keep, like [!nl]; a pair "like <b>…</b>" reads as belonging to words.
+            // 3 of 12 lines kept their colour on the right words before, 12 of 12 after, with no
+            // change on the bench's coloured cases in seven source languages. Telling the model
+            // that word order may change made it move the pair onto the WRONG words (0 of 10
+            // right) — do not add it back. A model writing real HTML because of this example is
+            // refused (Markup.Invented).
             if (markers.Tags && markers.TagPairs)
-                prompt.AppendLine("- IMPORTANT: [!t*0], [!t*1], etc. are formatting tags (colour, bold...). They come in pairs around words, like [!t*0]words[!t*1]: keep every tag, and put the translation of those words between the same two tags");
+                prompt.AppendLine("- IMPORTANT: [!t*0], [!t*1], etc. are formatting tags (colour, bold...). They come in pairs, like HTML tags (<b>...</b>): one opens, one closes. Keep each pair around the translation of the words it surrounds");
             else if (markers.Tags)
                 prompt.AppendLine("- IMPORTANT: [!t*0], [!t*1], etc. are formatting tags: keep them exactly as-is, do not modify or remove them");
             if (markers.Numbers)

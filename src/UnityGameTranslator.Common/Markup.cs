@@ -147,16 +147,21 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
-        /// The pairs that hold something in the source and nothing in the answer, as lines a
-        /// model can act on. Empty when every pair that styled text still styles some.
+        /// The pairs that hold words in the source and do not hold them in the answer — emptied,
+        /// or not there at all — as lines a model can act on, each NAMING the words the pair
+        /// surrounded. Empty when every pair that styled words still styles some.
         ///
-        /// 🔴 **Counting and ordering cannot see this either.** "仙霞派&lt;color&gt;外门弟子&lt;/color&gt;"
+        /// 🔴 **Counting and ordering cannot see an emptied pair.** "仙霞派&lt;color&gt;外门弟子&lt;/color&gt;"
         /// came back as "…Xianxia [!t*0][!t*1]": each token once, open before close — accepted,
-        /// and the game got an empty colour and the words it was meant to set apart unstyled
-        /// (2026-09-26). What sits between is compared as content, never as language: anything
-        /// but spacing, with the tags themselves left out and every other placeholder counting.
+        /// and the game got an empty colour (2026-09-26).
+        ///
+        /// 🔴 **And a missing pair needs its words named.** "武当派&lt;color&gt;掌门&lt;/color&gt;" is
+        /// "Chef de la secte de Wudang" in French — the styled word moves to the front — and told
+        /// only that [!t*0] and [!t*1] were missing, a model dropped them three times running: it
+        /// could not tell which French words they belonged to. Quoting the source words it
+        /// wrapped is the whole answer to that, and it quotes, so it depends on no language.
         /// </summary>
-        public static List<string> Emptied(string source, string answer, IList<string>? tags)
+        public static List<string> Unfilled(string source, string answer, IList<string>? tags)
         {
             var errors = new List<string>();
             if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(answer) || tags == null || tags.Count == 0) return errors;
@@ -169,11 +174,34 @@ namespace UnityGameTranslator.Common
 
                 string opening = PlaceholderPrefix + open + PlaceholderSuffix;
                 string closing = PlaceholderPrefix + close + PlaceholderSuffix;
-                if (!HoldsSomething(source, opening, closing, out bool inSource) || !inSource) continue;
-                if (HoldsSomething(answer, opening, closing, out bool inAnswer) && !inAnswer)
-                    errors.Add($"{opening} and {closing} surround words in the source: put the translation of those words between them");
+                string? words = Between(source, opening, closing);
+                if (string.IsNullOrEmpty(words)) continue;
+
+                string? kept = Between(answer, opening, closing);
+                if (!string.IsNullOrEmpty(kept)) continue;
+
+                errors.Add($"{opening} and {closing} mark \"{words}\" in the source. In your translation, put {opening} just before the words that translate it and {closing} just after them.");
             }
 
+            return errors;
+        }
+
+        /// <summary>
+        /// The markup an answer carries that was never sent — every tag is lifted out before a
+        /// text leaves (<see cref="Extract"/>), so any tag in the answer is the model's own.
+        ///
+        /// ⚠ Asked because the instructions compare tag placeholders to HTML ("like
+        /// &lt;b&gt;…&lt;/b&gt;"): the comparison is what makes a model keep a pair on the right
+        /// words, and it is also an invitation to write real HTML. Such a tag would reach the
+        /// game as markup nobody wrote. Read with the very pattern that lifts tags, so what counts
+        /// as a tag here is what counted as one on the way out.
+        /// </summary>
+        public static List<string> Invented(string answer)
+        {
+            var errors = new List<string>();
+            if (string.IsNullOrEmpty(answer)) return errors;
+            foreach (Match match in TagPattern.Matches(answer))
+                errors.Add($"{match.Value} is not in the source: write no tag of your own, only the placeholders");
             return errors;
         }
 
@@ -189,8 +217,8 @@ namespace UnityGameTranslator.Common
             {
                 int open = pairs[close];
                 if (open < 0) continue;
-                if (HoldsSomething(text, PlaceholderPrefix + open + PlaceholderSuffix,
-                                   PlaceholderPrefix + close + PlaceholderSuffix, out bool holds) && holds)
+                if (!string.IsNullOrEmpty(Between(text, PlaceholderPrefix + open + PlaceholderSuffix,
+                                                  PlaceholderPrefix + close + PlaceholderSuffix)))
                     return true;
             }
             return false;
@@ -199,19 +227,17 @@ namespace UnityGameTranslator.Common
         private static readonly Regex TagToken = new Regex(@"\[!t\*\d+\]", RegexOptions.Compiled);
 
         /// <summary>
-        /// Whether both tokens are there in order (the return) and, if so, whether anything but
-        /// spacing and other tags stands between them.
+        /// What stands between the two tokens, taken in order — other tags left out, spacing
+        /// trimmed — or null when either is missing or they come the wrong way round.
         /// </summary>
-        private static bool HoldsSomething(string text, string opening, string closing, out bool holds)
+        private static string? Between(string text, string opening, string closing)
         {
-            holds = false;
             int at = text.IndexOf(opening, System.StringComparison.Ordinal);
-            if (at < 0) return false;
+            if (at < 0) return null;
             int from = at + opening.Length;
             int end = text.IndexOf(closing, from, System.StringComparison.Ordinal);
-            if (end < 0) return false;
-            holds = TagToken.Replace(text.Substring(from, end - from), "").Trim().Length > 0;
-            return true;
+            if (end < 0) return null;
+            return TagToken.Replace(text.Substring(from, end - from), "").Trim();
         }
 
         /// <summary>Put each placeholder back as the tag it stood for.</summary>
