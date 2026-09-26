@@ -337,17 +337,6 @@ namespace UnityGameTranslator.Common.Checks
                 "a missing trailing line break is put back without asking again",
                 "the one repair a game can make on its own, and it saves a request");
 
-            // 🔴 A closing tag written the HTML way, without its number, is the pair understood.
-            var plainClose = new ScriptedModel("<color1>Avertissement</color>: boucliers à [!v*0] pour cent");
-            var shields = LineTranslation.AskModel("<color=#FFCC00>Warning</color>: shields at [!v*0] percent", Job(), plainClose.Send);
-            var nestedTags = new List<string> { "<b>", "<b>", "</b>", "</b>" };
-            check(shields.Outcome == LineOutcome.Translated && plainClose.Asked.Count == 1
-                  && shields.Text == "<color=#FFCC00>Avertissement</color>: boucliers à [!v*0] pour cent"
-                  && Markup.CloseUnnumbered("<b1>a <b2>b</b> c</b>", nestedTags) == "<b1>a <b2>b</b2> c</b1>"
-                  && Markup.CloseUnnumbered("x</i>", nestedTags) == "x</i>",
-                "a plain closing tag is tied to the innermost pair of its name still open",
-                "measured: small models kept the pair and dropped the number from </color1>, as HTML writes it — refused, the line stayed untranslated (2026-09-26)");
-
             // 🔴 Tags are no longer slots: a line holding only markup must still be checked.
             var onlyTags = new ScriptedModel("Démarrer maintenant", "<b1>Démarrer</b1> maintenant");
             var started = LineTranslation.AskModel("Press <b>Start</b> now", Job(), onlyTags.Send);

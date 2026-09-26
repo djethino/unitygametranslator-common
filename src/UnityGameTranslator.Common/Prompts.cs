@@ -323,7 +323,7 @@ namespace UnityGameTranslator.Common
             // measured 2026-09-26 on nine models: as <color1>…</color1> (Markup.Tokens) rather
             // than [!t*0]…[!t*1]. Sentences added here did not do it — comparing to HTML, or
             // saying that word order changes, moved the colour onto the WRONG words for several
-            // models. See analyse/balises-ia.md before touching this wording.
+            // models. See analyse/banc-routage-texte.md before touching this wording.
             if (markers.Tags && markers.TagPairs)
                 prompt.AppendLine("- IMPORTANT: <color1>...</color1>, <b1>...</b1>, etc. are formatting tags: keep each pair around the translation of the words it surrounds, written exactly as in the source");
             else if (markers.Tags)
