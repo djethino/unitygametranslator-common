@@ -86,7 +86,7 @@ namespace UnityGameTranslator.Common.Checks
                 "naming one invites a model to invent it");
             var all = new Prompts.Markers { LineBreaks = true, Tags = true, Numbers = true, Variables = true };
             string full = Game(TextType.Phrase, markers: all);
-            check(full.Contains("[!nl]") && full.Contains("[!t*0]") && full.Contains("[!v*0]") && full.Contains("[!STR*0]"),
+            check(full.Contains("[!nl]") && full.Contains("<color1>") && full.Contains("[!v*0]") && full.Contains("[!STR*0]"),
                 "and one rule each for those it does", "four kinds, four sentences");
 
             // ⚠ Each rule says what the marker REPLACES. "[!v*0]" used to be described as nothing.
@@ -101,17 +101,16 @@ namespace UnityGameTranslator.Common.Checks
             check(!full.Contains("come in pairs"), "no word about pairs when the text holds none",
                 "a lone tag — a line break, an icon — has no inside; describing pairs invites one");
             string paired = Game(TextType.Phrase, markers: new Prompts.Markers { Tags = true, TagPairs = true });
-            check(paired.Contains("They come in pairs around words, like [!t*0]words[!t*1]")
-                  && paired.Contains("put the translation of those words between the same two tags"),
-                "a pair around words is explained: what it is, and what stays inside it",
+            check(paired.Contains("<color1>...</color1>, <b1>...</b1>, etc. are formatting tags")
+                  && paired.Contains("keep each pair around the translation of the words it surrounds"),
+                "a pair around words is shown as the markup it is, and what stays inside it is said",
                 "told only to keep the tags, a model kept both and put them side by side at the end, empty (2026-09-26)");
             check(!paired.Contains("HTML", StringComparison.Ordinal) && !paired.Contains("order", StringComparison.OrdinalIgnoreCase),
                 "and it is neither compared to HTML nor told that word order may change",
                 "both, measured on nine models, moved the colour onto the wrong words for several (2026-09-26)");
-            var sectTags = new List<string> { "<color=#8C8C8C>", "</color>" };
-            check(LineTranslation.MarkersOf("仙霞派[!t*0]外门弟子[!t*1]", sectTags).TagPairs
-                  && !LineTranslation.MarkersOf("A[!t*0]B", new List<string> { "<br>" }).TagPairs
-                  && !LineTranslation.MarkersOf("仙霞派[!t*0]外门弟子[!t*1]").TagPairs,
+            check(LineTranslation.MarkersOf("仙霞派<color1>外门弟子</color1>").TagPairs
+                  && !LineTranslation.MarkersOf("A<br1/>B").TagPairs && LineTranslation.MarkersOf("A<br1/>B").Tags
+                  && !LineTranslation.MarkersOf("仙霞派<color1></color1>").TagPairs,
                 "and it is read from the text and the tags lifted out of it",
                 "a pair is known from the tags themselves; a lone one is not a pair");
             check(!full.Contains("are labels"), "no word about labels when the text holds none",
@@ -120,7 +119,7 @@ namespace UnityGameTranslator.Common.Checks
                     .Contains("are labels: translate the words and keep the brackets"),
                 "a label of the game's own is announced before the first attempt",
                 "told only after failing, a model turned \"[攻]\" into prose three times running");
-            check(LineTranslation.MarkersOf("[!t*0][攻][!t*1]").Labels && !LineTranslation.MarkersOf("[!t*0]x[!v*0]").Labels,
+            check(LineTranslation.MarkersOf("<color1>[攻]</color1>").Labels && !LineTranslation.MarkersOf("<b1>x</b1>[!v*0]").Labels,
                 "and it is read from the text", "placeholders alone are not a label");
 
             // The rating pass: the bench's second question, never a game's.

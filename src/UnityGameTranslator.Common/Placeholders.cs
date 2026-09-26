@@ -10,8 +10,8 @@ namespace UnityGameTranslator.Common
     /// The rules a machine translation has to obey to be usable in a game, and what to say to a
     /// model that broke them.
     ///
-    /// A game's text carries technical placeholders — [!v*0] for a value, [!t*0] for a tag,
-    /// [!STR*0] for a nested string, [!nl] for a line break. They are not decoration: the game
+    /// A game's text carries technical placeholders — [!v*0] for a value, [!STR*0] for a nested
+    /// string, [!nl] for a line break (a tag travels as &lt;color1&gt;, see <see cref="Markup"/>). They are not decoration: the game
     /// substitutes them at runtime, so one lost, duplicated or invented token is a line that
     /// breaks, and no amount of good prose makes up for it.
     ///
@@ -35,7 +35,15 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public const int MaxAttempts = 3;
 
-        /// <summary>The grammar of a token, written once: [!v*N], [!t*N], [!STR*N], [!nl].</summary>
+        /// <summary>
+        /// The grammar of a token, written once: [!v*N], [!t*N], [!STR*N], [!nl].
+        ///
+        /// ⚠ [!t*N] is no longer what a tag is SENT as — since 2026-09-26 it travels as
+        /// &lt;color1&gt;…&lt;/color1&gt;, checked by <see cref="Markup"/>. The family stays in this
+        /// grammar because the site's ports share it (website/app/Support/Placeholders.php,
+        /// resources/js/rules/placeholders.js) and its corpus cases use it as a generic token;
+        /// removing it is a change to all three, tracked in TODO.md.
+        /// </summary>
         private const string TokenGrammar = @"\[!(?:v\*\d+|t\*\d+|STR\*\d+|nl)\]";
 
         /// <summary>Every frozen token: [!v*N], [!t*N], [!STR*N], [!nl].</summary>

@@ -38,14 +38,18 @@ namespace UnityGameTranslator.Common.Checks
                 "a game wrapping the typed value in colour tags must still match what was typed");
 
             string lifted = Markup.Extract("<b>Play</b> now", out var tags);
-            check(lifted == "[!t*0]Play[!t*1] now" && tags.Count == 2 && tags[0] == "<b>" && tags[1] == "</b>",
-                "a tag leaves a slot of its own",
-                "the model reorders words freely and would carry a tag to the wrong one — the slot is what pins it");
+            check(lifted == "<b1>Play</b1> now" && tags.Count == 2 && tags[0] == "<b>" && tags[1] == "</b>",
+                "a tag pair travels as <b1>…</b1>: its own name, one number for both ends",
+                "measured on nine models: written like the markup a model knows, the pair stays on its words far more often than as [!t*0]…[!t*1] (54 → 66 of 90)");
+            var named = Markup.Tokens(new List<string> { "<color=#FD1430>", "<br>", "</color>", "<h1>", "</h1>", "</i>" });
+            check(string.Join(",", named) == string.Join(",", new[] { "<color1>", "<br2/>", "</color1>", "<h1-3>", "</h1-3>", "<i4/>" }),
+                "a lone tag travels as <br2/>, and a name ending in a digit keeps its number readable",
+                "the number is what ties a placeholder back to its tag; the attribute never travels");
 
             check(Markup.Restore(lifted, tags) == "<b>Play</b> now",
                 "and the slots take the tags back", "same round trip, same stake");
 
-            check(Markup.Restore("[!t*0]x", null) == "[!t*0]x",
+            check(Markup.Restore("<b1>x", null) == "<b1>x",
                 "with nothing to put back, the text is left alone",
                 "inventing a tag would be worse than leaving the slot visible");
 
@@ -62,16 +66,16 @@ namespace UnityGameTranslator.Common.Checks
                 "a guess there would move a tag the game placed");
 
             var colour = new List<string> { "<color=red>", "</color>" };
-            check(Markup.OutOfOrder("[!t*0]texte[!t*1]", colour).Count == 0,
+            check(Markup.OutOfOrder("<color1>texte</color1>", colour).Count == 0,
                 "open then close is in order", "the ordinary case");
-            check(Markup.OutOfOrder("texte [!t*0]rouge[!t*1]", colour).Count == 0,
+            check(Markup.OutOfOrder("texte <color1>rouge</color1>", colour).Count == 0,
                 "the styled span may move in the sentence", "where it goes is the language's business");
-            var swapped = Markup.OutOfOrder("[!t*1]texte[!t*0]", colour);
-            check(swapped.Count == 1 && swapped[0] == "[!t*1] closes [!t*0], so it must come after it",
+            var swapped = Markup.OutOfOrder("</color1>texte<color1>", colour);
+            check(swapped.Count == 1 && swapped[0] == "</color1> closes <color1>, so it must come after it",
                 "a closing slot before its opening one is named",
                 "each token is there once, so the count passed it — restored, the game got </color> before <color>");
             var two = new List<string> { "<b>", "</b>", "<i>", "</i>" };
-            check(Markup.OutOfOrder("[!t*2]B[!t*3] et [!t*0]A[!t*1]", two).Count == 0,
+            check(Markup.OutOfOrder("<i2>B</i2> et <b1>A</b1>", two).Count == 0,
                 "two styled spans may swap places", "each pair is still open-then-close");
         }
 
@@ -82,13 +86,13 @@ namespace UnityGameTranslator.Common.Checks
                 "the shape belongs to the game's layout; a model free to reflow it returns a label that no longer fits");
 
             var tagged = Backends.Prepare("<b>Play</b> now");
-            check(tagged.ToSend == "[!t*0]Play[!t*1] now" && tagged.Tags.Count == 2,
+            check(tagged.ToSend == "<b1>Play</b1> now" && tagged.Tags.Count == 2,
                 "markup is lifted out and numbered",
                 "a model that sees markup translates it, reorders it or invents some");
 
             // A pair around the whole text is held back, not sent (2026-09-26).
             var enclosed = Backends.Prepare("<color=#00B400>Heal +[!v*0]</color>");
-            check(enclosed.ToSend == "Heal +[!v*0]" && enclosed.Opening == "[!t*0]" && enclosed.Closing == "[!t*1]",
+            check(enclosed.ToSend == "Heal +[!v*0]" && enclosed.Opening == "<color1>" && enclosed.Closing == "</color1>",
                 "a tag pair enclosing the whole text is not sent",
                 "sent, a model dropped it on all three attempts and the line stayed untranslated");
             check(Backends.Restore(enclosed, "Soin +[!v*0]") == "<color=#00B400>Soin +[!v*0]</color>",
@@ -99,13 +103,13 @@ namespace UnityGameTranslator.Common.Checks
                 "nested enclosing pairs are held back together, with the padding inside them",
                 "outermost first, each put back where it was");
             var twoSpans = Backends.Prepare("<b>A</b> and <b>B</b>");
-            check(twoSpans.ToSend == "[!t*0]A[!t*1] and [!t*2]B[!t*3]" && twoSpans.Opening == "",
+            check(twoSpans.ToSend == "<b1>A</b1> and <b2>B</b2>" && twoSpans.Opening == "",
                 "a text that starts and ends with a tag is not enclosed unless one pair does it",
                 "here the closing tag at the end closes the second span: peeling it would restyle the first");
             var unclosed = Backends.Prepare("<b>Title");
-            check(unclosed.ToSend == "[!t*0]Title" && unclosed.Opening == "",
+            check(unclosed.ToSend == "<b1/>Title" && unclosed.Opening == "",
                 "a tag with nothing closing it is sent as it is", "there is no pair to put back");
-            check(Backends.Restore(enclosed, "[!t*0]Soin +[!v*0][!t*1]") == "<color=#00B400>Soin +[!v*0]</color>",
+            check(Backends.Restore(enclosed, "<color1>Soin +[!v*0]</color1>") == "<color=#00B400>Soin +[!v*0]</color>",
                 "an answer that already carries the pair is not wrapped twice",
                 "a failed proposal kept from before the pair was held back has it inside");
 
@@ -120,7 +124,7 @@ namespace UnityGameTranslator.Common.Checks
                 "as a token, the answer has to give it back");
 
             var mixed = Backends.Prepare("  <b>Go</b>\nnow  ");
-            check(mixed.ToSend == "[!t*0]Go[!t*1][!nl]now" && mixed.Leading == "  " && mixed.Trailing == "  ",
+            check(mixed.ToSend == "<b1>Go</b1>[!nl]now" && mixed.Leading == "  " && mixed.Trailing == "  ",
                 "and all three together leave only the words",
                 "what reaches a backend is the translatable text and the slots, nothing else");
 
@@ -132,7 +136,7 @@ namespace UnityGameTranslator.Common.Checks
         private static void PuttingItBack(Action<bool, string, string> check)
         {
             var prepared = Backends.Prepare("  <b>Hello</b>\nworld  ");
-            check(Backends.Restore(prepared, "[!t*0]Bonjour[!t*1][!nl]monde") == "  <b>Bonjour</b>\nmonde  ",
+            check(Backends.Restore(prepared, "<b1>Bonjour</b1>[!nl]monde") == "  <b>Bonjour</b>\nmonde  ",
                 "everything taken out comes back where it was",
                 "what the game gets differs from what it had only in the words");
 
@@ -150,7 +154,7 @@ namespace UnityGameTranslator.Common.Checks
                 "a text taken apart and put back untranslated is the text again, number slot included",
                 "anything this loses on its own is lost on every line ever handled");
 
-            check(Backends.Restore(Backends.Prepare("<b>Go</b> now"), "maintenant [!t*0]Va[!t*1]") == "maintenant <b>Va</b>",
+            check(Backends.Restore(Backends.Prepare("<b>Go</b> now"), "maintenant <b1>Va</b1>") == "maintenant <b>Va</b>",
                 "a translation may put the slots in another order",
                 "word order differs between languages, and the numbering is what lets it");
         }
@@ -211,29 +215,32 @@ namespace UnityGameTranslator.Common.Checks
                 "sent, it came back missing three times running and the line stayed untranslated (2026-09-26)");
 
             // 🔴 A pair that styled words must still style some: counted and ordered, an empty one passed.
-            var emptied = new ScriptedModel("Disciple externe de la secte Xianxia [!t*0][!t*1]",
-                                            "[!t*0]Disciple externe[!t*1] de la secte Xianxia");
+            var emptied = new ScriptedModel("Disciple externe de la secte Xianxia <color1></color1>",
+                                            "<color1>Disciple externe</color1> de la secte Xianxia");
             var sect = LineTranslation.AskModel("仙霞派<color=#8C8C8C>外门弟子</color>", Job(), emptied.Send);
             check(sect.Outcome == LineOutcome.Translated && emptied.Asked.Count == 2
                   && sect.Text == "<color=#8C8C8C>Disciple externe</color> de la secte Xianxia"
-                  && emptied.Asked[1].Messages[3].Content.Contains("[!t*0] and [!t*1] surround words in the source"),
+                  && emptied.Asked[1].Messages[3].Content.Contains("<color1> and </color1> surround words in the source"),
                 "a colour emptied of its words is refused, and the next attempt is told which",
                 "each token once and in order, it passed: the game got an empty colour (2026-09-26)");
-            check(Markup.Emptied("[!t*0][!v*0][!t*1] gold", "[!t*0][!v*0][!t*1] or", new List<string> { "<b>", "</b>" }).Count == 0
-                  && Markup.Emptied("A[!t*0][!t*1]B", "A[!t*0][!t*1]B", new List<string> { "<b>", "</b>" }).Count == 0,
+            check(Markup.Emptied("<b1>[!v*0]</b1> gold", "<b1>[!v*0]</b1> or", new List<string> { "<b>", "</b>" }).Count == 0
+                  && Markup.Emptied("A<b1></b1>B", "A<b1></b1>B", new List<string> { "<b>", "</b>" }).Count == 0,
                 "a pair around a number, or around nothing in the source, is not held to hold words",
                 "only what the source put inside has to stay inside");
-            var lost = Markup.Emptied("武当派[!t*0]掌门[!t*1]", "Chef de la secte de Wudang", new List<string> { "<color=#FD1430>", "</color>" });
-            check(lost.Count == 0,
-                "a pair not there at all is left to the placeholder check, and its words are not quoted",
+            var colourTags = new List<string> { "<color=#FD1430>", "</color>" };
+            var lost = Markup.Emptied("武当派<color1>掌门</color1>", "Chef de la secte de Wudang", colourTags);
+            var counted = Markup.Miscounted("武当派<color1>掌门</color1>", "Chef de la secte de Wudang</color1>", colourTags);
+            check(lost.Count == 0 && counted.Count == 1 && counted[0] == "tag <color1> appears 0 time(s) instead of 1",
+                "a pair not there at all is counted as missing, and its words are not quoted",
                 "quoted in the correction, small models copied the source words into the answer (2026-09-26)");
 
             // Compared with HTML in the instructions, a model may answer in real HTML: refused.
-            var html = new ScriptedModel("<b>Chef</b> de la secte de Wudang", "[!t*0]Chef[!t*1] de la secte de Wudang");
+            var html = new ScriptedModel("<b>Chef</b> de la secte de Wudang", "<color1>Chef</color1> de la secte de Wudang");
             var chief = LineTranslation.AskModel("武当派<color=#FD1430>掌门</color>", Job(), html.Send);
             check(chief.Outcome == LineOutcome.Translated && html.Asked.Count == 2
                   && chief.Text == "<color=#FD1430>Chef</color> de la secte de Wudang"
-                  && Markup.Invented("a < b > c").Count == 1 && Markup.Invented("Chef").Count == 0,
+                  && Markup.Invented("a < b > c", colourTags).Count == 1 && Markup.Invented("<color1>Chef</color1>", colourTags).Count == 0
+                  && Markup.Invented("<color2>Chef</color2>", colourTags).Count == 2,
                 "a tag the model wrote itself is refused",
                 "every tag is lifted out before sending, so any tag in an answer is invented and would reach the game");
 
@@ -242,7 +249,7 @@ namespace UnityGameTranslator.Common.Checks
             var shown = new ModelJob { Instructions = (m, _) => m.TagPairs ? "PAIRS" : "PLAIN" };
             LineTranslation.AskModel("仙霞派<color=#8C8C8C>外门弟子</color>",
                                      new ModelJob { Instructions = (m, _) => seenPrompt = m.TagPairs ? "PAIRS" : "PLAIN" },
-                                     new ScriptedModel("[!t*0]Disciple[!t*1]").Send);
+                                     new ScriptedModel("<color1>Disciple</color1>").Send);
             check(LineTranslation.InstructionsFor("仙霞派<color=#8C8C8C>外门弟子</color>", shown) == seenPrompt
                   && seenPrompt == "PAIRS",
                 "the prompt a bench shows is the one the loop sends",
@@ -251,7 +258,7 @@ namespace UnityGameTranslator.Common.Checks
                   && !LineTranslation.IsValidated("Play"),
                 "a line is checked when what is sent carries something to keep",
                 "the bench read this off pre-tokenised fixtures; read off the game's text, it is the loop's own test");
-            check(Backends.WireForm("<b>Go</b>\nnow", out var wireTags) == "[!t*0]Go[!t*1][!nl]now" && wireTags.Count == 2,
+            check(Backends.WireForm("<b>Go</b>\nnow", out var wireTags) == "<b1>Go</b1>[!nl]now" && wireTags.Count == 2,
                 "a translation reads back in token form by the same conversion that sent it",
                 "counted in its restored form, a [!nl] the game had turned back into a line break was never found");
 
@@ -281,7 +288,7 @@ namespace UnityGameTranslator.Common.Checks
             // number slot was lifted long before.
             Prompts.Markers seenMarkers = default;
             LineTranslation.AskModel("You have [!v*0] coins\n<b>now</b>", Job(m => seenMarkers = m),
-                                     new ScriptedModel("Vous avez [!v*0] pièces[!nl][!t*0]maintenant[!t*1]").Send);
+                                     new ScriptedModel("Vous avez [!v*0] pièces[!nl]<b1>maintenant</b1>").Send);
             check(seenMarkers.Numbers && seenMarkers.LineBreaks && seenMarkers.Tags && !seenMarkers.Variables,
                 "the instructions announce exactly the slots the text carries",
                 "announcing an absent one invites the model to invent it; omitting a present one gets it dropped");
@@ -330,11 +337,19 @@ namespace UnityGameTranslator.Common.Checks
                 "a missing trailing line break is put back without asking again",
                 "the one repair a game can make on its own, and it saves a request");
 
-            var inverted = new ScriptedModel("[!t*1]Appuyez[!t*0] maintenant", "[!t*0]Appuyez[!t*1] maintenant");
+            // 🔴 Tags are no longer slots: a line holding only markup must still be checked.
+            var onlyTags = new ScriptedModel("Démarrer maintenant", "<b1>Démarrer</b1> maintenant");
+            var started = LineTranslation.AskModel("Press <b>Start</b> now", Job(), onlyTags.Send);
+            check(started.Outcome == LineOutcome.Translated && onlyTags.Asked.Count == 2
+                  && started.Text == "<b>Démarrer</b> maintenant" && LineTranslation.IsValidated("Press <b>Start</b> now"),
+                "a line whose only placeholders are tags is still checked, and asked again",
+                "written as <b1> since 2026-09-26, tags are outside the slot grammar: counted from it alone, this line went unchecked");
+
+            var inverted = new ScriptedModel("</color1>Appuyez<color1> maintenant", "<color1>Appuyez</color1> maintenant");
             var reordered = LineTranslation.AskModel("<color=red>Press</color> now", Job(), inverted.Send);
             check(reordered.Outcome == LineOutcome.Translated && reordered.Text == "<color=red>Appuyez</color> maintenant"
                   && inverted.Asked.Count == 2
-                  && inverted.Asked[1].Messages[3].Content.Contains("[!t*1] closes [!t*0], so it must come after it"),
+                  && inverted.Asked[1].Messages[3].Content.Contains("</color1> closes <color1>, so it must come after it"),
                 "a closing tag put before its opening one is corrected on the second try, and named",
                 "each token was there once, so nothing refused it: the game got </color> before <color>");
 
@@ -350,17 +365,17 @@ namespace UnityGameTranslator.Common.Checks
         private static void WhatComesBackFromAService(Action<bool, string, string> check)
         {
             var prepared = Backends.Prepare("<b>Press</b> [!v*0]");
-            var good = LineTranslation.CheckServiceAnswer(prepared, "[!t*0]Appuyez[!t*1] [!v*0]");
+            var good = LineTranslation.CheckServiceAnswer(prepared, "<b1>Appuyez</b1> [!v*0]");
             check(good.Outcome == LineOutcome.Translated && good.Text == "<b>Appuyez</b> [!v*0]",
                 "a service's answer is validated and restored",
                 "no instructions were given, so nothing is cleaned — anything removed would be text");
 
-            var broken = LineTranslation.CheckServiceAnswer(prepared, "[!t*0]Appuyez[!t*1]");
+            var broken = LineTranslation.CheckServiceAnswer(prepared, "<b1>Appuyez</b1>");
             check(broken.Outcome == LineOutcome.Refused && broken.Attempts.Count == 1,
                 "a service that dropped a placeholder is refused, once",
                 "there is nothing to correct it with: it takes no instructions");
 
-            var reversed = LineTranslation.CheckServiceAnswer(prepared, "[!t*1]Appuyez[!t*0] [!v*0]");
+            var reversed = LineTranslation.CheckServiceAnswer(prepared, "</b1>Appuyez<b1> [!v*0]");
             check(reversed.Outcome == LineOutcome.Refused,
                 "a service that closed a tag before opening it is refused too",
                 "restored, the game would get </b> before <b>");
