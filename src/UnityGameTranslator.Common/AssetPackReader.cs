@@ -181,6 +181,48 @@ namespace UnityGameTranslator.Common
             return new Bounded(raw, entry.Size + 1);
         }
 
+        /// <summary>An entry's content found by its name in the pack — for the write, which reads it again.</summary>
+        public static Stream OpenByName(Stream zip, string entryName)
+        {
+            foreach (var entry in Entries(zip))
+            {
+                if (entry.Name == entryName) return Open(zip, entry);
+            }
+
+            throw new InvalidDataException(entryName + " is no longer in the pack.");
+        }
+
+        /// <summary>
+        /// Copies a source that must still be exactly what was planned — its length and its SHA-256.
+        ///
+        /// 🔴 **What is written is what was read and agreed to.** A pack or a file can change between the
+        /// list on screen and Apply; copied through a hash and a counter, one byte more or different
+        /// throws before the caller moves the file into place.
+        /// </summary>
+        public static void CopyExactly(Stream source, Stream output, long length, string sha256, string name)
+        {
+            var buffer = new byte[81920];
+            long copied = 0;
+
+            using (var sha = SHA256.Create())
+            {
+                int read;
+                while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    copied += read;
+                    if (copied > length) throw new InvalidDataException(name + " changed since it was read. Add it again.");
+
+                    sha.TransformBlock(buffer, 0, read, null, 0);
+                    output.Write(buffer, 0, read);
+                }
+
+                sha.TransformFinalBlock(new byte[0], 0, 0);
+
+                if (copied != length || !string.Equals(Hex(sha.Hash!), sha256, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException(name + " changed since it was read. Add it again.");
+            }
+        }
+
         /// <summary>
         /// Reads a stream to its end — or to one byte past <paramref name="limit"/>, then stops and says
         /// so. Length, SHA-256, CRC-32 and the first bytes, in one pass.
