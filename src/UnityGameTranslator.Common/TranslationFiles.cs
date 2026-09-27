@@ -62,6 +62,19 @@ namespace UnityGameTranslator.Common
             return translationPath + FailuresSuffix;
         }
 
+        public const string HeadsSuffix = ".heads";
+
+        /// <summary>
+        /// Where, in this game, a text is the head of a reveal resumed part-way — beside the
+        /// translation, same rule, and local only: it holds no translation, only which component
+        /// is not to send which text, and is learnt again if lost.
+        /// </summary>
+        public static string HeadsOf(string translationPath)
+        {
+            if (translationPath == null) throw new ArgumentNullException(nameof(translationPath));
+            return translationPath + HeadsSuffix;
+        }
+
         /// <summary>
         /// The section of the translation file that lists the images it puts in place. Each entry
         /// names its file under <see cref="ImageFileField"/>; entries written by earlier versions
