@@ -62,17 +62,18 @@ namespace UnityGameTranslator.Common
             return translationPath + FailuresSuffix;
         }
 
-        public const string HeadsSuffix = ".heads";
+        public const string ElementsSuffix = ".elements";
 
         /// <summary>
-        /// Where, in this game, a text is the head of a reveal resumed part-way — beside the
-        /// translation, same rule, and local only: it holds no translation, only which component
-        /// is not to send which text, and is learnt again if lost.
+        /// What the mod has learnt about this game's text elements — beside the translation, same
+        /// rule, and local only. One file, one section per kind of finding (`heads`: where a text is
+        /// the head of a reveal resumed part-way); a reader keeps the sections it does not know. It
+        /// holds no translation, and is learnt again if lost.
         /// </summary>
-        public static string HeadsOf(string translationPath)
+        public static string ElementsOf(string translationPath)
         {
             if (translationPath == null) throw new ArgumentNullException(nameof(translationPath));
-            return translationPath + HeadsSuffix;
+            return translationPath + ElementsSuffix;
         }
 
         /// <summary>

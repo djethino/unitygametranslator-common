@@ -42,12 +42,12 @@ namespace UnityGameTranslator.Common.Checks
                 "the failed lines are the path plus .failures — a third companion, same rule",
                 "swept with the translation, never mistaken for it or for a baseline");
 
-            check(TranslationFiles.HeadsOf(path) == path + ".heads"
-                  && !TranslationFiles.HeadsOf(path).EndsWith(".json", StringComparison.Ordinal)
-                  && TranslationFiles.HeadsOf(path) != TranslationFiles.FailuresOf(path)
-                  && TranslationFiles.HeadsOf(path) != TranslationFiles.AncestorOf(path)
-                  && TranslationFiles.HeadsOf(path) != TranslationFiles.MainAncestorOf(path),
-                "the heads of resumed reveals are the path plus .heads — a fourth companion, same rule",
+            check(TranslationFiles.ElementsOf(path) == path + ".elements"
+                  && !TranslationFiles.ElementsOf(path).EndsWith(".json", StringComparison.Ordinal)
+                  && TranslationFiles.ElementsOf(path) != TranslationFiles.FailuresOf(path)
+                  && TranslationFiles.ElementsOf(path) != TranslationFiles.AncestorOf(path)
+                  && TranslationFiles.ElementsOf(path) != TranslationFiles.MainAncestorOf(path),
+                "what the mod learnt about the elements is the path plus .elements — a fourth companion, same rule",
                 "swept with the translation by the manager's uninstall, never mistaken for it, a baseline or the failed lines");
 
             check(TranslationFiles.AncestorOf(path).StartsWith(path, StringComparison.Ordinal)
