@@ -195,6 +195,8 @@ namespace UnityGameTranslator.Common.Checks
 
             Section("System font names", SystemFontNamesChecks.Run);
 
+            Section("Reading a pack", AssetPackReaderChecks.Run);
+
             Section("Mod interface", ModUiChecks.Run);
 
             Section("Game names", GameNamesChecks.Run);
