@@ -97,6 +97,16 @@ namespace UnityGameTranslator.Common
         /// <summary>Field of an image entry naming the sprite it replaces — its identity in the section.</summary>
         public const string ImageSpriteField = "sprite_name";
 
+        /// <summary>
+        /// When two image entries are the SAME sprite: case ignored — how the mod's image replacer keys
+        /// them, the last entry winning.
+        ///
+        /// 🔴 One rule for every writer. A writer comparing exactly would add "logo" beside "Logo" as a
+        /// new entry, and the mod would read the two as one sprite with whichever came last — so an
+        /// image added from UGT Manager could lose to a stale one without anything saying so.
+        /// </summary>
+        public static readonly StringComparer SpriteNames = StringComparer.OrdinalIgnoreCase;
+
         /// <summary>Field of an image entry holding where the sprite was seen in the scene. Text.</summary>
         public const string ImagePathField = "path";
 
