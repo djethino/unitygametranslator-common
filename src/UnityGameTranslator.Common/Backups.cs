@@ -35,6 +35,13 @@ namespace UnityGameTranslator.Common
         Restored,
 
         /// <summary>
+        /// Fonts or images were added from UGT Manager's Assets tab, replacing files or image
+        /// definitions that were there. Taken WITH the assets: a replaced picture may be one
+        /// somebody retouched by hand, and it exists nowhere else.
+        /// </summary>
+        AssetsAdded,
+
+        /// <summary>
         /// Something replaced the file and did not say what. Never written on purpose: it is what
         /// a copy from an older version reads as, and what a caller that forgot to say gets.
         /// </summary>
@@ -457,6 +464,9 @@ namespace UnityGameTranslator.Common
 
                 case BackupReason.Restored:
                     return "Before another backup was restored";
+
+                case BackupReason.AssetsAdded:
+                    return "Before adding fonts or images";
 
                 default:
                     return "Before something replaced the translation";

@@ -219,7 +219,14 @@ namespace UnityGameTranslator.Common.Checks
                 Backups.Describe(BackupReason.Saved), Backups.Describe(BackupReason.Restored),
                 Backups.Describe(BackupReason.Installed, "@someone"),
                 Backups.Describe(BackupReason.Unknown),
+                Backups.Describe(BackupReason.AssetsAdded),
             };
+
+            check(Enum.GetValues(typeof(BackupReason)).Cast<BackupReason>()
+                      .Where(r => r != BackupReason.Unknown)
+                      .All(r => Backups.Describe(r) != Backups.Describe(BackupReason.Unknown)),
+                "every reason says what happened in its own words",
+                "a reason added without its phrase reads \"something replaced the translation\" — true of every row");
 
             check(!everyPhrase.Any(p => p.IndexOf("copy", StringComparison.OrdinalIgnoreCase) >= 0
                                      || p.IndexOf("copies", StringComparison.OrdinalIgnoreCase) >= 0),
