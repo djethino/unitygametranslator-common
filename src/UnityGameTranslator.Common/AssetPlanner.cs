@@ -401,6 +401,36 @@ namespace UnityGameTranslator.Common
         public static string Megabytes(long bytes) =>
             (bytes / 1024d / 1024d).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + " MB";
 
+        /// <summary>What a screen says about a pack made from another game — information, never a refusal.</summary>
+        public static string MadeForText(string otherGame) => "Made for " + otherGame + ". Check that it is meant for this game.";
+
+        /// <summary>
+        /// What a screen says about pictures made for another language — and the reason they are still
+        /// worth having: the rows name each picture to remake, with its settings (user, 2026-09-27).
+        /// </summary>
+        public static string OtherLanguageText(LanguageMismatch mismatch)
+        {
+            var made = Languages.NameOf(mismatch.PackLanguage) ?? mismatch.PackLanguage;
+            var here = Languages.NameOf(mismatch.GameLanguage) ?? mismatch.GameLanguage;
+            return "Images made for " + made + ". This game's translation is " + here + ": the pictures in "
+                   + mismatch.Pack + " still show " + made + " text.";
+        }
+
+        /// <summary>The line above a plan's rows: what arrives, what differs, what was left out.</summary>
+        public static string Summary(AssetPlan plan)
+        {
+            var parts = new List<string>();
+            var adds = plan.Offers.Count(o => o.Change == AssetChange.Add);
+            var replaces = plan.Offers.Count(o => o.Change == AssetChange.Replace);
+            var same = plan.Offers.Count(o => o.Change == AssetChange.Same);
+
+            if (adds > 0) parts.Add(adds + " new");
+            if (replaces > 0) parts.Add(replaces + " already in this game and different");
+            if (same > 0) parts.Add(same + " already in this game");
+            if (plan.Refused.Count > 0) parts.Add(plan.Refused.Count + " left out");
+            return string.Join(" · ", parts);
+        }
+
         /// <summary>Why image settings cannot go into this game's translation — null when they can.</summary>
         public static string? ImageSettingsRefusal(GameAssetSide game) =>
             !game.TranslationExists ? NoTranslationYet : game.TranslationDamaged ? DamagedTranslation : null;
