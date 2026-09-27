@@ -195,6 +195,8 @@ namespace UnityGameTranslator.Common.Checks
 
             Section("System font names", SystemFontNamesChecks.Run);
 
+            Section("Which font a reference means", FontReferencesChecks.Run);
+
             Section("Reading a pack", AssetPackReaderChecks.Run);
 
             Section("Planning what a pack does", AssetPlannerChecks.Run);
