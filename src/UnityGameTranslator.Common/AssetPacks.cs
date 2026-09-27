@@ -49,6 +49,18 @@ namespace UnityGameTranslator.Common
         public const string FontsFolder = "fonts";
         public const string ImagesFolder = "images";
 
+        /// <summary>Where a player puts a `.ugtpack` for UGT Mod to offer it (Translation Tools, Tools tab).</summary>
+        public const string PacksFolder = "packs";
+
+        /// <summary>
+        /// The folders prepared in the mod's data folder — by the mod when it starts, and by UGT
+        /// Manager when it installs it.
+        ///
+        /// 🔴 Created, not documented (user, 2026-09-27): somebody told to "put the file in packs/"
+        /// who finds no such folder concludes they are in the wrong place — or never looks.
+        /// </summary>
+        public static readonly string[] PreparedFolders = { FontsFolder, ImagesFolder, PacksFolder };
+
         /// <summary>
         /// Font SOURCES — exactly what the mod's font loader registers from its fonts/ folder, and
         /// it reads this list. Generated atlases sit in the same folder and are never one of these:
