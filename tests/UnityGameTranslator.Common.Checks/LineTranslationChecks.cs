@@ -61,6 +61,29 @@ namespace UnityGameTranslator.Common.Checks
                 "a tag nothing closes, and a closing nothing opened, pair with nothing",
                 "a guess there would move a tag the game placed");
 
+            // A reveal by markup: a span running to the end, and the same share of a translation.
+            const string hide = "<color=#00000000>";
+            check(Markup.TrailingSpan("Stand<color=#00000000> back</color>", out int os, out int ol, out int cs)
+                  && os == 5 && ol == hide.Length && cs == 5 + hide.Length + 5,
+                "a span that runs to the end is found, its opening and its closing",
+                "that is the whole shape of a reveal by markup: the opening moves, the closing stays last");
+            check(Markup.TrailingSpan("<b>2</b> left<color=#00000000></color>", out os, out _, out cs) && os == 13 && cs == 13 + hide.Length,
+                "an empty one at the end too, past other pairs", "the frame a reveal ends on");
+            check(!Markup.TrailingSpan("Hold <b>on</b> now", out _, out _, out _)
+                  && !Markup.TrailingSpan("Hold on</b>", out _, out _, out _)
+                  && !Markup.TrailingSpan("Hold on", out _, out _, out _),
+                "a text that does not end on a closed span has none",
+                "a closing tag in the middle, one nothing opened, or no tag at all");
+            check(Markup.RevealUnder("Reculez un peu, vite", hide, "</color>", 3, 10) == "Recule" + hide + "z un peu, vite</color>"
+                  && Markup.RevealUnder("Reculez un peu, vite", hide, "</color>", 10, 10) == "Reculez un peu, vite" + hide + "</color>"
+                  && Markup.RevealUnder("Reculez un peu, vite", hide, "</color>", 0, 10) == hide + "Reculez un peu, vite</color>",
+                "a translation uncovers the same share as its source, rounded up",
+                "3 of 10 is 6 of 20; rounded up, the last source character uncovers the last translated one");
+            check(Markup.RevealUnder("<b>Re</b>culez", hide, "</color>", 1, 2) == "<b>Re</b>cu" + hide + "lez</color>"
+                  && Markup.RevealUnder("<b>Recu</b>lez", hide, "</color>", 1, 3) == "<b>Rec" + hide + "u</b>lez</color>",
+                "the tags of the translation are stepped over, never counted nor cut",
+                "a tag is not a visible character, and the game's tag must not land inside one of ours");
+
             var colour = new List<string> { "<color=red>", "</color>" };
             check(Markup.OutOfOrder("[!t*0]texte[!t*1]", colour).Count == 0,
                 "open then close is in order", "the ordinary case");

@@ -112,6 +112,69 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// A span that runs to the very end of the text — the shape of a reveal by markup, where a
+        /// game uncovers a finished sentence by moving the opening of one tag along it
+        /// (`Can y&lt;color=#00000000&gt;ou help?&lt;/color&gt;`). Gives the opening tag's start and
+        /// length, and where the closing tag starts; the closing tag ends the text.
+        ///
+        /// ⚠ Says nothing about what the tag DOES — it may hide, fade or colour. Whoever uses it
+        /// copies the game's own tag; it is never interpreted here.
+        /// </summary>
+        public static bool TrailingSpan(string text, out int openStart, out int openLength, out int closeStart)
+        {
+            openStart = openLength = closeStart = -1;
+            if (string.IsNullOrEmpty(text)) return false;
+
+            var matches = TagPattern.Matches(text);
+            if (matches.Count == 0) return false;
+            var last = matches[matches.Count - 1];
+            if (last.Index + last.Length != text.Length || !IsClosing(last.Value)) return false;
+
+            var tags = new List<string>(matches.Count);
+            foreach (Match m in matches) tags.Add(m.Value);
+            int opening = Pairs(tags)[tags.Count - 1];
+            if (opening < 0) return false;
+
+            openStart = matches[opening].Index;
+            openLength = matches[opening].Length;
+            closeStart = last.Index;
+            return true;
+        }
+
+        /// <summary>
+        /// A translation shown at the same point of a reveal by markup as its source: the game's own
+        /// opening tag placed after the same SHARE of visible characters, its closing tag at the end.
+        /// <paramref name="shown"/> of <paramref name="total"/> visible source characters are
+        /// uncovered; the translation uncovers the same share, rounded up, so the last character of
+        /// the source uncovers the last of the translation. A ratio of two lengths, the same measure
+        /// a reveal counted in characters is carried over with — no language, no tag interpreted.
+        /// The opening tag never lands inside one of the translation's own tags.
+        /// </summary>
+        public static string RevealUnder(string translation, string open, string close, int shown, int total)
+        {
+            if (translation == null) return null;
+            int visible = Strip(translation).Length;
+            int keep = total <= 0 || shown >= total ? visible
+                     : shown <= 0 ? 0
+                     : (int)System.Math.Ceiling((double)shown * visible / total);
+            if (keep > visible) keep = visible;
+
+            // The raw index after `keep` visible characters, stepping over whole tags.
+            int raw = 0, seen = 0;
+            while (raw < translation.Length && seen < keep)
+            {
+                if (translation[raw] == '<')
+                {
+                    var tag = TagPattern.Match(translation, raw);
+                    if (tag.Success && tag.Index == raw) { raw += tag.Length; continue; }
+                }
+                raw++;
+                seen++;
+            }
+            return translation.Substring(0, raw) + open + translation.Substring(raw) + close;
+        }
+
+        /// <summary>
         /// The closing placeholders an answer puts before the opening one they close, as lines a
         /// model can act on. Empty when every pair of the source comes back open-then-close.
         ///
