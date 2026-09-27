@@ -78,6 +78,22 @@ namespace UnityGameTranslator.Common.Checks
                 "a file matches a reference by its exact name, case included",
                 "the mod looks the name up exactly: a looser match would export a font it never loads");
 
+            var png = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+            var ttf = new byte[] { 0x00, 0x01, 0x00, 0x00, 0x00, 0x10, 0x01, 0x00 };
+            var otf = new byte[] { (byte)'O', (byte)'T', (byte)'T', (byte)'O', 0, 0, 0, 0 };
+            var exe = new byte[] { (byte)'M', (byte)'Z', 0x90, 0x00, 0x03, 0x00, 0x00, 0x00 };
+
+            check(AssetPacks.ContentMatches("a.png", png, 8) && AssetPacks.ContentMatches("a.ttf", ttf, 8)
+                  && AssetPacks.ContentMatches("a.otf", otf, 8) && AssetPacks.ContentMatches("a.otf", ttf, 8),
+                "a real picture or font is recognised by its first bytes",
+                "an .otf may hold TrueType outlines: refusing it would refuse a working font");
+
+            check(!AssetPacks.ContentMatches("a.ttf", exe, 8) && !AssetPacks.ContentMatches("a.png", exe, 8)
+                  && !AssetPacks.ContentMatches("a.png", ttf, 8) && !AssetPacks.ContentMatches("a.ttf", png, 8)
+                  && !AssetPacks.ContentMatches("a.dll", exe, 8) && !AssetPacks.ContentMatches("a.png", png, 3),
+                "a program, or another kind of file, renamed to a font or a picture is refused",
+                "the name is a claim; a renamed program would be handed to a reader that trusts it");
+
             check(!AssetPacks.IsFontFile("NotoSansCJK.ttc"),
                 "a font collection is not accepted",
                 "the mod's loader never reads one: it would be copied into the game and never offered");

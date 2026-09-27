@@ -93,5 +93,26 @@ namespace UnityGameTranslator.Common
 
         /// <summary>Older spellings of <see cref="ImageFileField"/>, still found in game folders.</summary>
         public static readonly string[] ImageFileLegacyFields = { "replacement_file", "original_file" };
+
+        /// <summary>Field of an image entry naming the sprite it replaces — its identity in the section.</summary>
+        public const string ImageSpriteField = "sprite_name";
+
+        /// <summary>Field of an image entry holding where the sprite was seen in the scene. Text.</summary>
+        public const string ImagePathField = "path";
+
+        /// <summary>
+        /// The numeric fields of an image entry — everything else the mod's image replacer reads.
+        ///
+        /// ⚠ The complete list of what an entry may carry is these, <see cref="ImageSpriteField"/>,
+        /// <see cref="ImagePathField"/> and <see cref="ImageFileField"/>. A definition arriving from
+        /// somebody else (an asset pack) is rebuilt from them and nothing more: an unknown field
+        /// written into a translation file travels with it to the site and to every player who
+        /// downloads it.
+        /// </summary>
+        public static readonly string[] ImageNumberFields =
+        {
+            "original_width", "original_height", "pivot_x", "pivot_y",
+            "border_left", "border_bottom", "border_right", "border_top", "pixels_per_unit",
+        };
     }
 }

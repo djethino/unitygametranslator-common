@@ -92,6 +92,41 @@ namespace UnityGameTranslator.Common
             return name.Length == 0 ? null : name;
         }
 
+        /// <summary>How many first bytes <see cref="ContentMatches"/> needs.</summary>
+        public const int HeaderLength = 8;
+
+        /// <summary>
+        /// Whether a file's first bytes are what its extension claims: a PNG signature for an image,
+        /// a TrueType or OpenType signature for a font.
+        ///
+        /// 🔴 **The name is a claim, the bytes are the fact.** A pack comes from somebody else, and a
+        /// program renamed `title.png` would otherwise be written into the game and handed to a
+        /// picture or font reader that trusts it. Checked on the content itself, before planning.
+        ///
+        /// ⚠ Both font signatures for both extensions: an .otf may hold TrueType outlines, and the
+        /// mod's loader opens either by content, not by name.
+        /// </summary>
+        public static bool ContentMatches(string? fileName, byte[] head, int count)
+        {
+            if (head == null || count < 4) return false;
+
+            if (IsImageFile(fileName))
+            {
+                return count >= 8 && head[0] == 0x89 && head[1] == 0x50 && head[2] == 0x4E && head[3] == 0x47
+                       && head[4] == 0x0D && head[5] == 0x0A && head[6] == 0x1A && head[7] == 0x0A;
+            }
+
+            if (IsFontFile(fileName))
+            {
+                var trueType = head[0] == 0x00 && head[1] == 0x01 && head[2] == 0x00 && head[3] == 0x00;
+                var appleTrue = head[0] == (byte)'t' && head[1] == (byte)'r' && head[2] == (byte)'u' && head[3] == (byte)'e';
+                var openType = head[0] == (byte)'O' && head[1] == (byte)'T' && head[2] == (byte)'T' && head[3] == (byte)'O';
+                return trueType || appleTrue || openType;
+            }
+
+            return false;
+        }
+
         /// <summary>Whether a font file is the one a stem names — the file's name without its extension, exactly.</summary>
         public static bool IsFontFileFor(string fileName, string stem)
         {
