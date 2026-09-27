@@ -64,6 +64,20 @@ namespace UnityGameTranslator.Common.Checks
                 "a generated atlas is not a font",
                 "exporting atlases would multiply a pack's size for something rebuilt on demand");
 
+            check(AssetPacks.FontFileStem("[Custom] NotoSans") == "NotoSans"
+                  && AssetPacks.FontFileStem("NotoSans") == "NotoSans"
+                  && AssetPacks.FontFileStem("[Game] LiberationSans SDF") == null
+                  && AssetPacks.FontFileStem("") == null && AssetPacks.FontFileStem(null) == null,
+                "a font reference names a file of fonts/, unless it names one of the game's own",
+                "an export carries the fonts the translation uses, and only those");
+
+            check(AssetPacks.IsFontFileFor("NotoSans.ttf", "NotoSans") && AssetPacks.IsFontFileFor("NotoSans.otf", "NotoSans")
+                  && !AssetPacks.IsFontFileFor("notosans.ttf", "NotoSans")
+                  && !AssetPacks.IsFontFileFor("NotoSans Bold.ttf", "NotoSans")
+                  && !AssetPacks.IsFontFileFor("NotoSans.png", "NotoSans"),
+                "a file matches a reference by its exact name, case included",
+                "the mod looks the name up exactly: a looser match would export a font it never loads");
+
             check(!AssetPacks.IsFontFile("NotoSansCJK.ttc"),
                 "a font collection is not accepted",
                 "the mod's loader never reads one: it would be copied into the game and never offered");

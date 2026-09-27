@@ -63,6 +63,44 @@ namespace UnityGameTranslator.Common
         /// <summary>What the mod's own export writes, and what a definition's `file` names.</summary>
         public static readonly string[] ImageExtensions = { ".png" };
 
+        /// <summary>How a translation names a font dropped into fonts/: "[Custom] NotoSans".</summary>
+        public const string CustomFontPrefix = "[Custom] ";
+
+        /// <summary>How a translation names one of the game's own fonts: "[Game] LiberationSans SDF".</summary>
+        public const string GameFontPrefix = "[Game] ";
+
+        /// <summary>
+        /// The file a font reference in a translation points at, as the name of a font file without
+        /// its extension — or null when it points at no file of fonts/.
+        ///
+        /// The references are `_fonts[…].fallback` and `_font_overrides[].replacement`. "[Custom] X"
+        /// and a bare "X" both name fonts/X.ttf or fonts/X.otf, as the mod's loader keys them;
+        /// "[Game] X" names a font inside the game and no file at all. A bare name may also be a font
+        /// installed on the computer — the caller keeps it only when such a file is there.
+        ///
+        /// ⚠ Case kept: the mod looks the name up exactly (an ordinal dictionary), so "notosans"
+        /// never loads fonts/NotoSans.ttf, and saying it would be the same promise the mod breaks.
+        /// </summary>
+        public static string? FontFileStem(string? reference)
+        {
+            if (string.IsNullOrWhiteSpace(reference)) return null;
+
+            var name = reference!;
+            if (name.StartsWith(GameFontPrefix, StringComparison.Ordinal)) return null;
+            if (name.StartsWith(CustomFontPrefix, StringComparison.Ordinal)) name = name.Substring(CustomFontPrefix.Length);
+
+            return name.Length == 0 ? null : name;
+        }
+
+        /// <summary>Whether a font file is the one a stem names — the file's name without its extension, exactly.</summary>
+        public static bool IsFontFileFor(string fileName, string stem)
+        {
+            if (!IsFontFile(fileName)) return false;
+
+            var dot = fileName.LastIndexOf('.');
+            return string.Equals(fileName.Substring(0, dot), stem, StringComparison.Ordinal);
+        }
+
         /// <summary>The folder of a kind, inside the mod's data folder and inside a pack.</summary>
         public static string FolderOf(AssetKind kind) => kind == AssetKind.Font ? FontsFolder : ImagesFolder;
 
