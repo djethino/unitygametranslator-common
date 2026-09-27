@@ -191,6 +191,8 @@ namespace UnityGameTranslator.Common.Checks
 
             Section("Backups", BackupsChecks.Run);
 
+            Section("Asset packs", AssetPacksChecks.Run);
+
             Section("Mod interface", ModUiChecks.Run);
 
             Section("Game names", GameNamesChecks.Run);

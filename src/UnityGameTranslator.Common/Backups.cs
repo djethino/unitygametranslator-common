@@ -174,7 +174,7 @@ namespace UnityGameTranslator.Common
         public const int SavedKept = 10;
 
         /// <summary>Folders holding the assets a translation may name.</summary>
-        public static readonly string[] AssetFolders = { "fonts", "images" };
+        public static readonly string[] AssetFolders = { AssetPacks.FontsFolder, AssetPacks.ImagesFolder };
 
         // ── Naming ────────────────────────────────────────────────────────
 
@@ -248,8 +248,8 @@ namespace UnityGameTranslator.Common
                 }
             }
 
-            Take(imageFiles, "images");
-            Take(fontFiles, "fonts");
+            Take(imageFiles, AssetPacks.ImagesFolder);
+            Take(fontFiles, AssetPacks.FontsFolder);
 
             return chosen;
         }
