@@ -63,6 +63,19 @@ namespace UnityGameTranslator.Common
         /// <summary>What the mod's own export writes, and what a definition's `file` names.</summary>
         public static readonly string[] ImageExtensions = { ".png" };
 
+        /// <summary>
+        /// What is said wherever fonts and images are put in a pack to share — ONE wording.
+        ///
+        /// 🔴 The user's condition for offering to export system fonts (2026-09-27): whoever shares
+        /// is told, in plain words, that the files carry their own licences and that this tool
+        /// neither hosts them nor answers for them. True of every font and picture in a pack, not
+        /// only the system ones — so it is said once, beside the export, for all of them.
+        /// ⚠ Plain international English, short sentences: read in a fourth language.
+        /// </summary>
+        public const string ShareNotice =
+            "Fonts and images have their own licences. Make sure you are allowed to share them. "
+            + "UnityGameTranslator does not host them and is not responsible for them.";
+
         /// <summary>How a translation names a font dropped into fonts/: "[Custom] NotoSans".</summary>
         public const string CustomFontPrefix = "[Custom] ";
 
