@@ -63,6 +63,10 @@ namespace UnityGameTranslator.Common.Checks
             check(!AssetPacks.IsFontFile("NotoSans.gen.png") && !AssetPacks.IsFontFile("NotoSans.atlas.json"),
                 "a generated atlas is not a font",
                 "exporting atlases would multiply a pack's size for something rebuilt on demand");
+
+            check(!AssetPacks.IsFontFile("NotoSansCJK.ttc"),
+                "a font collection is not accepted",
+                "the mod's loader never reads one: it would be copied into the game and never offered");
         }
     }
 }

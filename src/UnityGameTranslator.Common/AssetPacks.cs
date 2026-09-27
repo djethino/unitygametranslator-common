@@ -50,10 +50,15 @@ namespace UnityGameTranslator.Common
         public const string ImagesFolder = "images";
 
         /// <summary>
-        /// Font SOURCES. Generated atlases sit in the same folder and are never one of these: they
-        /// are rebuilt from the font beside them (see <see cref="Backups.AssetsToCopy"/>).
+        /// Font SOURCES — exactly what the mod's font loader registers from its fonts/ folder, and
+        /// it reads this list. Generated atlases sit in the same folder and are never one of these:
+        /// they are rebuilt from the font beside them (see <see cref="Backups.AssetsToCopy"/>).
+        ///
+        /// ⚠ No `.ttc` (2026-09-27): the backups used to copy it, and the loader never read it, so a
+        /// collection dropped into a game was a file nobody could pick. Accepting one here would
+        /// have been the same dead end with a nicer door.
         /// </summary>
-        public static readonly string[] FontExtensions = { ".ttf", ".otf", ".ttc" };
+        public static readonly string[] FontExtensions = { ".ttf", ".otf" };
 
         /// <summary>What the mod's own export writes, and what a definition's `file` names.</summary>
         public static readonly string[] ImageExtensions = { ".png" };
