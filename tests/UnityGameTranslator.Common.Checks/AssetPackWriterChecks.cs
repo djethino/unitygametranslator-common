@@ -98,6 +98,18 @@ namespace UnityGameTranslator.Common.Checks
                     "only bare references are System fonts; a copy in fonts/ goes first; a .ttc or a missing font says why",
                     "[Custom] and [Game] name files that are not the system's to carry");
 
+                // The one list of font folders (audit 2026-09-28): what each search used to miss.
+                var windows = SystemFontFolders.For(SystemFontFolders.Os.Windows, "C:\\Windows", "C:\\Users\\u\\AppData\\Local");
+                var linux = SystemFontFolders.For(SystemFontFolders.Os.Linux, home: "/home/u");
+                var linuxXdg = SystemFontFolders.For(SystemFontFolders.Os.Linux, home: "/home/u", xdgDataHome: "/data");
+                var mac = SystemFontFolders.For(SystemFontFolders.Os.MacOs, home: "/Users/u");
+                check(windows.Count == 2 && windows[1].EndsWith(Path.Combine("Microsoft", "Windows", "Fonts"))
+                      && linux.Contains("/home/u/.local/share/fonts") && linux.Contains("/home/u/.fonts") && linux.Contains("/usr/local/share/fonts")
+                      && linuxXdg.Contains("/data/fonts")
+                      && mac.Contains("/System/Library/Fonts/Supplemental") && mac.Contains("/Users/u/Library/Fonts"),
+                    "the installed fonts include each user's own, on every system",
+                    "four lists disagreed: a font found by one search was missing from the next");
+
                 var when = new DateTime(2026, 9, 28, 14, 32, 5);
                 check(AssetPackWriter.FileName("LONESTAR", when) == "LONESTAR assets 2026-09-28 14-32.ugtpack"
                       && AssetPackWriter.FileName("Who: \"Me\"?", when) == "Who Me assets 2026-09-28 14-32.ugtpack"
