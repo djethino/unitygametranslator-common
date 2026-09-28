@@ -14,7 +14,7 @@ namespace UnityGameTranslator.Common.Checks
         public static void Run(Action<bool, string, string> check)
         {
             // Round-trip: what one screen writes, the input loop reads back.
-            check(Compose("F10", ctrl: true) == "Ctrl+F10", "Ctrl+F10 composes", "the default, and the ordinary case");
+            check(Compose("F10", ctrl: true) == "Ctrl+F10", "Ctrl+F10 composes", "the ordinary case");
             check(Compose("F10", ctrl: true, alt: true, shift: true) == "Ctrl+Alt+Shift+F10",
                 "modifiers keep one order", "so one shortcut has one spelling and configs compare as strings");
 
@@ -45,7 +45,8 @@ namespace UnityGameTranslator.Common.Checks
 
             check(Hotkeys.BaseKeyOf("Ctrl+Alt+F10") == "F10", "the key alone can be asked for",
                 "callers check it against what their own runtime can bind");
-            check(Hotkeys.Default == "Ctrl+F10", "the default is stated once", "three places used to carry it");
+            check(Hotkeys.Default == "Shift+F10", "the default is stated once, and it is Shift+F10",
+                "Ctrl+F10 was taken by KDE Plasma, Alt+F10 by GNOME and NVIDIA (2026-09-28)");
         }
 
         private static string Compose(string key, bool ctrl = false, bool alt = false, bool shift = false) =>

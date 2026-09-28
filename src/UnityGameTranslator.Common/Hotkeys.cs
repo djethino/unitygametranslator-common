@@ -27,8 +27,16 @@ namespace UnityGameTranslator.Common
     /// </summary>
     public static class Hotkeys
     {
-        /// <summary>What the mod falls back to when nothing is configured.</summary>
-        public const string Default = "Ctrl+F10";
+        /// <summary>
+        /// What the mod falls back to when nothing is configured — one key on every system.
+        ///
+        /// 🔴 **Shift+F10, chosen 2026-09-28 (user's decision).** Ctrl+F10 is KDE Plasma's
+        /// "Present Windows" (Bazzite, SteamOS desktop): the desktop took it and the mod never saw
+        /// it. Alt+F10 maximises a window on GNOME and saves a replay with NVIDIA's overlay. No
+        /// desktop, driver overlay or Steam binds Shift+F10; MangoHud binds RIGHT Shift+F10 only.
+        /// This used to read Ctrl+F10 while the mod and the config contract said F10.
+        /// </summary>
+        public const string Default = "Shift+F10";
 
         private const string Ctrl = "Ctrl+";
         private const string Alt = "Alt+";
