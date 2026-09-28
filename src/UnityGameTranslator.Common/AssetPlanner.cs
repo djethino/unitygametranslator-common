@@ -552,6 +552,75 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// A pack's manifest alone, under the bounds a plan reads it with — null with the reason
+        /// otherwise. For a pack opened before any game is chosen (UGT Manager opening a .ugtpack
+        /// from the file explorer): it names the game to offer. Nothing read here is written; the
+        /// plan reads the pack again, whole, once the game is known.
+        /// </summary>
+        public static PackManifest? ReadManifest(Stream zip, Func<byte[], PackManifest?> parseManifest, out string refusal)
+        {
+            var entries = AssetPackReader.Entries(zip);
+            var assets = entries.Count(e => AssetPacks.TryEntry(e.Name, out _, out _));
+            return ManifestOf(zip, entries, assets, parseManifest, out refusal);
+        }
+
+        /// <summary>The manifest entry, bounded, parsed and of a format this build reads.</summary>
+        private static PackManifest? ManifestOf(Stream zip, List<PackEntry> entries, int assetCount,
+                                                Func<byte[], PackManifest?> parseManifest, out string refusal)
+        {
+            refusal = "";
+
+            var manifestEntry = entries.FirstOrDefault(e => e.Name == AssetPacks.ManifestName);
+            if (manifestEntry == null)
+            {
+                refusal = "Not a UGT asset pack: it has no manifest.";
+                return null;
+            }
+
+            // ⚠ Parsed in memory, so bounded by what it can legitimately hold.
+            if (manifestEntry.Size > ManifestBytesPerImage * (assetCount + 1))
+            {
+                refusal = Misleading;
+                return null;
+            }
+
+            byte[] manifestBytes;
+            using (var stream = AssetPackReader.Open(zip, manifestEntry))
+            using (var memory = new MemoryStream())
+            {
+                stream.CopyTo(memory);
+                if (memory.Length > manifestEntry.Size)
+                {
+                    refusal = Misleading;
+                    return null;
+                }
+
+                manifestBytes = memory.ToArray();
+            }
+
+            var manifest = parseManifest(manifestBytes);
+            if (manifest == null)
+            {
+                refusal = "Not a UGT asset pack: its manifest cannot be read.";
+                return null;
+            }
+
+            if (manifest.Format == null || manifest.Format < 1)
+            {
+                refusal = "Not a UGT asset pack: its manifest has no format.";
+                return null;
+            }
+
+            if (manifest.Format > AssetPacks.Format)
+            {
+                refusal = "Made by a newer UGT Manager. Update UGT Manager to open it.";
+                return null;
+            }
+
+            return manifest;
+        }
+
+        /// <summary>
         /// Reads one pack into the plan — or nothing of it at all.
         ///
         /// 🔴 **A pack that lies is refused whole.** Sizes are checked against what the pack DECLARES
@@ -578,50 +647,10 @@ namespace UnityGameTranslator.Common
                 return;
             }
 
-            var manifestEntry = entries.FirstOrDefault(e => e.Name == AssetPacks.ManifestName);
-            if (manifestEntry == null)
-            {
-                refused.Add(new RefusedAsset(packName, "Not a UGT asset pack: it has no manifest."));
-                return;
-            }
-
-            // ⚠ Parsed in memory, so bounded by what it can legitimately hold.
-            if (manifestEntry.Size > ManifestBytesPerImage * (assetEntries.Count + 1))
-            {
-                refused.Add(new RefusedAsset(packName, Misleading));
-                return;
-            }
-
-            byte[] manifestBytes;
-            using (var stream = AssetPackReader.Open(zip, manifestEntry))
-            using (var memory = new MemoryStream())
-            {
-                stream.CopyTo(memory);
-                if (memory.Length > manifestEntry.Size)
-                {
-                    refused.Add(new RefusedAsset(packName, Misleading));
-                    return;
-                }
-
-                manifestBytes = memory.ToArray();
-            }
-
-            var manifest = parseManifest(manifestBytes);
+            var manifest = ManifestOf(zip, entries, assetEntries.Count, parseManifest, out var manifestRefusal);
             if (manifest == null)
             {
-                refused.Add(new RefusedAsset(packName, "Not a UGT asset pack: its manifest cannot be read."));
-                return;
-            }
-
-            if (manifest.Format == null || manifest.Format < 1)
-            {
-                refused.Add(new RefusedAsset(packName, "Not a UGT asset pack: its manifest has no format."));
-                return;
-            }
-
-            if (manifest.Format > AssetPacks.Format)
-            {
-                refused.Add(new RefusedAsset(packName, "Made by a newer UGT Manager. Update UGT Manager to open it."));
+                refused.Add(new RefusedAsset(packName, manifestRefusal));
                 return;
             }
 
