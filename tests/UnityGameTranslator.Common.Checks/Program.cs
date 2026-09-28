@@ -199,6 +199,8 @@ namespace UnityGameTranslator.Common.Checks
 
             Section("Reading a pack", AssetPackReaderChecks.Run);
 
+            Section("Writing a pack", AssetPackWriterChecks.Run);
+
             Section("Planning what a pack does", AssetPlannerChecks.Run);
 
             Section("Mod interface", ModUiChecks.Run);

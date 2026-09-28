@@ -281,7 +281,8 @@ namespace UnityGameTranslator.Common
             return table;
         }
 
-        private static uint Crc32Step(uint crc, byte[] buffer, int count)
+        /// <summary>One step of CRC-32 — shared with <see cref="AssetPackWriter"/>, so writing and reading agree.</summary>
+        internal static uint Crc32Step(uint crc, byte[] buffer, int count)
         {
             for (var i = 0; i < count; i++) crc = Crc32Table[(crc ^ buffer[i]) & 0xFF] ^ (crc >> 8);
             return crc;
