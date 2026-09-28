@@ -26,6 +26,29 @@ namespace UnityGameTranslator.Common
         public AssetKind Kind { get; }
     }
 
+    /// <summary>
+    /// A System font the translation uses: the name it uses, and the file an export would carry — or why
+    /// none can go. Offered in an export only when somebody ticks it (licences are the sharer's to check).
+    /// </summary>
+    public sealed class SystemFontChoice
+    {
+        public SystemFontChoice(string reference, string? path, string? why)
+        {
+            Reference = reference;
+            Path = path;
+            Why = why;
+        }
+
+        /// <summary>The name the translation uses — and the name the file takes in the pack.</summary>
+        public string Reference { get; }
+
+        public string? Path { get; }
+
+        public string? Why { get; }
+
+        public bool Includable => Path != null;
+    }
+
     /// <summary>What an export would carry — counted before anything is written.</summary>
     public sealed class ExportPlan
     {
@@ -80,6 +103,52 @@ namespace UnityGameTranslator.Common
         public static bool IsExported(string fileName, IEnumerable<string> fontReferences) =>
             fontReferences.Any(r => FontReferences.Order(r)[0] == FontSource.Custom
                                     && AssetPacks.IsFontFileFor(fileName, FontReferences.Name(r)));
+
+        public const string NotOnThisComputer = "not on this computer";
+
+        public const string CollectionNotSupported = ".ttc files are not supported";
+
+        /// <summary>
+        /// The System fonts the translation uses, each with the file an export could carry.
+        ///
+        /// ⚠ Only BARE references name an installed font (<see cref="FontReferences"/>): "[Custom] X" is
+        /// fonts/'s and "[Game] X" the game's — neither may be carried from the system. A copy already in
+        /// fonts/ (a pack laid in, say) is still a System font of the translation: carried from there, and
+        /// only when asked like any other (user, 2026-09-28).
+        /// </summary>
+        /// <param name="findInstalled">The product's own search for an installed font, by name — the one
+        /// the mod serves fonts by (the mod's font loader; the Manager mirrors it).</param>
+        public static List<SystemFontChoice> SystemFonts(IEnumerable<string> fontReferences, string dataFolder,
+                                                         Func<string, string?> findInstalled)
+        {
+            var fontsFolder = Path.Combine(dataFolder, AssetPacks.FontsFolder);
+            var local = Directory.Exists(fontsFolder)
+                ? Directory.GetFiles(fontsFolder).Select(Path.GetFileName).ToList()
+                : new List<string>();
+
+            var choices = new List<SystemFontChoice>();
+            var stems = fontReferences
+                .Where(r => FontReferences.Order(r)[0] == FontSource.System)
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(r => r, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var stem in stems)
+            {
+                var copy = local.FirstOrDefault(file => AssetPacks.IsFontFileFor(file, stem));
+                if (copy != null)
+                {
+                    choices.Add(new SystemFontChoice(stem, Path.Combine(fontsFolder, copy), null));
+                    continue;
+                }
+
+                var found = findInstalled(stem);
+                choices.Add(found == null ? new SystemFontChoice(stem, null, NotOnThisComputer)
+                    : AssetPacks.IsFontFile(found) ? new SystemFontChoice(stem, found, null)
+                    : new SystemFontChoice(stem, null, CollectionNotSupported));
+            }
+
+            return choices;
+        }
 
         /// <summary>
         /// Every file the export carries, read from the mod's data folder.

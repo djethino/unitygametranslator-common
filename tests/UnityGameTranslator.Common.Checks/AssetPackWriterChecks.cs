@@ -84,6 +84,20 @@ namespace UnityGameTranslator.Common.Checks
                         "pictures are already compressed: deflating them again only costs time");
                 }
 
+                // Which System fonts an export may offer: bare references only, a copy in fonts/ first.
+                File.WriteAllBytes(Path.Combine(fonts, "Candara.ttf"), Repeated("copy ", 10));
+                var offered = AssetPackWriter.SystemFonts(
+                    new[] { "Candara", "Arial", "MS Gothic", "[Custom] Used", "[Game] LiberationSans SDF", "Nowhere" }, root,
+                    stem => stem == "Arial" ? "C:\\Windows\\Fonts\\arial.ttf" : stem == "MS Gothic" ? "C:\\Windows\\Fonts\\msgothic.ttc" : null);
+
+                check(offered.Select(c => c.Reference).SequenceEqual(new[] { "Arial", "Candara", "MS Gothic", "Nowhere" })
+                      && offered.Single(c => c.Reference == "Candara").Path == Path.Combine(fonts, "Candara.ttf")
+                      && offered.Single(c => c.Reference == "Arial").Includable
+                      && offered.Single(c => c.Reference == "MS Gothic").Why == AssetPackWriter.CollectionNotSupported
+                      && offered.Single(c => c.Reference == "Nowhere").Why == AssetPackWriter.NotOnThisComputer,
+                    "only bare references are System fonts; a copy in fonts/ goes first; a .ttc or a missing font says why",
+                    "[Custom] and [Game] name files that are not the system's to carry");
+
                 var when = new DateTime(2026, 9, 28, 14, 32, 5);
                 check(AssetPackWriter.FileName("LONESTAR", when) == "LONESTAR assets 2026-09-28 14-32.ugtpack"
                       && AssetPackWriter.FileName("Who: \"Me\"?", when) == "Who Me assets 2026-09-28 14-32.ugtpack"
