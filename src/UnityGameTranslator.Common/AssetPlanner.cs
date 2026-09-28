@@ -424,12 +424,31 @@ namespace UnityGameTranslator.Common
             var replaces = plan.Offers.Count(o => o.Change == AssetChange.Replace);
             var same = plan.Offers.Count(o => o.Change == AssetChange.Same);
 
-            if (adds > 0) parts.Add(adds + " new");
-            if (replaces > 0) parts.Add(replaces + " already in this game and different");
-            if (same > 0) parts.Add(same + " already in this game");
+            // 🔴 Nothing new and nothing different is said as the outcome, not as a count: "8 already
+            // in this game" above a greyed Apply left somebody looking for the step they had missed
+            // (user, 2026-09-28). The files are the same bytes; there is nothing to force.
+            if (adds == 0 && replaces == 0 && same > 0)
+                parts.Add("Nothing to add: " + (same == 1 ? "this file is" : "these " + same + " files are")
+                          + " already in this game, identical");
+            else
+            {
+                if (adds > 0) parts.Add(adds + " new");
+                if (replaces > 0) parts.Add(replaces + " different from the ones in this game");
+                if (same > 0) parts.Add(same + " already in this game");
+            }
+
             if (plan.Refused.Count > 0) parts.Add(plan.Refused.Count + " left out");
             return string.Join(" · ", parts);
         }
+
+        /// <summary>Whether Apply could ever write something from this plan — a new file, or a replacement ticked.</summary>
+        public static bool AnythingToAdd(AssetPlan plan) => plan.Offers.Any(o => o.Change != AssetChange.Same);
+
+        /// <summary>What one row says of its file — both products, the same words.</summary>
+        public static string StateText(AssetChange change) =>
+            change == AssetChange.Add ? "New"
+            : change == AssetChange.Same ? "Already in this game (identical)"
+            : "Different from the one in this game";
 
         /// <summary>Why image settings cannot go into this game's translation — null when they can.</summary>
         public static string? ImageSettingsRefusal(GameAssetSide game) =>
