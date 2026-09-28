@@ -27,11 +27,6 @@ namespace UnityGameTranslator.Common.Checks
                 "a bare name that is only a game font still finds it",
                 "translations written before the origin marks named game fonts bare");
 
-            check(FontReferences.ReadsFontFiles("TMP") && FontReferences.ReadsFontFiles("TMP (alt)")
-                  && !FontReferences.ReadsFontFiles("Unity") && !FontReferences.ReadsFontFiles(null),
-                "only TextMeshPro text can be drawn from a font file; legacy text needs an installed font",
-                "an installed font a pack carries would arrive for legacy text and never be used");
-
             check(FontReferences.Name("[Game] Arial") == "Arial" && FontReferences.Name("[Custom] Noto") == "Noto"
                   && FontReferences.Name("Candara") == "Candara" && FontReferences.Name(null) == "",
                 "the name is the reference without its mark", "what every source is looked up by");

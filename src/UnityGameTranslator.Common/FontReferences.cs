@@ -35,6 +35,10 @@ namespace UnityGameTranslator.Common
     /// ⚠ The one leniency, the second line of a bare name, is what lets an exported installed font
     /// reach a player who does not have it — and on the author's machine changes nothing: the
     /// installed font still answers first.
+    ///
+    /// ⚠ Every kind of text reads a file of fonts/ — TextMeshPro through the mod's own atlas, legacy
+    /// text (UI.Text) since the mod shows fonts/ to the engine as installed fonts (2026-09-28, the
+    /// mod's FontFolderRedirect). A rule "only TextMeshPro reads a file" stood here until then.
     /// </summary>
     public static class FontReferences
     {
@@ -58,18 +62,6 @@ namespace UnityGameTranslator.Common
             if (reference.StartsWith(AssetPacks.CustomFontPrefix, StringComparison.Ordinal)) return reference.Substring(AssetPacks.CustomFontPrefix.Length);
             return reference;
         }
-
-        /// <summary>
-        /// Whether text of this kind can be drawn with a font FILE — a font in fonts/, brought by hand
-        /// or by an asset pack. The kind is `_fonts[…].type` as the mod writes it.
-        ///
-        /// 🔴 **Only TextMeshPro can.** Legacy text (UI.Text, written "Unity") is drawn by the engine
-        /// from a font the game holds or one INSTALLED on the computer — the operating system finds
-        /// the file, and a file lying in fonts/ is not installed. So an installed font a pack carries
-        /// helps TextMeshPro text only; for legacy text it would arrive and never be used.
-        /// </summary>
-        public static bool ReadsFontFiles(string? textType) =>
-            textType == "TMP" || textType == "TextMeshPro" || textType == "TMP (alt)";
 
         /// <summary>
         /// Which source serves a reference, given what exists here — null when none can.
