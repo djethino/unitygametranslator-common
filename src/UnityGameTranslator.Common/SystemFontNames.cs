@@ -53,9 +53,15 @@ namespace UnityGameTranslator.Common
                 candidates.Add(familyNoSpaces + style);
                 candidates.Add(familyNoSpaces + "-" + style);
             }
-
-            candidates.Add(familyNoSpaces + "-Regular");
-            candidates.Add(familyNoSpaces);
+            else
+            {
+                // 🔴 Only for a name that asks for no style. "Tahoma Bold" tried "Tahoma" as a file
+                // name, found tahoma.ttf — the REGULAR — and stopped there, before any name table was
+                // read: the Bold the translation named was drawn Regular (2026-10-02). The name table
+                // search that follows (FontFileNames.FindFile) finds the styled face by its full name.
+                candidates.Add(familyNoSpaces + "-Regular");
+                candidates.Add(familyNoSpaces);
+            }
             candidates.Add(displayName.Replace(" ", ""));
 
             return candidates.ToArray();

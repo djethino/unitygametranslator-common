@@ -17,6 +17,11 @@ namespace UnityGameTranslator.Common.Checks
                 "a display name with a style tries the file names fonts are usually saved under",
                 "\"Adobe Devanagari Italic\" is AdobeDevanagari-Italic.otf on disk");
 
+            var bold = SystemFontNames.Candidates("Tahoma Bold");
+            check(!bold.Contains("Tahoma", StringComparer.OrdinalIgnoreCase) && !bold.Contains("Tahoma-Regular", StringComparer.OrdinalIgnoreCase),
+                "a name with a style never tries the family's plain file",
+                "\"Tahoma Bold\" found tahoma.ttf, the Regular, before any name table was read — the Bold was drawn Regular");
+
             var plain = SystemFontNames.Candidates("comicbd");
             check(plain[0] == "comicbd" && plain.Contains("comicbd-Regular"),
                 "a name that already is a file name is tried as it is, first",
