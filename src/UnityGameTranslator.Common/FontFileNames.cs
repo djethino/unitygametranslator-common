@@ -83,7 +83,8 @@ namespace UnityGameTranslator.Common
         /// The installed file for a font name, and its face — null when none.
         ///
         /// 1. A file the name NAMES: a translation may refer to a font by its file ("comicbd"), and the
-        ///    names <see cref="SystemFontNames.Candidates"/> derives are tried as .ttf/.otf files first.
+        ///    names <see cref="SystemFontNames.Candidates"/> derives are tried as .ttf/.otf files first,
+        ///    in the folders then below them — exactly, never loosely.
         /// 2. Otherwise the file whose name table carries the name, the best rank of ALL the folders'
         ///    files — never the first one listed (a family's Bold comes before its Regular).
         /// </summary>
@@ -104,6 +105,10 @@ namespace UnityGameTranslator.Common
                         string path = Path.Combine(dir, candidate + extension);
                         if (File.Exists(path)) { face = 0; return path; }
                     }
+            // The same file names in the folders below — a system keeps its fonts in subfolders
+            // (Linux's /usr/share/fonts/truetype/<family>/): a name a translation gives as a file is
+            // found there too, before any name table is read.
+            var named = new HashSet<string>(candidates, StringComparer.OrdinalIgnoreCase);
 
             string? bestFile = null;
             int bestFace = -1, bestRank = int.MaxValue;
@@ -116,6 +121,7 @@ namespace UnityGameTranslator.Common
                 {
                     string extension = Path.GetExtension(file);
                     bool single = Array.Exists(SingleExtensions, x => string.Equals(x, extension, StringComparison.OrdinalIgnoreCase));
+                    if (single && named.Contains(Path.GetFileNameWithoutExtension(file))) { face = 0; return file; }
                     if (!single && !(collections && string.Equals(extension, ".ttc", StringComparison.OrdinalIgnoreCase))) continue;
                     try
                     {
