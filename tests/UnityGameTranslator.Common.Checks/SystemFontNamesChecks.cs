@@ -22,11 +22,6 @@ namespace UnityGameTranslator.Common.Checks
                 "a name that already is a file name is tried as it is, first",
                 "most translations name Windows fonts by their file, as the picker lists them");
 
-            check(SystemFontNames.Normalize("Adobe Devanagari Italic") == SystemFontNames.Normalize("AdobeDevanagari-Italic")
-                  && SystemFontNames.Normalize("DejaVu_Sans") == "dejavusans" && SystemFontNames.Normalize(null) == "",
-                "names compare without case, spaces, hyphens or underscores",
-                "the loose match the mod falls back on when no exact file name is there");
-
             check(SystemFontNames.RegisteredName("Candara Bold (TrueType)") == "Candara Bold"
                   && SystemFontNames.RegisteredName("Segoe UI Variable (TrueType)") == "Segoe UI Variable"
                   && SystemFontNames.RegisteredName("Candara") == "Candara",

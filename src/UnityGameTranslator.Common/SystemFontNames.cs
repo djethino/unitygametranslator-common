@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace UnityGameTranslator.Common
 {
@@ -63,26 +62,10 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
-        /// A font name made comparable: lower case, no spaces, hyphens or underscores.
-        /// "Adobe Devanagari Italic" and "AdobeDevanagari-Italic" both become "adobedevanagariitalic".
-        /// </summary>
-        public static string Normalize(string? name)
-        {
-            if (string.IsNullOrEmpty(name)) return "";
-
-            var sb = new StringBuilder(name!.Length);
-            foreach (var c in name)
-            {
-                if (c != ' ' && c != '-' && c != '_') sb.Append(char.ToLowerInvariant(c));
-            }
-
-            return sb.ToString();
-        }
-
-        /// <summary>
         /// The name a system font table gives a file, without the format Windows appends:
         /// "Candara Bold (TrueType)" → "Candara Bold". Several names joined by " &amp; " (a collection)
-        /// come back as they are — such a file is a .ttc, which no product here loads.
+        /// come back as they are — such a file is a .ttc, whose faces only the mod takes out
+        /// (<see cref="FontFileNames.FindFile"/>, collections allowed); an export carries none.
         /// </summary>
         public static string RegisteredName(string valueName)
         {
