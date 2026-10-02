@@ -69,9 +69,9 @@ namespace UnityGameTranslator.Common
         /// <summary>
         /// The same question asked of a list whose height is already settled by something else.
         ///
-        /// ⚠ It exists for a caller that cannot let this decide its geometry. The mod's popup opens
-        /// downwards from its button and nothing flips it when it would run off the bottom, so its
-        /// height is its own business until that is dealt with — but whether the list needs a search
+        /// ⚠ It exists for a caller that settles its geometry itself. The mod's popup takes the
+        /// height its screen asked for, opens above its button when there is not room for it below,
+        /// and is cut to the room on the side it opens — but whether the list then needs a search
         /// field is the same question there as anywhere, and it is answered here rather than by a
         /// judgement written at each call site.
         /// </summary>
