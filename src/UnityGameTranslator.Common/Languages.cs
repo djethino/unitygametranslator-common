@@ -336,5 +336,39 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static string? DeepLCode(string? languageName, bool isTarget) =>
             Provider(languageName, isTarget ? 3 : 2);
+
+        private static string[]? ScriptRow(string? languageName)
+        {
+            if (languageName == null) return null;
+            foreach (string[] row in CatalogueScripts)
+            {
+                if (string.Equals(row[0], languageName, StringComparison.OrdinalIgnoreCase))
+                    return row;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// The ISO 15924 code of the script this language is written in ("Arab", "Latn", "Jpan"),
+        /// or null for a name the catalogue does not hold. From the catalogue, which reads it from
+        /// CLDR.
+        /// </summary>
+        public static string? ScriptOf(string? languageName) => ScriptRow(languageName)?[1];
+
+        /// <summary>
+        /// Whether this language is written right to left — true or false from the catalogue
+        /// (CLDR's script metadata), null for a name it does not hold: unknown is not "left to
+        /// right".
+        ///
+        /// ⚠ The one answer to "is the target language right to left". Never a list of languages
+        /// in a program, never a guess from the letters a translation happens to contain: a French
+        /// translation that keeps one Arabic name is not a right-to-left translation, and a Hebrew
+        /// game translated into English is not one either.
+        /// </summary>
+        public static bool? IsRightToLeft(string? languageName)
+        {
+            string[]? row = ScriptRow(languageName);
+            return row == null ? (bool?)null : row[2] == "rtl";
+        }
     }
 }

@@ -141,6 +141,44 @@ namespace UnityGameTranslator.Common.Checks
             check(Languages.DeepLCode("Khmer", true) == null && Languages.GoogleCode("Khmer") == "km",
                 "and DeepL does not do Khmer while Google does",
                 "the kind of gap that used to cost a 400 per line, in silence");
+
+            // The direction of a language, re-read from the catalogue itself rather than from the
+            // table generated out of it: every language, both ways.
+            string? catalogue = FindCatalogue();
+            check(catalogue != null, "the language catalogue is found", "catalogs/languages.json, the source the tables are generated from");
+            if (catalogue != null)
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText(catalogue));
+                int read = 0, rtl = 0;
+                var wrong = new System.Collections.Generic.List<string>();
+                foreach (var entry in doc.RootElement.GetProperty("languages").EnumerateArray())
+                {
+                    string name = entry.GetProperty("name").GetString()!;
+                    bool written = entry.GetProperty("direction").GetString() == "rtl";
+                    read++;
+                    if (written) rtl++;
+                    if (Languages.IsRightToLeft(name) != written || Languages.ScriptOf(name) != entry.GetProperty("script").GetString())
+                        wrong.Add(name);
+                }
+                check(read > 100 && wrong.Count == 0, "every language's script and direction are the catalogue's",
+                    wrong.Count == 0 ? read + " languages, " + rtl + " right to left" : "differs for " + string.Join(", ", wrong));
+            }
+            check(Languages.IsRightToLeft("Klingon") == null, "a name the catalogue does not hold has no direction",
+                "unknown is not left to right: a caller that needs the answer must say it has none");
+            check(Languages.IsRightToLeft(null) == null && Languages.ScriptOf(null) == null, "and nothing has none", "");
+        }
+
+        /// <summary>Up from the binary until the catalogue's languages.json is found.</summary>
+        private static string? FindCatalogue()
+        {
+            var dir = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
+            while (dir != null)
+            {
+                string candidate = System.IO.Path.Combine(dir.FullName, "catalogs", "languages.json");
+                if (System.IO.File.Exists(candidate)) return candidate;
+                dir = dir.Parent;
+            }
+            return null;
         }
     }
 }
