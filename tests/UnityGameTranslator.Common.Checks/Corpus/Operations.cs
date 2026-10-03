@@ -234,6 +234,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => Placeholders.Tokens(Str(e, "text") ?? "")),
             new Operation("placeholders", "invented", typeof(Placeholders), nameof(Placeholders.Invented),
                 e => Placeholders.Invented(Str(e, "source") ?? "", Str(e, "translation"))),
+            new Operation("placeholders", "markup_kept_by_edit", typeof(Markup), nameof(Markup.KeptByEdit),
+                e => Markup.KeptByEdit(Str(e, "source") ?? "", Str(e, "edited") ?? "")),
             new Operation("placeholders", "tally", typeof(Placeholders), nameof(Placeholders.Tally),
                 e => Placeholders.Tally(Str(e, "text") ?? "")),
             new Operation("placeholders", "length_at", typeof(Placeholders), nameof(Placeholders.LengthAt),

@@ -262,6 +262,66 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// What a PERSON's edit lost of the source's markup, as lines read on a screen — the rules a
+        /// model's answer is held to (<see cref="OutOfOrder"/>, <see cref="Emptied"/>, every tag kept),
+        /// on a line typed with its tags as they are written. Empty when it keeps them all.
+        ///
+        /// 🔴 **The developer's markup is the developer's intent** (user, 2026-10-04: "ne pas trahir ce
+        /// que voulait le dev"). A model losing a tag was refused; a person retouching a line in the
+        /// mod's small editor could drop a &lt;u&gt; and publish it, and nothing said so.
+        ///
+        /// ⚠ A tag of the person's own is theirs (as "Save [F5]" is): only the source's are asked
+        /// for. Each tag of the edit is matched to the same tag of the source (case aside, as rich
+        /// text reads them), in order of appearance.
+        /// </summary>
+        public static List<string> KeptByEdit(string source, string edited)
+        {
+            var errors = new List<string>();
+            if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(edited)) return errors;
+            Extract(source, out List<string> tags);
+            if (tags.Count == 0) return errors;
+
+            // The edit with each source tag it holds as that tag's token: the shape the model rules read.
+            var used = new bool[tags.Count];
+            var lifted = new StringBuilder(edited.Length);
+            int last = 0;
+            foreach (Match match in TagPattern.Matches(edited))
+            {
+                lifted.Append(edited, last, match.Index - last);
+                int index = -1;
+                for (int i = 0; i < tags.Count && index < 0; i++)
+                    if (!used[i] && string.Equals(tags[i], match.Value, System.StringComparison.OrdinalIgnoreCase)) index = i;
+                if (index < 0) lifted.Append(match.Value);
+                else
+                {
+                    used[index] = true;
+                    lifted.Append(PlaceholderPrefix).Append(index).Append(PlaceholderSuffix);
+                }
+                last = match.Index + match.Length;
+            }
+            lifted.Append(edited, last, edited.Length - last);
+            string edit = lifted.ToString();
+
+            for (int i = 0; i < tags.Count; i++)
+                if (!used[i]) errors.Add($"{tags[i]} is missing: the source has it");
+
+            string liftedSource = Extract(source, out _);
+            int[] pairs = Pairs(tags);
+            for (int close = 0; close < pairs.Length; close++)
+            {
+                int open = pairs[close];
+                if (open < 0 || !used[open] || !used[close]) continue;
+                string opening = PlaceholderPrefix + open + PlaceholderSuffix;
+                string closing = PlaceholderPrefix + close + PlaceholderSuffix;
+                if (edit.IndexOf(closing, System.StringComparison.Ordinal) < edit.IndexOf(opening, System.StringComparison.Ordinal))
+                    errors.Add($"{tags[close]} must come after {tags[open]}");
+                else if (!string.IsNullOrEmpty(Between(liftedSource, opening, closing)) && Between(edit, opening, closing) == "")
+                    errors.Add($"Nothing between {tags[open]} and {tags[close]}: the source puts words there");
+            }
+            return errors;
+        }
+
+        /// <summary>
         /// Whether some pair of tags in this text encloses something — the case where a model has
         /// to be told that tags come in pairs and what sits between them stays between them.
         /// </summary>
