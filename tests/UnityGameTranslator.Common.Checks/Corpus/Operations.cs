@@ -135,6 +135,9 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => Uploads.WallOf(EnumRequired<Publication>(e, "publication"), Bool(e, "on_a_branch"), Str(e, "owner"),
                                     NullableBool(e, "accepts_branches"), NullableBool(e, "main_missing"),
                                     NullableBool(e, "main_abandoned"), NullableBool(e, "branch_frozen"))),
+            new Operation("uploads", "game_wall", typeof(Uploads), nameof(Uploads.GameWall),
+                e => Uploads.GameWall(EnumRequired<UploadAct>(e, "act"), Bool(e, "on_a_branch"),
+                                      GameChoiceOf(e, "confirmed_game"), LineageGameOf(e, "game"))),
             new Operation("uploads", "decided_in_the_game", typeof(Uploads), nameof(Uploads.DecidedInTheGame),
                 e => Uploads.DecidedInTheGame(EnumRequired<UploadAct>(e, "act"))),
             new Operation("uploads", "closed_reason", typeof(Uploads), nameof(Uploads.ClosedReason),
@@ -316,7 +319,21 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             LastSyncedHash = Str(e, "last_synced"),
             ContentHash = Str(e, "content_hash"),
             ForkStillTheCopy = Bool(e, "fork_still_the_copy"),
+            ConfirmedGame = GameChoiceOf(e, "confirmed_game"),
         };
+
+        /// <summary>`{source, id, name}` — the game confirmed on this machine — or null when absent.</summary>
+        private static GameChoice? GameChoiceOf(JsonElement e, string key) =>
+            e.TryGetProperty(key, out var g) && g.ValueKind == JsonValueKind.Object
+                ? new GameChoice(Str(g, "source") ?? "", Str(g, "id") ?? "", Str(g, "name") ?? "")
+                : null;
+
+        /// <summary>`{id, name, steam_id?, igdb_id?, rawg_id?}` — a lineage's game — or null when absent.</summary>
+        private static LineageGame? LineageGameOf(JsonElement e, string key) =>
+            e.TryGetProperty(key, out var g) && g.ValueKind == JsonValueKind.Object
+                ? new LineageGame(Int(g, "id"), Str(g, "name") ?? "", Str(g, "steam_id"),
+                                  NullableInt(g, "igdb_id"), NullableInt(g, "rawg_id"))
+                : null;
 
         private static ServerFacts ServerFactsOf(JsonElement e) => new ServerFacts
         {
@@ -339,6 +356,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             Status = Str(e, "status"),
             LinesChanged = NullableInt(e, "lines_changed"),
             LinesChangedHere = NullableInt(e, "lines_changed_here"),
+            Game = LineageGameOf(e, "game"),
+            GameSwitchPending = NullableBool(e, "game_switch_pending"),
         };
 
         private static AccountFacts AccountFactsOf(JsonElement e) => new AccountFacts
