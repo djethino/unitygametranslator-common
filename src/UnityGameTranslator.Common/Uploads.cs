@@ -374,12 +374,10 @@ namespace UnityGameTranslator.Common
             // otherwise (`game_changed`), so it is said before the click. A Main's owner is never
             // held: they moved it. The line under the game's name states the fact; the button the
             // way out; a screen without that line shows the whole wall.
-            if (closed == null && GameChoices.Differs(local.ConfirmedGame, server.Game)
-                && ((taken == UploadAct.Update && onABranch) || taken == UploadAct.Contribute))
+            if (closed == null && GameWall(taken, onABranch, local.ConfirmedGame, server.Game) is { } gameWall)
             {
-                var wall = Walls.GameChanged(server.Game!.Name);
-                closed = wall.WayOut;
-                wholeWall = wall.Whole;
+                closed = gameWall.WayOut;
+                wholeWall = gameWall.Whole;
             }
 
             return new UploadButton
@@ -393,6 +391,17 @@ namespace UnityGameTranslator.Common
                 Wall = wholeWall,
             };
         }
+
+        /// <summary>
+        /// The wall a contribution meets when the lineage is filed under another game than the one
+        /// confirmed here — or null. One rule for <see cref="Button"/> and for a tool that weighs
+        /// the act itself (the Manager): updating one's branch and a first contribution wait for
+        /// Switch game; a Main's own row never does — its owner moved it.
+        /// </summary>
+        public static WallText? GameWall(UploadAct act, bool onABranch, GameChoice? confirmed, LineageGame? game) =>
+            GameChoices.Differs(confirmed, game) && ((act == UploadAct.Update && onABranch) || act == UploadAct.Contribute)
+                ? Walls.GameChanged(game!.Name)
+                : (WallText?)null;
 
         /// <summary>Said by a tool that cannot take the act, after the wall when there is one.</summary>
         public const string OnlyInTheGame =
