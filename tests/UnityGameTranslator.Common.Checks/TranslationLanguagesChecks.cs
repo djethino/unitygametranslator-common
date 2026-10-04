@@ -91,6 +91,30 @@ namespace UnityGameTranslator.Common.Checks
                     "English", "French", "English", "French") == null,
                 "and says nothing when there is nothing to say",
                 "a warning shown on a file that is fine is a warning nobody will read twice");
+
+            // ── When a language may still change (user's rule, 2026-10-04) ──
+            check(!TranslationLanguages.TargetLocked(published: false, lineCount: 0)
+                  && TranslationLanguages.TargetLocked(false, 1) && TranslationLanguages.TargetLocked(true, 0),
+                "the target settles with the first line, or with publication",
+                "retargeting a file with lines leaves them in a language the game no longer asks for");
+
+            check(!TranslationLanguages.SourceLocked(false, 12, "auto") && !TranslationLanguages.SourceLocked(false, 12, null),
+                "a source still on auto stays free, lines or not",
+                "auto states nothing; naming it is how strict source detection is turned on before publishing");
+
+            check(TranslationLanguages.SourceLocked(false, 12, "English") && !TranslationLanguages.SourceLocked(false, 0, "English"),
+                "a named source settles once the file holds lines",
+                "an empty file may still change its mind");
+
+            check(TranslationLanguages.SourceLocked(true, 0, "auto"),
+                "and a published translation settles both",
+                "the server keeps the languages it was published with");
+
+            check(TranslationLanguages.SettlesSource(false, 12, "auto", "English")
+                  && !TranslationLanguages.SettlesSource(false, 0, "auto", "English")
+                  && !TranslationLanguages.SettlesSource(false, 12, "auto", "auto"),
+                "naming the source of a file with lines is said to settle it",
+                "said before Apply, never discovered after");
         }
     }
 }

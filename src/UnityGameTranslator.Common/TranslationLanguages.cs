@@ -41,6 +41,39 @@ namespace UnityGameTranslator.Common
             return Languages.IsSettled(fromConfig) ? fromConfig : null;
         }
 
+        /// <summary>
+        /// Whether the target may still be changed. Settled by the first line: retargeting a file
+        /// that holds lines leaves every one of them in a language the game no longer asks for, and
+        /// the next captures arrive in the new one — one file, two languages. Published: the server
+        /// keeps the languages a lineage was published with.
+        /// </summary>
+        public static bool TargetLocked(bool published, int lineCount) => published || lineCount > 0;
+
+        /// <summary>
+        /// Whether the source may still be changed (user's rule, 2026-10-04).
+        ///
+        /// 🔴 **"auto" is a working mode, not an answer** (see <see cref="Resolve"/>): a file holding
+        /// lines with its source still on "auto" has stated nothing, so naming its source then
+        /// orphans nothing — it is the one way to turn on strict source detection before
+        /// publishing. It settles the moment a language is named while the file holds lines
+        /// (<see cref="SettlesSource"/> says so before it happens), and publishing settles it too.
+        /// Locked for both products alike: the mod's Options and the Manager's card ask this.
+        /// </summary>
+        public static bool SourceLocked(bool published, int lineCount, string? source) =>
+            published || (lineCount > 0 && Languages.IsSettled(source));
+
+        /// <summary>
+        /// Whether choosing <paramref name="chosen"/> in place of <paramref name="current"/> settles
+        /// the source for good — said before the choice is applied, never after
+        /// (<see cref="SettlesSourceNotice"/>).
+        /// </summary>
+        public static bool SettlesSource(bool published, int lineCount, string? current, string? chosen) =>
+            !SourceLocked(published, lineCount, current) && lineCount > 0 && Languages.IsSettled(chosen);
+
+        /// <summary>What both products say before a choice settles the source.</summary>
+        public const string SettlesSourceNotice =
+            "The source language cannot be changed once applied: this translation already has lines.";
+
         /// <summary>Which side of a pair a disagreement is on. None when there is none.</summary>
         public enum Side
         {
