@@ -96,6 +96,63 @@ namespace UnityGameTranslator.Common
             return row;
         }
 
+        /// <summary>
+        /// What tells two games of one title apart, on one line under a list row: the id in each
+        /// store, the year, who made and who published it — each only when known. Same composition
+        /// as the site's list (`resources/js/components/game-picker.js`, `facts`).
+        ///
+        /// 🔴 **For the person picking, never for a decision** (user, 2026-10-04: "ça permet à
+        /// l'utilisateur d'aller vérifier avant de cliquer").
+        /// </summary>
+        /// <param name="ids">The ids the game answers to, by source ("steam", "igdb", "rawg"; "local" is not shown).</param>
+        public static string Facts(System.Collections.Generic.IDictionary<string, string>? ids, int? year,
+                                   System.Collections.Generic.IList<string>? developers,
+                                   System.Collections.Generic.IList<string>? publishers)
+        {
+            var parts = new System.Collections.Generic.List<string>();
+
+            if (ids != null)
+            {
+                foreach (var store in new[] { "steam", "igdb", "rawg" })
+                {
+                    if (ids.TryGetValue(store, out var id) && !string.IsNullOrEmpty(id))
+                        parts.Add(StoreLabel(store) + " " + id);
+                }
+            }
+
+            if (year.HasValue && year.Value > 0)
+                parts.Add(year.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+            var made = developers == null ? "" : string.Join(", ", developers);
+            var published = new System.Collections.Generic.List<string>();
+            if (publishers != null)
+            {
+                foreach (var p in publishers)
+                {
+                    if (developers == null || !developers.Contains(p)) published.Add(p);
+                }
+            }
+            var by = string.Join(", ", published);
+
+            if (made.Length > 0 && by.Length > 0) parts.Add(made + " / " + by);
+            else if (made.Length > 0) parts.Add(made);
+            else if (by.Length > 0) parts.Add(by);
+
+            return string.Join(" · ", parts);
+        }
+
+        /// <summary>A store's name as a person reads it.</summary>
+        public static string StoreLabel(string store)
+        {
+            switch (store)
+            {
+                case "steam": return "Steam";
+                case "igdb": return "IGDB";
+                case "rawg": return "RAWG";
+                default: return store;
+            }
+        }
+
         /// <summary>What the marks mean, under the list — the mod's own line.</summary>
         public const string Legend =
             "Pick the matching game. ★ = best match • [catalog] = already known here, other tags = external game databases";

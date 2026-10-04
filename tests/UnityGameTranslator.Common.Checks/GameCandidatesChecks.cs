@@ -37,6 +37,17 @@ namespace UnityGameTranslator.Common.Checks
             check(GameCandidates.Confidence(null, "Other", "rawg", null, "Some Game") == 0,
                 "nothing in common scores nothing", "no mark, bottom of the list");
 
+            // ── What tells two games of one title apart ──────────────────────
+            var ids = new System.Collections.Generic.Dictionary<string, string> { ["local"] = "12", ["igdb"] = "81", ["steam"] = "500" };
+            check(GameCandidates.Facts(ids, 2025, new[] { "Studio A" }, new[] { "Studio A", "House B" })
+                  == "Steam 500 · IGDB 81 · 2025 · Studio A / House B",
+                "a row says its store ids, its year and who made and published it",
+                "the site's list says the same; the card's own number is not a store's; a publisher that also made it is said once");
+            check(GameCandidates.Facts(null, null, null, null) == "",
+                "nothing known, nothing said", "an empty line rather than a guess");
+            check(GameCandidates.Facts(null, null, null, new[] { "House B" }) == "House B",
+                "a publisher alone is still said", "often the only maker a store names");
+
             // ── Marks and rows ───────────────────────────────────────────────
             check(GameCandidates.Mark(GameCandidates.BestMatch) == "★"
                   && GameCandidates.Mark(GameCandidates.LikelyMatch) == "☆"
