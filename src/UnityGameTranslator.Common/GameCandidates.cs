@@ -99,5 +99,92 @@ namespace UnityGameTranslator.Common
         /// <summary>What the marks mean, under the list — the mod's own line.</summary>
         public const string Legend =
             "Pick the matching game. ★ = best match • [catalog] = already known here, other tags = external game databases";
+
+        /// <summary>
+        /// Said when the list is empty — the way out, not a dead end: the search box also takes an
+        /// id or a store page. The site's own list says the same (`upload.no_game_found`).
+        /// </summary>
+        public const string NothingFound =
+            "No games found. Try another title, or paste the game's Steam ID or Steam link.";
+
+        /// <summary>
+        /// The hit a person took, as a publication sends it back (`game_pick`): its source, and its
+        /// id IN that source. Null when the hit carries no usable id.
+        ///
+        /// 🔴 **A choice is sent as the hit was given, never as its title** (analyse/
+        /// identite-des-jeux-parcours.md, T1): the site used to search the picked title again and
+        /// could file the translation under another game of the same name. A Steam hit is named by
+        /// its Steam id; a hit of the site's catalogue, IGDB or RAWG by `id`. Same rule as the
+        /// site's own list (`resources/js/components/game-picker.js`, `pickOf`).
+        /// </summary>
+        public static Pick? PickOf(string? source, long id, string? steamId)
+        {
+            if (string.IsNullOrEmpty(source)) return null;
+
+            var kind = source!.Trim().ToLowerInvariant();
+
+            if (kind == "steam")
+                return IsDigits(steamId) ? new Pick(kind, steamId!.Trim()) : null;
+
+            if (kind == CatalogueSource || kind == "igdb" || kind == "rawg")
+                return id > 0 ? new Pick(kind, id.ToString(System.Globalization.CultureInfo.InvariantCulture)) : null;
+
+            return null;
+        }
+
+        /// <summary>A hit taken: `{source, id}` as the upload and `GET games/adult` take it.</summary>
+        public sealed class Pick
+        {
+            public Pick(string source, string id)
+            {
+                Source = source;
+                Id = id;
+            }
+
+            public string Source { get; }
+            public string Id { get; }
+        }
+
+        /// <summary>
+        /// Whether the game picked looks like the game on this machine — said BEFORE sending.
+        ///
+        /// 🔴 **Warned, never refused, here** (decided 2026-10-02: "si on peut être sûr on refuse,
+        /// sinon on avertit"). Two different Steam ids look sure, and the site does refuse them —
+        /// but a DEMO reads its own id while the game picked is the full game's, which only the site
+        /// can tell (it asks Steam). So the client says what it sees and lets the site decide;
+        /// titles that look unrelated are ordinary (a product name of initials for a title that
+        /// spells the words out) and are only ever a warning.
+        /// </summary>
+        /// <returns>The sentence to show under the game picked, or null when nothing looks off.</returns>
+        public static string? DifferentGame(string? readSteamId, string? readName,
+                                            string? pickedSteamId, string? pickedName)
+        {
+            if (IsDigits(readSteamId) && IsDigits(pickedSteamId))
+            {
+                return string.Equals(readSteamId!.Trim(), pickedSteamId!.Trim(), System.StringComparison.Ordinal)
+                    ? null
+                    : "Different game? The installed game is Steam app " + readSteamId.Trim()
+                      + ". The picked one is Steam app " + pickedSteamId.Trim() + ".";
+            }
+
+            var read = GameNames.Flat(readName);
+            var picked = GameNames.Flat(pickedName);
+            if (read.Length == 0 || picked.Length == 0) return null;
+
+            if (read == picked || picked.Contains(read) || read.Contains(picked)) return null;
+
+            return "Different game? The installed game is named \"" + readName!.Trim()
+                   + "\". The picked one is \"" + pickedName!.Trim() + "\".";
+        }
+
+        private static bool IsDigits(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return false;
+            foreach (var c in value!.Trim())
+            {
+                if (c < '0' || c > '9') return false;
+            }
+            return true;
+        }
     }
 }

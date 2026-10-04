@@ -81,5 +81,26 @@ namespace UnityGameTranslator.Common
 
             return new Match(all, true);
         }
+
+        /// <summary>
+        /// A name with case, spaces and punctuation removed — the whole difference between a
+        /// product name and a shop title ("LONESTAR", "LoneStar", "Lone Star: The Game").
+        ///
+        /// ⚠ Letters and digits of ANY script: the site's own version once kept `[a-z0-9]` only and
+        /// emptied every title written in another alphabet. Same rule as the site's
+        /// `App\Support\GameNaming::flatten`, so the three products compare names alike.
+        /// </summary>
+        public static string Flat(string? name)
+        {
+            if (string.IsNullOrEmpty(name)) return "";
+
+            var flat = new System.Text.StringBuilder(name!.Length);
+            foreach (var c in name.ToLowerInvariant())
+            {
+                if (char.IsLetterOrDigit(c)) flat.Append(c);
+            }
+
+            return flat.ToString();
+        }
     }
 }

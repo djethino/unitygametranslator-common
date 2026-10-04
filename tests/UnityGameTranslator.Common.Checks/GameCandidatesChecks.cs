@@ -53,6 +53,42 @@ namespace UnityGameTranslator.Common.Checks
 
             check(GameCandidates.Legend.Contains("★") && GameCandidates.Legend.Contains("[catalog]"),
                 "the legend explains the two marks it uses", "a mark nobody explains is decoration");
+
+            // ── The hit taken, sent back as it was given (game_pick) ─────────
+            var steamPick = GameCandidates.PickOf("steam", 0, "3863760");
+            check(steamPick != null && steamPick.Source == "steam" && steamPick.Id == "3863760",
+                "a Steam hit is named by its Steam id", "it carries no other id");
+
+            var igdbPick = GameCandidates.PickOf("IGDB", 376372, "3863760");
+            check(igdbPick != null && igdbPick.Source == "igdb" && igdbPick.Id == "376372",
+                "an IGDB hit is named by its IGDB id, even when it knows the Steam id",
+                "the site resolves the Steam id from the IGDB answer itself");
+
+            check(GameCandidates.PickOf("local", 37, null)?.Id == "37"
+                  && GameCandidates.PickOf("steam", 0, null) == null
+                  && GameCandidates.PickOf("rawg", 0, null) == null
+                  && GameCandidates.PickOf("somewhere", 5, null) == null,
+                "a hit without a usable id, or from an unknown source, is no pick", "never a guessed pair");
+
+            // ── Warned before sending, never refused here ────────────────────
+            check(GameCandidates.DifferentGame("3863760", null, "3604960", null)?.Contains("3604960") == true
+                  && GameCandidates.DifferentGame("3863760", null, "3863760", null) == null,
+                "two Steam ids that differ are said, the same one is not", "the site decides (a demo reads its own id)");
+
+            check(GameCandidates.DifferentGame(null, "Legacy of Shadows", null, "Spyro: Shadow Legacy") != null,
+                "a title that is not a form of the name read is said", "the case that filed a translation under another game");
+
+            check(GameCandidates.DifferentGame(null, "LONESTAR", null, "LoneStar: The Game") == null
+                  && GameCandidates.DifferentGame(null, "Hollow Knight", null, "hollow-knight") == null
+                  && GameCandidates.DifferentGame(null, null, null, "Anything") == null,
+                "a product name that is a form of the title, or nothing read, says nothing",
+                "case, spaces and punctuation aside");
+
+            check(GameNames.Flat("龙胤立志传") == "龙胤立志传" && GameNames.Flat("Lone Star: The Game!") == "lonestarthegame",
+                "names are compared on letters and digits of any script", "the site's flatten, the same rule");
+
+            check(GameCandidates.NothingFound.Contains("Steam ID"),
+                "an empty list says what to try next", "the search box takes ids too");
         }
     }
 }
