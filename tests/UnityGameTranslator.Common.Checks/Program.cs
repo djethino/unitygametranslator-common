@@ -97,6 +97,8 @@ namespace UnityGameTranslator.Common.Checks
             Section("The language of a translation", TranslationLanguagesChecks.Run);
 
             Section("Which game a publication names", GameCandidatesChecks.Run);
+
+            Section("The game confirmed here against the site's", GameChoicesChecks.Run);
         }
 
         /// <summary>Who may rate a translation, and why the arrows are sometimes absent.</summary>

@@ -72,7 +72,7 @@ namespace UnityGameTranslator.Common
         public string Whole => Fact + " " + WayOut;
     }
 
-    /// <summary>The four walls, each written once. The words every product reads.</summary>
+    /// <summary>The walls, each written once. The words every product reads.</summary>
     internal static class Walls
     {
         public static readonly WallText MainMissing = new WallText
@@ -91,6 +91,17 @@ namespace UnityGameTranslator.Common
         {
             Fact = "The Main no longer accepts contributions.",
             WayOut = "Contributions cannot be sent there any more. Fork keeps your lines as your own version.",
+        };
+
+        /// <summary>
+        /// The lineage is filed under another game than the one confirmed here (its Main moved,
+        /// 2026-10-05): a contribution waits for the player to confirm that game. The fact is the
+        /// line under the game's name (<see cref="GameChoices.Banner"/>); the way out names its act.
+        /// </summary>
+        public static WallText GameChanged(string name) => new WallText
+        {
+            Fact = "On the website, this translation is for " + name + ".",
+            WayOut = "Switch game to keep contributing.",
         };
 
         /// <param name="owner">Who leads the lineage, when known. Named when it can be — "somebody" leaves nowhere to look.</param>
@@ -352,6 +363,25 @@ namespace UnityGameTranslator.Common
             // whoever downloads a fork carries it too, in a lineage where other rules answer.
             bool untouchedCopy = !server.Exists && local.ForkStillTheCopy;
 
+            string? closed = ClosedReason(taken, local.Lines, untouchedCopy, account.Online, account.SignedIn,
+                                          standing.Sync == SyncDirection.InSync,
+                                          serverMoved: standing.Sync == SyncDirection.Download);
+
+            // 🔴 **A contribution follows its Main's game** (user, 2026-10-05: "ça doit bloquer la
+            // contribution de la branche tant que la synchro de nom n'est pas faite"). When the
+            // lineage is filed under another game than the one confirmed here, a contribution —
+            // updating one's branch, or a first one — waits for Switch game; the site refuses it
+            // otherwise (`game_changed`), so it is said before the click. A Main's owner is never
+            // held: they moved it. The line under the game's name states the fact; the button the
+            // way out; a screen without that line shows the whole wall.
+            if (closed == null && GameChoices.Differs(local.ConfirmedGame, server.Game)
+                && ((taken == UploadAct.Update && onABranch) || taken == UploadAct.Contribute))
+            {
+                var wall = Walls.GameChanged(server.Game!.Name);
+                closed = wall.WayOut;
+                wholeWall = wall.Whole;
+            }
+
             return new UploadButton
             {
                 Act = act,
@@ -359,9 +389,7 @@ namespace UnityGameTranslator.Common
                 Hint = hint,
                 HintIsTranslatable = translatable,
                 Mention = mention,
-                Closed = ClosedReason(taken, local.Lines, untouchedCopy, account.Online, account.SignedIn,
-                                      standing.Sync == SyncDirection.InSync,
-                                      serverMoved: standing.Sync == SyncDirection.Download),
+                Closed = closed,
                 Wall = wholeWall,
             };
         }

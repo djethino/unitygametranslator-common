@@ -139,6 +139,12 @@ namespace UnityGameTranslator.Common
         /// second identical entry on the site under a new name.
         /// </summary>
         public bool ForkStillTheCopy;
+
+        /// <summary>
+        /// The game the player confirmed for this installation (`config.json`, `game_choice`), or
+        /// null when none was yet. See <see cref="GameChoices"/>.
+        /// </summary>
+        public GameChoice? ConfirmedGame;
     }
 
     /// <summary>
@@ -217,6 +223,15 @@ namespace UnityGameTranslator.Common
         /// not a difference. Null until counted; the mod's own count stands in until then.
         /// </summary>
         public int? LinesChangedHere;
+
+        /// <summary>The game the lineage is filed under on the site (`check-uuid` → `game`). Null when not said.</summary>
+        public LineageGame? Game;
+
+        /// <summary>
+        /// This account's branch is held since its Main moved to another game, until an upload
+        /// names that game (`game_switch_pending`). Null when not said.
+        /// </summary>
+        public bool? GameSwitchPending;
     }
 
     /// <summary>Under whose name this screen acts, and whether it can reach the site at all.</summary>
