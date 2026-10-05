@@ -96,13 +96,26 @@ namespace UnityGameTranslator.Common
                 : source!.ToLowerInvariant();
         }
 
-        /// <summary>One candidate as a list row: name, its source in brackets, its mark.</summary>
-        public static string Row(string? name, string? source, int confidence)
+        /// <summary>
+        /// A game's title with the names the stores give it besides, in brackets — "侠影录 (Legacy of
+        /// Shadows)" (user, 2026-10-06: whoever searched the other store's name could not tell the
+        /// card answered for it). No word to translate: the site's pages write it the same way
+        /// (`Game::titleWithOtherNames`).
+        /// </summary>
+        public static string TitleWithOtherNames(string? name, System.Collections.Generic.IList<string>? otherNames)
+        {
+            string title = name ?? "";
+            return otherNames == null || otherNames.Count == 0 ? title : title + " (" + string.Join(" / ", otherNames) + ")";
+        }
+
+        /// <summary>One candidate as a list row: name (and its other names), its source in brackets, its mark.</summary>
+        public static string Row(string? name, string? source, int confidence,
+                                 System.Collections.Generic.IList<string>? otherNames = null)
         {
             string label = SourceLabel(source);
             string mark = Mark(confidence);
 
-            string row = name ?? "";
+            string row = TitleWithOtherNames(name, otherNames);
             if (label.Length > 0) row += " [" + label + "]";
             if (mark.Length > 0) row += " " + mark;
             return row;

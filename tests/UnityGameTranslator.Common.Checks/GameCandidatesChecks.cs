@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace UnityGameTranslator.Common.Checks
 {
@@ -47,6 +48,13 @@ namespace UnityGameTranslator.Common.Checks
             check(GameCandidates.Confidence("1", "Some Game", "igdb", null, "Some Game")
                   == GameCandidates.Confidence("1", "Some Game", "steam", null, "Some Game"),
                 "the source alone counts for nothing", "the Steam id it carries does, whoever gives it");
+
+            // ── The names the stores give a game besides its title, after it in brackets ──
+            var row = GameCandidates.Row("Legacy of Shadows", "local", 0, new List<string> { "侠影录" });
+            check(row == "Legacy of Shadows (侠影录) [catalog]",
+                "a card's other names follow its title, in brackets", row);
+            check(GameCandidates.Row("Foretales", "igdb", 0, new List<string>()) == "Foretales [igdb]",
+                "no other name, nothing added", "an empty list writes nothing");
 
             // ── A list row's picture: fills its frame, or whole over its blur ──
             check(GameCandidates.FillsFrame(264, 352) && GameCandidates.FillsFrame(300, 450),
