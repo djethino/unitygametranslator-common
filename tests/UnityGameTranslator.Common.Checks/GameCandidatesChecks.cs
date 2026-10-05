@@ -37,6 +37,17 @@ namespace UnityGameTranslator.Common.Checks
             check(GameCandidates.Confidence(null, "Other", "rawg", null, "Some Game") == 0,
                 "nothing in common scores nothing", "no mark, bottom of the list");
 
+            // Foretales (2026-10-06): the add-ons Steam lists under a title that only CONTAINS the
+            // name come after the row that IS the name, and are no likely match.
+            int game = GameCandidates.Confidence("1170080", "Foretales", "igdb", null, "Foretales");
+            int artbook = GameCandidates.Confidence("2080350", "Foretales - Artbook", "steam", null, "Foretales");
+            check(game > artbook, "the exact name with the game's Steam id outranks an add-on that contains it", $"{game} > {artbook}");
+            check(GameCandidates.Mark(artbook) == "" && GameCandidates.Mark(game) != "",
+                "an add-on is no likely match; the game is", $"'{GameCandidates.Mark(artbook)}' / '{GameCandidates.Mark(game)}'");
+            check(GameCandidates.Confidence("1", "Some Game", "igdb", null, "Some Game")
+                  == GameCandidates.Confidence("1", "Some Game", "steam", null, "Some Game"),
+                "the source alone counts for nothing", "the Steam id it carries does, whoever gives it");
+
             // ── A list row's picture: fills its frame, or whole over its blur ──
             check(GameCandidates.FillsFrame(264, 352) && GameCandidates.FillsFrame(300, 450),
                 "a cover fills its portrait frame", "IGDB 264x352, Steam capsule 300x450");

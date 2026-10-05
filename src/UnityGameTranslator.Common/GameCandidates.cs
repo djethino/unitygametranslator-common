@@ -13,7 +13,10 @@ namespace UnityGameTranslator.Common
     /// ⚠ The site ranks nothing here: it returns what it knows (its own catalogue first, then the
     /// stores and the game databases) and the client puts the likeliest first. That order is the
     /// same decision in every product, so it is taken once. The figures were the mod's
-    /// (UploadSetupPanel, 2026-09-05) and are carried over unchanged.
+    /// (UploadSetupPanel, 2026-09-05); since 2026-10-06 the same name weighs 30 and a Steam id
+    /// 10 whatever its source, instead of 20 for any answer Steam gave (see Confidence).
+    /// The site orders its own list with the same weights, plus a tie-break among its catalogue
+    /// cards by translation count (`GameSearchService::calculateMatchScores`).
     /// </summary>
     public static class GameCandidates
     {
@@ -49,16 +52,25 @@ namespace UnityGameTranslator.Common
             // A game the site already holds translations for outranks one it only heard of.
             if (string.Equals(candidateSource, CatalogueSource, System.StringComparison.OrdinalIgnoreCase))
                 score += 30;
-            else if (string.Equals(candidateSource, "steam", System.StringComparison.OrdinalIgnoreCase))
-                score += 20;
+
+            // 🔴 **A Steam id, whichever source carries it — never the source itself** (user,
+            // 2026-10-06, Foretales: its Artbook, Soundtrack and Demo, three Steam hits whose title
+            // merely CONTAINS the detected name, scored 20 + 5 and were listed above the IGDB row
+            // that IS the name and carries the game's Steam id). Being Steam's own answer said
+            // nothing about being the right game; carrying an id the game can be checked against
+            // does, a little.
+            if (!string.IsNullOrEmpty(candidateSteamId))
+                score += 10;
 
             if (!string.IsNullOrEmpty(detectedName) && !string.IsNullOrEmpty(candidateName))
             {
                 string detected = detectedName!.Trim();
                 string name = candidateName!.Trim();
 
+                // The same name outranks any source or id bonus: it is the one fact the person
+                // and the machine both read.
                 if (string.Equals(detected, name, System.StringComparison.OrdinalIgnoreCase))
-                    score += 20;
+                    score += 30;
                 else if (name.IndexOf(detected, System.StringComparison.OrdinalIgnoreCase) >= 0
                          || detected.IndexOf(name, System.StringComparison.OrdinalIgnoreCase) >= 0)
                     score += 5;
