@@ -165,6 +165,21 @@ namespace UnityGameTranslator.Common
             "No games found. Try another title, or paste the game's Steam ID or Steam link.";
 
         /// <summary>
+        /// Said beside the list when the search had no account behind it (<c>stores: false</c>): the
+        /// list is the site's catalogue alone — the games that have translations, which is what a
+        /// player without an account can use. The stores are searched for an account only.
+        /// </summary>
+        public const string CatalogueOnly =
+            "Games with translations only. Sign in to search all games.";
+
+        /// <summary>The empty list of a search without an account — the same way out, and why it is shorter.</summary>
+        public const string NothingFoundInCatalogue =
+            "No game with translations found. Try another title, or paste the game's Steam ID. Sign in to search all games.";
+
+        /// <summary>What an empty list says, by whether the stores were searched.</summary>
+        public static string NothingFoundFor(bool stores) => stores ? NothingFound : NothingFoundInCatalogue;
+
+        /// <summary>
         /// The hit a person took, as a publication sends it back (`game_pick`): its source, and its
         /// id IN that source. Null when the hit carries no usable id.
         ///

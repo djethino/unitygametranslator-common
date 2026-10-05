@@ -100,6 +100,15 @@ namespace UnityGameTranslator.Common.Checks
 
             check(GameCandidates.NothingFound.Contains("Steam ID"),
                 "an empty list says what to try next", "the search box takes ids too");
+
+            // Without an account the list is the catalogue alone (2026-10-05): its empty answer
+            // says so and gives the way to the rest, and the list with an account does not.
+            check(GameCandidates.NothingFoundFor(stores: true) == GameCandidates.NothingFound
+                  && GameCandidates.NothingFoundFor(stores: false).Contains("Sign in")
+                  && GameCandidates.NothingFoundFor(stores: false).Contains("Steam ID")
+                  && !GameCandidates.NothingFound.Contains("Sign in"),
+                "a search without an account says the list is the catalogue alone, and how to search all games",
+                "the stores are asked for an account only");
         }
     }
 }
