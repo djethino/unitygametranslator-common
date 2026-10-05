@@ -28,6 +28,23 @@ namespace UnityGameTranslator.Common.Checks
             check(!GameChoices.Same(new GameChoice("rawg", "81", "Lost Echo"), card),
                 "an id is read in its own source only", "IGDB 81 is not RAWG 81");
 
+            // ── An answer of the list against the game already confirmed ────────
+            var held = new GameChoice("igdb", "137192", "Buried Stars");
+            var folded = new System.Collections.Generic.Dictionary<string, string>
+                { ["steam"] = "1025960", ["igdb"] = "137192" };
+
+            check(GameChoices.Holds(held, "igdb", "137192", null),
+                "the answer it was confirmed from holds it", "nothing to apply");
+            check(GameChoices.Holds(held, "steam", "1025960", folded),
+                "the same game clicked on its Steam row holds it too",
+                "🔴 the reported defect: Apply (1) stayed after clicking the game already confirmed");
+            check(!GameChoices.Holds(held, "steam", "1754810", new System.Collections.Generic.Dictionary<string, string> { ["steam"] = "1754810" }),
+                "another game's row does not", "its soundtrack is another Steam app");
+            check(!GameChoices.Holds(held, "rawg", "137192", new System.Collections.Generic.Dictionary<string, string> { ["rawg"] = "137192" }),
+                "an id is read in its own source only here too", "IGDB 137192 is not RAWG 137192");
+            check(!GameChoices.Holds(null, "igdb", "137192", null),
+                "nothing confirmed holds nothing", "every answer is then something to apply");
+
             // ── The line under the game's name ────────────────────────────────
             var mine = new GameChoice("local", "13", "Crystal Dragon");
             check(GameChoices.Banner(mine, card) == "On the website, this translation is for Lost Echo.",

@@ -88,6 +88,25 @@ namespace UnityGameTranslator.Common
         public const string NotIdentified =
             "This game could not be identified. Search for it by title, or paste its Steam ID or Steam link, and pick it in the list.";
 
+        /// <summary>
+        /// Whether an answer of the site's game list IS the game already confirmed — by the answer's
+        /// own source and id, or by any id the answer gathers from the others (`ids`, by source: the
+        /// site folds the hits of one game into one row).
+        ///
+        /// 🔴 **By the game, never by the row's source** (user, 2026-10-05: "il me laisse apply (1)
+        /// même si je … reclick sur celui d'avant"). A game confirmed from its IGDB answer, clicked
+        /// again on its Steam row or its card, is the same game — nothing to apply.
+        /// </summary>
+        /// <param name="ids">The answer's ids by source ("local", "steam", "igdb", "rawg"); null when unknown.</param>
+        public static bool Holds(GameChoice? held, string? source, string? id,
+                                 System.Collections.Generic.IReadOnlyDictionary<string, string>? ids)
+        {
+            if (held is null) return false;
+            if (held.Source == source && held.Id == id) return true;
+
+            return ids != null && ids.TryGetValue(held.Source, out var same) && same == held.Id;
+        }
+
         /// <summary>Whether the confirmed game IS the lineage's game — by the card, or by a store id the card holds.</summary>
         public static bool Same(GameChoice choice, LineageGame game)
         {
