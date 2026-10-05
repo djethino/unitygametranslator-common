@@ -110,6 +110,14 @@ namespace UnityGameTranslator.Common
         /// list describes candidates, and only the list has to say which of them is already here.
         /// </summary>
         Installed,
+
+        /// <summary>
+        /// How the game's own name stands, on its title: read from the game's files, or confirmed
+        /// by the player — until a translation of it is on the site, which fixes the game
+        /// (<see cref="GameChoices.IdentityBadge"/>). A fact about the GAME on this machine, never
+        /// part of a translation's strip.
+        /// </summary>
+        GameIdentity,
     }
 
     /// <summary>One chip: what it says, how loudly, and what it means in full.</summary>

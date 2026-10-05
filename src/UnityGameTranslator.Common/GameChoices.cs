@@ -89,6 +89,27 @@ namespace UnityGameTranslator.Common
             "This game could not be identified. Search for it by title, or paste its Steam ID or Steam link, and pick it in the list.";
 
         /// <summary>
+        /// The chip on the game's title: "Detected" (yellow) while the name is only read from the
+        /// game's files, "Confirmed" (green) once the player chose it — and nothing once a
+        /// translation of it is on the site, which fixes the game (user, 2026-10-05: "un badge sur
+        /// les titres tant qu'ils sont pas publish, detected/confirmed … detected en jaune et
+        /// confirmed en vert"). Nothing either when there is no name to qualify.
+        /// </summary>
+        /// <param name="hasName">Whether a name is shown at all.</param>
+        /// <param name="confirmed">Whether a game is confirmed here (`game_choice`).</param>
+        /// <param name="onTheSite">Whether this game's translation is on the site — published or downloaded.</param>
+        public static Badge? IdentityBadge(bool hasName, bool confirmed, bool onTheSite)
+        {
+            if (!hasName || onTheSite) return null;
+
+            return confirmed
+                ? new Badge { Kind = BadgeKind.GameIdentity, Text = "Confirmed", Tone = BadgeTone.Good,
+                              Tip = "Chosen on this computer. Fixed by the website once the translation is published." }
+                : new Badge { Kind = BadgeKind.GameIdentity, Text = "Detected", Tone = BadgeTone.Attention,
+                              Tip = "Read from the game's files. Not confirmed yet." };
+        }
+
+        /// <summary>
         /// Whether an answer of the site's game list IS the game already confirmed — by the answer's
         /// own source and id, or by any id the answer gathers from the others (`ids`, by source: the
         /// site folds the hits of one game into one row).

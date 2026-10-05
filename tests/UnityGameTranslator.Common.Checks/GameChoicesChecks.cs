@@ -28,6 +28,21 @@ namespace UnityGameTranslator.Common.Checks
             check(!GameChoices.Same(new GameChoice("rawg", "81", "Lost Echo"), card),
                 "an id is read in its own source only", "IGDB 81 is not RAWG 81");
 
+            // ── The chip on the game's title ──────────────────────────────────
+            var detected = GameChoices.IdentityBadge(hasName: true, confirmed: false, onTheSite: false);
+            check(detected is { Text: "Detected", Tone: BadgeTone.Attention, Kind: BadgeKind.GameIdentity },
+                "a name only read from the files says Detected, in yellow", "not confirmed by anybody yet");
+            var confirmedChip = GameChoices.IdentityBadge(hasName: true, confirmed: true, onTheSite: false);
+            check(confirmedChip is { Text: "Confirmed", Tone: BadgeTone.Good },
+                "a game the player chose says Confirmed, in green", "chosen here, not yet fixed by the site");
+            check(GameChoices.IdentityBadge(true, true, onTheSite: true) is null
+                  && GameChoices.IdentityBadge(true, false, onTheSite: true) is null,
+                "nothing once a translation of it is on the site", "the site fixes the game from then on");
+            check(GameChoices.IdentityBadge(hasName: false, confirmed: false, onTheSite: false) is null,
+                "nothing without a name to qualify", "\"No game detected\" needs no chip");
+            check(!string.IsNullOrEmpty(detected?.Tip) && !string.IsNullOrEmpty(confirmedChip?.Tip),
+                "each says what it means on hover", "a chip's tip is never empty");
+
             // ── An answer of the list against the game already confirmed ────────
             var held = new GameChoice("igdb", "137192", "Buried Stars");
             var folded = new System.Collections.Generic.Dictionary<string, string>
