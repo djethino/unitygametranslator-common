@@ -37,6 +37,14 @@ namespace UnityGameTranslator.Common.Checks
             check(GameCandidates.Confidence(null, "Other", "rawg", null, "Some Game") == 0,
                 "nothing in common scores nothing", "no mark, bottom of the list");
 
+            // ── A list row's picture: fills its frame, or whole over its blur ──
+            check(GameCandidates.FillsFrame(264, 352) && GameCandidates.FillsFrame(300, 450),
+                "a cover fills its portrait frame", "IGDB 264x352, Steam capsule 300x450");
+            check(!GameCandidates.FillsFrame(460, 215) && !GameCandidates.FillsFrame(1920, 1080),
+                "a store header or a screenshot is shown whole", "cropped, it kept its middle third");
+            check(!GameCandidates.FillsFrame(500, 500) && !GameCandidates.FillsFrame(0, 0),
+                "a square, or a picture of no size, is not cropped", "taller than wide only");
+
             // ── What tells two games of one title apart ──────────────────────
             var ids = new System.Collections.Generic.Dictionary<string, string> { ["local"] = "12", ["igdb"] = "81", ["steam"] = "500" };
             check(GameCandidates.Facts(ids, 2025, new[] { "Studio A" }, new[] { "Studio A", "House B" })

@@ -141,6 +141,18 @@ namespace UnityGameTranslator.Common
             return string.Join(" · ", parts);
         }
 
+        /// <summary>
+        /// Whether a game's picture fills its portrait frame (cropped at the edges, as a cover is
+        /// meant to be seen) — or is shown whole, centred, over a blurred copy of itself.
+        ///
+        /// 🔴 **By the picture's shape, the one rule of the three products** (user, 2026-10-06): a
+        /// cover is taller than wide; a store header or a screenshot is wider, and cropped into a
+        /// portrait frame it kept its middle third. The site applies the same test on its pages
+        /// (`resources/js/game-cover.js`) and chooses each card's picture by shape
+        /// (`App\Services\GameArt`), so a wide picture is what a game with no cover anywhere has left.
+        /// </summary>
+        public static bool FillsFrame(int width, int height) => width > 0 && height > width;
+
         /// <summary>A store's name as a person reads it.</summary>
         public static string StoreLabel(string store)
         {
