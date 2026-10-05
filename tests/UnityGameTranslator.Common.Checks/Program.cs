@@ -98,6 +98,8 @@ namespace UnityGameTranslator.Common.Checks
 
             Section("Which game a publication names", GameCandidatesChecks.Run);
 
+            Section("What a box of one line keeps of a paste", PastedTextChecks.Run);
+
             Section("The game confirmed here against the site's", GameChoicesChecks.Run);
         }
 
