@@ -17,7 +17,9 @@ namespace UnityGameTranslator.Common
     /// The rule, in order:
     ///
     ///  1. **An exact name wins.** Case and surrounding spaces ignored, nothing else: a game called
-    ///     exactly what we asked for is not a coincidence.
+    ///     exactly what we asked for is not a coincidence. 🔴 **Unless several games carry it**
+    ///     (namesakes, user 2026-10-05): all of them are kept and the answer is ambiguous — the name
+    ///     answered twice, so which game this is has to be confirmed, never assumed.
     ///  2. **A single candidate wins.** "Foo" resolving only to "Foo: Deluxe Edition" is the
     ///     ordinary case loose matching exists for, and dropping it would lose translations that
     ///     genuinely belong to this game.
@@ -44,8 +46,9 @@ namespace UnityGameTranslator.Common
             public IReadOnlyList<int> Chosen { get; }
 
             /// <summary>
-            /// Several games match loosely and none exactly. Nothing was dropped — a caller must
-            /// simply not present the result as being about one game.
+            /// The name describes several games: some match loosely and none exactly, or several
+            /// carry it exactly. Nothing was dropped — a caller must not present the result as being
+            /// about one game, and asks for the game to be confirmed.
             /// </summary>
             public bool Ambiguous { get; }
         }
@@ -76,7 +79,7 @@ namespace UnityGameTranslator.Common
                         exact.Add(i);
                 }
 
-                if (exact.Count > 0) return new Match(exact, false);
+                if (exact.Count > 0) return new Match(exact, exact.Count > 1);
             }
 
             return new Match(all, true);

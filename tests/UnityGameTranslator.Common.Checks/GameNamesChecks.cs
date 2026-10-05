@@ -49,12 +49,14 @@ namespace UnityGameTranslator.Common.Checks
                 "an unresolved name keeps everything and says so",
                 "never guess, never hide");
 
-            // Two games carrying the same exact name: both kept, and it is not an ambiguity — the
-            // name answered, the site simply has two games wearing it.
-            var twins = GameNames.Which(new List<string> { "Cat", "Cat" }, "Cat");
-            check(twins.Chosen.Count == 2 && !twins.Ambiguous,
-                "two exact namesakes are both kept",
-                "the name answered; there are two");
+            // 🔴 Two games carrying the same exact name: both kept AND it IS an ambiguity (user,
+            // 2026-10-05, a game with several namesakes: "si le détecté semble être conflictuel il faut
+            // un message pour demander de confirmer"). It used to read "the name answered; there are
+            // two" — and the translations of two games were shown as one game's, with nothing said.
+            var twins = GameNames.Which(new List<string> { "Cat", "Cat", "Cattails" }, "Cat");
+            check(twins.Chosen.Count == 2 && twins.Ambiguous,
+                "two exact namesakes are both kept, and said to be two games",
+                "🔴 the name answered twice: which one this is must be confirmed");
 
             // Nothing came back: nothing to choose, and nothing to warn about.
             var none = GameNames.Which(new List<string>(), "Cat");

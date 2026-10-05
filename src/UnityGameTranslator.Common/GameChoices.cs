@@ -110,6 +110,19 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// The line under a game's title when its name, only detected, describes several games on
+        /// the site (<see cref="GameNames.Match.Ambiguous"/>) — namesakes, or loose matches none of
+        /// which is exact — or null when there is nothing to say: a game confirmed here is known,
+        /// and a name that answered once is not in doubt (user, 2026-10-05: "si le détecté semble
+        /// être conflictuel il faut un message … pour demander de confirmer").
+        /// </summary>
+        public static string? Namesakes(GameChoice? confirmed, string? detectedName, bool ambiguous)
+        {
+            if (confirmed != null || !ambiguous || string.IsNullOrWhiteSpace(detectedName)) return null;
+            return "Several games are named " + detectedName!.Trim() + ". Confirm which one with Change.";
+        }
+
+        /// <summary>
         /// Whether an answer of the site's game list IS the game already confirmed — by the answer's
         /// own source and id, or by any id the answer gathers from the others (`ids`, by source: the
         /// site folds the hits of one game into one row).

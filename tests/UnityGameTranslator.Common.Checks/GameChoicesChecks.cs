@@ -43,6 +43,15 @@ namespace UnityGameTranslator.Common.Checks
             check(!string.IsNullOrEmpty(detected?.Tip) && !string.IsNullOrEmpty(confirmedChip?.Tip),
                 "each says what it means on hover", "a chip's tip is never empty");
 
+            // ── A detected name that describes several games ───────────────────
+            check(GameChoices.Namesakes(null, "Inari", ambiguous: true) == "Several games are named Inari. Confirm which one with Change.",
+                "a detected name worn by several games asks for the game to be confirmed",
+                "🔴 the reported case: namesakes, and nothing said");
+            check(GameChoices.Namesakes(new GameChoice("igdb", "1", "Inari"), "Inari", ambiguous: true) is null,
+                "nothing once a game is confirmed here", "it is known");
+            check(GameChoices.Namesakes(null, "Inari", ambiguous: false) is null,
+                "nothing when the name answered once", "no doubt to raise");
+
             // ── An answer of the list against the game already confirmed ────────
             var held = new GameChoice("igdb", "137192", "Buried Stars");
             var folded = new System.Collections.Generic.Dictionary<string, string>
