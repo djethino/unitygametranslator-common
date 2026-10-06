@@ -102,15 +102,23 @@ namespace UnityGameTranslator.Common
         /// card answered for it). No word to translate: the site's pages write it the same way
         /// (`Game::titleWithOtherNames`).
         /// </summary>
-        public static string TitleWithOtherNames(string? name, System.Collections.Generic.IList<string>? otherNames)
+        public static string TitleWithOtherNames(string? name, System.Collections.Generic.IEnumerable<string>? otherNames)
         {
             string title = name ?? "";
-            return otherNames == null || otherNames.Count == 0 ? title : title + " (" + string.Join(" / ", otherNames) + ")";
+            var others = new System.Collections.Generic.List<string>();
+            if (otherNames != null)
+            {
+                foreach (var other in otherNames)
+                {
+                    if (!string.IsNullOrWhiteSpace(other)) others.Add(other.Trim());
+                }
+            }
+            return others.Count == 0 ? title : title + " (" + string.Join(" / ", others) + ")";
         }
 
         /// <summary>One candidate as a list row: name (and its other names), its source in brackets, its mark.</summary>
         public static string Row(string? name, string? source, int confidence,
-                                 System.Collections.Generic.IList<string>? otherNames = null)
+                                 System.Collections.Generic.IEnumerable<string>? otherNames = null)
         {
             string label = SourceLabel(source);
             string mark = Mark(confidence);

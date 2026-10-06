@@ -7,11 +7,33 @@ namespace UnityGameTranslator.Common
     /// </summary>
     public sealed class GameChoice
     {
-        public GameChoice(string source, string id, string name)
+        public GameChoice(string source, string id, string name,
+                          System.Collections.Generic.IReadOnlyList<string>? otherNames = null)
         {
             Source = source;
             Id = id;
             Name = name;
+            OtherNames = OtherNamesOf(otherNames);
+        }
+
+        /// <summary>
+        /// The names the stores give the game besides its title (`other_names`, user 2026-10-06) —
+        /// display only, never part of what identifies it. Empty when none is known.
+        /// </summary>
+        public System.Collections.Generic.IReadOnlyList<string> OtherNames { get; }
+
+        /// <summary>The title as every screen shows it: "侠影录 (Legacy of Shadows)".</summary>
+        public string Title => GameCandidates.TitleWithOtherNames(Name, OtherNames);
+
+        internal static System.Collections.Generic.IReadOnlyList<string> OtherNamesOf(System.Collections.Generic.IEnumerable<string>? names)
+        {
+            var kept = new System.Collections.Generic.List<string>();
+            if (names == null) return kept;
+            foreach (var name in names)
+            {
+                if (!string.IsNullOrWhiteSpace(name)) kept.Add(name.Trim());
+            }
+            return kept;
         }
 
         /// <summary>"local" (a card of the site), "steam", "igdb" or "rawg" — as `game_pick` names them.</summary>
@@ -30,19 +52,27 @@ namespace UnityGameTranslator.Common
     /// <summary>The game a lineage is filed under on the site, as `check-uuid` names it (`game`).</summary>
     public sealed class LineageGame
     {
-        public LineageGame(long id, string name, string? steamId, long? igdbId, long? rawgId)
+        public LineageGame(long id, string name, string? steamId, long? igdbId, long? rawgId,
+                           System.Collections.Generic.IReadOnlyList<string>? otherNames = null)
         {
             Id = id;
             Name = name;
             SteamId = steamId;
             IgdbId = igdbId;
             RawgId = rawgId;
+            OtherNames = GameChoice.OtherNamesOf(otherNames);
         }
 
         /// <summary>The card's id on the site.</summary>
         public long Id { get; }
 
         public string Name { get; }
+
+        /// <summary>The card's names in the other stores (`other_names`) — display only.</summary>
+        public System.Collections.Generic.IReadOnlyList<string> OtherNames { get; }
+
+        /// <summary>The title as every screen shows it: "侠影录 (Legacy of Shadows)".</summary>
+        public string Title => GameCandidates.TitleWithOtherNames(Name, OtherNames);
         public string? SteamId { get; }
         public long? IgdbId { get; }
         public long? RawgId { get; }
@@ -163,7 +193,7 @@ namespace UnityGameTranslator.Common
 
         /// <summary>The line under the game's name, or null when nothing differs.</summary>
         public static string? Banner(GameChoice? choice, LineageGame? game) =>
-            Differs(choice, game) ? "On the website, this translation is for " + game!.Name + "." : null;
+            Differs(choice, game) ? "On the website, this translation is for " + game!.Title + "." : null;
 
         /// <summary>
         /// The confirmed game after a translation was taken from the site or published: the
@@ -175,7 +205,39 @@ namespace UnityGameTranslator.Common
 
         /// <summary>The lineage's game as a choice — what Switch game writes.</summary>
         public static GameChoice Of(LineageGame game) =>
-            new GameChoice(GameCandidates.CatalogueSource, Invariant(game.Id), game.Name);
+            new GameChoice(GameCandidates.CatalogueSource, Invariant(game.Id), game.Name, game.OtherNames);
+
+        /// <summary>
+        /// The confirmed game with the other names the site now gives it — when the site files the
+        /// translation under that SAME game (<see cref="Same"/>), and only its names change: the
+        /// title confirmed, its source and its id stay. Null when there is nothing to refresh, so a
+        /// caller writes only a real change.
+        ///
+        /// ⚠ Not a move: names are display (user, 2026-10-06), and a game the site files the
+        /// translation under is the confirmed one by its id. A DIFFERENT game is still only ever
+        /// said (<see cref="Banner"/>), never taken.
+        /// </summary>
+        public static GameChoice? WithNamesOf(GameChoice? choice, LineageGame? game)
+        {
+            if (choice == null || game == null || !Same(choice, game)) return null;
+
+            // The card's title is one of its names here when the choice was titled otherwise (a
+            // Steam pick confirmed as 侠影录, a card now titled Legacy of Shadows): both are kept.
+            var names = new System.Collections.Generic.List<string>(game.OtherNames);
+            names.Insert(0, game.Name);
+            var others = new System.Collections.Generic.List<string>();
+            var seen = new System.Collections.Generic.HashSet<string>(System.StringComparer.Ordinal) { GameNames.Flat(choice.Name) };
+            foreach (var name in names)
+            {
+                var flat = GameNames.Flat(name);
+                if (flat.Length > 0 && seen.Add(flat)) others.Add(name);
+            }
+
+            if (others.Count == choice.OtherNames.Count && System.Linq.Enumerable.SequenceEqual(others, choice.OtherNames))
+                return null;
+
+            return new GameChoice(choice.Source, choice.Id, choice.Name, others);
+        }
 
         private static string Invariant(long value) =>
             value.ToString(System.Globalization.CultureInfo.InvariantCulture);

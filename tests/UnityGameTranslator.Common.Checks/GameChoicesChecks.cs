@@ -16,6 +16,22 @@ namespace UnityGameTranslator.Common.Checks
         {
             var card = new LineageGame(12, "Lost Echo", "500", 81, null);
 
+            // ── Its other names: shown with the title, refreshed, never a move (2026-10-06) ──
+            var named = new LineageGame(12, "Legacy of Shadows", "500", 81, null, new[] { "侠影录" });
+            check(named.Title == "Legacy of Shadows (侠影录)", "a card's title carries its other names in brackets", named.Title);
+
+            var steamPick = new GameChoice("steam", "500", "侠影录");
+            var refreshed = GameChoices.WithNamesOf(steamPick, named);
+            check(refreshed != null && refreshed.Name == "侠影录" && refreshed.Source == "steam" && refreshed.Id == "500"
+                  && refreshed.Title == "侠影录 (Legacy of Shadows)",
+                "the same game confirmed under another title takes the card's title as its other name",
+                refreshed?.Title ?? "null");
+            check(GameChoices.WithNamesOf(refreshed, named) == null, "nothing new, nothing to write", "a caller writes only a change");
+            check(GameChoices.WithNamesOf(new GameChoice("steam", "999", "Other"), named) == null,
+                "another game's names are never taken", "a different game is said, never adopted");
+            check(GameChoices.Banner(new GameChoice("steam", "999", "Other"), named) == "On the website, this translation is for Legacy of Shadows (侠影录).",
+                "the line under the name names the site's game with its other names", "");
+
             // ── The same game, however it was named ───────────────────────────
             check(GameChoices.Same(new GameChoice("local", "12", "Lost Echo"), card),
                 "the card itself is the same game", "picked from the site's catalogue");
