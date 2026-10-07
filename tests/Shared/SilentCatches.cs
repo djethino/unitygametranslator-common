@@ -37,8 +37,9 @@ namespace UnityGameTranslator.Checks.Shared
         private static readonly Regex Comments = new Regex(@"//[^\n]*|/\*.*?\*/", RegexOptions.Compiled | RegexOptions.Singleline);
         private static readonly Regex Strings = new Regex(@"@""(?:[^""]|"""")*""|\$?""(?:[^""\\\n]|\\.)*""", RegexOptions.Compiled);
         private static readonly Regex CatchHead = new Regex(@"\bcatch\b\s*(\([^)]*\))?\s*(when\s*\([^)]*\)\s*)?\{", RegexOptions.Compiled);
-        // What makes a catch NOT silent: it says something, or it lets the failure go on.
-        private static readonly Regex Speaks = new Regex(@"\bLog\w*\s*\(|\bFaults\.|\bthrow\b|\bSay\w*\s*\(", RegexOptions.Compiled);
+        // What makes a catch NOT silent: it says something, or it lets the failure go on. The
+        // Manager's Journal.Note is a voice too: a case recognised and written down, once.
+        private static readonly Regex Speaks = new Regex(@"\bLog\w*\s*\(|\bFaults\.|\bJournal\.Note\s*\(|\bthrow\b|\bSay\w*\s*\(", RegexOptions.Compiled);
         private static readonly Regex DebugLine = new Regex(@"\bLogDebug\s*\(", RegexOptions.Compiled);
         private static readonly Regex CaughtName = new Regex(@"catch\s*\(\s*[\w.]+\s+(\w+)\s*\)", RegexOptions.Compiled);
         private static readonly Regex CaughtType = new Regex(@"catch\s*\(\s*([\w.]+)", RegexOptions.Compiled);
@@ -140,6 +141,8 @@ namespace UnityGameTranslator.Checks.Shared
                 "a precise type answered at debug level is an expected answer");
             Counts("try { A(); } catch (Exception ex) { LogDebug(\"x\"); Faults.Say(\"here\", ex); }", 0,
                 "a debug line beside a real voice is fine");
+            Counts("try { A(); } catch (ArgumentException) { Journal.Note(\"process\", \"ended first\"); }", 0,
+                "a case the Manager notes in its journal is said");
         }
 
         /// <summary>
