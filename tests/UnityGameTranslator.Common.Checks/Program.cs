@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityGameTranslator.Checks.Shared;
 using UnityGameTranslator.Common;
 
 namespace UnityGameTranslator.Common.Checks
@@ -25,8 +26,12 @@ namespace UnityGameTranslator.Common.Checks
     {
         private static int _failures;
 
-        private static int Main()
+        private static int Main(string[] args)
         {
+            // `dotnet run -- silent-list [file]`: where the silent catches of this library are.
+            if (args.Length >= 1 && args[0] == "silent-list")
+                return SilentCatches.List(LibrarySources(), CommonRoot()!, args.Length >= 2 ? args[1] : null);
+
             // ⚠ The corpus prints its own headings, so it is guarded here rather than by
             // Section() below — same reason, same wording: a throw must not end the run silently.
             try
@@ -51,12 +56,12 @@ namespace UnityGameTranslator.Common.Checks
             LanguageLookup();
             HotkeySpelling();
             QualityMeasures();
-            PlaceholderRules();
             PromptWording();
             EndpointAddresses();
             WhyItNeverArrived();
             ProviderNegotiation();
             ProductColours();
+            NothingSwallowed();
 
             Console.WriteLine();
             if (_failures == 0)
@@ -160,12 +165,6 @@ namespace UnityGameTranslator.Common.Checks
             Section("Prompts", PromptsChecks.Run);
         }
 
-        /// <summary>What a game will accept back from a model, and what it says when it will not.</summary>
-        private static void PlaceholderRules()
-        {
-
-        }
-
         /// <summary>What a player is told about a file, checked against the website's rules.</summary>
         private static void QualityMeasures()
         {
@@ -220,6 +219,30 @@ namespace UnityGameTranslator.Common.Checks
             Section("Text systems a game shows", TextSystemsChecks.Run);
 
             Section("Freeing or keeping a model on a local server", ModelMemoryChecks.Run);
+        }
+
+        /// <summary>
+        /// No catch of this library swallows a failure without a word. The counter is
+        /// tests/Shared/SilentCatches.cs, linked by the mod's and the Manager's checks as well.
+        /// </summary>
+        private static void NothingSwallowed()
+        {
+            Section("Silent catches", check =>
+            {
+                SilentCatches.SelfCheck(check);
+                string? root = CommonRoot();
+                check(root != null, "the library's sources are found", "this check reads them; without them it proves nothing");
+                if (root == null) return;
+                SilentCatches.NoneUnder(check, "no silent catch in the library", LibrarySources(), root);
+            });
+        }
+
+        private static string? CommonRoot() => SilentCatches.FolderHolding("src/UnityGameTranslator.Common");
+
+        private static string[] LibrarySources()
+        {
+            string? root = CommonRoot();
+            return root == null ? Array.Empty<string>() : new[] { System.IO.Path.Combine(root, "src") };
         }
 
         /// <summary>The stored-secret format, checked against its own specification.</summary>

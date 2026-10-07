@@ -117,8 +117,11 @@ namespace UnityGameTranslator.Common
                 const string probe = "UGT round-trip probe";
                 return Unprotect(Protect(probe)) == probe;
             }
-            catch
+            catch (Exception ex)
             {
+                // The caller says "could not be saved"; the why is here, since it is a property of
+                // this machine (a crypto provider missing, a sandbox) that no screen can guess.
+                Faults.Say("Secrets.RoundTripWorks", ex);
                 return false;
             }
         }
@@ -236,10 +239,12 @@ namespace UnityGameTranslator.Common
                     builder.Append(home);
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 // A home path we cannot read drops out of the secret. Both programs have always
-                // failed this way, and they must keep failing identically or they derive two keys.
+                // failed this way, and they must keep failing identically or they derive two keys —
+                // saying it changes nothing to the key, and explains a secret that will not open.
+                Faults.Say("Secrets.MachineSecret", ex, "the home folder is left out of the key");
             }
 
             return builder.ToString();

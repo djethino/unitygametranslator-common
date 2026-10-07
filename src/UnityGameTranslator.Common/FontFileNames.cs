@@ -114,10 +114,7 @@ namespace UnityGameTranslator.Common
             int bestFace = -1, bestRank = int.MaxValue;
             foreach (var dir in dirs)
             {
-                IEnumerable<string> files;
-                try { files = Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories); }
-                catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) { continue; }
-                foreach (var file in files)
+                foreach (var file in FilesUnder(dir))
                 {
                     string extension = Path.GetExtension(file);
                     bool single = Array.Exists(SingleExtensions, x => string.Equals(x, extension, StringComparison.OrdinalIgnoreCase));
@@ -132,14 +129,51 @@ namespace UnityGameTranslator.Common
                             bestFile = file; bestFace = found; bestRank = rank;
                         }
                     }
-                    // A file we may not open is a font we cannot carry; the search goes on.
-                    catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) { }
+                    // A file we may not open is a font we cannot carry; the search goes on, and the
+                    // file is named, since a font somebody asked for may be exactly this one.
+                    catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+                    {
+                        Faults.Say("FontFileNames.FindFile", e, file);
+                    }
                     if (bestRank == 0) break;
                 }
                 if (bestRank == 0) break;
             }
             face = bestFace;
             return bestFile;
+        }
+
+        /// <summary>
+        /// Every file below <paramref name="root"/>, folder by folder, lazily — the search stops at
+        /// the first exact match.
+        ///
+        /// ⚠ Not <c>Directory.EnumerateFiles(…, AllDirectories)</c>: that one throws from the MIDDLE
+        /// of the walk when a subfolder may not be read, which ended the whole search at the first
+        /// locked folder (a system keeps some), and a try around the call itself never saw it — the
+        /// enumeration is lazy. Here a folder that may not be read is named and skipped, and its
+        /// neighbours are still searched.
+        /// </summary>
+        private static IEnumerable<string> FilesUnder(string root)
+        {
+            var folders = new Stack<string>();
+            folders.Push(root);
+            while (folders.Count > 0)
+            {
+                string folder = folders.Pop();
+                string[] files, children;
+                try
+                {
+                    files = Directory.GetFiles(folder);
+                    children = Directory.GetDirectories(folder);
+                }
+                catch (Exception e) when (e is IOException || e is UnauthorizedAccessException)
+                {
+                    Faults.Say("FontFileNames.FilesUnder", e, folder);
+                    continue;
+                }
+                foreach (var file in files) yield return file;
+                for (int i = children.Length - 1; i >= 0; i--) folders.Push(children[i]);
+            }
         }
 
         private static bool Has(byte[] table, int id, string name) =>

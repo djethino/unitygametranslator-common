@@ -239,49 +239,46 @@ namespace UnityGameTranslator.Common
         {
             if (string.IsNullOrEmpty(baseUrl)) return Locality.Elsewhere;
 
-            try
+            // An address we cannot even parse is certainly not one we should treat as ours.
+            if (!Uri.TryCreate(baseUrl.IndexOf("://", StringComparison.Ordinal) >= 0
+                                   ? baseUrl
+                                   : "http://" + baseUrl,
+                               UriKind.Absolute, out Uri? uri))
             {
-                var uri = new Uri(baseUrl.IndexOf("://", StringComparison.Ordinal) >= 0
-                    ? baseUrl
-                    : "http://" + baseUrl);
+                return Locality.Elsewhere;
+            }
 
-                string host = uri.Host.Trim('[', ']').ToLowerInvariant();
+            string host = uri.Host.Trim('[', ']').ToLowerInvariant();
 
-                if (host == "localhost" || host == "::1"
-                    || host.StartsWith("127.", StringComparison.Ordinal))
-                {
-                    return Locality.ThisMachine;
-                }
+            if (host == "localhost" || host == "::1"
+                || host.StartsWith("127.", StringComparison.Ordinal))
+            {
+                return Locality.ThisMachine;
+            }
 
-                // A name a household router hands out, and the one Bonjour/mDNS uses.
-                if (host.EndsWith(".local", StringComparison.Ordinal)) return Locality.YourNetwork;
+            // A name a household router hands out, and the one Bonjour/mDNS uses.
+            if (host.EndsWith(".local", StringComparison.Ordinal)) return Locality.YourNetwork;
 
-                // The private ranges, for a server running on another machine at home — a common
-                // setup, and one where unloading the model matters just as much.
-                if (host.StartsWith("10.", StringComparison.Ordinal)
-                    || host.StartsWith("192.168.", StringComparison.Ordinal))
+            // The private ranges, for a server running on another machine at home — a common
+            // setup, and one where unloading the model matters just as much.
+            if (host.StartsWith("10.", StringComparison.Ordinal)
+                || host.StartsWith("192.168.", StringComparison.Ordinal))
+            {
+                return Locality.YourNetwork;
+            }
+
+            if (host.StartsWith("172.", StringComparison.Ordinal))
+            {
+                string[] parts = host.Split('.');
+                int second;
+                if (parts.Length > 1 && int.TryParse(parts[1], out second)
+                    && second >= 16 && second <= 31)
                 {
                     return Locality.YourNetwork;
                 }
-
-                if (host.StartsWith("172.", StringComparison.Ordinal))
-                {
-                    string[] parts = host.Split('.');
-                    int second;
-                    if (parts.Length > 1 && int.TryParse(parts[1], out second)
-                        && second >= 16 && second <= 31)
-                    {
-                        return Locality.YourNetwork;
-                    }
-                }
-
-                return Locality.Elsewhere;
             }
-            catch
-            {
-                // An address we cannot even parse is certainly not one we should treat as ours.
-                return Locality.Elsewhere;
-            }
+
+            return Locality.Elsewhere;
         }
 
         /// <summary>

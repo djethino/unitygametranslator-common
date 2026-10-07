@@ -25,4 +25,9 @@
     <ProjectReference Include="../../src/UnityGameTranslator.Common/UnityGameTranslator.Common.csproj" />
   </ItemGroup>
 
+  <!-- The silent-catch counter, written once and linked by the mod's and the Manager's checks too. -->
+  <ItemGroup>
+    <Compile Include="../Shared/SilentCatches.cs" />
+  </ItemGroup>
+
 </Project>
