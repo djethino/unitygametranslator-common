@@ -182,6 +182,8 @@ namespace UnityGameTranslator.Common.Checks
         {
             Section("Languages", LanguagesChecks.Run);
 
+            Section("Strict source, by script", WritingChecks.Run);
+
             Section("Flags", FlagChecks.Run);
 
             Section("Origins", OriginsChecks.Run);
