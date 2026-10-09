@@ -60,7 +60,7 @@ namespace UnityGameTranslator.Common.Checks
             {
                 string key = SettingsSections.JsonKey(section);
                 if (string.IsNullOrEmpty(key)) { withoutKey.Add(section); continue; }
-                if (!key.StartsWith("_", StringComparison.Ordinal)) notUnderscored.Add(key);
+                if (!TranslationFileKeys.IsMetadataKey(key)) notUnderscored.Add(key);
             }
 
             check(withoutKey.Count == 0,
@@ -71,9 +71,9 @@ namespace UnityGameTranslator.Common.Checks
 
             check(notUnderscored.Count == 0,
                 notUnderscored.Count == 0
-                    ? "and every key is an underscore key"
+                    ? "and every key is a metadata key"
                     : "NOT A METADATA KEY: " + string.Join(", ", notUnderscored.ToArray()),
-                "anything not starting with _ is read as a translated line, so the section would arrive as somebody's text");
+                "a key missing from TranslationFileKeys is left alone by every reader, or read as a line — the section would never arrive");
 
             // ── 🔴 The round trip: name → key → name ──────────────────────
             var lost = new List<string>();

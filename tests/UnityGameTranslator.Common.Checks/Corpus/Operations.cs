@@ -96,8 +96,6 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             // ── sync ──────────────────────────────────────────────────────────
             new Operation("sync", "content_hash", typeof(ContentHash), nameof(ContentHash.Of),
                 e => ContentHash.Of(Lines(e, "lines"), Str(e, "uuid")!)),
-            new Operation("sync", "is_metadata_key", typeof(ContentHash), nameof(ContentHash.IsMetadataKey),
-                e => ContentHash.IsMetadataKey(Str(e, "key")!)),
             new Operation("sync", "decide", typeof(Sync), nameof(Sync.Decide),
                 e => Sync.Decide(Str(e, "local_content")!, Str(e, "server_content")!,
                                  Str(e, "last_synced")!, Bool(e, "has_local_changes"))),
@@ -105,6 +103,12 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => Sync.Name(EnumRequired<SyncDirection>(e, "direction"))),
             new Operation("sync", "explain", typeof(Sync), nameof(Sync.Explain),
                 e => Sync.Explain(EnumRequired<SyncDirection>(e, "direction"))),
+
+            // ── translation_file_keys ─────────────────────────────────────────
+            new Operation("translation_file_keys", "is_metadata_key", typeof(TranslationFileKeys), nameof(TranslationFileKeys.IsMetadataKey),
+                e => TranslationFileKeys.IsMetadataKey(Str(e, "key")!)),
+            new Operation("translation_file_keys", "is_line", typeof(TranslationFileKeys), nameof(TranslationFileKeys.IsLine),
+                e => TranslationFileKeys.IsLine(Str(e, "key")!, Bool(e, "line_shaped"))),
 
             // ── standing ──────────────────────────────────────────────────────
             new Operation("standing", "from", typeof(Standings), nameof(Standings.From),

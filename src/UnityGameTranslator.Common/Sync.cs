@@ -64,7 +64,8 @@ namespace UnityGameTranslator.Common
     /// below are pinned by frozen vectors in the check project.
     ///
     /// The rules, each of which the reference implementation needs:
-    ///  · only the translated lines and _uuid; every other underscore key is metadata and excluded;
+    ///  · only the translated lines and _uuid; every metadata key (<see cref="TranslationFileKeys"/>)
+    ///    is excluded;
     ///  · each line becomes {"v":…,"t":…}, in that order, with no other field;
     ///  · keys sorted ORDINALLY — byte order, which is what PHP's ksort does and what
     ///    StringComparer.Ordinal does. Culture-aware sorting puts "a" before "A" and would produce
@@ -86,9 +87,8 @@ namespace UnityGameTranslator.Common
         /// The content hash of a translation.
         /// </summary>
         /// <param name="lines">
-        /// The translated lines only. Metadata keys must not be here — the caller knows its own
-        /// storage, and filtering by "starts with an underscore" twice would be a rule to keep in
-        /// step twice. <see cref="IsMetadataKey"/> exists for callers reading a raw file.
+        /// The translated lines only — <see cref="TranslationFileKeys.IsLine"/> decides, on a raw file.
+        /// A metadata name met here is dropped anyway.
         /// </param>
         /// <param name="uuid">The lineage identifier, hashed alongside the lines.</param>
         public static string Of(IEnumerable<KeyValuePair<string, TranslationLine>> lines, string uuid)
@@ -99,7 +99,7 @@ namespace UnityGameTranslator.Common
             {
                 foreach (var line in lines)
                 {
-                    if (line.Key == null || IsMetadataKey(line.Key)) continue;
+                    if (line.Key == null || TranslationFileKeys.IsMetadataKey(line.Key)) continue;
                     sorted[line.Key] = line.Value;
                 }
             }
@@ -161,13 +161,6 @@ namespace UnityGameTranslator.Common
                 return hex.ToString();
             }
         }
-
-        /// <summary>
-        /// Whether a key is metadata rather than a translated line. The mod's convention, and the
-        /// website's: everything the tools write about a file starts with an underscore.
-        /// </summary>
-        public static bool IsMetadataKey(string key) =>
-            !string.IsNullOrEmpty(key) && key[0] == '_';
 
         /// <summary>
         /// One JSON string, escaped exactly as the reference implementations escape it.
