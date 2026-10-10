@@ -19,6 +19,7 @@ Usage:
     python generate-font-layouts.py                  # fetch the latest type_tree tpk, regenerate
     python generate-font-layouts.py --tpk lzma.tpk   # from a tpk on disk
     python generate-font-layouts.py --tpk lzma.tpk --check   # exit 1 when the table is not this tpk's
+    python generate-font-layouts.py --check          # the release chain: today's tpk; exit 3 if unreachable
 """
 
 import argparse
@@ -201,14 +202,38 @@ def main():
     p.add_argument("--tpk")
     p.add_argument("--check", action="store_true")
     a = p.parse_args()
-    tpk = a.tpk or fetch()
+    if a.tpk:
+        tpk = a.tpk
+    else:
+        try:
+            tpk = fetch()
+        except OSError as ex:
+            # Exit 3: the source could not be reached — the table in the repository is still right for
+            # every version it knows; the release chain says so and goes on.
+            print(f"could not fetch {SOURCE_URL}: {ex}")
+            sys.exit(3)
     sha = hashlib.sha256(open(tpk, "rb").read()).hexdigest()
     text = render(tpk, sha)
     current = open(TARGET, "rb").read().decode("utf-8") if os.path.exists(TARGET) else None
     if a.check:
-        if current != text:
-            print(f"{TARGET}: not this tpk's table ({sha})")
+        # The source's own SHA-256 is left out: a dump rebuilt with nothing new for Font (or for the
+        # newest version) is not a stale table.
+        def facts(t, keep_newest=True):
+            if t is None:
+                return None
+            lines = [l for l in t.split("\n") if "SHA-256" not in l and "SourceSha256" not in l]
+            if not keep_newest:
+                lines = [l for l in lines if "NewestKnown" not in l and "newest Unity version" not in l]
+            return "\n".join(lines)
+        if facts(current, keep_newest=False) != facts(text, keep_newest=False):
+            # Exit 1: a Font layout changed — a game of that version would be read wrongly.
+            print(f"{TARGET}: Font layouts differ from this tpk's ({sha})")
             sys.exit(1)
+        if facts(current) != facts(text):
+            # Exit 4: only newer Unity versions are known, with no new layout — the table reads them
+            # right but calls them "newer than the table".
+            print(f"{TARGET}: the dump knows newer Unity versions, with no new Font layout ({sha})")
+            sys.exit(4)
         print("up to date")
         return
     os.makedirs(os.path.dirname(TARGET), exist_ok=True)
