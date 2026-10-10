@@ -50,6 +50,29 @@ namespace UnityGameTranslator.Common.UnityFiles
             public string Extension => ExtensionOf(Data);
         }
 
+        /// <summary>
+        /// The folder, inside the mod's fonts/ folder, where the game's own fonts are cached (the
+        /// index below, and the backups the mod extracts for itself) — never Custom fonts, never exported.
+        /// </summary>
+        public const string CacheFolder = ".ugt-game-fonts";
+
+        /// <summary>The index file in <see cref="CacheFolder"/>, written by whichever product read the game first.</summary>
+        public const string IndexFile = "index.txt";
+
+        /// <summary>
+        /// The file name an extracted font is written under in fonts/ — the mod's Extract and the
+        /// Manager's give the same file the same name: the font's name, a character a file name cannot
+        /// hold, a control or a space made '_', then its extension.
+        /// </summary>
+        public static string FileNameFor(string fontName, string extension)
+        {
+            var invalid = new HashSet<char>(Path.GetInvalidFileNameChars()) { '/', '\\', ':', '*', '?', '"', '<', '>', '|' };
+            var chars = (string.IsNullOrEmpty(fontName) ? "Game font" : fontName).ToCharArray();
+            for (int i = 0; i < chars.Length; i++)
+                if (invalid.Contains(chars[i]) || char.IsControl(chars[i]) || char.IsWhiteSpace(chars[i])) chars[i] = '_';
+            return new string(chars).Trim('.') + extension;
+        }
+
         /// <summary>A font file's extension from its first bytes: ".otf", ".ttc" or ".ttf"; "" for nothing.</summary>
         public static string ExtensionOf(byte[]? data)
         {

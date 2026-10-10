@@ -92,6 +92,12 @@ namespace UnityGameTranslator.Common.Checks
             check(FontLayouts.CommonString(0) == "AABB" && FontLayouts.CommonString(5) == "AnimationClip",
                 "an embedded type tree's common string is found at its offset", "names are counted in bytes, each ended by a zero");
 
+            check(GameFonts.FileNameFor("CharcuterieBlock SDF", ".ttf") == "CharcuterieBlock_SDF.ttf"
+                  && GameFonts.FileNameFor("Noto: Sans/JP?", ".otf") == "Noto__Sans_JP_.otf"
+                  && GameFonts.FileNameFor("思源黑体", ".ttf") == "思源黑体.ttf",
+                "an extracted font's file name keeps its letters, any script, and nothing a file name cannot hold",
+                "the mod's Extract and the Manager's write the same file under the same name — Windows' rules on every system (Proton)");
+
             BuiltFile(check);
         }
 
