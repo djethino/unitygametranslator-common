@@ -208,6 +208,10 @@ namespace UnityGameTranslator.Common.Checks
                       && back.Fonts[0].Name == "Bench Font" && back.Fonts[0].FontNames[0] == "Bench Family" && back.Fonts[0].PathId == 7,
                     "an index written to disk reads back the same", "kept between launches, redone only when the game's files change");
                 check(Sha(GameFonts.ReadData(folder, back!.Fonts[0])!) == Sha(fontFile), "one font of an index is read alone, whole", "Extract writes this file");
+                File.WriteAllBytes(Path.Combine(folder, "sub", "level1"), file.ToArray());
+                var twice = GameFonts.FromDataFolder(folder, "2021.3.27f1", withData: false);
+                check(twice.Fonts.Count == 2 && GameFonts.Distinct(twice.Fonts).Count == 1,
+                    "the same font in two of a game's files is listed once", "each scene's sharedassets can carry its own copy");
                 File.WriteAllText(Path.Combine(folder, "notes.txt"), "changed");
                 check(GameFonts.Stamp(folder) != index.Stamp, "a changed data folder has another stamp", "the game was updated: index it again");
                 File.WriteAllText(saved, "ugt-game-fonts 1\nstamp\tx\nfont\ta\tb");

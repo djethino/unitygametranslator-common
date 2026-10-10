@@ -73,6 +73,20 @@ namespace UnityGameTranslator.Common.UnityFiles
             return new string(chars).Trim('.') + extension;
         }
 
+        /// <summary>
+        /// One font per name and length: a game carries the same font in several of its files (each
+        /// scene's sharedassets, its bundles) — listed once, the first copy read (Manager, 2026-10-10:
+        /// basis33 and FZ16 three times each). Same name, other length: another font, kept.
+        /// </summary>
+        public static List<Font> Distinct(IEnumerable<Font> fonts)
+        {
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            var result = new List<Font>();
+            foreach (var f in fonts)
+                if (seen.Add(f.Name + "\u0001" + f.DataLength)) result.Add(f);
+            return result;
+        }
+
         /// <summary>A font file's extension from its first bytes: ".otf", ".ttc" or ".ttf"; "" for nothing.</summary>
         public static string ExtensionOf(byte[]? data)
         {
