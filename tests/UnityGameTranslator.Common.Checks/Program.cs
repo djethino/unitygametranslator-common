@@ -205,6 +205,8 @@ namespace UnityGameTranslator.Common.Checks
 
             Section("Reading a pack", AssetPackReaderChecks.Run);
 
+            Section("Reading a game's fonts from its data files", UnityFilesChecks.Run);
+
             Section("Writing a pack", AssetPackWriterChecks.Run);
 
             Section("Planning what a pack does", AssetPlannerChecks.Run);
