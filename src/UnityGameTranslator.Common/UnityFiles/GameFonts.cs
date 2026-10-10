@@ -51,6 +51,14 @@ namespace UnityGameTranslator.Common.UnityFiles
         }
 
         /// <summary>
+        /// Said wherever a game's font is copied out — the mod's Extract, the Manager's Export: a font
+        /// is under its own licence, and the copy is there to adapt it for one's own use (user,
+        /// 2026-10-10). The sharing notice of a pack (AssetPacks.ShareNotice) is its neighbour.
+        /// </summary>
+        public const string ExportNotice =
+            "Fonts have their own licences. These copies are for adapting a font for your own use only.";
+
+        /// <summary>
         /// The folder, inside the mod's fonts/ folder, where the game's own fonts are cached (the
         /// index below, and the backups the mod extracts for itself) — never Custom fonts, never exported.
         /// </summary>
