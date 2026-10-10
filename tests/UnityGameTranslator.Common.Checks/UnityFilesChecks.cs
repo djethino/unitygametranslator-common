@@ -184,6 +184,31 @@ namespace UnityGameTranslator.Common.Checks
                   && fields["m_FontData"] is byte[] data && Sha(data) == Sha(fontFile)
                   && fields["m_FontNames"] is List<object?> names && names.Count == 1 && names[0] as string == "Bench Family",
                 "a Font without type tree gives back its name, its whole file and its family", "what the export writes and the UI.Text backup names");
+            // The same file in a data folder: indexed without its bytes, the index written and read
+            // back, then the one font read alone.
+            string folder = Path.Combine(Path.GetTempPath(), "ugt-check-gamefonts-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(Path.Combine(folder, "sub"));
+            try
+            {
+                File.WriteAllBytes(Path.Combine(folder, "sub", "level0"), file.ToArray());
+                File.WriteAllText(Path.Combine(folder, "notes.txt"), "not a Unity file");
+                var index = GameFonts.FromDataFolder(folder, "2021.3.27f1", withData: false);
+                check(index.Fonts.Count == 1 && index.Fonts[0].Data == null && index.Fonts[0].DataLength == fontFile.Length && index.NotRead.Count == 0,
+                    "an index gives each font's length, not its bytes", "a game can carry dozens of large fonts; one is extracted at a time");
+                string saved = Path.Combine(folder, "index.txt");
+                GameFonts.SaveIndex(index, saved);
+                var back = GameFonts.LoadIndex(saved);
+                check(back != null && back.Stamp == index.Stamp && back.Fonts.Count == 1 && back.Fonts[0].File == "sub/level0"
+                      && back.Fonts[0].Name == "Bench Font" && back.Fonts[0].FontNames[0] == "Bench Family" && back.Fonts[0].PathId == 7,
+                    "an index written to disk reads back the same", "kept between launches, redone only when the game's files change");
+                check(Sha(GameFonts.ReadData(folder, back!.Fonts[0])!) == Sha(fontFile), "one font of an index is read alone, whole", "Extract writes this file");
+                File.WriteAllText(Path.Combine(folder, "notes.txt"), "changed");
+                check(GameFonts.Stamp(folder) != index.Stamp, "a changed data folder has another stamp", "the game was updated: index it again");
+                File.WriteAllText(saved, "ugt-game-fonts 1\nstamp\tx\nfont\ta\tb");
+                check(GameFonts.LoadIndex(saved) == null, "a damaged index is not trusted", "it is read again from the game");
+            }
+            finally { Directory.Delete(folder, true); }
+
             check(!SerializedFile.LooksLikeOne(new MemoryStream(Encoding.ASCII.GetBytes(new string('x', 200)))),
                 "a file that is not a serialized file is not taken for one", "a game's folder holds DLLs, videos, configs");
         }

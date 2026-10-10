@@ -232,10 +232,11 @@ namespace UnityGameTranslator.Common.UnityFiles
         /// Reads the named top-level fields of an object with <paramref name="tree"/>; see
         /// <see cref="TypeTreeWalker.Fields"/>.
         /// </summary>
-        public Dictionary<string, object?> Fields(ObjectInfo info, IReadOnlyList<TypeNode> tree, ICollection<string> wanted)
+        public Dictionary<string, object?> Fields(ObjectInfo info, IReadOnlyList<TypeNode> tree, ICollection<string> wanted,
+                                                  ICollection<string>? measured = null)
         {
             _reader.Position = info.Start;
-            var fields = new TypeTreeWalker(_reader, tree).Fields(wanted);
+            var fields = new TypeTreeWalker(_reader, tree).Fields(wanted, measured ?? Array.Empty<string>());
             if (_reader.Position > info.Start + info.Size)
                 throw new UnityFileFormatException($"object {info.PathId} read past its {info.Size} byte(s): not the layout it was written with");
             return fields;

@@ -41,18 +41,37 @@ namespace UnityGameTranslator.Common.UnityFiles
         /// The object's top-level fields named in <paramref name="wanted"/>, read from the reader's
         /// position; reading stops after the last of them.
         /// </summary>
-        public Dictionary<string, object?> Fields(ICollection<string> wanted)
+        public Dictionary<string, object?> Fields(ICollection<string> wanted) => Fields(wanted, System.Array.Empty<string>());
+
+        /// <summary>
+        /// As <see cref="Fields(ICollection{string})"/>, and the fields named in <paramref name="measured"/>
+        /// — arrays of one-byte values (a font file) — read past and given as their length (an int):
+        /// what an index needs without holding every font of a game in memory.
+        /// </summary>
+        public Dictionary<string, object?> Fields(ICollection<string> wanted, ICollection<string> measured)
         {
             var found = new Dictionary<string, object?>();
+            int expected = wanted.Count + measured.Count;
             foreach (int child in _children[0])
             {
-                if (found.Count == wanted.Count) break;
-                bool keep = wanted.Contains(_nodes[child].Name);
+                if (found.Count == expected) break;
+                string name = _nodes[child].Name;
+                if (measured.Contains(name))
+                {
+                    _skippedBytes = -1;
+                    Value(child, false);
+                    found[name] = _skippedBytes;
+                    continue;
+                }
+                bool keep = wanted.Contains(name);
                 var value = Value(child, keep);
-                if (keep) found[_nodes[child].Name] = value;
+                if (keep) found[name] = value;
             }
             return found;
         }
+
+        // The length of the last array of one-byte values read past (Fields' measured fields).
+        private int _skippedBytes = -1;
 
         private object? Value(int index, bool keep)
         {
@@ -85,6 +104,7 @@ namespace UnityGameTranslator.Common.UnityFiles
             {
                 if (keep) return _r.Bytes(count);
                 _r.Skip(count);
+                _skippedBytes = count;
                 return null;
             }
             if (leaf && size > 0 && !keep && !element.AlignsAfter)
