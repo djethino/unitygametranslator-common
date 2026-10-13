@@ -380,6 +380,10 @@
         { "kind": "button", "name": "ScaleDefaultBtn", "text": "100%", "size": "Compact", "minWidth": 50, "policy": "Excluded", "act": "scaleDefault", "visible": false, "reserve": true,
           "help": "Sets the size back to 100%. Applied on Apply." },
         { "kind": "checkbox", "name": "AutoScale", "text": "Auto", "act": "autoScaleChanged", "visible": false }
+      ] },
+      { "kind": "row", "name": "LinesRow", "spacing": 5, "minHeight": "RowHeightNormal", "visible": false, "children": [
+        { "kind": "checkbox", "name": "KeepLines", "text": "Keep the game's lines", "act": "keepLinesChanged",
+          "help": "Keeps every line of text in this font where the game puts it, at any size and with any replacement font. Turn on when a menu pointer, a frame or a bar no longer lines up with the text. A font with much taller letters than the game's can then look tight." }
       ] }
     ] },
     { "kind": "row", "name": "ImageRow", "spacing": 5, "pad": 2, "minHeight": "RowHeightNormal", "children": [
