@@ -370,18 +370,5 @@ namespace UnityGameTranslator.Common
             string[]? row = ScriptRow(languageName);
             return row == null ? (bool?)null : row[2] == "rtl";
         }
-
-        /// <summary>
-        /// Whether this language's letters are shaped together — joined, reordered, stacked (CLDR's
-        /// script metadata, shapingReq YES: Arabic, Devanagari, Bengali, Tamil, Khmer…). A text in
-        /// such a script must not be letter-spaced: spaced, its joined letters come apart (the top
-        /// bar of a Hindi word broken by a game's spacing for its Latin titles). Null for a name the
-        /// catalogue does not hold. "min" (Latin, Cyrillic, Thai…) is not "yes".
-        /// </summary>
-        public static bool? LettersShapedTogether(string? languageName)
-        {
-            string[]? row = ScriptRow(languageName);
-            return row == null || row.Length < 4 ? (bool?)null : row[3] == "yes";
-        }
     }
 }
