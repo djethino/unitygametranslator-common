@@ -481,9 +481,9 @@ namespace UnityGameTranslator.Common
         /// Whether a language on a backup is an answer or an absence.
         ///
         /// 🔴 **"auto" is not a language**, and this is the distinction the row is drawn from: a
-        /// copy whose source says "auto" was taken before anybody settled what it translates FROM,
-        /// which is a different thing from a copy that names English. The first gets an arrow with
-        /// nothing before it; the second gets a flag.
+        /// copy whose source says "auto" was taken while the source was detected, which is a
+        /// different thing from a copy that names English. The first shows the word
+        /// <see cref="TranslationLanguages.AutoWord"/>, the second a flag (<see cref="IsAutoLanguage"/>).
         ///
         /// ⚠ Here rather than in each screen because both products draw this row, and "is auto a
         /// language" answered twice is answered differently the day one of them grows a case.
@@ -491,6 +491,15 @@ namespace UnityGameTranslator.Common
         public static bool IsSettledLanguage(string? language) =>
             !string.IsNullOrWhiteSpace(language)
             && !string.Equals(language, "auto", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// The side reads "auto": detection, written as <see cref="TranslationLanguages.AutoWord"/> —
+        /// as the Main's card writes it (user, 2026-10-15: an arrow with nothing before it read as
+        /// something missing). A side with nothing at all — an older copy whose file did not say —
+        /// shows nothing, and the arrow goes with it.
+        /// </summary>
+        public static bool IsAutoLanguage(string? language) =>
+            string.Equals(language?.Trim(), "auto", StringComparison.OrdinalIgnoreCase);
 
         public const string ScreenTitle = "Translation backups";
 

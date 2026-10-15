@@ -20,6 +20,12 @@ namespace UnityGameTranslator.Common
     public static class TranslationLanguages
     {
         /// <summary>
+        /// The word a side of a language pair shows when its language is detected rather than
+        /// chosen ("auto"): the Main's card, the backups of both products. One word everywhere.
+        /// </summary>
+        public const string AutoWord = "Auto";
+
+        /// <summary>
         /// Which language answer wins, from the three places that can give one.
         ///
         ///  1. **the server**, whenever it has answered about this lineage. The only durable
