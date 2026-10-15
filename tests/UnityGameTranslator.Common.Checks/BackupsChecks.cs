@@ -31,6 +31,16 @@ namespace UnityGameTranslator.Common.Checks
 
         public static void Run(Action<bool, string, string> check)
         {
+            // ── A backup row's source side (2026-10-15: one automatic copy showed a lone flag) ──
+            check(Backups.SourceOf("auto", "Arabic") == Backups.SourceSide.Auto
+                  && Backups.SourceOf(null, "Arabic") == Backups.SourceSide.Auto,
+                "a source detected reads Auto whether the copy says \"auto\" or nothing beside its target",
+                "the mod wrote the game's setting, the Manager the file: one fact, one row");
+            check(Backups.SourceOf("English", "Arabic") == Backups.SourceSide.Language,
+                "a settled source shows its flag", "a language is not an absence");
+            check(Backups.SourceOf(null, null) == Backups.SourceSide.None,
+                "a copy that says nothing of its languages shows none", "an older copy: no row of empty boxes");
+
             // ── Naming ────────────────────────────────────────────────────
             var at = new DateTime(2026, 8, 17, 14, 32, 10);
 

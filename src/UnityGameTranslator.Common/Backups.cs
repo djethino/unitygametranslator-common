@@ -483,7 +483,7 @@ namespace UnityGameTranslator.Common
         /// 🔴 **"auto" is not a language**, and this is the distinction the row is drawn from: a
         /// copy whose source says "auto" was taken while the source was detected, which is a
         /// different thing from a copy that names English. The first shows the word
-        /// <see cref="TranslationLanguages.AutoWord"/>, the second a flag (<see cref="IsAutoLanguage"/>).
+        /// <see cref="TranslationLanguages.AutoWord"/>, the second a flag (<see cref="SourceOf"/>).
         ///
         /// ⚠ Here rather than in each screen because both products draw this row, and "is auto a
         /// language" answered twice is answered differently the day one of them grows a case.
@@ -492,14 +492,33 @@ namespace UnityGameTranslator.Common
             !string.IsNullOrWhiteSpace(language)
             && !string.Equals(language, "auto", StringComparison.OrdinalIgnoreCase);
 
+        /// <summary>What the source side of a backup's row shows.</summary>
+        public enum SourceSide
+        {
+            /// <summary>Nothing — and no arrow: nothing is known of this copy's languages.</summary>
+            None,
+            /// <summary>The word <see cref="TranslationLanguages.AutoWord"/>: the source is detected, not chosen.</summary>
+            Auto,
+            /// <summary>The language's flag.</summary>
+            Language,
+        }
+
         /// <summary>
-        /// The side reads "auto": detection, written as <see cref="TranslationLanguages.AutoWord"/> —
-        /// as the Main's card writes it (user, 2026-10-15: an arrow with nothing before it read as
-        /// something missing). A side with nothing at all — an older copy whose file did not say —
-        /// shows nothing, and the arrow goes with it.
+        /// The source side of a backup's row, from what its description recorded.
+        ///
+        /// 🔴 **"auto" and nothing say the same thing once the target is known** (user, 2026-10-15:
+        /// one row of the automatic backups had only a flag, the others « Auto → »). A translation
+        /// file names its source only once it is settled, so a copy whose file holds no source,
+        /// beside a target it does hold, was taken with the source detected — what "auto" says.
+        /// The mod recorded the game's setting ("auto"), the Manager the file (nothing): the same
+        /// fact, written two ways, read here as one. Nothing at all only when the target is not
+        /// known either — an older copy whose file said nothing.
         /// </summary>
-        public static bool IsAutoLanguage(string? language) =>
-            string.Equals(language?.Trim(), "auto", StringComparison.OrdinalIgnoreCase);
+        public static SourceSide SourceOf(string? source, string? target) =>
+            IsSettledLanguage(source) ? SourceSide.Language
+            : string.Equals(source?.Trim(), "auto", StringComparison.OrdinalIgnoreCase) || IsSettledLanguage(target)
+                ? SourceSide.Auto
+                : SourceSide.None;
 
         public const string ScreenTitle = "Translation backups";
 
