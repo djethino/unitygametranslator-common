@@ -168,8 +168,51 @@ namespace UnityGameTranslator.Common
 
             // ⚠ Also a model-only check, for the same reason: a person who adds a letter meant it.
             foreach (string error in LettersAddedBetween(source, translation)) errors.Add(error);
+            foreach (string error in ValuesRunTogether(source, translation)) errors.Add(error);
 
             return errors.Count == 0;
+        }
+
+        /// <summary>
+        /// Two placeholders the source separates with a WORD, which the answer leaves side by side with nothing but
+        /// spaces between them: the values can no longer be told apart. The mirror of <see cref="LettersAddedBetween"/>.
+        ///
+        /// 🔴 **Seen in a real file**: "[!v*0]年[!v*1]月[!v*2]日" (year, month, day) came back as "[!v*2] [!v*1] [!v*0]",
+        /// and the game showed a save's date as "3 1 1" (2026-10-19).
+        ///
+        /// ⚠ **Narrow on purpose**: only two placeholders that appear once on each side and follow each other in the
+        /// answer (in either order); only when the source has a letter between them; only when the answer has NOTHING
+        /// but white space between them — a sign or a punctuation mark there ("[!v*0]x[!v*1]" → "[!v*0]×[!v*1]", a
+        /// "/" or a ":") still tells the values apart and is the language's choice.
+        /// </summary>
+        private static List<string> ValuesRunTogether(string source, string translation)
+        {
+            var errors = new List<string>();
+            if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(translation)) return errors;
+
+            List<Match> inSource = TokenPattern.Matches(source).Cast<Match>().ToList();
+            if (inSource.Count < 2) return errors;
+            List<Match> inAnswer = TokenPattern.Matches(translation).Cast<Match>().ToList();
+            Dictionary<string, int> sourceTally = Tally(source);
+            Dictionary<string, int> answerTally = Tally(translation);
+
+            for (int i = 0; i + 1 < inSource.Count; i++)
+            {
+                string first = inSource[i].Value, second = inSource[i + 1].Value;
+                if (!OnceEach(first, sourceTally, answerTally) || !OnceEach(second, sourceTally, answerTally)) continue;
+
+                string joint = Between(source, inSource[i], inSource[i + 1]);
+                if (!HasLetter(joint)) continue;
+
+                int a = inAnswer.FindIndex(m => m.Value == first), b = inAnswer.FindIndex(m => m.Value == second);
+                if (a < 0 || b < 0 || Math.Abs(a - b) != 1) continue;
+
+                string answered = a < b ? Between(translation, inAnswer[a], inAnswer[b]) : Between(translation, inAnswer[b], inAnswer[a]);
+                if (answered.Trim().Length == 0)
+                    errors.Add($"between {first} and {second} the source has the word \"{joint.Trim()}\": \"{answered}\" leaves the two values side by side — keep a word between them");
+            }
+
+            return errors;
         }
 
         /// <summary>
