@@ -180,10 +180,12 @@ namespace UnityGameTranslator.Common
         /// 🔴 **Seen in a real file**: "[!v*0]年[!v*1]月[!v*2]日" (year, month, day) came back as "[!v*2] [!v*1] [!v*0]",
         /// and the game showed a save's date as "3 1 1" (2026-10-19).
         ///
-        /// ⚠ **Narrow on purpose**: only two placeholders that appear once on each side and follow each other in the
+        /// ⚠ **Narrow on purpose**: only an answer with no letter left at all (a word moved elsewhere still names the
+        /// values); only two placeholders that appear once on each side and follow each other in the
         /// answer (in either order); only when the source has a letter between them; only when the answer has NOTHING
-        /// but white space between them — a sign or a punctuation mark there ("[!v*0]x[!v*1]" → "[!v*0]×[!v*1]", a
-        /// "/" or a ":") still tells the values apart and is the language's choice.
+        /// between them but white space and the signs the source already had there (its braces around a value) — a
+        /// sign of the answer's own ("[!v*0]x[!v*1]" → "[!v*0]×[!v*1]", a "/" or a ":") still tells the values apart
+        /// and is the language's choice.
         /// </summary>
         private static List<string> ValuesRunTogether(string source, string translation)
         {
@@ -192,6 +194,9 @@ namespace UnityGameTranslator.Common
 
             List<Match> inSource = TokenPattern.Matches(source).Cast<Match>().ToList();
             if (inSource.Count < 2) return errors;
+            // only an answer that kept no word at all: a word that MOVED ("第[!v*0]章 [!v*1]" → "Chapitre [!v*0] [!v*1]",
+            // the second value a title) still says what the values are — refused, a right translation was lost (2026-10-19)
+            if (HasLetter(TokenPattern.Replace(translation, " "))) return errors;
             List<Match> inAnswer = TokenPattern.Matches(translation).Cast<Match>().ToList();
             Dictionary<string, int> sourceTally = Tally(source);
             Dictionary<string, int> answerTally = Tally(translation);
@@ -208,7 +213,9 @@ namespace UnityGameTranslator.Common
                 if (a < 0 || b < 0 || Math.Abs(a - b) != 1) continue;
 
                 string answered = a < b ? Between(translation, inAnswer[a], inAnswer[b]) : Between(translation, inAnswer[b], inAnswer[a]);
-                if (answered.Trim().Length == 0)
+                // what the answer added there, beyond white space and the signs the source already had around its word
+                // ("[!v*0]年{[!v*1]}" → "[!v*0] {[!v*1]}": the brace is the source's, the word is gone)
+                if (answered.All(c => char.IsWhiteSpace(c) || (!char.IsLetterOrDigit(c) && joint.IndexOf(c) >= 0)))
                     errors.Add($"between {first} and {second} the source has the word \"{joint.Trim()}\": \"{answered}\" leaves the two values side by side — keep a word between them");
             }
 
