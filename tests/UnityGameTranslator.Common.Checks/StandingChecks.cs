@@ -13,6 +13,19 @@ namespace UnityGameTranslator.Common.Checks
     {
         public static void Run(Action<bool, string, string> check)
         {
+            // ── A file's verdict: its lines, then its settings (Sync.DecideFile) ──
+            const string same = "aa", moved = "bb";
+            check(Sync.DecideFile(same, same, same, linesChanged: false, settingsChanged: true) == SyncDirection.Upload,
+                "identical lines with settings changed here is something to upload",
+                "the settings are in no content hash: the Manager said « Up to date » beside « settings changed — not uploaded yet »");
+            check(Sync.DecideFile(same, same, same, linesChanged: false, settingsChanged: false) == SyncDirection.InSync,
+                "and with nothing changed, in step", "the settings add nothing when they did not move");
+            check(Sync.DecideFile(same, moved, same, linesChanged: false, settingsChanged: true) == SyncDirection.Merge,
+                "settings changed here while the site moved is a merge, not a download over them",
+                "a font set here would be lost by taking the published file");
+            check(Sync.DecideFile(same, moved, same, linesChanged: false, settingsChanged: false) == SyncDirection.Download,
+                "nothing changed here and the site moved: download", "Decide's own answer, untouched");
+
             // ── Writing the local file ────────────────────────────────────────
             check(Standings.MayWriteLocally(AccountStanding.Anonymous),
                 "somebody with no account may change their own copy",

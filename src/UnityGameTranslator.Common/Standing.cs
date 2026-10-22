@@ -280,9 +280,9 @@ namespace UnityGameTranslator.Common
         /// </summary>
         private static SyncDirection SyncOf(LocalFacts local, ServerFacts server)
         {
-            var lines = Sync.Decide(local.ContentHash ?? "", server.Hash ?? "", local.LastSyncedHash ?? "",
-                                    local.LocalChanges > 0 || local.MetadataDirty);
-            return lines == SyncDirection.InSync && local.MetadataDirty ? SyncDirection.Upload : lines;
+            // The composition lives in Sync.DecideFile, which the Manager asks too.
+            return Sync.DecideFile(local.ContentHash ?? "", server.Hash ?? "", local.LastSyncedHash ?? "",
+                                   local.LocalChanges > 0, local.MetadataDirty);
         }
 
         public static Standing From(LocalFacts local, ServerFacts server, AccountFacts account)

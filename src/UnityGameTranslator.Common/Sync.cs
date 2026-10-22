@@ -312,6 +312,25 @@ namespace UnityGameTranslator.Common
         /// Whether anything here has been changed since that last sync. Counted by the mod, which
         /// is the only side that watches lines being written.
         /// </param>
+        /// <summary>
+        /// The verdict on a whole translation file: its lines (<see cref="Decide"/>), then its
+        /// settings — fonts, rules, images, exclusions — which no content hash covers, so identical
+        /// lines with settings changed here is something to upload.
+        ///
+        /// 🔴 **The one composition every product asks** (2026-10-22). The mod reached it through
+        /// <see cref="Standings"/>, the Manager called <see cref="Decide"/> on its own and said
+        /// « Up to date » beside a game whose corner notice read « settings changed — not uploaded
+        /// yet ». Asking for the file's verdict means asking this.
+        /// </summary>
+        /// <param name="linesChanged">Lines changed since the last sync (the mod's count).</param>
+        /// <param name="settingsChanged">The file's settings changed since the last sync (<c>_metadata_dirty</c>).</param>
+        public static SyncDirection DecideFile(string localContent, string serverContent, string lastSynced,
+                                               bool linesChanged, bool settingsChanged)
+        {
+            var lines = Decide(localContent, serverContent, lastSynced, linesChanged || settingsChanged);
+            return lines == SyncDirection.InSync && settingsChanged ? SyncDirection.Upload : lines;
+        }
+
         public static SyncDirection Decide(string localContent, string serverContent,
                                            string lastSynced, bool hasLocalChanges)
         {
