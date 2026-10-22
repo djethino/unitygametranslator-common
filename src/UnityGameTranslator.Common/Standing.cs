@@ -268,6 +268,23 @@ namespace UnityGameTranslator.Common
         /// work. Unknown is not zero: an older server that cannot say which contributions hold
         /// work gives the raw count rather than nothing, since "nothing waiting" is a claim.
         /// </summary>
+        /// <summary>
+        /// Where the lines stand (Sync.Decide), then the settings: identical lines with settings changed
+        /// here is something to upload.
+        ///
+        /// 🔴 **The settings are not in the content hash** — it is the lines', as the site computes it —
+        /// so Sync.Decide, which asks « identical content? » first, answers InSync for a font or an
+        /// exclusion changed and nothing else (2026-10-22: the corner notice said « settings changed —
+        /// not uploaded yet » and the Update button was closed « up to date »). Fixed once in August in
+        /// the main screen, lost when this composition replaced it.
+        /// </summary>
+        private static SyncDirection SyncOf(LocalFacts local, ServerFacts server)
+        {
+            var lines = Sync.Decide(local.ContentHash ?? "", server.Hash ?? "", local.LastSyncedHash ?? "",
+                                    local.LocalChanges > 0 || local.MetadataDirty);
+            return lines == SyncDirection.InSync && local.MetadataDirty ? SyncDirection.Upload : lines;
+        }
+
         public static Standing From(LocalFacts local, ServerFacts server, AccountFacts account)
         {
             bool here = local.Lines > 0;
@@ -280,10 +297,7 @@ namespace UnityGameTranslator.Common
                 Publication = publication,
 
                 // Nothing published to compare against is not "in sync": it is no comparison at all.
-                Sync = server.Exists
-                    ? Sync.Decide(local.ContentHash ?? "", server.Hash ?? "", local.LastSyncedHash ?? "",
-                                  local.LocalChanges > 0 || local.MetadataDirty)
-                    : (SyncDirection?)null,
+                Sync = server.Exists ? SyncOf(local, server) : (SyncDirection?)null,
 
                 Account = account.SignedIn ? AccountStanding.Ours : AccountStanding.Anonymous,
                 Role = role,
