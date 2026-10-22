@@ -206,6 +206,16 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     Bool(e, "capture_only"))),
             new Operation("badges", "in_listing", typeof(Badges), nameof(Badges.InListing),
                 e => Badges.InListing(Bool(e, "installed"), NullableBool(e, "yours_is_main"))),
+            new Operation("badges", "format", typeof(Badges), nameof(Badges.Format),
+                e => new List<Badge> { Badges.Format(Int(e, "file_format"), NullableInt(e, "reads_up_to")) }),
+
+            // ── translation_format ────────────────────────────────────────────
+            new Operation("translation_format", "announced", typeof(TranslationFormat), nameof(TranslationFormat.Announced),
+                e => TranslationFormat.Announced(Str(e, "value"))),
+            new Operation("translation_format", "of_file", typeof(TranslationFormat), nameof(TranslationFormat.OfFile),
+                e => TranslationFormat.OfFile(NullableInt(e, "engine_version"))),
+            new Operation("translation_format", "reads", typeof(TranslationFormat), nameof(TranslationFormat.Reads),
+                e => TranslationFormat.Reads(Int(e, "reads_up_to"), Int(e, "file_format"))),
 
             // ── mod_ui_migration ──────────────────────────────────────────────
             new Operation("mod_ui_migration", "decide", typeof(ModUiMigration), nameof(ModUiMigration.Decide),

@@ -118,6 +118,13 @@ namespace UnityGameTranslator.Common
         /// part of a translation's strip.
         /// </summary>
         GameIdentity,
+
+        /// <summary>
+        /// The format of the translation's file (<see cref="TranslationFormat"/>), always shown — and
+        /// wrong-toned when the client looking at it cannot read it, which is also when its Download
+        /// is closed. A fact about the FILE against this client, given by <see cref="Badges.Format"/>.
+        /// </summary>
+        Format,
     }
 
     /// <summary>One chip: what it says, how loudly, and what it means in full.</summary>
@@ -275,6 +282,28 @@ namespace UnityGameTranslator.Common
             }
 
             return badges;
+        }
+
+        /// <summary>
+        /// The file's format, as a chip: « v1 », « v2 »… quiet when the client reads it, wrong when it
+        /// does not — the one case where it says what to do (<see cref="TranslationFormat.UpdateTheMod"/>).
+        ///
+        /// 🔴 **Always shown** (user, 2026-10-22: « toujours (v1, v2…) »), so that the number is a
+        /// known sight before the day it matters.
+        /// </summary>
+        /// <param name="fileFormat">The translation's format (TranslationFormat.OfFile).</param>
+        /// <param name="readsUpTo">What the client looking at it reads; null where nobody in particular looks (a public page).</param>
+        public static Badge Format(int fileFormat, int? readsUpTo)
+        {
+            int format = fileFormat < 1 ? 1 : fileFormat;
+            bool readable = readsUpTo == null || TranslationFormat.Reads(readsUpTo.Value, format);
+            return new Badge
+            {
+                Text = "v" + format,
+                Kind = BadgeKind.Format,
+                Tone = readable ? BadgeTone.Quiet : BadgeTone.Wrong,
+                Tip = readable ? "Translation file format " + format + "." : TranslationFormat.UpdateTheMod,
+            };
         }
 
         public static List<Badge> For(Publication publication, bool? isMain, int? branchesWaiting,
