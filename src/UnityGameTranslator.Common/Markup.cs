@@ -15,8 +15,34 @@ namespace UnityGameTranslator.Common
     /// </summary>
     public static class Markup
     {
-        /// <summary>Any XML/HTML-like tag: &lt;tag&gt;, &lt;/tag&gt;, &lt;tag attr="val"&gt;, &lt;tag/&gt;.</summary>
-        private static readonly Regex TagPattern = new Regex(@"<[^>]+>", RegexOptions.Compiled);
+        /// <summary>
+        /// Any XML/HTML-like tag: &lt;tag&gt;, &lt;/tag&gt;, &lt;tag attr="val"&gt;, &lt;tag/&gt; — on ONE line, holding no
+        /// other `&lt;`. A game's sheet compares with the signs themselves (`Light&lt;12`, lines later `Overload&gt;60`):
+        /// read as a tag, everything between them was lifted out as markup and the sheet stayed untranslated
+        /// (2026-10-25). No engine's rich text spans a line break.
+        /// </summary>
+        private static readonly Regex TagPattern = new Regex(@"<[^<>\r\n]+>", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Where the tag opening at <paramref name="at"/> ends (its `&gt;`), or -1 when no tag opens there — the rule of
+        /// <see cref="TagPattern"/>, for a reader walking a text character by character.
+        /// </summary>
+        public static int TagEnd(string text, int at)
+        {
+            if (text == null || at < 0 || at >= text.Length || text[at] != '<') return -1;
+            for (int k = at + 1; k < text.Length; k++)
+            {
+                char c = text[k];
+                if (c == '>') return k > at + 1 ? k : -1;
+                if (c == '<' || c == '\n' || c == '\r') return -1;
+            }
+            return -1;
+        }
+
+        /// <summary>Every tag of a text replaced by what <paramref name="evaluator"/> makes of it (the same tags
+        /// <see cref="Extract"/> lifts).</summary>
+        public static string ReplaceTags(string text, MatchEvaluator evaluator) =>
+            string.IsNullOrEmpty(text) ? text : TagPattern.Replace(text, evaluator);
 
         /// <summary>What a lifted tag becomes: [!t*0], [!t*1]…</summary>
         public const string PlaceholderPrefix = "[!t*";

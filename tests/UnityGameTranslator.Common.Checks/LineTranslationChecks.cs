@@ -42,6 +42,12 @@ namespace UnityGameTranslator.Common.Checks
                 "a tag leaves a slot of its own",
                 "the model reorders words freely and would carry a tag to the wrong one — the slot is what pins it");
 
+            string sheet = "Light<12 Speed x120%\nOverload>60 Speed x80%";
+            check(Markup.Extract(sheet, out var sheetTags) == sheet && sheetTags.Count == 0
+                && Markup.TagEnd(sheet, sheet.IndexOf('<')) == -1 && Markup.TagEnd("<color=#FF0000>", 0) == 14,
+                "a tag is on one line and holds no other `<`: the signs of a sheet are text",
+                "`<12` and, lines later, `>60` were one tag: everything between them was lifted as markup and the sheet stayed untranslated");
+
             check(Markup.Restore(lifted, tags) == "<b>Play</b> now",
                 "and the slots take the tags back", "same round trip, same stake");
 
