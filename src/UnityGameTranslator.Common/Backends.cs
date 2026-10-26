@@ -61,6 +61,10 @@ namespace UnityGameTranslator.Common
         /// <summary>The token a line break becomes while a text is away being translated.</summary>
         public const string LineBreak = "[!nl]";
 
+        /// <summary>A line-break token with the raw line breaks a model wrote around it (Restore drops them).</summary>
+        private static readonly System.Text.RegularExpressions.Regex ModelBreakBesideToken =
+            new System.Text.RegularExpressions.Regex(@"(?:[ \t]*\r?\n)+[ \t]*\[!nl\]|\[!nl\](?:[ \t]*\r?\n)+");
+
         /// <summary>
         /// Take a text apart for sending: structure into tokens, padding held back.
         ///
@@ -152,6 +156,10 @@ namespace UnityGameTranslator.Common
                 answer = opening + answer + closing;
 
             string result = Markup.Restore(answer, prepared.Tags);
+            // A raw line break the model wrote beside a line-break token is its own layout: the text sent holds none (every
+            // break went as the token). Kept, `[!nl]` plus the model's `\n` gave a blank line the game never had — 11 of a
+            // game's dialogue lines asked again, 2026-10-26
+            result = ModelBreakBesideToken.Replace(result, LineBreak);
             result = result.Replace(LineBreak, "\n");
 
             if (prepared.Leading.Length > 0 || prepared.Trailing.Length > 0)

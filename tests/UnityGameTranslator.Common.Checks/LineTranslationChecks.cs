@@ -165,6 +165,12 @@ namespace UnityGameTranslator.Common.Checks
                 "everything taken out comes back where it was",
                 "what the game gets differs from what it had only in the words");
 
+            var twoLines = Backends.Prepare("Hello\nworld");
+            check(Backends.Restore(twoLines, "Bonjour[!nl]\nmonde") == "Bonjour\nmonde" && Backends.Restore(twoLines, "Bonjour\n[!nl]monde") == "Bonjour\nmonde"
+                && Backends.Restore(Backends.Prepare("Hello\n\nworld"), "Bonjour[!nl]\n[!nl]monde") == "Bonjour\n\nmonde",
+                "a raw line break a model writes beside a line-break token is dropped",
+                "the text sent holds no raw break, every one went as the token: kept, the game got a blank line it never had");
+
             check(Backends.Restore(Backends.Prepare("Play"), null!) == null && Backends.Restore(Backends.Prepare("Play"), "") == "",
                 "an empty answer is handed straight back",
                 "dressing an empty string in the original's padding would produce a translation made of spaces");
