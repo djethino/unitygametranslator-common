@@ -287,13 +287,20 @@ namespace UnityGameTranslator.Common
         /// verdict in the line — `UI label: Annuler` — and that line is what gets written into the
         /// game. Same reason reasoning is turned off through a parameter rather than by adding a
         /// marker to the text (see the mod's request builder).
+        ///
+        /// ⚠ **The punctuation rule goes both ways.** Written "do not add punctuation if not in the
+        /// source", it only forbade adding, and the model dropped the final mark instead — 3-6 % of
+        /// the lines ending in ! or ? in French, up to a quarter in Hindi and Chinese ("Tear away their
+        /// pain!" with no "!"). Measured on 176 lines in French, Chinese and Hindi: the two-way rule gave
+        /// the mark back to 73 of 80 lines that had lost it, took it from none of the 48 that had it, and
+        /// added one to 2 of 48 lines without (1 before).
         /// </summary>
         private static void AppendCommonRules(StringBuilder prompt, string targetLanguage)
         {
             prompt.AppendLine($"- Write natural, correct {targetLanguage}");
             prompt.AppendLine("- Keep the tone of the source");
             prompt.AppendLine("- Keep it about as long as the source");
-            prompt.AppendLine("- Do not add punctuation if not in the source to translate");
+            prompt.AppendLine("- Keep the punctuation of the source: add none it lacks, drop none it has");
         }
 
         /// <summary>
