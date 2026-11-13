@@ -28,7 +28,10 @@ namespace UnityGameTranslator.Common
     ///
     ///  1. <see cref="FormatTooOld"/> — the file says it is format 1 and the line holds a field of the format 2
     ///     (a format 1 file is asked nothing else: its text is the game's);
-    ///  2. <see cref="MarkerWithoutLink"/> / <see cref="LinkWithoutMarker"/> — <c>[!g*N]</c> and <c>links[N]</c> must pair;
+    ///  2. <see cref="CarriageReturn"/> — every text of the format 2 (forms, a link's <c>was</c> and <c>to</c>, a refused
+    ///     entry) is LF only, like <c>v</c> and the keys: nobody normalises them before hashing, so
+    ///     a carriage return (CR) would make two hashes for one text;
+    ///     <see cref="MarkerWithoutLink"/> / <see cref="LinkWithoutMarker"/> — <c>[!g*N]</c> and <c>links[N]</c> must pair;
     ///  3. <see cref="LinkEntryMissing"/> / <see cref="LinkFormMissing"/> — the entry exists, and so does the form it names;
     ///     <see cref="EntryHasLinkMarker"/> — a term, or the entry a link points at, shows no <c>[!g*N]</c> itself
     ///     (a term citing a term would put a marker on the screen: no recursion is read, none is allowed);
@@ -42,6 +45,7 @@ namespace UnityGameTranslator.Common
     public static class LineWrites
     {
         public const string FormatTooOld = "format-2-field-in-format-1";
+        public const string CarriageReturn = "carriage-return-in-text";
         public const string MarkerWithoutLink = "marker-without-link";
         public const string LinkWithoutMarker = "link-without-marker";
         public const string LinkEntryMissing = "link-entry-missing";
@@ -80,6 +84,11 @@ namespace UnityGameTranslator.Common
             // ⚠ Everything below is the format 2's. A line of a format 1 file holds the game's text
             // as it always did — a « [!g*0] » or a « [!L*x] » written there is text, not a marker.
             if (fileFormat < 2) return null;
+
+            string? carriage = CarriageReturnIn(line);
+            if (carriage != null)
+                return Say(CarriageReturn,
+                    $"The line \"{key}\" holds a carriage return in {carriage}: the texts of the format 2 use LF alone.");
 
             var links = line.Links ?? (IReadOnlyList<LineLink>)new LineLink[0];
             var markers = LineMarkers.LinkNumbers(line.Value);
@@ -185,6 +194,25 @@ namespace UnityGameTranslator.Common
         }
 
         private static LineRefusal Say(string code, string words) => new LineRefusal { Code = code, Words = words };
+
+        /// <summary>Which text of the line holds a « \r », or null.</summary>
+        private static string? CarriageReturnIn(TranslationLine line)
+        {
+            if (line.Forms != null)
+                foreach (var form in line.Forms)
+                    if (form.Value != null && form.Value.IndexOf('\r') >= 0) return $"its form {form.Key}";
+            if (line.Links != null)
+                for (int i = 0; i < line.Links.Count; i++)
+                {
+                    var link = line.Links[i];
+                    if (link.Was != null && link.Was.IndexOf('\r') >= 0) return $"the `was` of link {i}";
+                    if (link.To != null && link.To.IndexOf('\r') >= 0) return $"the target of link {i}";
+                }
+            if (line.Unlinked != null)
+                foreach (var to in line.Unlinked)
+                    if (to != null && to.IndexOf('\r') >= 0) return "a refused entry";
+            return null;
+        }
 
         /// <summary>The line's own text, or one of its written forms, shows a <c>[!g*N]</c>.</summary>
         private static bool HasLinkMarker(TranslationLine line)

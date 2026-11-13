@@ -1349,6 +1349,99 @@
       "why": "the entry a link points at must not show a marker either, whether or not it carries the term mark"
     },
     {
+      "id": "translation-file/format2/form-with-a-carriage-return",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Star Coin": {
+          "v": "Pièce",
+          "t": "V",
+          "term": true,
+          "forms": {
+            "f1": "pièces\r\nd'étoile"
+          }
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "guarantee": "carriage-return-in-text",
+      "why": "a written form is LF only, like `v` and the keys: nobody normalises it before hashing, so a CR would make two hashes for one text"
+    },
+    {
+      "id": "translation-file/format2/was-with-a-carriage-return",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Star Coin": {
+          "v": "Pièce d'étoile",
+          "t": "V",
+          "term": true,
+          "forms": {
+            "f1": "pièces d'étoile",
+            "f2": "de la pièce d'étoile"
+          }
+        },
+        "Not enough Star Coins!": {
+          "v": "Pas assez de [!g*0] !",
+          "t": "A",
+          "links": [
+            {
+              "to": "Star Coin",
+              "form": "f1",
+              "by": "A",
+              "was": "pièces\r d'étoile"
+            }
+          ]
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "guarantee": "carriage-return-in-text",
+      "why": "the `was` of a link is compared with what the link reads, and hashed as it is: LF only"
+    },
+    {
+      "id": "translation-file/format2/form-with-a-line-feed-is-fine",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Star Coin": {
+          "v": "Pièce",
+          "t": "V",
+          "term": true,
+          "forms": {
+            "f1": "pièces\nd'étoile"
+          }
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 1,
+        "tag_counts": {
+          "human": 0,
+          "validated": 1,
+          "ai": 0,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "read2": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 2,
+        "lines": {
+          "Star Coin": {
+            "v": "Pièce",
+            "t": "V",
+            "term": true,
+            "forms": {
+              "f1": "pièces\nd'étoile"
+            }
+          }
+        }
+      },
+      "why": "a line break is written LF: it is the text's own, and all that is asked is that nobody writes it another way"
+    },
+    {
       "id": "translation-file/format2/link-by-an-unknown-writer",
       "document": {
         "_engine_version": 2,

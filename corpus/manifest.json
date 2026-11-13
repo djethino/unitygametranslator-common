@@ -4,6 +4,7 @@
   "sides": {
     "site": {
       "sync": ["content_hash"],
+      "template_ids": ["of", "collision"],
       "translation_file_keys": ["is_metadata_key", "is_line"],
       "translation_format": ["announced", "of_file", "reads"],
       "settings": ["all", "json_key", "section_of"],

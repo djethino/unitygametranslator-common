@@ -98,6 +98,7 @@
     "description": "What a writer owes a file before a line is written (LineWrites.Refusal, draft §6). Checked at the door (`upload`) and by every editor, in this order, the first failing one being the reason given. Everything but `format-2-field-in-format-1` applies to a file of the format 2 only: in a format 1 file a `[!g*0]` is the game's text.",
     "codes": {
       "format-2-field-in-format-1": "a line holds a field of the format 2 and the file says it is format 1 (`_engine_version` absent, 0 or 1)",
+      "carriage-return-in-text": "a text of the format 2 (a form, a link's `was` or `to`, a refused entry) holds a carriage return: they are LF only, like `v` and the keys — no side normalises them before hashing",
       "marker-without-link": "the text shows `[!g*N]` and the line holds no `links[N]`",
       "link-without-marker": "the line holds `links[N]` and its text has no `[!g*N]`",
       "link-entry-missing": "a link's `to` is not the key of a line of this file",
@@ -191,7 +192,7 @@
         },
         "forms": {
           "type": "object",
-          "description": "The written forms of this entry (« pièces d'étoile », « de la pièce d'étoile »), by form id. An id is given once and never reused — it does not depend on a template or on an extraction pass. `0` is the entry's own `v`, never listed. Meant to be few: a form is kept once, and a template or a sentence points at it.",
+          "description": "The written forms of this entry (LF only, like every text) (« pièces d'étoile », « de la pièce d'étoile »), by form id. An id is given once and never reused — it does not depend on a template or on an extraction pass. `0` is the entry's own `v`, never listed. Meant to be few: a form is kept once, and a template or a sentence points at it.",
           "propertyNames": { "$ref": "#/$defs/formId" },
           "additionalProperties": { "type": "string", "pattern": "^[^\\r]*$" },
           "minProperties": 1
@@ -229,7 +230,7 @@
           "type": "array",
           "items": {
             "type": "object",
-            "properties": { "to": { "type": "string", "minLength": 1 } },
+            "properties": { "to": { "type": "string", "minLength": 1, "pattern": "^[^\\r]*$" } },
             "required": ["to"],
             "additionalProperties": false
           },
@@ -244,7 +245,7 @@
       "type": "object",
       "description": "« Here is written such an entry, in such a form ». Reading it (common LinkReading): the form asked of the entry, with its case; the form gone → the entry's translation; the entry gone → `was`; never a hole, never the marker. « To read again » is computed: what the link reads today is no longer `was`.",
       "properties": {
-        "to": { "type": "string", "minLength": 1, "description": "The KEY of the entry's line (a line's key is unique: no list is named)." },
+        "to": { "type": "string", "minLength": 1, "pattern": "^[^\\r]*$", "description": "The KEY of the entry's line (a line's key is unique: no list is named)." },
         "form": { "$ref": "#/$defs/formRef", "description": "The form asked of the entry. Absent = the entry's own translation." },
         "case": { "enum": ["upper-first", "lower-first"], "description": "How the sentence writes the case of that text: the first letter as a capital, or as a small letter (measured: only the first letter differs, and never at the head of a sentence). Absent = as the form is written. Applying it is the reader's own Unicode data, never the machine's culture." },
         "by": { "enum": ["A", "H"], "description": "A the machine set it, H a person set or confirmed it." },
