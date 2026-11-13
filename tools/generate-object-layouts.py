@@ -9,7 +9,7 @@ One source for every generated table: FontLayouts and ObjectLayouts are written 
 (its SHA-256 is in both headers), and it is changed for all of them at once, never for one class.
 
 Classes taken: TextAsset (49), MonoBehaviour (114) and MonoScript (115) - the ones the reading of a
-game's texts asks for. Another class is added to CLASSES when a step of the chain names it as read.
+game's texts asks for - and Transform (4) and RectTransform (224), which give the scene tree. Another class is added to CLASSES when a step of the chain names it as read.
 
 Usage:
     python generate-object-layouts.py --tpk lzma.tpk          # from a tpk on disk
@@ -25,7 +25,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TARGET = os.path.join(HERE, "..", "src", "UnityGameTranslator.Common", "UnityFiles", "ObjectLayouts.Tables.g.cs")
-CLASSES = [(49, "TextAsset"), (114, "MonoBehaviour"), (115, "MonoScript")]
+CLASSES = [(4, "Transform"), (49, "TextAsset"), (114, "MonoBehaviour"), (115, "MonoScript"), (224, "RectTransform")]
 
 _spec = importlib.util.spec_from_file_location("fonts", os.path.join(HERE, "generate-font-layouts.py"))
 fonts = importlib.util.module_from_spec(_spec)

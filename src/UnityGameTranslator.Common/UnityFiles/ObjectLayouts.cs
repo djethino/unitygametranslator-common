@@ -13,6 +13,8 @@ namespace UnityGameTranslator.Common.UnityFiles
     /// </summary>
     public static partial class ObjectLayouts
     {
+        public const int TransformClassId = 4;
+        public const int RectTransformClassId = 224;
         public const int TextAssetClassId = 49;
         public const int MonoBehaviourClassId = 114;
         public const int MonoScriptClassId = 115;
