@@ -157,7 +157,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
 
         /// <summary>A link in the file's form: <c>{to, form?, case?, by, was?}</c>; an absent key is an absent field.</summary>
         public static LineLink LinkOf(JsonElement l) =>
-            new LineLink { To = Str(l, "to"), Form = Str(l, "form"), Case = Str(l, "case"), By = Str(l, "by"), Was = Str(l, "was") };
+            new LineLink { To = Str(l, "to"), Form = Str(l, "form"), Case = Str(l, "case"), By = Str(l, "by"), Was = Str(l, "was"), Own = Str(l, "own") };
 
         public static LineLink LinkRequired(JsonElement e, string key) =>
             e.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.Object
@@ -316,7 +316,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 case LineLink link:
                     return new Dictionary<string, object?>
                     {
-                        ["to"] = link.To, ["form"] = link.Form, ["case"] = link.Case, ["by"] = link.By, ["was"] = link.Was,
+                        ["to"] = link.To, ["form"] = link.Form, ["case"] = link.Case, ["by"] = link.By, ["was"] = link.Was, ["own"] = link.Own,
                     };
                 case ClosedSlot slot:
                     return new Dictionary<string, object?> { ["list"] = slot.List, ["repeated"] = slot.Repeated, ["agrees"] = slot.Agrees };

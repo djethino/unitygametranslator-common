@@ -27,6 +27,13 @@ namespace UnityGameTranslator.Common
 
         /// <summary>The text that was read when the link was set or confirmed — the repère « à relire » is judged against.</summary>
         public string? Was;
+
+        /// <summary>
+        /// The writing of THIS sentence alone, when a person wrote the term otherwise here and kept
+        /// the link (« Only this text »). It passes before every form of the entry, never follows
+        /// the term, and is therefore never « to read again ». Written last by the hash: to, form, case, by, was, own.
+        /// </summary>
+        public string? Own;
     }
 
     /// <summary>

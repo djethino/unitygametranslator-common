@@ -94,6 +94,22 @@
     { "id": "link_reading/needs_review/entry-source-same-text", "op": "needs_review",
       "in": {"link": {"by": "A", "to": "a", "was": "Pièce"}, "read_text": "Pièce", "source": "Entry"},
       "out": false,
-      "why": "the form is gone but the entry's own text is what was read: nothing moved" }
+      "why": "the form is gone but the entry's own text is what was read: nothing moved" },
+    { "id": "link_reading/read/own-passes-before-the-form", "op": "read",
+      "in": {"link": {"by": "A", "to": "Star Coin", "form": "f1", "was": "x", "own": "pièces d'étoiles"}, "entries": {"Star Coin": {"v": "Pièce d'étoile", "t": "V", "forms": {"f1": "pièces d'étoile", "f2": "de la pièce d'étoile"}}, "Key": {"v": "Touche", "t": "V"}, "Blank": {"v": "", "t": "H"}, "Odd": {"v": "Bizarre", "t": "A", "forms": {"f1": ""}}}},
+      "out": {"text": "pièces d'étoiles", "source": "Own", "case_not_applied": false},
+      "why": "the sentence's own writing of the term passes before every form" },
+    { "id": "link_reading/read/own-keeps-its-case", "op": "read",
+      "in": {"link": {"by": "A", "to": "Star Coin", "form": "f1", "was": "x", "own": "pièces d'étoiles", "case": "upper-first"}, "entries": {"Star Coin": {"v": "Pièce d'étoile", "t": "V", "forms": {"f1": "pièces d'étoile", "f2": "de la pièce d'étoile"}}, "Key": {"v": "Touche", "t": "V"}, "Blank": {"v": "", "t": "H"}, "Odd": {"v": "Bizarre", "t": "A", "forms": {"f1": ""}}}, "casing": "first-letter"},
+      "out": {"text": "pièces d'étoiles", "source": "Own", "case_not_applied": false},
+      "why": "it is the text as the person wrote it: the case is not applied to it" },
+    { "id": "link_reading/read/own-survives-its-entry", "op": "read",
+      "in": {"link": {"by": "A", "to": "Missing", "was": "x", "own": "pièces d'étoiles"}, "entries": {"Star Coin": {"v": "Pièce d'étoile", "t": "V", "forms": {"f1": "pièces d'étoile", "f2": "de la pièce d'étoile"}}, "Key": {"v": "Touche", "t": "V"}, "Blank": {"v": "", "t": "H"}, "Odd": {"v": "Bizarre", "t": "A", "forms": {"f1": ""}}}},
+      "out": {"text": "pièces d'étoiles", "source": "Own", "case_not_applied": false},
+      "why": "it does not depend on the entry at all" },
+    { "id": "link_reading/needs_review/own-is-never-to-read", "op": "needs_review",
+      "in": {"link": {"by": "A", "to": "a", "was": "avant", "own": "pièces d'étoiles"}, "read_text": "pièces d'étoiles", "source": "Own"},
+      "out": false,
+      "why": "it does not follow the term, so nothing can have moved under it" }
   ]
 }

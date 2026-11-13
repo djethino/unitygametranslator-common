@@ -39,7 +39,7 @@ def line_doc(line):
     if line.get('oracle'):
         out['oracle'] = line['oracle']
     if line.get('links'):
-        out['links'] = [{f: l[f] for f in ('to', 'form', 'case', 'by', 'was') if f in l} for l in line['links']]
+        out['links'] = [{f: l[f] for f in ('to', 'form', 'case', 'by', 'was', 'own') if f in l} for l in line['links']]
     if line.get('unlinked'):
         out['unlinked'] = [{'to': x['to']} for x in sorted(line['unlinked'], key=lambda x: x['to'].encode('utf-8'))]
     return out

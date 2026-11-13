@@ -1442,6 +1442,108 @@
       "why": "a line break is written LF: it is the text's own, and all that is asked is that nobody writes it another way"
     },
     {
+      "id": "translation-file/format2/link-with-an-own-writing",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Star Coin": {
+          "v": "Pièce d'étoile",
+          "t": "V",
+          "term": true,
+          "forms": {
+            "f1": "pièces d'étoile",
+            "f2": "de la pièce d'étoile"
+          }
+        },
+        "Not enough Star Coins!": {
+          "v": "Pas assez de [!g*0] !",
+          "t": "H",
+          "links": [
+            {
+              "to": "Star Coin",
+              "form": "f1",
+              "by": "H",
+              "was": "pièces d'étoiles",
+              "own": "pièces d'étoiles"
+            }
+          ]
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 2,
+        "tag_counts": {
+          "human": 1,
+          "validated": 1,
+          "ai": 0,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "read2": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 2,
+        "lines": {
+          "Star Coin": {
+            "v": "Pièce d'étoile",
+            "t": "V",
+            "term": true,
+            "forms": {
+              "f1": "pièces d'étoile",
+              "f2": "de la pièce d'étoile"
+            }
+          },
+          "Not enough Star Coins!": {
+            "v": "Pas assez de [!g*0] !",
+            "t": "H",
+            "links": [
+              {
+                "to": "Star Coin",
+                "form": "f1",
+                "by": "H",
+                "was": "pièces d'étoiles",
+                "own": "pièces d'étoiles"
+              }
+            ]
+          }
+        }
+      },
+      "why": "a person wrote the term their own way in this sentence and kept the link: `own` is that text, and it does not follow the term"
+    },
+    {
+      "id": "translation-file/format2/link-with-an-empty-own-writing",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Star Coin": {
+          "v": "Pièce d'étoile",
+          "t": "V",
+          "term": true,
+          "forms": {
+            "f1": "pièces d'étoile",
+            "f2": "de la pièce d'étoile"
+          }
+        },
+        "Not enough Star Coins!": {
+          "v": "Pas assez de [!g*0] !",
+          "t": "H",
+          "links": [
+            {
+              "to": "Star Coin",
+              "form": "f1",
+              "by": "H",
+              "was": "pièces d'étoiles",
+              "own": ""
+            }
+          ]
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "an empty own writing says nothing: the field is simply absent"
+    },
+    {
       "id": "translation-file/format2/link-by-an-unknown-writer",
       "document": {
         "_engine_version": 2,

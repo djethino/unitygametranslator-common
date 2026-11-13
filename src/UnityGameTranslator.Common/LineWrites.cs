@@ -206,6 +206,7 @@ namespace UnityGameTranslator.Common
                 {
                     var link = line.Links[i];
                     if (link.Was != null && link.Was.IndexOf('\r') >= 0) return $"the `was` of link {i}";
+                    if (link.Own != null && link.Own.IndexOf('\r') >= 0) return $"the own writing of link {i}";
                     if (link.To != null && link.To.IndexOf('\r') >= 0) return $"the target of link {i}";
                 }
             if (line.Unlinked != null)
@@ -240,7 +241,7 @@ namespace UnityGameTranslator.Common
             if (!previous.HasValue || previous.GetValueOrDefault().Links == null) return false;
             foreach (var old in previous.GetValueOrDefault().Links!)
                 if (old.To == link.To && old.Form == link.Form && old.Case == link.Case
-                    && old.By == link.By && old.Was == link.Was) return true;
+                    && old.By == link.By && old.Was == link.Was && old.Own == link.Own) return true;
             return false;
         }
 

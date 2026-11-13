@@ -115,7 +115,7 @@ namespace UnityGameTranslator.Common
             for (int i = 0; i < CountOf(a.Links); i++)
             {
                 LineLink x = a.Links![i], y = b.Links![i];
-                if (x.To != y.To || x.Form != y.Form || x.Case != y.Case || x.By != y.By || x.Was != y.Was) return false;
+                if (x.To != y.To || x.Form != y.Form || x.Case != y.Case || x.By != y.By || x.Was != y.Was || x.Own != y.Own) return false;
             }
 
             if (CountOf(a.Unlinked) != CountOf(b.Unlinked)) return false;
@@ -346,6 +346,7 @@ namespace UnityGameTranslator.Common
                     WriteMember(json, ref first, "case", link.Case);
                     WriteMember(json, ref first, "by", link.By);
                     WriteMember(json, ref first, "was", link.Was);
+                    WriteMember(json, ref first, "own", link.Own);
                     json.Append('}');
                 }
                 json.Append(']');

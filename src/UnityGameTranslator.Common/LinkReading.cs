@@ -14,6 +14,9 @@ namespace UnityGameTranslator.Common
         /// <summary>What the link read when it was set or confirmed: the entry (or its translation) is gone.</summary>
         Was,
 
+        /// <summary>The sentence's own writing of the term (<see cref="LineLink.Own"/>): it does not follow the term.</summary>
+        Own,
+
         /// <summary>Nothing else was held: the entry's key, the game's own word. Unreachable in a file a writer kept to <see cref="LineWrites"/>.</summary>
         Key,
     }
@@ -87,6 +90,10 @@ namespace UnityGameTranslator.Common
         {
             if (entryOf == null) throw new ArgumentNullException(nameof(entryOf));
 
+            // « Only this text »: a person wrote the term their own way here, and that passes before
+            // every form. The case is not applied to it: it is the text as they wrote it.
+            if (!string.IsNullOrEmpty(link.Own)) return new LinkRead { Text = link.Own!, Source = LinkSource.Own };
+
             TranslationLine? entry = string.IsNullOrEmpty(link.To) ? (TranslationLine?)null : entryOf(link.To!);
 
             string? text = null;
@@ -155,10 +162,15 @@ namespace UnityGameTranslator.Common
         /// </summary>
         /// <param name="link">The link.</param>
         /// <param name="read">What <see cref="Read"/> answered for it.</param>
-        public static bool NeedsReview(LineLink link, LinkRead read) =>
-            link.Was == null
-            || read.Source == LinkSource.Was || read.Source == LinkSource.Key
-            || !string.Equals(link.Was, read.Text, StringComparison.Ordinal);
+        public static bool NeedsReview(LineLink link, LinkRead read)
+        {
+            // The sentence's own writing does not follow the term: nothing moved under it.
+            if (read.Source == LinkSource.Own) return false;
+
+            return link.Was == null
+                || read.Source == LinkSource.Was || read.Source == LinkSource.Key
+                || !string.Equals(link.Was, read.Text, StringComparison.Ordinal);
+        }
 
         private static string? FormOf(TranslationLine entry, string formId)
         {

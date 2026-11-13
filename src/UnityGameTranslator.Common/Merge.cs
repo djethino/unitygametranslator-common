@@ -403,7 +403,7 @@ public static MergeDecision Decide(TranslationLine? local, TranslationLine? remo
         }
 
         private static bool SameLink(LineLink a, LineLink b) =>
-            a.To == b.To && a.Form == b.Form && a.Case == b.Case && a.By == b.By && a.Was == b.Was;
+            a.To == b.To && a.Form == b.Form && a.Case == b.Case && a.By == b.By && a.Was == b.Was && a.Own == b.Own;
 
         private static bool SameSet(List<string> merged, IReadOnlyList<string>? held)
         {

@@ -249,7 +249,8 @@
         "form": { "$ref": "#/$defs/formRef", "description": "The form asked of the entry. Absent = the entry's own translation." },
         "case": { "enum": ["upper-first", "lower-first"], "description": "How the sentence writes the case of that text: the first letter as a capital, or as a small letter (measured: only the first letter differs, and never at the head of a sentence). Absent = as the form is written. Applying it is the reader's own Unicode data, never the machine's culture." },
         "by": { "enum": ["A", "H"], "description": "A the machine set it, H a person set or confirmed it." },
-        "was": { "type": "string", "pattern": "^[^\\r]*$", "description": "The text read when the link was set or confirmed — as the sentence shows it, case included. Saving or validating the sentence puts it back." }
+        "was": { "type": "string", "pattern": "^[^\\r]*$", "description": "The text read when the link was set or confirmed — as the sentence shows it, case included. Saving or validating the sentence puts it back." },
+        "own": { "type": "string", "minLength": 1, "pattern": "^[^\\r]*$", "description": "The writing of THIS sentence alone, when a person wrote the term otherwise here and kept the link (`Only this text`). It passes before every form, never follows the term, and is never to read again. LF only." }
       },
       "required": ["to", "by", "was"],
       "additionalProperties": false
