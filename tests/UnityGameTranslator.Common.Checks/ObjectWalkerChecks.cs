@@ -158,6 +158,25 @@ namespace UnityGameTranslator.Common.Checks
             check(Refuses(() => new ObjectWalker(head).Walk(new UnityFileReader(new MemoryStream(whole), bigEndian: false), 0, 6, new Seen(), "Probe", wholeObject: false), "reads past"),
                 "even then a header that does not fit the object is refused", "the size is still the limit");
 
+            // A class with no field to serialize holds no byte: it is read as nothing, not refused.
+            var empty = new List<TypeNode>
+            {
+                new TypeNode(0, "Probe", "Base", -1, 0, 0x8000), Int(1, "m_Count"),
+                new TypeNode(1, "Marker", "m_Marker", -1, 0, 0x0), Int(1, "m_After"),
+            };
+            var keptEmpty = new List<TypeNode>(empty);
+            keptEmpty[2] = new TypeNode(1, "Marker", "m_Marker", 0, 0, 0x0);
+            var keptSeen = new Seen();
+            Walk(keptEmpty, new byte[] { 5, 0, 0, 0, 6, 0, 0, 0 }, keptSeen);
+            check(keptSeen.Lines.Count == 3, "the same, as a type tree a file kept writes it (size 0)", string.Join(" | ", keptSeen.Lines));
+            var emptySeen = new Seen();
+            Walk(empty, new byte[] { 5, 0, 0, 0, 6, 0, 0, 0 }, emptySeen);
+            check(emptySeen.Lines.SequenceEqual(new[] { "m_Count [Probe.m_Count] = 5", "m_Marker skipped 0", "m_After [Probe.m_After] = 6" }),
+                "a class with no field to serialize holds no byte", string.Join(" | ", emptySeen.Lines));
+            var unknown = new List<TypeNode> { new TypeNode(0, "Probe", "Base", -1, 0, 0x8000), new TypeNode(1, "Mystery", "m_X", -2, 0, 0x0) };
+            check(Refuses(() => Walk(unknown, new byte[4], new Seen()), "has no size"),
+                "a type that names a size this reader cannot decode is still refused", "only a class with no fields is nothing");
+
             RegistryChecks(check);
         }
 
