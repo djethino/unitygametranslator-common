@@ -50,6 +50,7 @@ namespace UnityGameTranslator.Common.Checks
                 check(Sha(LzmaDecoder.Decode(stream, v.size)) == v.sha,
                     $"LZMA decodes a stream liblzma wrote ({v.name})", "a bundle compressed with LZMA gives back its files byte for byte");
             }
+            ObjectLayoutChecks(check);
             var records = Records();
             foreach (var (name, stream) in new[] { ("lc3", UnityFilesVectors.RecordsLc3), ("lc0 lp2 pb0", UnityFilesVectors.RecordsLp2) })
             {
@@ -103,6 +104,30 @@ namespace UnityGameTranslator.Common.Checks
         }
 
         /// <summary>The records <see cref="UnityFilesVectors"/> compress: the same generator as the Python that wrote them.</summary>
+        private static string Names(IReadOnlyList<TypeNode>? tree) =>
+            tree == null ? "none" : string.Join(",", tree.Where(n => n.Depth == 1).Select(n => n.Name));
+
+        private static void ObjectLayoutChecks(Action<bool, string, string> check)
+        {
+            ulong V(string v) => UnityVersions.Key(v);
+            check(ObjectLayouts.SourceSha256 == FontLayouts.SourceSha256,
+                "the object layouts and the Font layouts come from the same dump", "one dated source for every generated table: changed for all of them at once");
+            check(Names(ObjectLayouts.For(ObjectLayouts.TextAssetClassId, V("2021.3.27f1"), out _)) == "m_Name,m_Script"
+                  && Names(ObjectLayouts.For(ObjectLayouts.TextAssetClassId, V("2017.1.0b2"), out _)) == "m_Name,m_Script"
+                  && Names(ObjectLayouts.For(ObjectLayouts.TextAssetClassId, V("5.6.5f1"), out _)) == "m_Name,m_Script,m_PathName",
+                "TextAsset: two strings from 2017.1, a path name after them before", "m_PathName is what the older layout adds");
+            check(Names(ObjectLayouts.For(ObjectLayouts.MonoBehaviourClassId, V("2021.3.27f1"), out _)) == "m_GameObject,m_Enabled,m_Script,m_Name",
+                "MonoBehaviour: its header, whose own fields come from the game's code", "the script's fields are never in this table");
+            check(Names(ObjectLayouts.For(ObjectLayouts.MonoScriptClassId, V("2021.3.27f1"), out _)) == "m_Name,m_ExecutionOrder,m_PropertiesHash,m_ClassName,m_Namespace,m_AssemblyName",
+                "MonoScript: the class name, the namespace and the assembly", "what names the class of a MonoBehaviour");
+            check(ObjectLayouts.For(ObjectLayouts.TextAssetClassId, 0, out _) == null && ObjectLayouts.For(ObjectLayouts.TextAssetClassId, V("1.0.0f1"), out _) == null,
+                "an unknown or older version gives no layout", "never a guess");
+            check(!ObjectLayouts.Has(128) && ObjectLayouts.For(128, V("2021.3.27f1"), out _) == null && ObjectLayouts.Has(114),
+                "a class the table does not hold gives none, and Has says so", "Font stays in FontLayouts");
+            ObjectLayouts.For(ObjectLayouts.TextAssetClassId, V("9999.1.0f1"), out bool newer);
+            check(newer, "a version newer than the dump is said so", "the closest layout below is given and may be wrong");
+        }
+
         internal static byte[] Records()
         {
             uint x = 12345;
