@@ -457,11 +457,13 @@
         "description": "`destination: server` (default) publishes the arbitrated result as the translation — allowed on one's own row only (403 otherwise). `destination: local` hands the result back to the game through `GET /merge-preview/{token}/result` and writes nothing on the site — allowed on any translation the caller could download, which is how a branch compares itself with its Main. `local_content` is the file as the mod would upload it — the lines and the `_` settings sections the page compares (fonts, exclusions, variables…); never the sync stamps. The token lives 15 minutes, then 120 once the browser has used it.",
         "security": [{ "bearer": [] }],
         "x-throttle": "10/min per token",
+        "parameters": [{ "$ref": "#/components/parameters/ClientFormat" }],
         "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MergePreviewInitBody" } } } },
         "responses": {
           "200": { "description": "OK", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TokenSessionResponse" } } } },
           "401": { "$ref": "#/components/responses/Unauthorized" },
           "403": { "description": "Not one's own translation (`server`), or not readable by the caller (`local`).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
+          "409": { "description": "FormatTooNew: the translation is written in a format past what the client reads (X-UGT-Format; a client that says nothing reads the format 1). Refused before any comparison exists, for both destinations: the lines would come back to a mod that reads them wrong, or its own file would be laid over a translation it cannot read. Same body as the download.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } } } },
           "413": { "$ref": "#/components/responses/TooLarge" },
           "422": { "$ref": "#/components/responses/ValidationFailed" },
           "429": { "$ref": "#/components/responses/TooMany" }

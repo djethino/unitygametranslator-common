@@ -1114,6 +1114,20 @@
       "why": "destination server by default: the arbitrated result becomes the published translation, so only its owner may open it"
     },
     {
+      "id": "api-v1/merge-preview/init/past-the-format-is-refused",
+      "setup": "format2",
+      "request": { "method": "POST", "path": "/merge-preview/init", "as": "alice", "body": { "translation_id": { "$ref": "translations.main.id" }, "local_content": { "Shop": { "v": "Magasin", "t": "H" } }, "destination": "server" } },
+      "response": { "status": 409, "body": { "error": "FormatTooNew", "format_version": 2 } },
+      "why": "a client that says nothing reads the format 1: the comparison would hand it lines it reads wrong (apply-local) or lay its file over a translation it cannot read. The same wall as the download, which this route used to go around"
+    },
+    {
+      "id": "api-v1/merge-preview/init/reading-the-format-is-served",
+      "setup": "format2",
+      "request": { "method": "POST", "path": "/merge-preview/init", "as": "alice", "headers": { "X-UGT-Format": "2" }, "body": { "translation_id": { "$ref": "translations.main.id" }, "local_content": { "Shop": { "v": "Magasin", "t": "H" } }, "destination": "server" } },
+      "response": { "status": 200, "body": { "token": { "$is": "session_key" }, "url": { "$contains": "/merge-preview?token=" }, "expires_at": { "$is": "iso8601" } } },
+      "why": "a client that reads the format is served as before"
+    },
+    {
       "id": "api-v1/merge-preview/publishing-comparison-refused-on-somebodys",
       "setup": "lineage",
       "request": { "method": "POST", "path": "/merge-preview/init", "as": "bob", "body": { "translation_id": { "$ref": "translations.main.id" }, "local_content": { "Shop": { "v": "Boutique", "t": "H" } } } },
