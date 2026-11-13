@@ -31,6 +31,22 @@ namespace UnityGameTranslator.Common
         RemoteModifiedLocalDeleted,
     }
 
+    /// <summary>
+    /// Whose fields of the format 2 the merged line carries, when they are not those of the side
+    /// whose text was taken. <see cref="None"/> is the whole line of the side the verdict names.
+    /// </summary>
+    public enum MergeFieldsFrom
+    {
+        /// <summary>The line is the chosen side's, as it stands.</summary>
+        None,
+
+        /// <summary>The text (v, t) is the chosen side's, the fields are the LOCAL line's.</summary>
+        Local,
+
+        /// <summary>The text (v, t) is the chosen side's, the fields are the REMOTE line's.</summary>
+        Remote,
+    }
+
     /// <summary>Which tally a decision belongs to. Counting is the caller's; naming is not.</summary>
     public enum MergeReason
     {
@@ -56,6 +72,19 @@ namespace UnityGameTranslator.Common
         public bool IsConflict;
         public ConflictKind Conflict;
         public MergeReason Reason;
+
+        /// <summary>
+        /// Set only when a side of the format 1 is the one taken while the other holds fields of the
+        /// format 2: the fields stay, they are not « removed by a side that cannot hold them ».
+        /// </summary>
+        public MergeFieldsFrom FieldsFrom;
+
+        /// <summary>
+        /// The fields kept (<see cref="FieldsFrom"/>) held links, and the taken text is not the text
+        /// they were written for: the links cannot follow (no marker of theirs is in it) and the
+        /// merged line holds none. Said, so a caller can show it.
+        /// </summary>
+        public bool LinksDropped;
     }
 
     /// <summary>
@@ -205,8 +234,62 @@ namespace UnityGameTranslator.Common
         /// Null means "this side has no such key" — which is a different thing from an empty value,
         /// and the difference is what separates a deletion from a captured line.
         /// </summary>
+public static MergeDecision Decide(TranslationLine? local, TranslationLine? remote,
+                                           TranslationLine? ancestor) =>
+            Decide(local, remote, ancestor, 1, 1, 1);
+
+        /// <summary>
+        /// The same verdict when the three sides may not be of the same format (draft §5).
+        ///
+        /// 🔴 **A line « moved » when any field the hash writes moved**, and choosing a side takes
+        /// its WHOLE line — v and links never part, because a link means something only for the
+        /// words it was written for. Two lines that differ only by a link are therefore two
+        /// different lines, settled like two different words.
+        ///
+        /// 🔴 **A side of the format 1 holds no field, and says nothing about them**: a branch
+        /// written before the Main grew its marks must not erase one by not having it. So:
+        ///
+        ///  · between two LIVE sides, fields are compared only when both are of the format 2;
+        ///  · against the ANCESTOR, a format 1 ancestor held NO field (so the fields a side holds
+        ///    now are what it added), while a format 1 side is never said to have removed one;
+        ///  · when the side taken is of the format 1 and the other holds fields, the merged line
+        ///    is the taken side's text WITH the other's fields (<see cref="MergeDecision.FieldsFrom"/>):
+        ///    taking a validation or a rewritten word must not cost the term mark and the written
+        ///    forms of the line. Only the LINKS cannot follow words they were not written for
+        ///    (<see cref="MergeDecision.LinksDropped"/>).
+        ///
+        /// ⚠ Nothing here says how the merged file is written: the caller still builds it.
+        /// </summary>
+        /// <param name="localFormat">The format of the local FILE (<see cref="TranslationFormat.OfFile"/>).</param>
+        /// <param name="remoteFormat">The format of the remote file.</param>
+        /// <param name="ancestorFormat">The format of the ancestor file.</param>
         public static MergeDecision Decide(TranslationLine? local, TranslationLine? remote,
-                                           TranslationLine? ancestor)
+                                           TranslationLine? ancestor,
+                                           int localFormat, int remoteFormat, int ancestorFormat)
+        {
+            var decision = Settle(local, remote, ancestor, localFormat, remoteFormat, ancestorFormat);
+
+            if (decision.Verdict == MergeVerdict.Drop || !local.HasValue || !remote.HasValue) return decision;
+
+            bool takesLocal = decision.Verdict == MergeVerdict.TakeLocal;
+            TranslationLine taken = takesLocal ? local.GetValueOrDefault() : remote.GetValueOrDefault();
+            TranslationLine other = takesLocal ? remote.GetValueOrDefault() : local.GetValueOrDefault();
+            int takenFormat = takesLocal ? localFormat : remoteFormat;
+            int otherFormat = takesLocal ? remoteFormat : localFormat;
+
+            if (takenFormat < 2 && otherFormat >= 2 && other.HasFormat2Fields)
+            {
+                decision.FieldsFrom = takesLocal ? MergeFieldsFrom.Remote : MergeFieldsFrom.Local;
+                decision.LinksDropped = other.Links != null && other.Links.Count > 0
+                    && !string.Equals(taken.Value, other.Value, StringComparison.Ordinal);
+            }
+
+            return decision;
+        }
+
+        private static MergeDecision Settle(TranslationLine? local, TranslationLine? remote,
+                                            TranslationLine? ancestor,
+                                            int localFormat, int remoteFormat, int ancestorFormat)
         {
             bool inLocal = local.HasValue;
             bool inRemote = remote.HasValue;
@@ -229,7 +312,7 @@ namespace UnityGameTranslator.Common
                 TranslationLine here = local.GetValueOrDefault();
                 TranslationLine there = remote.GetValueOrDefault();
 
-                if (Same(here, there))
+                if (Same(here, localFormat, there, remoteFormat))
                     return Decision(MergeVerdict.TakeLocal, MergeReason.Unchanged);
 
                 // One outranks the other: settled, and nobody is asked.
@@ -244,10 +327,10 @@ namespace UnityGameTranslator.Common
                 {
                     TranslationLine was = ancestor.GetValueOrDefault();
 
-                    if (Same(here, was))
+                    if (SameAsAncestor(here, localFormat, was, ancestorFormat))
                         return Decision(MergeVerdict.TakeRemote, MergeReason.RemoteUpdated);
 
-                    if (Same(there, was))
+                    if (SameAsAncestor(there, remoteFormat, was, ancestorFormat))
                         return Decision(MergeVerdict.TakeLocal, MergeReason.LocalModified);
 
                     return Conflict(MergeVerdict.TakeRemote, ConflictKind.BothModified);
@@ -261,7 +344,7 @@ namespace UnityGameTranslator.Common
             // Here and in the ancestor, gone from there.
             if (inLocal && inAncestor)
             {
-                return Same(local.GetValueOrDefault(), ancestor.GetValueOrDefault())
+                return SameAsAncestor(local.GetValueOrDefault(), localFormat, ancestor.GetValueOrDefault(), ancestorFormat)
                     ? Decision(MergeVerdict.Drop, MergeReason.Deleted)
                     : Conflict(MergeVerdict.TakeLocal, ConflictKind.LocalModifiedRemoteDeleted);
             }
@@ -269,7 +352,7 @@ namespace UnityGameTranslator.Common
             // There and in the ancestor, gone from here.
             if (inRemote && inAncestor)
             {
-                return Same(remote.GetValueOrDefault(), ancestor.GetValueOrDefault())
+                return SameAsAncestor(remote.GetValueOrDefault(), remoteFormat, ancestor.GetValueOrDefault(), ancestorFormat)
                     ? Decision(MergeVerdict.Drop, MergeReason.Deleted)
                     : Conflict(MergeVerdict.TakeRemote, ConflictKind.RemoteModifiedLocalDeleted);
             }
@@ -280,7 +363,7 @@ namespace UnityGameTranslator.Common
                             MergeReason.Unchanged);
         }
 
-        /// <summary>
+                /// <summary>
         /// Two lines saying the same thing.
         ///
         /// ⚠ Value AND tag: the same words tagged H rather than A is a different fact about the
@@ -294,6 +377,29 @@ namespace UnityGameTranslator.Common
         /// screens end up reporting different numbers about one file.
         /// </summary>
         public static bool Same(TranslationLine a, TranslationLine b) =>
+            SameText(a, b) && TranslationLine.SameFields(a, b);
+
+        /// <summary>
+        /// Two lines of two live files saying the same thing, each file of its own format: the text
+        /// and the tag always, the fields only when BOTH files hold fields (a format 1 file has no
+        /// opinion about them; see the six-argument <see cref="Decide(TranslationLine?, TranslationLine?, TranslationLine?, int, int, int)"/>).
+        /// </summary>
+        public static bool Same(TranslationLine a, int aFormat, TranslationLine b, int bFormat) =>
+            SameText(a, b) && (aFormat < 2 || bFormat < 2 || TranslationLine.SameFields(a, b));
+
+        /// <summary>
+        /// A line against the ancestor of its own lineage: the text and the tag, and the fields,
+        /// except that a format 1 LINE cannot be said to have removed any, while a format 1
+        /// ANCESTOR held none, so whatever a format 2 line holds against it was added since.
+        /// </summary>
+        public static bool SameAsAncestor(TranslationLine line, int lineFormat, TranslationLine ancestor, int ancestorFormat)
+        {
+            if (!SameText(line, ancestor)) return false;
+            if (lineFormat < 2) return true;
+            return ancestorFormat >= 2 ? TranslationLine.SameFields(line, ancestor) : !line.HasFormat2Fields;
+        }
+
+        private static bool SameText(TranslationLine a, TranslationLine b) =>
             string.Equals(a.Value, b.Value, StringComparison.Ordinal)
             && string.Equals(Tag(a), Tag(b), StringComparison.Ordinal);
 

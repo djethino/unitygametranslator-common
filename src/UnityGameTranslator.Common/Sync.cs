@@ -83,6 +83,70 @@ namespace UnityGameTranslator.Common
 
         private static bool IsEmpty<T>(IReadOnlyList<T>? list) => list == null || list.Count == 0;
 
+        /// <summary>
+        /// Do two lines hold the same fields of the format 2 — the ones the hash writes, compared the
+        /// way it writes them: an empty field is an absent one, an object has no order (forms, use,
+        /// class), the links are POSITIONAL, the refused entries are a set.
+        /// </summary>
+        public static bool SameFields(TranslationLine a, TranslationLine b)
+        {
+            if (a.Term != b.Term) return false;
+            if (!string.Equals(a.Oracle ?? string.Empty, b.Oracle ?? string.Empty, StringComparison.Ordinal)) return false;
+            if (!SameMap(a.Forms, b.Forms) || !SameMap(a.Class, b.Class)) return false;
+
+            if (CountOf(a.Use) != CountOf(b.Use)) return false;
+            if (a.Use != null)
+                foreach (var use in a.Use)
+                {
+                    LineUse? other = null;
+                    if (b.Use != null)
+                        foreach (var candidate in b.Use)
+                            if (string.Equals(candidate.Key, use.Key, StringComparison.Ordinal)) { other = candidate.Value; break; }
+                    if (!other.HasValue) return false;
+                    var o = other.Value;
+                    bool byClassHere = use.Value.ByClass != null && use.Value.ByClass.Count > 0;
+                    bool byClassThere = o.ByClass != null && o.ByClass.Count > 0;
+                    if (byClassHere != byClassThere) return false;
+                    if (byClassHere ? !SameMap(use.Value.ByClass, o.ByClass)
+                                    : !string.Equals(use.Value.Form, o.Form, StringComparison.Ordinal)) return false;
+                }
+
+            if (CountOf(a.Links) != CountOf(b.Links)) return false;
+            for (int i = 0; i < CountOf(a.Links); i++)
+            {
+                LineLink x = a.Links![i], y = b.Links![i];
+                if (x.To != y.To || x.Form != y.Form || x.Case != y.Case || x.By != y.By || x.Was != y.Was) return false;
+            }
+
+            if (CountOf(a.Unlinked) != CountOf(b.Unlinked)) return false;
+            if (a.Unlinked != null)
+                foreach (var key in a.Unlinked)
+                {
+                    bool found = false;
+                    foreach (var other in b.Unlinked!)
+                        if (string.Equals(other, key, StringComparison.Ordinal)) { found = true; break; }
+                    if (!found) return false;
+                }
+            return true;
+        }
+
+        private static int CountOf<T>(IReadOnlyList<T>? list) => list == null ? 0 : list.Count;
+
+        private static bool SameMap(IReadOnlyList<KeyValuePair<string, string>>? a, IReadOnlyList<KeyValuePair<string, string>>? b)
+        {
+            if (CountOf(a) != CountOf(b)) return false;
+            if (a == null) return true;
+            foreach (var pair in a)
+            {
+                bool found = false;
+                foreach (var other in b!)
+                    if (string.Equals(other.Key, pair.Key, StringComparison.Ordinal)
+                        && string.Equals(other.Value, pair.Value, StringComparison.Ordinal)) { found = true; break; }
+                if (!found) return false;
+            }
+            return true;
+        }
+
         /// <summary>An entry from before tags existed: the value stands alone.</summary>
         public static TranslationLine Bare(string value) =>
             new TranslationLine { Value = value, Tag = null, BareString = true };

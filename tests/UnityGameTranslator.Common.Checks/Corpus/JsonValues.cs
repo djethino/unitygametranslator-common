@@ -227,6 +227,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         ["conflict"] = decision.IsConflict,
                         ["kind"] = decision.IsConflict ? decision.Conflict.ToString() : null,
                         ["reason"] = decision.Reason.ToString(),
+                        ["fields_from"] = decision.FieldsFrom.ToString(),
+                        ["links_dropped"] = decision.LinksDropped,
                     };
                 case Badge badge:
                     return new Dictionary<string, object?>
@@ -297,6 +299,17 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         ["branch_frozen"] = standing.BranchFrozen,
                         ["finished"] = standing.Finished,
                         ["main_owner"] = standing.MainOwner,
+                    };
+                case TermImpact impact:
+                    return new Dictionary<string, object?> { ["uses"] = Canon(impact.Uses), ["forms_to_redo"] = Canon(impact.FormsToRedo) };
+                case TermUse use:
+                    return new Dictionary<string, object?>
+                    {
+                        ["key"] = use.Key,
+                        ["kind"] = use.Kind.ToString(),
+                        ["text_changes"] = use.TextChanges,
+                        ["needs_review_after"] = use.NeedsReviewAfter,
+                        ["source_after"] = use.SourceAfter.ToString(),
                     };
                 case ClosedSlot slot:
                     return new Dictionary<string, object?> { ["list"] = slot.List, ["repeated"] = slot.Repeated, ["agrees"] = slot.Agrees };

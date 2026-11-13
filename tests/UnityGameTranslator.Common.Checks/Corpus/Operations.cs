@@ -183,6 +183,13 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => Merge.Decide(Line(e, "local"), Line(e, "remote"), Line(e, "ancestor"))),
             new Operation("merge", "same", typeof(Merge), nameof(Merge.Same),
                 e => Merge.Same(LineRequired(e, "a"), LineRequired(e, "b"))),
+            new Operation("merge", "decide_formats", typeof(Merge), nameof(Merge.Decide),
+                e => Merge.Decide(Line(e, "local"), Line(e, "remote"), Line(e, "ancestor"),
+                                  Int(e, "local_format"), Int(e, "remote_format"), Int(e, "ancestor_format"))),
+            new Operation("merge", "same_formats", typeof(Merge), nameof(Merge.Same),
+                e => Merge.Same(LineRequired(e, "a"), Int(e, "a_format"), LineRequired(e, "b"), Int(e, "b_format"))),
+            new Operation("merge", "same_as_ancestor", typeof(Merge), nameof(Merge.SameAsAncestor),
+                e => Merge.SameAsAncestor(LineRequired(e, "line"), Int(e, "line_format"), LineRequired(e, "ancestor"), Int(e, "ancestor_format"))),
 
             // ── badges ────────────────────────────────────────────────────────
             //
@@ -247,6 +254,17 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     Text = Str(e, "read_text") ?? "",
                     Source = EnumRequired<LinkSource>(e, "source"),
                 })),
+
+            // ── term_changes ──────────────────────────────────────────────────
+            new Operation("term_changes", "impact", typeof(TermChanges), nameof(TermChanges.Impact),
+                e =>
+                {
+                    var lists = new List<KeyValuePair<string, IReadOnlyList<string>>>();
+                    if (e.TryGetProperty("lists", out var l) && l.ValueKind == JsonValueKind.Object)
+                        foreach (var p in l.EnumerateObject())
+                            lists.Add(new KeyValuePair<string, IReadOnlyList<string>>(p.Name, Strings(l, p.Name)));
+                    return TermChanges.Impact(Str(e, "entry_key")!, Lines(e, "lines"), lists, Line(e, "after"));
+                }),
 
             // ── template_ids ──────────────────────────────────────────────────
             new Operation("template_ids", "of", typeof(TemplateIds), nameof(TemplateIds.Of),
