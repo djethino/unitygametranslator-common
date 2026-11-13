@@ -286,6 +286,18 @@ namespace UnityGameTranslator.Common.UnityFiles
             return text;
         }
 
+        private static bool IsKnownPrimitive(string type)
+        {
+            switch (type)
+            {
+                case "bool": case "char": case "SInt8": case "UInt8": case "SInt16": case "UInt16": case "short": case "unsigned short":
+                case "int": case "SInt32": case "UInt32": case "unsigned int": case "float": case "Type*":
+                case "SInt64": case "UInt64": case "long long": case "unsigned long long": case "double": case "FileSize":
+                    return true;
+                default: return false;
+            }
+        }
+
         private static int PrimitiveSize(TypeNode node)
         {
             switch (node.Type)
@@ -302,6 +314,15 @@ namespace UnityGameTranslator.Common.UnityFiles
         {
             var r = run.R;
             int size = PrimitiveSize(node);
+
+            // A class with no field to serialize is a node with no children and no size (-1, or 0 in a type
+            // tree a file kept): it holds no byte. A size below -1 names nothing this reader decodes: refused.
+            if (size <= 0 && node.ByteSize >= -1 && node.Type != "string" && !IsKnownPrimitive(node.Type))
+            {
+                run.V.Skipped(site, 0);
+                return;
+            }
+
             if (size <= 0) throw new UnityFileFormatException($"field '{node.Name}' of type '{node.Type}' has no size this reader knows");
 
             switch (node.Type)
