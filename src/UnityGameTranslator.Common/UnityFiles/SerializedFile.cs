@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace UnityGameTranslator.Common.UnityFiles
 {
@@ -55,6 +56,32 @@ namespace UnityGameTranslator.Common.UnityFiles
         /// <summary>Why a kept type tree was not used (a string this table does not know), or null.</summary>
         public string? TreeRefused { get; private set; }
         public IReadOnlyList<ObjectInfo> Objects => _objects;
+
+        /// <summary>One file this one points into: a reference (PPtr) whose file id is N + 1 names entry N.</summary>
+        public sealed class ExternalFile
+        {
+            internal ExternalFile(string pathName, string guid, int type) { PathName = pathName; Guid = guid; Type = type; }
+
+            /// <summary>The path Unity wrote ("archive:/CAB-…/CAB-…", "globalgamemanagers.assets", "Library/unity default resources").</summary>
+            public string PathName { get; }
+
+            /// <summary>The 16 bytes written beside it, as 32 hexadecimal digits.</summary>
+            public string Guid { get; }
+
+            /// <summary>Unity's kind of external (0 for an asset file of the player).</summary>
+            public int Type { get; }
+        }
+
+        /// <summary>
+        /// The files this one points into, in the order the file lists them. A reference's file id 0 is
+        /// THIS file; id N is entry N − 1 here. Read the first time it is asked, from where the object
+        /// table ended — a caller that never asks (the fonts) is not made to depend on it — so the
+        /// stream must still be open then. <see cref="UnityFileFormatException"/> when the table does not read.
+        /// </summary>
+        public IReadOnlyList<ExternalFile> Externals => _externals ?? (_externals = ReadExternals());
+
+        private long _afterObjects;
+        private List<ExternalFile>? _externals;
 
         private SerializedFile(Stream stream) { _reader = new UnityFileReader(stream, bigEndian: true); }
 
@@ -183,7 +210,45 @@ namespace UnityGameTranslator.Common.UnityFiles
                 _objects.Add(new ObjectInfo(pathId, start, size, classId, typeIndex));
             }
             // What follows (script types, externals, reference types, user information) is not needed
-            // to read an object.
+            // to read an object; the externals are read when somebody asks (Externals).
+            _afterObjects = r.Position;
+        }
+
+        private List<ExternalFile> ReadExternals()
+        {
+            var r = _reader;
+            long at = r.Position;
+            try
+            {
+                r.Position = _afterObjects;
+
+                // Script types: (file index, id) per script, from format 11. Only passed over here.
+                if (Format >= 11)
+                {
+                    int scripts = r.Count(8);
+                    for (int i = 0; i < scripts; i++)
+                    {
+                        r.I32();
+                        if (Format >= 14) { r.Align(); r.I64(); }
+                        else r.I32();
+                    }
+                }
+
+                int count = r.Count(1);
+                var list = new List<ExternalFile>(count);
+                for (int i = 0; i < count; i++)
+                {
+                    r.Zstring(256);                       // an empty string, written by the editor
+                    var guid = r.Bytes(16);
+                    int type = r.I32();
+                    string path = r.Zstring(1024);
+                    var hex = new StringBuilder(32);
+                    foreach (byte b in guid) hex.Append(b.ToString("x2"));
+                    list.Add(new ExternalFile(path, hex.ToString(), type));
+                }
+                return list;
+            }
+            finally { r.Position = at; }
         }
 
         private SerializedType ReadType(bool isReference)

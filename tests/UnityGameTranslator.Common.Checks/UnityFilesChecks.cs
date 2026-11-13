@@ -163,8 +163,19 @@ namespace UnityGameTranslator.Common.Checks
             m.Write(0L);          // start in the data
             m.Write((uint)objBytes.Length);
             m.Write(0);           // type index
-            m.Write(0);           // script types
-            m.Write(0);           // externals
+            m.Write(1);           // script types: one, (file 1, path id 4242), the id aligned to four
+            m.Write(1);
+            while ((headerSize + meta.Length) % 4 != 0) m.Write((byte)0);
+            m.Write(4242L);
+            m.Write(2);           // externals: two
+            m.Write((byte)0);     // its empty string
+            m.Write(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0xAB });
+            m.Write(0);
+            m.Write(Encoding.ASCII.GetBytes("globalgamemanagers.assets\0"));
+            m.Write((byte)0);
+            m.Write(new byte[16]);
+            m.Write(3);
+            m.Write(Encoding.ASCII.GetBytes("archive:/CAB-0123/CAB-0123\0"));
             m.Write(0);           // reference types
             m.Write((byte)0);     // user information
             var metaBytes = meta.ToArray();
@@ -194,6 +205,9 @@ namespace UnityGameTranslator.Common.Checks
             new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13 }.CopyTo(png, 0);
             check(SerializedFile.Probe(new MemoryStream(png), out _) == SerializedProbe.NotSerialized, "a PNG is not mistaken for one", "its first chunk's length is 13: a version the table accepts");
             var read = SerializedFile.Open(file);
+            check(read.Externals.Count == 2 && read.Externals[0].PathName == "globalgamemanagers.assets" && read.Externals[0].Guid == "0102030405060708090a0b0c0d0e0fab"
+                  && read.Externals[0].Type == 0 && read.Externals[1].PathName == "archive:/CAB-0123/CAB-0123" && read.Externals[1].Type == 3,
+                "the files a file points into are read, after the script types", "a reference's file id N is entry N - 1: how a script is found in another file");
             check(read.Objects.Count == 1 && read.Objects[0].ClassId == FontLayouts.FontClassId && read.Objects[0].PathId == 7,
                 "the object table is read", "path id, class, place");
             var fields = read.Fields(read.Objects[0], tree, new[] { "m_Name", "m_FontData", "m_FontNames" });
