@@ -35,13 +35,53 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public bool BareString;
 
+        // ── The fields of the format 2 (spec/translation-file/schema.json, $defs/lineV2) ─────────
+        //
+        // ⚠ ADDED BY ADDITION: a line that holds none of them is exactly what it was, and so is its
+        // hash (ContentHash.Of). Null or empty means « the file holds no such field » — the hash
+        // never writes a field that is not there, whatever the format the file claims.
+        //
+        // Who sets them is NOT this type's business: a reader of the format 1 never fills them, and
+        // a writer that does must have checked LineWrites first.
+
+        /// <summary>« This text names a thing of the game », set by a person or the machine. Written only when true.</summary>
+        public bool Term;
+
+        /// <summary>Written forms of this entry, id → text. An id is given once and never reused; "0" is the entry's own v and never listed.</summary>
+        public IReadOnlyList<KeyValuePair<string, string>>? Forms;
+
+        /// <summary>What each template takes from this entry, template id → form (or per class).</summary>
+        public IReadOnlyList<KeyValuePair<string, LineUse>>? Use;
+
+        /// <summary>The class this entry gives in each template it governs, template id → class name.</summary>
+        public IReadOnlyList<KeyValuePair<string, string>>? Class;
+
+        /// <summary>For a template line: how it was made — accepted, refused, line, repeated-name.</summary>
+        public string? Oracle;
+
+        /// <summary>The links of the sentence; the list position is the N of its <c>[!g*N]</c>.</summary>
+        public IReadOnlyList<LineLink>? Links;
+
+        /// <summary>Keys of entries a person said this sentence does NOT name.</summary>
+        public IReadOnlyList<string>? Unlinked;
+
         /// <summary>An entry of the current form. Tag null means the file has no "t".</summary>
         public TranslationLine(string value, string tag)
         {
+            // Not field by field: this struct grows by addition, and a field forgotten here would
+            // be an error in one compiler and silence in another.
+            this = default;
             Value = value;
             Tag = tag;
             BareString = false;
         }
+
+        /// <summary>Does this line hold any field of the format 2?</summary>
+        public bool HasFormat2Fields =>
+            Term || !IsEmpty(Forms) || !IsEmpty(Use) || !IsEmpty(Class) || !string.IsNullOrEmpty(Oracle)
+            || !IsEmpty(Links) || !IsEmpty(Unlinked);
+
+        private static bool IsEmpty<T>(IReadOnlyList<T>? list) => list == null || list.Count == 0;
 
         /// <summary>An entry from before tags existed: the value stands alone.</summary>
         public static TranslationLine Bare(string value) =>
@@ -66,7 +106,9 @@ namespace UnityGameTranslator.Common
     /// The rules, each of which the reference implementation needs:
     ///  · only the translated lines and _uuid; every metadata key (<see cref="TranslationFileKeys"/>)
     ///    is excluded;
-    ///  · each line becomes {"v":…,"t":…}, in that order, with no other field;
+    ///  · each line becomes {"v":…,"t":…}, in that order — and, only when the line holds them, the
+    ///    fields of the format 2 AFTER those two, in the fixed order <see cref="WriteFormat2"/> lists
+    ///    (a file that holds none of them keeps exactly the hash it always had);
     ///  · keys sorted ORDINALLY — byte order, which is what PHP's ksort does and what
     ///    StringComparer.Ordinal does. Culture-aware sorting puts "a" before "A" and would produce
     ///    a different document on a machine and the server;
@@ -147,6 +189,8 @@ namespace UnityGameTranslator.Common
                     Write(json, entry.Value.Tag);
                 }
 
+                WriteFormat2(json, entry.Value);
+
                 json.Append('}');
             }
 
@@ -163,13 +207,145 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// The fields of the format 2, written AFTER "v" and "t", each only when the line holds it
+        /// and it is not empty. A line with none of them writes nothing here: its document is the
+        /// one it always was.
+        ///
+        /// 🔴 **The order is the contract, and the site copies it byte for byte**
+        /// (Translation::computeHash). Fixed, never the file's own:
+        ///
+        ///   1. "term":true — only when true.
+        ///   2. "forms":{id:text,…} — an object, ids sorted ORDINALLY (so "1","10","2": byte order,
+        ///      never numeric — a PHP ksort on integer-looking keys sorts numerically and is wrong).
+        ///   3. "use":{templateId: "form" | {class:"form",…},…} — ids sorted ordinally, and so are
+        ///      the classes of an inner object. A value holding nothing is written null.
+        ///   4. "class":{templateId:"className",…} — ids sorted ordinally.
+        ///   5. "oracle":"…" — only when not empty.
+        ///   6. "links":[{…},…] — an ARRAY in the line's own order (the position is the N of
+        ///      [!g*N]); each link writes to, form, case, by, was in that order, only the ones held.
+        ///   7. "unlinked":[{"to":…},…] — an array sorted ORDINALLY by key (a set: two writers that
+        ///      list the same keys differently must not hash differently).
+        ///
+        /// ⚠ **An "object" stays an object even when its ids are numbers.** {"1":"a","2":"b"} is
+        /// written as such; a language that decodes it into a list and writes it back as [..] has
+        /// a different document.
+        /// </summary>
+        private static void WriteFormat2(StringBuilder json, TranslationLine line)
+        {
+            if (line.Term) json.Append(",\"term\":true");
+
+            if (line.Forms != null && line.Forms.Count > 0)
+            {
+                json.Append(",\"forms\":");
+                WriteMap(json, line.Forms);
+            }
+
+            if (line.Use != null && line.Use.Count > 0)
+            {
+                json.Append(",\"use\":{");
+                bool first = true;
+                foreach (var use in Sorted(line.Use))
+                {
+                    if (!first) json.Append(',');
+                    first = false;
+                    Write(json, use.Key);
+                    json.Append(':');
+                    if (use.Value.ByClass != null && use.Value.ByClass.Count > 0) WriteMap(json, use.Value.ByClass);
+                    else Write(json, use.Value.Form);
+                }
+                json.Append('}');
+            }
+
+            if (line.Class != null && line.Class.Count > 0)
+            {
+                json.Append(",\"class\":");
+                WriteMap(json, line.Class);
+            }
+
+            if (!string.IsNullOrEmpty(line.Oracle))
+            {
+                json.Append(",\"oracle\":");
+                Write(json, line.Oracle);
+            }
+
+            if (line.Links != null && line.Links.Count > 0)
+            {
+                json.Append(",\"links\":[");
+                for (int i = 0; i < line.Links.Count; i++)
+                {
+                    if (i > 0) json.Append(',');
+                    LineLink link = line.Links[i];
+                    json.Append('{');
+                    bool first = true;
+                    WriteMember(json, ref first, "to", link.To);
+                    WriteMember(json, ref first, "form", link.Form);
+                    WriteMember(json, ref first, "case", link.Case);
+                    WriteMember(json, ref first, "by", link.By);
+                    WriteMember(json, ref first, "was", link.Was);
+                    json.Append('}');
+                }
+                json.Append(']');
+            }
+
+            if (line.Unlinked != null && line.Unlinked.Count > 0)
+            {
+                var keys = new List<string>(line.Unlinked);
+                keys.Sort(StringComparer.Ordinal);
+                json.Append(",\"unlinked\":[");
+                for (int i = 0; i < keys.Count; i++)
+                {
+                    if (i > 0) json.Append(',');
+                    json.Append("{\"to\":");
+                    Write(json, keys[i]);
+                    json.Append('}');
+                }
+                json.Append(']');
+            }
+        }
+
+        /// <summary>One member of an object, written only when the file holds it (null = absent).</summary>
+        private static void WriteMember(StringBuilder json, ref bool first, string name, string? value)
+        {
+            if (value == null) return;
+            if (!first) json.Append(',');
+            first = false;
+            json.Append('"').Append(name).Append("\":");
+            Write(json, value);
+        }
+
+        /// <summary>An object of strings, keys sorted ordinally.</summary>
+        private static void WriteMap(StringBuilder json, IReadOnlyList<KeyValuePair<string, string>> map)
+        {
+            json.Append('{');
+            bool first = true;
+            foreach (var pair in Sorted(map))
+            {
+                if (!first) json.Append(',');
+                first = false;
+                Write(json, pair.Key);
+                json.Append(':');
+                Write(json, pair.Value);
+            }
+            json.Append('}');
+        }
+
+        /// <summary>A copy in byte order of the keys — the order PHP's ksort (SORT_STRING) gives, not a culture's.</summary>
+        private static List<KeyValuePair<string, T>> Sorted<T>(IReadOnlyList<KeyValuePair<string, T>> map)
+        {
+            var copy = new List<KeyValuePair<string, T>>(map);
+            // List.Sort is not stable, but two equal keys cannot be told apart in a JSON object anyway.
+            copy.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
+            return copy;
+        }
+
+        /// <summary>
         /// One JSON string, escaped exactly as the reference implementations escape it.
         ///
         /// ⚠ Only the five short forms and \u00xx for the remaining control characters. Anything
         /// above 0x1F is written as itself — including the solidus, which JSON allows to be escaped
         /// and which PHP escapes unless told not to. Both spellings parse; only one hashes right.
         /// </summary>
-        private static void Write(StringBuilder json, string value)
+        private static void Write(StringBuilder json, string? value)
         {
             // ⚠ Null is the JSON literal, NOT an empty string. The website keeps a null "v" as
             // null; writing "" instead produced a different document for a file nobody had

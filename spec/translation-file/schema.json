@@ -67,16 +67,73 @@
     "_image_replacements": { "type": "array", "description": "Settings section `images`. Internal shape: a later artefact." },
     "_exclusions": { "type": "array", "description": "Settings section `exclusions`: path patterns whose text is never sent. Internal shape: a later artefact." },
     "_variables": { "type": "array", "description": "Settings section `variables`: game values lifted out of texts as [!STR*N]. Internal shape: a later artefact." },
-    "_settings": { "type": "object", "description": "Settings section `game_settings`: per-game switches. Internal shape: a later artefact." }
+    "_settings": { "type": "object", "description": "Settings section `game_settings`: per-game switches. Internal shape: a later artefact." },
+    "_lists": {
+      "type": "object",
+      "description": "Format 2 only. What the game's own lists hold, for the templates whose slots (`[!L*name]`) read them: imposed by the game, read by the extraction, edited by nobody — the most recent extraction replaces it, so it is never merged line by line. A slot of a line may name only a list found here (spec/translation-file `x-writer-guarantees`). NOT part of the content hash yet (open question, analyse/smart-suivi-socle.md). Anything else the extraction keeps (`field`, `row`, `witnesses`…) is provenance and diagnosis: internal shape, a later artefact.",
+      "properties": {
+        "lists": {
+          "type": "object",
+          "description": "The lists, by name. A name holds none of ] [ : = * (see x-markers).",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "values": { "type": "array", "items": { "type": "string" }, "description": "The entries, in the game's own order." },
+              "join": { "type": "string", "description": "How repeated entries are joined when no text holds them." }
+            },
+            "required": ["values"]
+          }
+        }
+      },
+      "required": ["lists"]
+    }
+  },
+  "x-markers": {
+    "description": "The three markers the format 2 adds to the text of a line. Grammar only: what they mean is `x-writer-guarantees` and the reading rules. N is a canonical decimal of at most nine digits (no sign, no leading zero). A list name holds none of ] [ : = *. The C# (LineMarkers) is held to these patterns by the checks; the site and the editors port them as written.",
+    "link": "\\[!g\\*(0|[1-9][0-9]{0,8})\\]",
+    "closedSlot": "\\[!L\\*([^\\]\\[:=*]+)(\\*)?(?:=([^\\]\\[:=*]+))?\\]",
+    "openSlot": "\\[!T\\*(0|[1-9][0-9]{0,8})\\]"
+  },
+  "x-writer-guarantees": {
+    "description": "What a writer owes a file before a line is written (LineWrites.Refusal, draft §6). Checked at the door (`upload`) and by every editor, in this order, the first failing one being the reason given. Everything but `format-2-field-in-format-1` applies to a file of the format 2 only: in a format 1 file a `[!g*0]` is the game's text.",
+    "codes": {
+      "format-2-field-in-format-1": "a line holds a field of the format 2 and the file says it is format 1 (`_engine_version` absent, 0 or 1)",
+      "marker-without-link": "the text shows `[!g*N]` and the line holds no `links[N]`",
+      "link-without-marker": "the line holds `links[N]` and its text has no `[!g*N]`",
+      "link-entry-missing": "a link's `to` is not the key of a line of this file",
+      "link-form-missing": "a link names a form its entry's `forms` does not hold (`0` is always the entry's own `v`)",
+      "slot-list-missing": "a slot of the key or of `v` names a list `_lists` does not hold, or agrees with something that is neither such a list nor an open slot of the key",
+      "slot-open-missing": "`v` shows `[!T*N]` and the key has no `[!T*N]`",
+      "use-form-missing": "a `use` of the line names a form the line does not hold",
+      "machine-changed-person-line": "the machine writes: it changed the `v`, `forms` or `class` of a line a person wrote or validated (tag H or V)",
+      "machine-wrote-person-link": "the machine writes: a link with `by: \"H\"` the line did not already hold",
+      "machine-wrote-unlinked": "the machine writes: `unlinked` the line did not already hold"
+    }
   },
   "propertyNames": {
     "pattern": "^[^\\r]*$",
     "$comment": "LF only: a key holding CR is not the written form. Every reader normalises CRLF, so a Core that writes it has keys the site never finds."
   },
-  "additionalProperties": { "$ref": "#/$defs/line" },
+  "additionalProperties": { "$ref": "#/$defs/lineV2" },
+  "if": {
+    "not": {
+      "required": ["_engine_version"],
+      "properties": { "_engine_version": { "type": "integer", "minimum": 2 } }
+    },
+    "$comment": "The file says it is format 1 (`_engine_version` absent, 0 or 1)."
+  },
+  "then": {
+    "properties": {
+      "_engine_version": true, "_uuid": true, "_source_language": true, "_target_language": true, "_local_changes": true,
+      "_metadata_dirty": true, "_game": true, "_source": true, "_forked_from": true, "_fonts": true, "_font_overrides": true,
+      "_image_replacements": true, "_exclusions": true, "_variables": true, "_settings": true, "_lists": true
+    },
+    "additionalProperties": { "$ref": "#/$defs/line" },
+    "$comment": "...so no line holds a field of the format 2. The names above are the metadata, spared from the line form (the same list as `properties` and `not.propertyNames.enum`)."
+  },
   "required": ["_uuid"],
   "not": {
-    "propertyNames": { "enum": ["_engine_version", "_uuid", "_source_language", "_target_language", "_local_changes", "_metadata_dirty", "_game", "_source", "_forked_from", "_fonts", "_font_overrides", "_image_replacements", "_exclusions", "_variables", "_settings"] },
+    "propertyNames": { "enum": ["_engine_version", "_uuid", "_source_language", "_target_language", "_local_changes", "_metadata_dirty", "_game", "_source", "_forked_from", "_fonts", "_font_overrides", "_image_replacements", "_exclusions", "_variables", "_settings", "_lists"] },
     "$comment": "At least one line: a file made only of metadata has nothing to publish and is refused at the door."
   },
   "$defs": {
@@ -118,6 +175,96 @@
       },
       "required": ["v", "t"],
       "additionalProperties": false
+    },
+    "lineV2": {
+      "type": "object",
+      "description": "A line of a file of the format 2: the format 1 line, and the fields below, each written only when it holds something. A file that says it is format 1 may hold none of them (the `then` of the root). The content hash writes them after v and t in the order listed here (common Sync.cs, ContentHash).",
+      "properties": {
+        "v": { "$ref": "#/$defs/line/properties/v" },
+        "t": { "$ref": "#/$defs/line/properties/t" },
+        "i": { "$ref": "#/$defs/line/properties/i" },
+        "term": {
+          "const": true,
+          "description": "« This text names a thing of the game », set by a person or the machine, even before any sentence points at it. Absent, never false. An entry of a list the game holds is one without it."
+        },
+        "forms": {
+          "type": "object",
+          "description": "The written forms of this entry (« pièces d'étoile », « de la pièce d'étoile »), by form id. An id is given once and never reused — it does not depend on a template or on an extraction pass. `0` is the entry's own `v`, never listed. Meant to be few: a form is kept once, and a template or a sentence points at it.",
+          "propertyNames": { "$ref": "#/$defs/formId" },
+          "additionalProperties": { "type": "string", "pattern": "^[^\\r]*$" },
+          "minProperties": 1
+        },
+        "use": {
+          "type": "object",
+          "description": "What each template takes from this entry, by template id: one form id, or one per agreement class (`[!L*a=b]`). An entry with no `use` for a template gives its own `v`.",
+          "propertyNames": { "$ref": "#/$defs/name" },
+          "additionalProperties": {
+            "oneOf": [
+              { "$ref": "#/$defs/formRef" },
+              { "type": "object", "propertyNames": { "$ref": "#/$defs/name" }, "additionalProperties": { "$ref": "#/$defs/formRef" }, "minProperties": 1 }
+            ]
+          },
+          "minProperties": 1
+        },
+        "class": {
+          "type": "object",
+          "description": "The agreement class this entry gives in each template it governs, by template id.",
+          "propertyNames": { "$ref": "#/$defs/name" },
+          "additionalProperties": { "$ref": "#/$defs/name" },
+          "minProperties": 1
+        },
+        "oracle": {
+          "enum": ["accepted", "refused", "line", "repeated-name"],
+          "description": "On a template's line: how it was made — `accepted` as it stands, `refused` and assembled anyway (to be read again), `line` taken from a line, `repeated-name` a name the game draws from repeated entries."
+        },
+        "links": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/link" },
+          "minItems": 1,
+          "description": "The links of the sentence. The position is the N of the `[!g*N]` of `v`: no hole, no marker without one, no link without a marker (`x-writer-guarantees`)."
+        },
+        "unlinked": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "to": { "type": "string", "minLength": 1 } },
+            "required": ["to"],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "description": "Entries a PERSON said this sentence does not name (« here, this word is not that term »). The machine never writes one; a person's refusal outlasts every later extraction."
+        }
+      },
+      "required": ["v", "t"],
+      "additionalProperties": false
+    },
+    "link": {
+      "type": "object",
+      "description": "« Here is written such an entry, in such a form ». Reading it (common LinkReading): the form asked of the entry, with its case; the form gone → the entry's translation; the entry gone → `was`; never a hole, never the marker. « To read again » is computed: what the link reads today is no longer `was`.",
+      "properties": {
+        "to": { "type": "string", "minLength": 1, "description": "The KEY of the entry's line (a line's key is unique: no list is named)." },
+        "form": { "$ref": "#/$defs/formRef", "description": "The form asked of the entry. Absent = the entry's own translation." },
+        "case": { "enum": ["upper-first", "lower-first"], "description": "How the sentence writes the case of that text: the first letter as a capital, or as a small letter (measured: only the first letter differs, and never at the head of a sentence). Absent = as the form is written. Applying it is the reader's own Unicode data, never the machine's culture." },
+        "by": { "enum": ["A", "H"], "description": "A the machine set it, H a person set or confirmed it." },
+        "was": { "type": "string", "pattern": "^[^\\r]*$", "description": "The text read when the link was set or confirmed — as the sentence shows it, case included. Saving or validating the sentence puts it back." }
+      },
+      "required": ["to", "by", "was"],
+      "additionalProperties": false
+    },
+    "formId": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,8}$",
+      "description": "A form id of an entry: a positive decimal, given once and never reused. Sorted as TEXT by the hash (1, 10, 2)."
+    },
+    "formRef": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,8})$",
+      "description": "A form id, or `0` for the entry's own `v`."
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,31}$",
+      "description": "A template id or a class name: starts with a letter on purpose — an integer-looking key is turned into a number by PHP's arrays, and the hash would sort it as one."
     }
   }
 }

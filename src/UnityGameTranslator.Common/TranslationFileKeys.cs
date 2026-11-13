@@ -37,7 +37,7 @@ namespace UnityGameTranslator.Common
         {
             "_engine_version", "_uuid", "_source_language", "_target_language", "_local_changes",
             "_metadata_dirty", "_game", "_source", "_forked_from", "_fonts", "_font_overrides",
-            "_image_replacements", "_exclusions", "_variables", "_settings",
+            "_image_replacements", "_exclusions", "_variables", "_settings", "_lists",
         };
 
         /// <summary>The names the tools write ABOUT a file.</summary>

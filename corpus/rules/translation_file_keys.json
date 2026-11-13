@@ -11,6 +11,8 @@
       "why": "a name of the contract is metadata — the properties of spec/translation-file/schema.json" },
     { "id": "translation_file_keys/is_metadata_key/settings-section", "op": "is_metadata_key", "in": { "key": "_font_overrides" }, "out": true,
       "why": "the settings sections are metadata too" },
+    { "id": "translation_file_keys/is_metadata_key/game-lists", "op": "is_metadata_key", "in": { "key": "_lists" }, "out": true,
+      "why": "the game's lists a template reads (format 2) are a section of the file, not a line — a name of spec/translation-file/schema.json" },
     { "id": "translation_file_keys/is_metadata_key/text-is-not", "op": "is_metadata_key", "in": { "key": "Hello" }, "out": false,
       "why": "a key the game showed is not metadata" },
     { "id": "translation_file_keys/is_metadata_key/underscore-inside", "op": "is_metadata_key", "in": { "key": "snake_case" }, "out": false,

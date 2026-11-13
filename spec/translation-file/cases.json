@@ -725,6 +725,779 @@
         ]
       },
       "why": "_fonts is an object keyed by name, _exclusions a list: the written form fixes each container; a reader still hands the token to the owner, who yields an empty section"
+    },
+    {
+      "id": "translation-file/format2/format-1-file-is-unchanged",
+      "document": {
+        "_engine_version": 1,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Play": {
+          "v": "Jouer",
+          "t": "H",
+          "i": 1
+        },
+        "Quit": {
+          "v": "Quitter",
+          "t": "A",
+          "i": 2
+        },
+        "Level [!v*0]": {
+          "v": "Niveau [!v*0]",
+          "t": "A",
+          "i": 3
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 3,
+        "tag_counts": {
+          "human": 1,
+          "validated": 0,
+          "ai": 2,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "read": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 1,
+        "lines": {
+          "Play": {
+            "v": "Jouer",
+            "t": "H",
+            "i": 1
+          },
+          "Quit": {
+            "v": "Quitter",
+            "t": "A",
+            "i": 2
+          },
+          "Level [!v*0]": {
+            "v": "Niveau [!v*0]",
+            "t": "A",
+            "i": 3
+          }
+        },
+        "rewrite": false
+      },
+      "read2": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 1,
+        "lines": {
+          "Play": {
+            "v": "Jouer",
+            "t": "H",
+            "i": 1
+          },
+          "Quit": {
+            "v": "Quitter",
+            "t": "A",
+            "i": 2
+          },
+          "Level [!v*0]": {
+            "v": "Niveau [!v*0]",
+            "t": "A",
+            "i": 3
+          }
+        }
+      },
+      "why": "a file of the format 1 holds none of the new fields and is read, hashed and counted exactly as before: the format 2 is added to, never replaced"
+    },
+    {
+      "id": "translation-file/format2/term-forms-link-unlinked",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Star Coin": {
+          "v": "Pièce d'étoile",
+          "t": "V",
+          "term": true,
+          "forms": {
+            "1": "pièces d'étoile",
+            "2": "de la pièce d'étoile"
+          }
+        },
+        "Key": {
+          "v": "Touche",
+          "t": "V",
+          "term": true
+        },
+        "Not enough Star Coins!": {
+          "v": "Pas assez de [!g*0] !",
+          "t": "A",
+          "links": [
+            {
+              "to": "Star Coin",
+              "form": "1",
+              "by": "A",
+              "was": "pièces d'étoile"
+            }
+          ]
+        },
+        "The key is stuck.": {
+          "v": "La touche est coincée.",
+          "t": "H",
+          "unlinked": [
+            {
+              "to": "Key"
+            }
+          ]
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 4,
+        "tag_counts": {
+          "human": 1,
+          "validated": 2,
+          "ai": 1,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "read2": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 2,
+        "lines": {
+          "Star Coin": {
+            "v": "Pièce d'étoile",
+            "t": "V",
+            "term": true,
+            "forms": {
+              "1": "pièces d'étoile",
+              "2": "de la pièce d'étoile"
+            }
+          },
+          "Key": {
+            "v": "Touche",
+            "t": "V",
+            "term": true
+          },
+          "Not enough Star Coins!": {
+            "v": "Pas assez de [!g*0] !",
+            "t": "A",
+            "links": [
+              {
+                "to": "Star Coin",
+                "form": "1",
+                "by": "A",
+                "was": "pièces d'étoile"
+              }
+            ]
+          },
+          "The key is stuck.": {
+            "v": "La touche est coincée.",
+            "t": "H",
+            "unlinked": [
+              {
+                "to": "Key"
+              }
+            ]
+          }
+        }
+      },
+      "why": "a term with two written forms, a sentence that links to it by form 1, and a sentence where a person said a word is NOT a term: all on lines, so each is one decision for the merge"
+    },
+    {
+      "id": "translation-file/format2/template-with-lists",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_lists": {
+          "lists": {
+            "weapon": {
+              "values": [
+                "Sword"
+              ]
+            },
+            "quality": {
+              "values": [
+                "Rusty"
+              ]
+            }
+          }
+        },
+        "Sword": {
+          "v": "Épée",
+          "t": "A",
+          "term": true,
+          "class": {
+            "k1": "c0"
+          }
+        },
+        "Rusty": {
+          "v": "Rouillé",
+          "t": "A",
+          "term": true,
+          "forms": {
+            "1": "rouillée"
+          },
+          "use": {
+            "k1": {
+              "c0": "0",
+              "c1": "1"
+            }
+          }
+        },
+        "[!L*quality][!L*weapon]": {
+          "v": "[!L*weapon] [!L*quality=weapon]",
+          "t": "A",
+          "oracle": "accepted"
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 3,
+        "tag_counts": {
+          "human": 0,
+          "validated": 0,
+          "ai": 3,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "read2": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 2,
+        "lines": {
+          "Sword": {
+            "v": "Épée",
+            "t": "A",
+            "term": true,
+            "class": {
+              "k1": "c0"
+            }
+          },
+          "Rusty": {
+            "v": "Rouillé",
+            "t": "A",
+            "term": true,
+            "forms": {
+              "1": "rouillée"
+            },
+            "use": {
+              "k1": {
+                "c0": "0",
+                "c1": "1"
+              }
+            }
+          },
+          "[!L*quality][!L*weapon]": {
+            "v": "[!L*weapon] [!L*quality=weapon]",
+            "t": "A",
+            "oracle": "accepted"
+          }
+        }
+      },
+      "why": "a template reads two lists of the game; the entry that governs says its class in the template, the entry that follows says which form it takes for each class (0 = its own text); the value `[!L*quality=weapon]` carries neither"
+    },
+    {
+      "id": "translation-file/format2/field-in-a-format-1-file",
+      "document": {
+        "_engine_version": 1,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Star Coin": {
+          "v": "Pièce d'étoile",
+          "t": "V",
+          "term": true
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "read": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 1,
+        "lines": {
+          "Star Coin": {
+            "v": "Pièce d'étoile",
+            "t": "V"
+          }
+        }
+      },
+      "guarantee": "format-2-field-in-format-1",
+      "why": "the file says it is format 1 and a line holds `term`: a reader of the format 1 would drop the field and the hash would not cover what the file says, so it is refused, never silently read"
+    },
+    {
+      "id": "translation-file/format2/field-in-a-file-without-a-version",
+      "document": {
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Not enough Star Coins!": {
+          "v": "Pas assez de [!g*0] !",
+          "t": "A",
+          "links": [
+            {
+              "to": "Star Coin",
+              "form": "1",
+              "by": "A",
+              "was": "pièces d'étoile"
+            }
+          ]
+        },
+        "Star Coin": {
+          "v": "Pièce d'étoile",
+          "t": "V",
+          "term": true,
+          "forms": {
+            "1": "pièces d'étoile",
+            "2": "de la pièce d'étoile"
+          }
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "read": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 0,
+        "lines": {
+          "Not enough Star Coins!": {
+            "v": "Pas assez de [!g*0] !",
+            "t": "A"
+          },
+          "Star Coin": {
+            "v": "Pièce d'étoile",
+            "t": "V"
+          }
+        }
+      },
+      "guarantee": "format-2-field-in-format-1",
+      "why": "no `_engine_version` reads as format 1, so the same refusal holds when the file says nothing"
+    },
+    {
+      "id": "translation-file/format2/marker-text-in-a-format-1-file-is-text",
+      "document": {
+        "_engine_version": 1,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Hello [!g*0]": {
+          "v": "Bonjour [!g*0]",
+          "t": "H"
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 1,
+        "tag_counts": {
+          "human": 1,
+          "validated": 0,
+          "ai": 0,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "read": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 1,
+        "lines": {
+          "Hello [!g*0]": {
+            "v": "Bonjour [!g*0]",
+            "t": "H"
+          }
+        }
+      },
+      "why": "in a format 1 file `[!g*0]` is the game's own text: nothing is asked of it, and the line is read as it always was"
+    },
+    {
+      "id": "translation-file/format2/marker-without-its-link",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Star Coin": {
+          "v": "Pièce d'étoile",
+          "t": "V",
+          "term": true,
+          "forms": {
+            "1": "pièces d'étoile",
+            "2": "de la pièce d'étoile"
+          }
+        },
+        "Not enough Star Coins!": {
+          "v": "Pas assez de [!g*0] !",
+          "t": "A"
+        }
+      },
+      "written": true,
+      "upload": "refused",
+      "guarantee": "marker-without-link",
+      "why": "the text shows `[!g*0]` and the line holds no `links[0]`: a reader could only show the marker, which it never does, so the writer is refused"
+    },
+    {
+      "id": "translation-file/format2/link-without-its-marker",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Star Coin": {
+          "v": "Pièce d'étoile",
+          "t": "V",
+          "term": true,
+          "forms": {
+            "1": "pièces d'étoile",
+            "2": "de la pièce d'étoile"
+          }
+        },
+        "Not enough Star Coins!": {
+          "v": "Pas assez de pièces !",
+          "t": "A",
+          "links": [
+            {
+              "to": "Star Coin",
+              "form": "1",
+              "by": "A",
+              "was": "pièces d'étoile"
+            }
+          ]
+        }
+      },
+      "written": true,
+      "upload": "refused",
+      "guarantee": "link-without-marker",
+      "why": "a link nothing points at would be kept for ever and counted « to read again » for nothing"
+    },
+    {
+      "id": "translation-file/format2/link-to-an-entry-that-does-not-exist",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Not enough Star Coins!": {
+          "v": "Pas assez de [!g*0] !",
+          "t": "A",
+          "links": [
+            {
+              "to": "Star Coin",
+              "form": "1",
+              "by": "A",
+              "was": "pièces d'étoile"
+            }
+          ]
+        }
+      },
+      "written": true,
+      "upload": "refused",
+      "guarantee": "link-entry-missing",
+      "why": "the link names an entry that is no line of the file: it is refused when written (when read later, the sentence shows `was`)"
+    },
+    {
+      "id": "translation-file/format2/link-to-a-form-the-entry-lacks",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Star Coin": {
+          "v": "Pièce d'étoile",
+          "t": "V",
+          "term": true
+        },
+        "Not enough Star Coins!": {
+          "v": "Pas assez de [!g*0] !",
+          "t": "A",
+          "links": [
+            {
+              "to": "Star Coin",
+              "form": "1",
+              "by": "A",
+              "was": "pièces d'étoile"
+            }
+          ]
+        }
+      },
+      "written": true,
+      "upload": "refused",
+      "guarantee": "link-form-missing",
+      "why": "the link asks for form 1 and the entry holds none: refused when written (when read later, the entry's translation is shown)"
+    },
+    {
+      "id": "translation-file/format2/slot-of-a-list-the-file-lacks",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_lists": {
+          "lists": {
+            "weapon": {
+              "values": [
+                "Sword"
+              ]
+            }
+          }
+        },
+        "[!L*quality][!L*weapon]": {
+          "v": "[!L*weapon] [!L*quality]",
+          "t": "A",
+          "oracle": "accepted"
+        }
+      },
+      "written": true,
+      "upload": "refused",
+      "guarantee": "slot-list-missing",
+      "why": "the template reads a list `_lists` does not hold: its slot could never be filled"
+    },
+    {
+      "id": "translation-file/format2/open-slot-the-key-lacks",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_lists": {
+          "lists": {
+            "weapon": {
+              "values": [
+                "Sword"
+              ]
+            }
+          }
+        },
+        "[!L*weapon]": {
+          "v": "[!T*0] [!L*weapon]",
+          "t": "A"
+        }
+      },
+      "written": true,
+      "upload": "refused",
+      "guarantee": "slot-open-missing",
+      "why": "the value shows an open slot the key never had: nothing says what text fills it"
+    },
+    {
+      "id": "translation-file/format2/use-of-a-form-the-line-lacks",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Rusty": {
+          "v": "Rouillé",
+          "t": "A",
+          "term": true,
+          "use": {
+            "k1": "3"
+          }
+        }
+      },
+      "written": true,
+      "upload": "refused",
+      "guarantee": "use-form-missing",
+      "why": "what a template takes from an entry must be a form the entry holds"
+    },
+    {
+      "id": "translation-file/format2/link-by-an-unknown-writer",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Hello": {
+          "v": "[!g*0]",
+          "t": "A",
+          "links": [
+            {
+              "to": "Hello",
+              "by": "X",
+              "was": "a"
+            }
+          ]
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "`by` is A or H"
+    },
+    {
+      "id": "translation-file/format2/link-without-was",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Hello": {
+          "v": "[!g*0]",
+          "t": "A",
+          "links": [
+            {
+              "to": "Hello",
+              "by": "A"
+            }
+          ]
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "a link with no `was` can never be told « to read again » from a new one"
+    },
+    {
+      "id": "translation-file/format2/link-with-an-unknown-case",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Hello": {
+          "v": "[!g*0]",
+          "t": "A",
+          "links": [
+            {
+              "to": "Hello",
+              "by": "A",
+              "was": "a",
+              "case": "title"
+            }
+          ]
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "`case` is upper-first or lower-first; another word is a newer writer's, not ours"
+    },
+    {
+      "id": "translation-file/format2/link-with-an-extra-field",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Hello": {
+          "v": "[!g*0]",
+          "t": "A",
+          "links": [
+            {
+              "to": "Hello",
+              "by": "A",
+              "was": "a",
+              "note": "x"
+            }
+          ]
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "a link is `{to, form, case, by, was}` and nothing else"
+    },
+    {
+      "id": "translation-file/format2/term-false-is-absent",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Hello": {
+          "v": "Bonjour",
+          "t": "A",
+          "term": false
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "`term` is written when true and never as false"
+    },
+    {
+      "id": "translation-file/format2/form-id-zero-is-the-entry-itself",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Hello": {
+          "v": "Bonjour",
+          "t": "A",
+          "forms": {
+            "0": "a"
+          }
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "form `0` is the entry's own `v` and is never listed"
+    },
+    {
+      "id": "translation-file/format2/form-id-with-a-leading-zero",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Hello": {
+          "v": "Bonjour",
+          "t": "A",
+          "forms": {
+            "01": "a"
+          }
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "a form id is a canonical positive number: `01` and `1` would be one key twice"
+    },
+    {
+      "id": "translation-file/format2/template-id-that-looks-like-a-number",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Hello": {
+          "v": "Bonjour",
+          "t": "A",
+          "class": {
+            "1": "c0"
+          }
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "a template id starts with a letter: an integer-looking key is turned into a number by PHP arrays and sorted as one"
+    },
+    {
+      "id": "translation-file/format2/oracle-unknown",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Hello": {
+          "v": "Bonjour",
+          "t": "A",
+          "oracle": "maybe"
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "`oracle` is one of accepted, refused, line, repeated-name"
+    },
+    {
+      "id": "translation-file/format2/empty-links-are-not-written",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Hello": {
+          "v": "Bonjour",
+          "t": "A",
+          "links": []
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "an empty list is not written: the field is simply absent"
+    },
+    {
+      "id": "translation-file/format2/unlinked-needs-no-term",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "The key is stuck.": {
+          "v": "La touche est coincée.",
+          "t": "H",
+          "unlinked": [
+            {
+              "to": "Key"
+            }
+          ]
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 1,
+        "tag_counts": {
+          "human": 1,
+          "validated": 0,
+          "ai": 0,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "read2": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 2,
+        "lines": {
+          "The key is stuck.": {
+            "v": "La touche est coincée.",
+            "t": "H",
+            "unlinked": [
+              {
+                "to": "Key"
+              }
+            ]
+          }
+        }
+      },
+      "why": "a person may say a word is not a term even where no line holds that term yet: nothing is checked against `unlinked`"
     }
   ]
 }

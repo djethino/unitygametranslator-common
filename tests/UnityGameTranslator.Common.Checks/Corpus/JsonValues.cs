@@ -108,10 +108,83 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 case JsonValueKind.Object:
                     string? value = v.TryGetProperty("v", out var val) && val.ValueKind == JsonValueKind.String ? val.GetString() : null;
                     string? tag = v.TryGetProperty("t", out var t) && t.ValueKind == JsonValueKind.String ? t.GetString() : null;
-                    return new TranslationLine(value!, tag!);
+                    var line = new TranslationLine(value!, tag!);
+                    ReadFormat2(v, ref line);
+                    return line;
                 default:
                     throw new InvalidOperationException($"a line is an object, a string or null, not {v.ValueKind}");
             }
+        }
+
+        /// <summary>
+        /// The fields of the format 2 a line holds, read the way a port reads them: an absent key is
+        /// an absent field, and a field of the wrong shape is a case written wrong — it throws.
+        /// </summary>
+        private static void ReadFormat2(JsonElement v, ref TranslationLine line)
+        {
+            if (v.TryGetProperty("term", out var term)) line.Term = term.ValueKind == JsonValueKind.True;
+            line.Forms = StringMap(v, "forms");
+            line.Class = StringMap(v, "class");
+            line.Oracle = Str(v, "oracle");
+
+            if (v.TryGetProperty("use", out var use) && use.ValueKind == JsonValueKind.Object)
+            {
+                var list = new List<KeyValuePair<string, LineUse>>();
+                foreach (var p in use.EnumerateObject())
+                {
+                    var entry = new LineUse();
+                    if (p.Value.ValueKind == JsonValueKind.String) entry.Form = p.Value.GetString();
+                    else if (p.Value.ValueKind == JsonValueKind.Object) entry.ByClass = StringPairs(p.Value);
+                    list.Add(new KeyValuePair<string, LineUse>(p.Name, entry));
+                }
+                line.Use = list;
+            }
+
+            if (v.TryGetProperty("links", out var links) && links.ValueKind == JsonValueKind.Array)
+            {
+                var list = new List<LineLink>();
+                foreach (var l in links.EnumerateArray()) list.Add(LinkOf(l));
+                line.Links = list;
+            }
+
+            if (v.TryGetProperty("unlinked", out var unlinked) && unlinked.ValueKind == JsonValueKind.Array)
+            {
+                var list = new List<string>();
+                foreach (var u in unlinked.EnumerateArray()) list.Add(Str(u, "to") ?? "");
+                line.Unlinked = list;
+            }
+        }
+
+        /// <summary>A link in the file's form: <c>{to, form?, case?, by, was?}</c>; an absent key is an absent field.</summary>
+        public static LineLink LinkOf(JsonElement l) =>
+            new LineLink { To = Str(l, "to"), Form = Str(l, "form"), Case = Str(l, "case"), By = Str(l, "by"), Was = Str(l, "was") };
+
+        public static LineLink LinkRequired(JsonElement e, string key) =>
+            e.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.Object
+                ? LinkOf(v) : throw new InvalidOperationException($"'{key}' must be a link");
+
+        /// <summary>The lines of an object keyed by the game's text, as a lookup (absent or null = no such line).</summary>
+        public static Func<string, TranslationLine?> LineLookup(JsonElement e, string key)
+        {
+            var map = new Dictionary<string, TranslationLine>(StringComparer.Ordinal);
+            if (e.TryGetProperty(key, out var obj) && obj.ValueKind == JsonValueKind.Object)
+                foreach (var p in obj.EnumerateObject())
+                {
+                    var line = LineOf(p.Value);
+                    if (line != null) map[p.Name] = line.Value;
+                }
+            return k => map.TryGetValue(k, out var found) ? found : (TranslationLine?)null;
+        }
+
+        private static List<KeyValuePair<string, string>>? StringMap(JsonElement e, string key) =>
+            e.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.Object ? StringPairs(v) : null;
+
+        private static List<KeyValuePair<string, string>> StringPairs(JsonElement obj)
+        {
+            var list = new List<KeyValuePair<string, string>>();
+            foreach (var p in obj.EnumerateObject())
+                list.Add(new KeyValuePair<string, string>(p.Name, p.Value.GetString() ?? ""));
+            return list;
         }
 
         /// <summary>The lines of a file: an object keyed by the game's text, in file order.</summary>
@@ -224,6 +297,15 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         ["branch_frozen"] = standing.BranchFrozen,
                         ["finished"] = standing.Finished,
                         ["main_owner"] = standing.MainOwner,
+                    };
+                case ClosedSlot slot:
+                    return new Dictionary<string, object?> { ["list"] = slot.List, ["repeated"] = slot.Repeated, ["agrees"] = slot.Agrees };
+                case LinkRead read:
+                    return new Dictionary<string, object?>
+                    {
+                        ["text"] = read.Text,
+                        ["source"] = read.Source.ToString(),
+                        ["case_not_applied"] = read.CaseNotApplied,
                     };
                 case TranslationLine line:
                     return line.BareString

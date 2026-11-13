@@ -80,6 +80,7 @@ namespace UnityGameTranslator.Common.Checks
             Section("Translation files", TranslationFilesChecks.Run);
             Section("The settings sections a translation carries", SettingsSectionsChecks.Run);
             Section("Which keys of a translation file are metadata", check => TranslationFileKeysChecks.Run(check, CommonRoot()));
+            Section("The format 2 of a translation file, against its spec", check => TranslationFileFormat2Checks.Run(check, CommonRoot()));
         }
 
         /// <summary>Which copy an editor is about to change, and what is reachable from where.</summary>

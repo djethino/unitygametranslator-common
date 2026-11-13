@@ -220,6 +220,39 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("translation_format", "reads", typeof(TranslationFormat), nameof(TranslationFormat.Reads),
                 e => TranslationFormat.Reads(Int(e, "reads_up_to"), Int(e, "file_format"))),
 
+            // ── line_markers ──────────────────────────────────────────────────
+            new Operation("line_markers", "link_numbers", typeof(LineMarkers), nameof(LineMarkers.LinkNumbers),
+                e => LineMarkers.LinkNumbers(Str(e, "text"))),
+            new Operation("line_markers", "closed_slots", typeof(LineMarkers), nameof(LineMarkers.ClosedSlots),
+                e => LineMarkers.ClosedSlots(Str(e, "text"))),
+            new Operation("line_markers", "open_slots", typeof(LineMarkers), nameof(LineMarkers.OpenSlots),
+                e => LineMarkers.OpenSlots(Str(e, "text"))),
+            new Operation("line_markers", "open_slot_ref", typeof(LineMarkers), nameof(LineMarkers.OpenSlotRef),
+                e => LineMarkers.OpenSlotRef(Str(e, "agrees"))),
+
+            // ── link_reading ──────────────────────────────────────────────────
+            // ⚠ The socle owns no case mapping: `casing: first-letter` is the executor's stand-in
+            // (first UTF-16 character, invariant), enough for the Latin cases written here.
+            new Operation("link_reading", "read", typeof(LinkReading), nameof(LinkReading.Read),
+                e =>
+                {
+                    bool casing = Str(e, "casing") == "first-letter";
+                    return LinkReading.Read(LinkRequired(e, "link"), LineLookup(e, "entries"),
+                        casing ? FirstUpper : (Func<string, string>?)null,
+                        casing ? FirstLower : (Func<string, string>?)null);
+                }),
+            new Operation("link_reading", "needs_review", typeof(LinkReading), nameof(LinkReading.NeedsReview),
+                e => LinkReading.NeedsReview(LinkRequired(e, "link"), Str(e, "read_text") ?? "")),
+
+            // ── line_writes ───────────────────────────────────────────────────
+            new Operation("line_writes", "refusal", typeof(LineWrites), nameof(LineWrites.Refusal),
+                e =>
+                {
+                    var lists = new HashSet<string>(Strings(e, "lists"), StringComparer.Ordinal);
+                    return LineWrites.Refusal(Str(e, "key")!, LineRequired(e, "line"), Int(e, "file_format"),
+                        LineLookup(e, "entries"), lists.Contains, Bool(e, "by_machine"), Line(e, "previous"))?.Code;
+                }),
+
             // ── mod_ui_migration ──────────────────────────────────────────────
             new Operation("mod_ui_migration", "decide", typeof(ModUiMigration), nameof(ModUiMigration.Decide),
                 e => ModUiMigration.Decide(Bool(e, "in_ancestor"), Bool(e, "already_held"), Bool(e, "is_empty"),
@@ -502,6 +535,12 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 ["at_rest"] = give.AtRest,
             };
         }
+
+        private static string FirstUpper(string text) =>
+            text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text.Substring(1);
+
+        private static string FirstLower(string text) =>
+            text.Length == 0 ? text : char.ToLowerInvariant(text[0]) + text.Substring(1);
 
         public static Operation? Find(string rule, string op) =>
             ById.TryGetValue(rule + "/" + op, out var found) ? found : null;
