@@ -146,6 +146,18 @@ namespace UnityGameTranslator.Common.Checks
             check(Refuses(() => Walk(tree, bigCount, new Seen()), "does not fit"),
                 "a count larger than the bytes left is refused", "never a million elements out of a few bytes");
 
+            // A tree that is only the START of the layout (a MonoBehaviour's header): read as far as it goes.
+            var head = new List<TypeNode> { new TypeNode(0, "Probe", "Base", -1, 0, 0x8000), Int(1, "m_Count") };
+            head.AddRange(Str(1, "m_Title"));
+            var headSeen = new Seen();
+            var reader = new UnityFileReader(new MemoryStream(whole), bigEndian: false);
+            new ObjectWalker(head).Walk(reader, 0, whole.Length, headSeen, "Probe", wholeObject: false);
+            check(headSeen.Lines.SequenceEqual(new[] { "m_Count [Probe.m_Count] = 7", "m_Title [Probe.m_Title] = ab" })
+                  && Refuses(() => Walk(head, whole, new Seen()), "does not account for"),
+                "a tree that is only the start of the layout is read as far as it goes, and only when asked", "the header of a MonoBehaviour, before the fields its class declares");
+            check(Refuses(() => new ObjectWalker(head).Walk(new UnityFileReader(new MemoryStream(whole), bigEndian: false), 0, 6, new Seen(), "Probe", wholeObject: false), "reads past"),
+                "even then a header that does not fit the object is refused", "the size is still the limit");
+
             RegistryChecks(check);
         }
 
