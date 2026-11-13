@@ -246,17 +246,24 @@ namespace UnityGameTranslator.Common.UnityFiles
             var site = new FieldSite(path, node, owner, field);
 
             int version = r.I32();
-            if (version != 2)
+            if (version != 1 && version != 2)
             {
-                run.RegistryNotRead = $"a registry of references in version {version}, not the one this reader knows (2)";
+                run.RegistryNotRead = $"a registry of references in version {version}, not one this reader knows (1 and 2)";
                 return;
             }
 
-            int count = r.Count(8);
-            for (int i = 0; i < count; i++)
+            // Version 2: a count, then each entry with its id. Version 1: no count and no id — the entries follow one
+            // another, their id is their position from 0, and a last entry of the class "Terminus" (namespace
+            // "UnityEngine.DMAT", assembly "FAKE_ASM") ends the list. (Read from the bytes of a Unity 2019 object, and
+            // held by the same game's texts: the registry of its localization settings.)
+            long entries = version == 2 ? r.Count(8) : -1;
+            long position = 0;
+            for (long i = 0; version == 1 || i < entries; i++)
             {
-                long rid = r.I64();
+                long rid = version == 2 ? r.I64() : position++;
                 string cls = ReadAlignedString(r), ns = ReadAlignedString(r), assembly = ReadAlignedString(r);
+
+                if (version == 1 && cls == "Terminus" && ns == "UnityEngine.DMAT" && assembly == "FAKE_ASM") return;
 
                 // An entry that names no type (Unity's null and terminus references) holds no data.
                 if (cls.Length == 0) continue;
@@ -265,7 +272,7 @@ namespace UnityGameTranslator.Common.UnityFiles
                 if (tree == null)
                 {
                     run.RegistryNotRead = _resolver == null
-                        ? $"a registry of {count} reference(s) and no way to read their classes (first: {ns}.{cls})"
+                        ? $"a registry of references and no way to read their classes (first: {ns}.{cls})"
                         : $"the registry names {ns}.{cls} ({assembly}), whose class is not known";
                     return;
                 }

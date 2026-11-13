@@ -221,10 +221,35 @@ namespace UnityGameTranslator.Common.Checks
             check(notKnown.RegistryNotRead != null && notKnown.RegistryNotRead.Contains("not known"),
                 "a class the resolver does not know says so, and the object is not taken for whole", notKnown.RegistryNotRead ?? "silent");
 
-            var old = (byte[])bytes.Clone();
-            BitConverter.GetBytes(1).CopyTo(old, 4);
-            check(Walk(tree, old, new Seen()).RegistryNotRead is string why && why.Contains("version 1"),
-                "a registry in another version is said unread", "the layout of its entries is not known");
+            var other = (byte[])bytes.Clone();
+            BitConverter.GetBytes(3).CopyTo(other, 4);
+            check(Walk(tree, other, new Seen()).RegistryNotRead is string why && why.Contains("version 3"),
+                "a registry in a version this reader does not know is said unread", "the layout of its entries is not known");
+
+            // Version 1: no count, no ids — entries one after the other, the first is 0, a "Terminus" ends the list.
+            var ms1 = new MemoryStream();
+            var w1 = new BinaryWriter(ms1);
+            w1.Write(9);
+            w1.Write(1);
+            Text(w1, "Foo"); Text(w1, "Game.Ns"); Text(w1, "Assembly-CSharp"); Text(w1, "first");
+            Text(w1, "Foo"); Text(w1, "Game.Ns"); Text(w1, "Assembly-CSharp"); Text(w1, "second");
+            Text(w1, "Terminus"); Text(w1, "UnityEngine.DMAT"); Text(w1, "FAKE_ASM");
+            var v1 = new Seen();
+            var read1 = Walk(tree, ms1.ToArray(), v1, (cls, ns, asm) => cls == "Foo" ? foo : null);
+            check(read1.RegistryNotRead == null && v1.Lines.SequenceEqual(new[]
+                {
+                    "m_Id [Probe.m_Id] = 9",
+                    "references[0]<Foo>.label [Foo.label] = first",
+                    "references[1]<Foo>.label [Foo.label] = second",
+                }),
+                "a registry in version 1 is read: ids are positions from 0, the Terminus entry ends it", string.Join(" | ", v1.Lines));
+
+            var unterminated = ms1.ToArray();
+            Array.Resize(ref unterminated, unterminated.Length - 40);
+            bool refused = false;
+            try { Walk(tree, unterminated, new Seen(), (cls, ns, asm) => cls == "Foo" ? foo : null); }
+            catch (UnityFileFormatException) { refused = true; }
+            check(refused, "a version 1 registry that does not end is refused, not read past the object", refused ? "refused" : "read on");
         }
     }
 }
