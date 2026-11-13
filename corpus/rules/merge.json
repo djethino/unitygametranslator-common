@@ -9,6 +9,9 @@
     "can_replace": { "in": { "candidate": "line", "existing": "line | null" }, "out": "bool" },
     "contribution_wins": { "in": { "main": "line | null", "contribution": "line" }, "out": "bool" },
     "decide": { "in": { "local": "line | null", "remote": "line | null", "ancestor": "line | null" }, "out": "{verdict: TakeLocal|TakeRemote|Drop, conflict: bool, kind: BothModified|NoAncestor|LocalModifiedRemoteDeleted|RemoteModifiedLocalDeleted|null, reason: Unchanged|LocalOnly|LocalModified|RemoteAdded|RemoteUpdated|Deleted|Conflict}" },
+    "same_formats": { "in": { "a": "line", "a_format": "int", "b": "line", "b_format": "int" }, "out": "bool: the text and the tag always; the fields of the format 2 only when BOTH files are of the format 2" },
+    "same_as_ancestor": { "in": { "line": "line", "line_format": "int", "ancestor": "line", "ancestor_format": "int" }, "out": "bool: a format 1 line cannot have removed a field; a format 1 ancestor held none" },
+    "decide_formats": { "in": { "local": "line | null", "remote": "line | null", "ancestor": "line | null", "local_format": "int", "remote_format": "int", "ancestor_format": "int" }, "out": "as decide, plus {fields_from, links_dropped, merged_unlinked, merged_links}" },
     "same": { "in": { "a": "line", "b": "line" }, "out": "bool: same value and same tag, a missing tag reading as A" }
   },
   "cases": [

@@ -11,11 +11,12 @@
       "translation_file_keys": ["is_metadata_key", "is_line"],
       "translation_format": ["announced", "of_file", "reads", "of_content"],
       "settings": ["all", "json_key", "section_of"],
-      "merge": ["priority_of"],
+      "merge": ["priority_of", "contribution_wins", "same", "same_formats"],
       "placeholders": ["frozen_sequences", "accepts_edit", "tokens", "invented", "tally"]
     },
     "editor": {
       "link_reading": ["read", "needs_review"],
+      "merge": ["same", "same_formats"],
       "line_markers": ["link_numbers", "closed_slots", "open_slots", "open_slot_ref"],
       "line_writes": ["refusal"],
       "template_ids": ["of"],
