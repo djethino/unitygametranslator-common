@@ -46,6 +46,7 @@ A rule file:
 - `out` — the exact answer, or a relation (below).
 - `symmetric` — for a signed comparison: the first two inputs swapped must give `-out`.
 - `why` — the rule in one sentence.
+- `reachable` — `false` when the input cannot come from a file (callers normalise it first, e.g. a carriage return in a hashed text): the case tests the rule on its own, and a port replays it on the rule, not through its file reader. Absent = reachable.
 
 ## Answers
 
