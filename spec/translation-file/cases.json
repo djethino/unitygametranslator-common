@@ -814,8 +814,8 @@
           "t": "V",
           "term": true,
           "forms": {
-            "1": "pièces d'étoile",
-            "2": "de la pièce d'étoile"
+            "f1": "pièces d'étoile",
+            "f2": "de la pièce d'étoile"
           }
         },
         "Key": {
@@ -829,7 +829,7 @@
           "links": [
             {
               "to": "Star Coin",
-              "form": "1",
+              "form": "f1",
               "by": "A",
               "was": "pièces d'étoile"
             }
@@ -866,8 +866,8 @@
             "t": "V",
             "term": true,
             "forms": {
-              "1": "pièces d'étoile",
-              "2": "de la pièce d'étoile"
+              "f1": "pièces d'étoile",
+              "f2": "de la pièce d'étoile"
             }
           },
           "Key": {
@@ -881,7 +881,7 @@
             "links": [
               {
                 "to": "Star Coin",
-                "form": "1",
+                "form": "f1",
                 "by": "A",
                 "was": "pièces d'étoile"
               }
@@ -924,7 +924,7 @@
           "t": "A",
           "term": true,
           "class": {
-            "k1": "c0"
+            "t66f147acff9f": "c0"
           }
         },
         "Rusty": {
@@ -932,12 +932,12 @@
           "t": "A",
           "term": true,
           "forms": {
-            "1": "rouillée"
+            "f1": "rouillée"
           },
           "use": {
-            "k1": {
+            "t66f147acff9f": {
               "c0": "0",
-              "c1": "1"
+              "c1": "f1"
             }
           }
         },
@@ -968,7 +968,7 @@
             "t": "A",
             "term": true,
             "class": {
-              "k1": "c0"
+              "t66f147acff9f": "c0"
             }
           },
           "Rusty": {
@@ -976,12 +976,12 @@
             "t": "A",
             "term": true,
             "forms": {
-              "1": "rouillée"
+              "f1": "rouillée"
             },
             "use": {
-              "k1": {
+              "t66f147acff9f": {
                 "c0": "0",
-                "c1": "1"
+                "c1": "f1"
               }
             }
           },
@@ -1030,7 +1030,7 @@
           "links": [
             {
               "to": "Star Coin",
-              "form": "1",
+              "form": "f1",
               "by": "A",
               "was": "pièces d'étoile"
             }
@@ -1041,8 +1041,8 @@
           "t": "V",
           "term": true,
           "forms": {
-            "1": "pièces d'étoile",
-            "2": "de la pièce d'étoile"
+            "f1": "pièces d'étoile",
+            "f2": "de la pièce d'étoile"
           }
         }
       },
@@ -1109,8 +1109,8 @@
           "t": "V",
           "term": true,
           "forms": {
-            "1": "pièces d'étoile",
-            "2": "de la pièce d'étoile"
+            "f1": "pièces d'étoile",
+            "f2": "de la pièce d'étoile"
           }
         },
         "Not enough Star Coins!": {
@@ -1133,8 +1133,8 @@
           "t": "V",
           "term": true,
           "forms": {
-            "1": "pièces d'étoile",
-            "2": "de la pièce d'étoile"
+            "f1": "pièces d'étoile",
+            "f2": "de la pièce d'étoile"
           }
         },
         "Not enough Star Coins!": {
@@ -1143,7 +1143,7 @@
           "links": [
             {
               "to": "Star Coin",
-              "form": "1",
+              "form": "f1",
               "by": "A",
               "was": "pièces d'étoile"
             }
@@ -1166,7 +1166,7 @@
           "links": [
             {
               "to": "Star Coin",
-              "form": "1",
+              "form": "f1",
               "by": "A",
               "was": "pièces d'étoile"
             }
@@ -1194,7 +1194,7 @@
           "links": [
             {
               "to": "Star Coin",
-              "form": "1",
+              "form": "f1",
               "by": "A",
               "was": "pièces d'étoile"
             }
@@ -1265,7 +1265,7 @@
           "t": "A",
           "term": true,
           "use": {
-            "k1": "3"
+            "t66f147acff9f": "f3"
           }
         }
       },
@@ -1273,6 +1273,80 @@
       "upload": "refused",
       "guarantee": "use-form-missing",
       "why": "what a template takes from an entry must be a form the entry holds"
+    },
+    {
+      "id": "translation-file/format2/term-that-cites-a-term",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Star Coin": {
+          "v": "Pièce d'étoile",
+          "t": "V",
+          "term": true,
+          "forms": {
+            "f1": "pièces"
+          }
+        },
+        "Coin pile": {
+          "v": "Tas de [!g*0]",
+          "t": "V",
+          "term": true,
+          "links": [
+            {
+              "to": "Star Coin",
+              "form": "f1",
+              "by": "A",
+              "was": "pièces"
+            }
+          ]
+        }
+      },
+      "written": true,
+      "upload": "refused",
+      "guarantee": "entry-has-link-marker",
+      "why": "a term whose own text shows a link marker would put the marker on the screen: it is refused, so no reader recurses"
+    },
+    {
+      "id": "translation-file/format2/link-to-an-entry-that-cites-a-term",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Gem": {
+          "v": "Gemme",
+          "t": "V",
+          "term": true
+        },
+        "Star Coin": {
+          "v": "Pièce d'étoile [!g*0]",
+          "t": "V",
+          "forms": {
+            "f1": "pièces"
+          },
+          "links": [
+            {
+              "to": "Gem",
+              "by": "A",
+              "was": "Gemme"
+            }
+          ]
+        },
+        "Not enough Star Coins!": {
+          "v": "Pas assez de [!g*0] !",
+          "t": "A",
+          "links": [
+            {
+              "to": "Star Coin",
+              "form": "f1",
+              "by": "A",
+              "was": "pièces d'étoile"
+            }
+          ]
+        }
+      },
+      "written": true,
+      "upload": "refused",
+      "guarantee": "entry-has-link-marker",
+      "why": "the entry a link points at must not show a marker either, whether or not it carries the term mark"
     },
     {
       "id": "translation-file/format2/link-by-an-unknown-writer",
@@ -1400,13 +1474,30 @@
           "v": "Bonjour",
           "t": "A",
           "forms": {
-            "01": "a"
+            "f01": "a"
           }
         }
       },
       "written": false,
       "upload": "refused",
-      "why": "a form id is a canonical positive number: `01` and `1` would be one key twice"
+      "why": "a form id is `f` and a canonical positive number: `f01` and `f1` would be one key twice"
+    },
+    {
+      "id": "translation-file/format2/form-id-without-the-letter",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Hello": {
+          "v": "Bonjour",
+          "t": "A",
+          "forms": {
+            "1": "a"
+          }
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "a form id starts with `f`: a key that looks like a number is turned into one by PHP arrays, sorted as one and re-encoded as a list"
     },
     {
       "id": "translation-file/format2/template-id-that-looks-like-a-number",
@@ -1423,7 +1514,24 @@
       },
       "written": false,
       "upload": "refused",
-      "why": "a template id starts with a letter: an integer-looking key is turned into a number by PHP arrays and sorted as one"
+      "why": "a template id is `t` and twelve hex digits (common TemplateIds): never a bare number, for the same reason"
+    },
+    {
+      "id": "translation-file/format2/template-id-not-derived-from-a-key",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "Hello": {
+          "v": "Bonjour",
+          "t": "A",
+          "class": {
+            "k1": "c0"
+          }
+        }
+      },
+      "written": false,
+      "upload": "refused",
+      "why": "an id that is not of the derived shape cannot be one"
     },
     {
       "id": "translation-file/format2/oracle-unknown",

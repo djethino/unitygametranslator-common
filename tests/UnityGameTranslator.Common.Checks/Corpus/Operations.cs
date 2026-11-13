@@ -242,7 +242,17 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         casing ? FirstLower : (Func<string, string>?)null);
                 }),
             new Operation("link_reading", "needs_review", typeof(LinkReading), nameof(LinkReading.NeedsReview),
-                e => LinkReading.NeedsReview(LinkRequired(e, "link"), Str(e, "read_text") ?? "")),
+                e => LinkReading.NeedsReview(LinkRequired(e, "link"), new LinkRead
+                {
+                    Text = Str(e, "read_text") ?? "",
+                    Source = EnumRequired<LinkSource>(e, "source"),
+                })),
+
+            // ── template_ids ──────────────────────────────────────────────────
+            new Operation("template_ids", "of", typeof(TemplateIds), nameof(TemplateIds.Of),
+                e => TemplateIds.Of(Str(e, "key")!)),
+            new Operation("template_ids", "collision", typeof(TemplateIds), nameof(TemplateIds.Collision),
+                e => TemplateIds.Collision(Strings(e, "keys"))?.Code),
 
             // ── line_writes ───────────────────────────────────────────────────
             new Operation("line_writes", "refusal", typeof(LineWrites), nameof(LineWrites.Refusal),

@@ -105,6 +105,8 @@
       "slot-list-missing": "a slot of the key or of `v` names a list `_lists` does not hold, or agrees with something that is neither such a list nor an open slot of the key",
       "slot-open-missing": "`v` shows `[!T*N]` and the key has no `[!T*N]`",
       "use-form-missing": "a `use` of the line names a form the line does not hold",
+      "entry-has-link-marker": "a term, or the entry a link points at, shows a `[!g*N]` in its own text or in one of its forms: a term does not cite another term",
+      "template-id-collision": "two different templates of the file have the same derived id (file-level: TemplateIds.Collision)",
       "machine-changed-person-line": "the machine writes: it changed the `v`, `forms` or `class` of a line a person wrote or validated (tag H or V)",
       "machine-wrote-person-link": "the machine writes: a link with `by: \"H\"` the line did not already hold",
       "machine-wrote-unlinked": "the machine writes: `unlinked` the line did not already hold"
@@ -197,7 +199,7 @@
         "use": {
           "type": "object",
           "description": "What each template takes from this entry, by template id: one form id, or one per agreement class (`[!L*a=b]`). An entry with no `use` for a template gives its own `v`.",
-          "propertyNames": { "$ref": "#/$defs/name" },
+          "propertyNames": { "$ref": "#/$defs/templateId" },
           "additionalProperties": {
             "oneOf": [
               { "$ref": "#/$defs/formRef" },
@@ -209,7 +211,7 @@
         "class": {
           "type": "object",
           "description": "The agreement class this entry gives in each template it governs, by template id.",
-          "propertyNames": { "$ref": "#/$defs/name" },
+          "propertyNames": { "$ref": "#/$defs/templateId" },
           "additionalProperties": { "$ref": "#/$defs/name" },
           "minProperties": 1
         },
@@ -253,18 +255,23 @@
     },
     "formId": {
       "type": "string",
-      "pattern": "^[1-9][0-9]{0,8}$",
-      "description": "A form id of an entry: a positive decimal, given once and never reused. Sorted as TEXT by the hash (1, 10, 2)."
+      "pattern": "^f[1-9][0-9]{0,8}$",
+      "description": "A form id of an entry: `f` and a positive decimal, given once and never reused. It starts with a letter on purpose: an integer-looking key is turned into a number by PHP arrays (numeric sort, re-encoded as a list). Sorted as TEXT by the hash (f1, f10, f2)."
     },
     "formRef": {
       "type": "string",
-      "pattern": "^(0|[1-9][0-9]{0,8})$",
-      "description": "A form id, or `0` for the entry's own `v`."
+      "pattern": "^(0|f[1-9][0-9]{0,8})$",
+      "description": "A form id, or `0` for the entry's own `v` (a value, never a key)."
     },
     "name": {
       "type": "string",
       "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,31}$",
-      "description": "A template id or a class name: starts with a letter on purpose — an integer-looking key is turned into a number by PHP's arrays, and the hash would sort it as one."
+      "description": "An agreement class name: starts with a letter on purpose (see formId)."
+    },
+    "templateId": {
+      "type": "string",
+      "pattern": "^t[0-9a-f]{12}$",
+      "description": "The id of a template, DERIVED from its key: `t` and the first 12 hexadecimal digits of the SHA-256 of the key in UTF-8, line breaks LF (common TemplateIds.Of, corpus rules/template_ids.json). Never stored on the template, so two writers cannot disagree; two templates of one file with the same id are refused."
     }
   }
 }

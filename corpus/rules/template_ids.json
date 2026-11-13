@@ -1,0 +1,43 @@
+{
+  "rule": "template_ids",
+  "classes": ["TemplateIds"],
+  "note": "The identifier of a template, derived from its key (nothing stored): `t` and the first 12 hexadecimal digits (lower case) of the SHA-256 of the key in UTF-8, line breaks LF. The ids below were computed with Python's hashlib, not with the C#. A real collision cannot be written as a case (it needs two keys with the same 48 bits): the checks force one with a small id function (TemplateIdsChecks).",
+  "operations": {
+    "of": {"in": {"key": "string"}, "out": "the id"},
+    "collision": {"in": {"keys": "[the keys of the file's lines]"}, "out": "the refusal code `template-id-collision` or null"}
+  },
+  "cases": [
+    { "id": "template_ids/of/two-slots", "op": "of",
+      "in": {"key": "[!L*quality][!L*weapon]"},
+      "out": "t66f147acff9f",
+      "why": "the id is `t` and the first 12 hex digits of the SHA-256 of the key" },
+    { "id": "template_ids/of/one-slot", "op": "of",
+      "in": {"key": "[!L*weapon]"},
+      "out": "tb84b4628a065",
+      "why": "another key, another id" },
+    { "id": "template_ids/of/accents-and-open-slot", "op": "of",
+      "in": {"key": "[!T*0] épée [!L*arme]"},
+      "out": "t9c7edce2e112",
+      "why": "UTF-8, not a code page: accents are bytes of the key" },
+    { "id": "template_ids/of/line-break", "op": "of",
+      "in": {"key": "[!L*a]\n[!L*b]"},
+      "out": "td2d6c756b822",
+      "why": "a key holding a line break is hashed with an LF" },
+    { "id": "template_ids/of/empty", "op": "of",
+      "in": {"key": ""},
+      "out": "te3b0c44298fc",
+      "why": "even the empty key has an id: nothing is special-cased" },
+    { "id": "template_ids/collision/no-templates", "op": "collision",
+      "in": {"keys": ["Play", "Hello [!v*0]"]},
+      "out": null,
+      "why": "a key with no closed slot is no template: nothing to collide" },
+    { "id": "template_ids/collision/distinct-templates", "op": "collision",
+      "in": {"keys": ["[!L*quality][!L*weapon]", "[!L*weapon]", "Play"]},
+      "out": null,
+      "why": "two different templates have two ids" },
+    { "id": "template_ids/collision/same-key-twice-is-one-template", "op": "collision",
+      "in": {"keys": ["[!L*weapon]", "[!L*weapon]"]},
+      "out": null,
+      "why": "the same template listed twice is not a collision" }
+  ]
+}

@@ -142,20 +142,23 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
-        /// Must the person read this sentence again? True when the text the link reads today is no
-        /// longer the text it read when it was set or confirmed (<c>was</c>).
+        /// Must the person read this sentence again? Yes when the text the link reads today is no
+        /// longer the text it read when it was set or confirmed (<c>was</c>), OR when the entry is
+        /// gone (or has nothing to give) and the sentence only shows <c>was</c> — the person must
+        /// know the term no longer follows. <see cref="LinkRead.Source"/> says which of the two.
         ///
         /// Saving or validating the sentence puts <c>was</c> back to the text read at that moment,
-        /// which is what makes this false again — nothing else stores the state.
+        /// which is what makes this false again for the first reason — nothing else stores the state.
+        /// (For the second, the sentence stays « to read » until its link is replaced or removed.)
         ///
-        /// ⚠ A link with no <c>was</c> was never confirmed: the answer is yes. And a link whose
-        /// entry is gone reads <c>was</c> itself, so it is NOT « à relire » by this rule — the
-        /// caller that wants to say the term is gone asks <see cref="LinkRead.Source"/>.
+        /// ⚠ A link with no <c>was</c> was never confirmed: the answer is yes.
         /// </summary>
         /// <param name="link">The link.</param>
-        /// <param name="readText">What <see cref="Read"/> answered for it.</param>
-        public static bool NeedsReview(LineLink link, string readText) =>
-            link.Was == null || !string.Equals(link.Was, readText, StringComparison.Ordinal);
+        /// <param name="read">What <see cref="Read"/> answered for it.</param>
+        public static bool NeedsReview(LineLink link, LinkRead read) =>
+            link.Was == null
+            || read.Source == LinkSource.Was || read.Source == LinkSource.Key
+            || !string.Equals(link.Was, read.Text, StringComparison.Ordinal);
 
         private static string? FormOf(TranslationLine entry, string formId)
         {

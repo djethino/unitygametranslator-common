@@ -30,6 +30,8 @@ namespace UnityGameTranslator.Common
     ///     (a format 1 file is asked nothing else: its text is the game's);
     ///  2. <see cref="MarkerWithoutLink"/> / <see cref="LinkWithoutMarker"/> — <c>[!g*N]</c> and <c>links[N]</c> must pair;
     ///  3. <see cref="LinkEntryMissing"/> / <see cref="LinkFormMissing"/> — the entry exists, and so does the form it names;
+    ///     <see cref="EntryHasLinkMarker"/> — a term, or the entry a link points at, shows no <c>[!g*N]</c> itself
+    ///     (a term citing a term would put a marker on the screen: no recursion is read, none is allowed);
     ///  4. <see cref="SlotListMissing"/> / <see cref="SlotOpenMissing"/> — every slot names a list the file holds or an open slot the key holds;
     ///  5. <see cref="UseFormMissing"/> — what a term says a template takes names a form of its own;
     ///  6. <see cref="MachineChangedPersonLine"/> / <see cref="MachineWrotePersonLink"/> / <see cref="MachineWroteUnlinked"/> — a machine writing (the person's decisions are theirs).
@@ -44,6 +46,8 @@ namespace UnityGameTranslator.Common
         public const string LinkWithoutMarker = "link-without-marker";
         public const string LinkEntryMissing = "link-entry-missing";
         public const string LinkFormMissing = "link-form-missing";
+        public const string EntryHasLinkMarker = "entry-has-link-marker";
+        public const string TemplateIdCollision = "template-id-collision";
         public const string SlotListMissing = "slot-list-missing";
         public const string SlotOpenMissing = "slot-open-missing";
         public const string UseFormMissing = "use-form-missing";
@@ -99,11 +103,19 @@ namespace UnityGameTranslator.Common
                     return Say(LinkEntryMissing,
                         $"Link number {i} of the line \"{key}\" points at \"{link.To}\", which is not a line of this file.");
 
+                if (HasLinkMarker(entry.GetValueOrDefault()))
+                    return Say(EntryHasLinkMarker,
+                        $"Link number {i} of the line \"{key}\" points at \"{link.To}\", whose own text shows a link marker: a term does not cite another term.");
+
                 if (!string.IsNullOrEmpty(link.Form) && link.Form != LinkReading.OwnForm
                     && !HasForm(entry.GetValueOrDefault(), link.Form!))
                     return Say(LinkFormMissing,
                         $"Link number {i} of the line \"{key}\" asks for form {link.Form} of \"{link.To}\", which has no such form.");
             }
+
+            if (line.Term && HasLinkMarker(line))
+                return Say(EntryHasLinkMarker,
+                    $"The line \"{key}\" is a term and its own text shows a link marker: a term does not cite another term.");
 
             // The key holds the slots of a template; its translation repeats them. Both are checked.
             var openInKey = LineMarkers.OpenSlots(key);
@@ -173,6 +185,16 @@ namespace UnityGameTranslator.Common
         }
 
         private static LineRefusal Say(string code, string words) => new LineRefusal { Code = code, Words = words };
+
+        /// <summary>The line's own text, or one of its written forms, shows a <c>[!g*N]</c>.</summary>
+        private static bool HasLinkMarker(TranslationLine line)
+        {
+            if (LineMarkers.LinkNumbers(line.Value).Count > 0) return true;
+            if (line.Forms != null)
+                foreach (var form in line.Forms)
+                    if (LineMarkers.LinkNumbers(form.Value).Count > 0) return true;
+            return false;
+        }
 
         private static bool HasForm(TranslationLine entry, string form)
         {
