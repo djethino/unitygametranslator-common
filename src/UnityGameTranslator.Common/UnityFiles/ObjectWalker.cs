@@ -136,7 +136,13 @@ namespace UnityGameTranslator.Common.UnityFiles
         /// in the reader's stream, handing over every value.
         /// </summary>
         /// <param name="rootOwner">The name of the object's own class, the owner of its first-level fields.</param>
-        public ObjectWalk Walk(UnityFileReader reader, long start, long end, IObjectVisitor visitor, string rootOwner)
+        /// <param name="wholeObject">
+        /// True (the rule): the tree is the object's whole layout and the object must end where it ends.
+        /// False: the tree is only the START of the layout (a MonoBehaviour's header, before the
+        /// fields the game's code declares) — the reading stops after it and what follows is not asked
+        /// about. Still refused when the header itself does not fit the object.
+        /// </param>
+        public ObjectWalk Walk(UnityFileReader reader, long start, long end, IObjectVisitor visitor, string rootOwner, bool wholeObject = true)
         {
             var run = new Run { R = reader, V = visitor };
             reader.Position = start;
@@ -153,7 +159,7 @@ namespace UnityGameTranslator.Common.UnityFiles
             {
                 if (reader.Position > end)
                     throw new UnityFileFormatException($"the object reads past its end by {reader.Position - end} byte(s): not the layout it was written with");
-                if (reader.Position != end)
+                if (wholeObject && reader.Position != end)
                     throw new UnityFileFormatException($"the object has {end - reader.Position} byte(s) the layout does not account for");
             }
             return new ObjectWalk(run.RegistryNotRead);
