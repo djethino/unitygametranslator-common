@@ -50,6 +50,9 @@ namespace UnityGameTranslator.Common.UnityFiles
         }
 
         public int Format { get; private set; }
+
+        /// <summary>The byte order of the file's values — its objects' too (the header says it once).</summary>
+        public bool BigEndian { get; private set; }
         /// <summary>The engine version the file says ("2021.3.27f1"); empty or "0.0.0" when it says none.</summary>
         public string EngineVersion { get; private set; } = "";
         public bool TypeTreesKept { get; private set; }
@@ -171,6 +174,7 @@ namespace UnityGameTranslator.Common.UnityFiles
                 r.I64();
             }
             r.BigEndian = bigEndian;
+            BigEndian = bigEndian;
 
             EngineVersion = Format >= 7 ? r.Zstring(64) : "";
             if (Format >= 8) r.I32();   // target platform
@@ -331,11 +335,23 @@ namespace UnityGameTranslator.Common.UnityFiles
         /// <see cref="TypeTreeWalker.Fields"/>.
         /// </summary>
         public Dictionary<string, object?> Fields(ObjectInfo info, IReadOnlyList<TypeNode> tree, ICollection<string> wanted,
-                                                  ICollection<string>? measured = null)
+                                                  ICollection<string>? measured = null) =>
+            Fields(info, tree, wanted, measured, null, out _);
+
+        /// <summary>
+        /// As above, with the string fields named in <paramref name="raw"/> given as bytes (see
+        /// <see cref="TypeTreeWalker.Fields(ICollection{string}, ICollection{string}, ICollection{string})"/>)
+        /// and <paramref name="end"/>, where the last field read ended: a caller whose tree is the
+        /// whole of the layout can check the object ends there.
+        /// </summary>
+        public Dictionary<string, object?> Fields(ObjectInfo info, IReadOnlyList<TypeNode> tree, ICollection<string> wanted,
+                                                  ICollection<string>? measured, ICollection<string>? raw, out long end)
         {
             _reader.Position = info.Start;
-            var fields = new TypeTreeWalker(_reader, tree).Fields(wanted, measured ?? Array.Empty<string>());
-            if (_reader.Position > info.Start + info.Size)
+            var walker = new TypeTreeWalker(_reader, tree);
+            var fields = walker.Fields(wanted, measured ?? Array.Empty<string>(), raw ?? Array.Empty<string>());
+            end = walker.Position;
+            if (end > info.Start + info.Size)
                 throw new UnityFileFormatException($"object {info.PathId} read past its {info.Size} byte(s): not the layout it was written with");
             return fields;
         }

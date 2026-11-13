@@ -215,6 +215,28 @@ namespace UnityGameTranslator.Common.Checks
                   && fields["m_FontData"] is byte[] data && Sha(data) == Sha(fontFile)
                   && fields["m_FontNames"] is List<object?> names && names.Count == 1 && names[0] as string == "Bench Family",
                 "a Font without type tree gives back its name, its whole file and its family", "what the export writes and the UI.Text backup names");
+            check(!read.BigEndian, "the file's byte order is said", "a little-endian file: its objects are read so");
+            var rawName = read.Fields(read.Objects[0], tree, new[] { "m_Name" }, null, new[] { "m_Name" }, out long fieldEnd);
+            check(rawName["m_Name"] is byte[] nameBytes && Encoding.UTF8.GetString(nameBytes) == "Bench Font" && fieldEnd > read.Objects[0].Start && fieldEnd <= read.Objects[0].Start + read.Objects[0].Size,
+                "a string field can be asked as the bytes the file holds", "and where the reading ended is said");
+
+            // A string whose bytes are not UTF-8: as text it loses them, as bytes it keeps them.
+            var oddTree = new[]
+            {
+                new TypeNode(0, "TextAsset", "Base", -1, 0, 0),
+                new TypeNode(1, "string", "m_Script", -1, 0, 0x8001),
+                new TypeNode(2, "Array", "Array", -1, 1, 0x4001),
+                new TypeNode(3, "int", "size", 4, 0, 0x1),
+                new TypeNode(3, "char", "data", 1, 0, 0x1),
+            };
+            var oddBytes = new byte[] { 3, 0, 0, 0, 0xFF, 0xFE, 0x41, 0 };
+            var odd = new TypeTreeWalker(new UnityFileReader(new MemoryStream(oddBytes), bigEndian: false), oddTree);
+            var asText = odd.Fields(new[] { "m_Script" });
+            var asBytes = new TypeTreeWalker(new UnityFileReader(new MemoryStream(oddBytes), bigEndian: false), oddTree)
+                .Fields(new[] { "m_Script" }, new string[0], new[] { "m_Script" });
+            check(asBytes["m_Script"] is byte[] kept && kept.SequenceEqual(new byte[] { 0xFF, 0xFE, 0x41 }) && asText["m_Script"] is string text && text != "ÿþA",
+                "bytes that are not UTF-8 survive when asked as bytes", "a UTF-16 mark or a cipher must not become replacement characters");
+
             // The same file in a data folder: indexed without its bytes, the index written and read
             // back, then the one font read alone.
             string folder = Path.Combine(Path.GetTempPath(), "ugt-check-gamefonts-" + Guid.NewGuid().ToString("N"));
