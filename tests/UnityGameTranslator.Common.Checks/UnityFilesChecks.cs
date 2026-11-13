@@ -51,6 +51,7 @@ namespace UnityGameTranslator.Common.Checks
                     $"LZMA decodes a stream liblzma wrote ({v.name})", "a bundle compressed with LZMA gives back its files byte for byte");
             }
             ObjectLayoutChecks(check);
+            ObjectWalkerChecks.Run(check);
             var records = Records();
             foreach (var (name, stream) in new[] { ("lc3", UnityFilesVectors.RecordsLc3), ("lc0 lp2 pb0", UnityFilesVectors.RecordsLp2) })
             {
