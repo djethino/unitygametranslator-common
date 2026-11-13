@@ -49,7 +49,7 @@ For the hunk `[x, y)` of the passage `[a, b)`:
 
 *What a changed passage's words are*, in this order: equal to `Original` → its original link is put back (no question
 will ever be asked: typing then undoing leaves it as it was); a writing the term already has (exact, or with the
-first letter's case — the callers' own case functions) → the link points at that writing; **absorption**: a
+first letter's case — `Casing`, see `casing.md`) → the link points at that writing; **absorption**: a
 writing of the term, found in the text, that contains the new words (`PassageBorder.AbsorbedAt`) → the passage
 widens to it, if it overlaps no other passage; otherwise → `Pending`. The term no longer existing → lost,
 `EntryGone`, the words stay as ordinary text.

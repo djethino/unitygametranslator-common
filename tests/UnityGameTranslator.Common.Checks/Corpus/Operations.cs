@@ -240,15 +240,14 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => LineMarkers.OpenSlotRef(Str(e, "agrees"))),
 
             // ── link_reading ──────────────────────────────────────────────────
-            // ⚠ The socle owns no case mapping: `casing: first-letter` is the executor's stand-in
-            // (first UTF-16 character, invariant), enough for the Latin cases written here.
+            // `casing: first-letter` hands in the socle's own Casing (spec/translation-file/casing.md).
             new Operation("link_reading", "read", typeof(LinkReading), nameof(LinkReading.Read),
                 e =>
                 {
                     bool casing = Str(e, "casing") == "first-letter";
                     return LinkReading.Read(LinkRequired(e, "link"), LineLookup(e, "entries"),
-                        casing ? FirstUpper : (Func<string, string>?)null,
-                        casing ? FirstLower : (Func<string, string>?)null);
+                        casing ? Casing.UpperFirst! : (Func<string, string>?)null,
+                        casing ? Casing.LowerFirst! : (Func<string, string>?)null);
                 }),
             new Operation("link_reading", "needs_review", typeof(LinkReading), nameof(LinkReading.NeedsReview),
                 e => LinkReading.NeedsReview(LinkRequired(e, "link"), new LinkRead
@@ -256,6 +255,12 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     Text = Str(e, "read_text") ?? "",
                     Source = EnumRequired<LinkSource>(e, "source"),
                 })),
+
+            // ── casing ────────────────────────────────────────────────────────
+            new Operation("casing", "upper_first", typeof(Casing), nameof(Casing.UpperFirst),
+                e => Casing.UpperFirst(Str(e, "text"))),
+            new Operation("casing", "lower_first", typeof(Casing), nameof(Casing.LowerFirst),
+                e => Casing.LowerFirst(Str(e, "text"))),
 
             // ── line_endings ──────────────────────────────────────────────────
             new Operation("line_endings", "to_lf", typeof(LineEndings), nameof(LineEndings.ToLf),
@@ -612,20 +617,14 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             };
         }
 
-        private static Func<string, string>? Up(JsonElement e) => Str(e, "casing") == "first-letter" ? FirstUpper : (Func<string, string>?)null;
+        private static Func<string, string>? Up(JsonElement e) => Str(e, "casing") == "first-letter" ? Casing.UpperFirst! : (Func<string, string>?)null;
 
-        private static Func<string, string>? Low(JsonElement e) => Str(e, "casing") == "first-letter" ? FirstLower : (Func<string, string>?)null;
+        private static Func<string, string>? Low(JsonElement e) => Str(e, "casing") == "first-letter" ? Casing.LowerFirst! : (Func<string, string>?)null;
 
         private static System.Collections.Generic.IEnumerable<TranslationLine> ValuesOf(System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, TranslationLine>> lines)
         {
             foreach (var l in lines) yield return l.Value;
         }
-
-        private static string FirstUpper(string text) =>
-            text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text.Substring(1);
-
-        private static string FirstLower(string text) =>
-            text.Length == 0 ? text : char.ToLowerInvariant(text[0]) + text.Substring(1);
 
         public static Operation? Find(string rule, string op) =>
             ById.TryGetValue(rule + "/" + op, out var found) ? found : null;

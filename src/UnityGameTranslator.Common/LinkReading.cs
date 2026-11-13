@@ -52,12 +52,11 @@ namespace UnityGameTranslator.Common
     /// The case (<c>case</c>) is applied to 1 and 2 only: <c>was</c> is already the text as the
     /// sentence wrote it.
     ///
-    /// ⚠ **The case of a letter is not this library's to decide.** The socle holds no case mapping
-    /// — and Unicode's own (a titlecase digraph, a dotted capital, a script with no case at all)
-    /// is not the machine's culture, nor <c>char.ToUpper</c>. The caller hands in the two
-    /// functions it trusts (the mod: its Unicode data; the Manager: its own), and a text they
-    /// leave alone is simply shown. A script without capitals needs no special case: the
-    /// functions answer the text itself.
+    /// ⚠ **The case of a letter is Unicode's, never the machine's.** The caller hands in the two functions —
+    /// and they are <see cref="Casing.UpperFirst"/> and <see cref="Casing.LowerFirst"/>, the same in every product
+    /// (spec/translation-file/casing.md: the first code point only, the language-independent mapping, a titlecase
+    /// digraph, a script with no case left alone). They stay parameters so a caller with no case (a screen that
+    /// only measures) can pass none: the text is then shown as the form is written, and the read says so.
     ///
     /// « À relire » is computed, never stored (<see cref="NeedsReview"/>).
     /// </summary>

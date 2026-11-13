@@ -1,7 +1,7 @@
 {
   "rule": "link_reading",
   "classes": ["LinkReading"],
-  "note": "Reading a link (draft §3, §9): never a hole, never the marker. The CASE is the caller's: the socle holds no case mapping, so the executor's `casing: first-letter` is a stand-in (first UTF-16 character, invariant) that the cases below are written for — a port gives its own and the cases stay ASCII or Latin-1 on purpose.",
+  "note": "Reading a link (draft §3, §9): never a hole, never the marker. The CASE is Unicode's, through the socle's own `Casing` (spec/translation-file/casing.md): `casing: first-letter` hands it in. A caller with no case function passes none.",
   "operations": {
     "read": {"in": {"link": "{to, form?, case?, by, was?}", "entries": "{key: line} — the lines of the file, in the file's form", "casing": "first-letter | absent (no casing function given)"}, "out": "{text, source (Form|Entry|Was|Key), case_not_applied}"},
     "needs_review": {"in": {"link": "as above", "read_text": "what `read` answered"}, "out": "bool"}

@@ -82,6 +82,7 @@ namespace UnityGameTranslator.Common.Checks
             Section("Which keys of a translation file are metadata", check => TranslationFileKeysChecks.Run(check, CommonRoot()));
             Section("The format 2 of a translation file, against its spec", check => TranslationFileFormat2Checks.Run(check, CommonRoot()));
             Section("Template identifiers", TemplateIdsChecks.Run);
+            Section("First-letter case tables", check => CasingChecks.Run(check, CommonRoot()));
             Section("Editing a text with links", LinkEditingChecks.Run);
         }
 

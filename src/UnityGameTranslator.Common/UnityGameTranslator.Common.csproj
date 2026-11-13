@@ -11,4 +11,9 @@
     both. See THIRD_PARTY_LICENSES.md, which says "none" on purpose.
   -->
 
+  <!-- The checks read the case tables to hold them equal to the JSON a port reads (CasingChecks). -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="UnityGameTranslator.Common.Checks" />
+  </ItemGroup>
+
 </Project>

@@ -812,8 +812,8 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
-        /// Are these words a writing the term already has? Exactly, or with the first letter's case the caller's own
-        /// functions give. A known writing needs no question.
+        /// Are these words a writing the term already has? Exactly, or with the first letter's case as <see cref="Casing"/>
+        /// gives it (the functions the caller hands in). A known writing needs no question.
         /// </summary>
         private static bool Known(TranslationLine entry, string words, Func<string, string>? upperFirst, Func<string, string>? lowerFirst,
                                   out string? form, out string? casing)
