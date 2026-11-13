@@ -1363,9 +1363,23 @@
         }
       },
       "written": false,
-      "upload": "refused",
+      "upload": "accepted",
+      "read2": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 2,
+        "lines": {
+          "Star Coin": {
+            "v": "Pièce",
+            "t": "V",
+            "term": true,
+            "forms": {
+              "f1": "pièces\nd'étoile"
+            }
+          }
+        }
+      },
       "guarantee": "carriage-return-in-text",
-      "why": "a written form is LF only, like `v` and the keys: nobody normalises it before hashing, so a CR would make two hashes for one text"
+      "why": "a written form is LF only, like `v` and the keys: a file from elsewhere that holds a CR in one is NORMALISED on read (the same rule as v, common LineEndings), never refused — and what a WRITER of this library produces is refused (`guarantee`: the writer rule, asked of the raw text)"
     },
     {
       "id": "translation-file/format2/was-with-a-carriage-return",
@@ -1395,9 +1409,36 @@
         }
       },
       "written": false,
-      "upload": "refused",
+      "upload": "accepted",
+      "read2": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 2,
+        "lines": {
+          "Star Coin": {
+            "v": "Pièce d'étoile",
+            "t": "V",
+            "term": true,
+            "forms": {
+              "f1": "pièces d'étoile",
+              "f2": "de la pièce d'étoile"
+            }
+          },
+          "Not enough Star Coins!": {
+            "v": "Pas assez de [!g*0] !",
+            "t": "A",
+            "links": [
+              {
+                "to": "Star Coin",
+                "form": "f1",
+                "by": "A",
+                "was": "pièces\n d'étoile"
+              }
+            ]
+          }
+        }
+      },
       "guarantee": "carriage-return-in-text",
-      "why": "the `was` of a link is compared with what the link reads, and hashed as it is: LF only"
+      "why": "the `was` of a link is compared with what the link reads, and hashed as it is: LF only — read from elsewhere it is normalised first, a writer of this library never produces one"
     },
     {
       "id": "translation-file/format2/form-with-a-line-feed-is-fine",

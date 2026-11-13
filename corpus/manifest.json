@@ -1,14 +1,15 @@
 {
   "schema_version": 1,
-  "rules": ["versions", "sync", "merge", "badges", "mod_ui_migration", "settings", "answers", "placeholders", "dropdown_fit", "edge_give", "list_room", "standing", "uploads", "notices", "status_card", "translation_file_keys", "translation_format", "line_markers", "link_reading", "line_writes", "template_ids", "term_changes", "text_diff", "passage_border", "link_editing"],
+  "rules": ["versions", "sync", "merge", "badges", "mod_ui_migration", "settings", "answers", "placeholders", "dropdown_fit", "edge_give", "list_room", "standing", "uploads", "notices", "status_card", "translation_file_keys", "translation_format", "line_markers", "link_reading", "line_writes", "template_ids", "term_changes", "line_endings", "text_diff", "passage_border", "link_editing"],
   "sides": {
     "site": {
       "sync": ["content_hash"],
       "template_ids": ["of", "collision"],
+      "line_endings": ["to_lf", "of_line"],
       "line_markers": ["link_numbers", "closed_slots", "open_slots", "open_slot_ref"],
       "line_writes": ["refusal"],
       "translation_file_keys": ["is_metadata_key", "is_line"],
-      "translation_format": ["announced", "of_file", "reads"],
+      "translation_format": ["announced", "of_file", "reads", "of_content"],
       "settings": ["all", "json_key", "section_of"],
       "merge": ["priority_of"],
       "placeholders": ["frozen_sequences", "accepts_edit", "tokens", "invented", "tally"]
@@ -20,6 +21,7 @@
       "template_ids": ["of"],
       "term_changes": ["impact"],
       "text_diff": ["hunks"],
+      "line_endings": ["to_lf", "of_line"],
       "passage_border": ["touches", "straddles"],
       "link_editing": ["show", "view", "reconcile", "next_question", "answer", "unlink", "link_to", "mark_as_read", "resume"],
       "translation_file_keys": ["is_metadata_key", "is_line"],

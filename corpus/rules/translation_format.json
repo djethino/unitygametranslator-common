@@ -5,6 +5,10 @@
   ],
   "note": "Which format of translation file a client reads. No table of versions: every client released before this rule says nothing and reads the format 1; from it on, each client says what it reads (X-UGT-Format, or ?format= on a stream), and the site does not list, announce or serve a translation beyond it.",
   "operations": {
+    "of_content": {
+      "in": { "holds_game_lists": "bool: the file has a `_lists` section", "lines": "object keyed by the game's text, each a line in the file's form" },
+      "out": "int: the format to stamp — 2 only if the file holds something of the format 2"
+    },
     "announced": {
       "in": {
         "value": "string or null: the header's (or the parameter's) value"
@@ -145,6 +149,62 @@
       },
       "out": false,
       "why": "🔴 the case this rule exists for: loaded anyway, a format-1 client wrote the file back as format 1 and damaged it in silence"
+    },
+    {
+      "id": "translation_format/of_content/plain",
+      "op": "of_content",
+      "in": { "holds_game_lists": false, "lines": {"Play": {"v": "Jouer", "t": "A"}} },
+      "out": 1,
+      "why": "a file of the format 1 stays 1 whatever the writer speaks"
+    },
+    {
+      "id": "translation_format/of_content/empty",
+      "op": "of_content",
+      "in": { "holds_game_lists": false, "lines": {} },
+      "out": 1,
+      "why": "nothing in it"
+    },
+    {
+      "id": "translation_format/of_content/marker-text-is-not-evidence",
+      "op": "of_content",
+      "in": { "holds_game_lists": false, "lines": {"Hello [!g*0]": {"v": "Bonjour [!g*0]", "t": "H"}} },
+      "out": 1,
+      "why": "a marker-looking text with no link is the game's own text: it does not make a file the format 2"
+    },
+    {
+      "id": "translation_format/of_content/a-term-mark",
+      "op": "of_content",
+      "in": { "holds_game_lists": false, "lines": {"Star Coin": {"v": "Pièce", "t": "V", "term": true}} },
+      "out": 2,
+      "why": "a field of the format 2 on a line"
+    },
+    {
+      "id": "translation_format/of_content/a-link",
+      "op": "of_content",
+      "in": { "holds_game_lists": false, "lines": {"S": {"v": "[!g*0]", "t": "A", "links": [{"to": "Star Coin", "by": "A", "was": "x"}]}} },
+      "out": 2,
+      "why": "a link"
+    },
+    {
+      "id": "translation_format/of_content/a-refused-entry",
+      "op": "of_content",
+      "in": { "holds_game_lists": false, "lines": {"S": {"v": "x", "t": "H", "unlinked": [{"to": "Key"}]}} },
+      "out": 2,
+      "why": "a refusal a person made"
+    },
+    {
+      "id": "translation_format/of_content/game-lists",
+      "op": "of_content",
+      "in": { "holds_game_lists": true, "lines": {"Play": {"v": "Jouer", "t": "A"}} },
+      "out": 2,
+      "why": "the lists a template reads, even before any line uses them"
+    },
+    {
+      "id": "translation_format/of_content/empty-fields-are-nothing",
+      "op": "of_content",
+      "in": { "holds_game_lists": false, "lines": {"S": {"v": "x", "t": "A", "forms": {}, "links": [], "term": false}} },
+      "out": 1,
+      "why": "a field that is there and empty is not held (the hash does not write it either)"
     }
   ]
 }

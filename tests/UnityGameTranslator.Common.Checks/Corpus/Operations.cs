@@ -224,6 +224,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => TranslationFormat.Announced(Str(e, "value"))),
             new Operation("translation_format", "of_file", typeof(TranslationFormat), nameof(TranslationFormat.OfFile),
                 e => TranslationFormat.OfFile(NullableInt(e, "engine_version"))),
+            new Operation("translation_format", "of_content", typeof(TranslationFormat), nameof(TranslationFormat.OfContent),
+                e => TranslationFormat.OfContent(Bool(e, "holds_game_lists"), ValuesOf(Lines(e, "lines")))),
             new Operation("translation_format", "reads", typeof(TranslationFormat), nameof(TranslationFormat.Reads),
                 e => TranslationFormat.Reads(Int(e, "reads_up_to"), Int(e, "file_format"))),
 
@@ -254,6 +256,12 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     Text = Str(e, "read_text") ?? "",
                     Source = EnumRequired<LinkSource>(e, "source"),
                 })),
+
+            // ── line_endings ──────────────────────────────────────────────────
+            new Operation("line_endings", "to_lf", typeof(LineEndings), nameof(LineEndings.ToLf),
+                e => LineEndings.ToLf(Str(e, "text"))),
+            new Operation("line_endings", "of_line", typeof(LineEndings), nameof(LineEndings.Of),
+                e => FullLine(LineEndings.Of(LineRequired(e, "line")))),
 
             // ── term_changes ──────────────────────────────────────────────────
             new Operation("term_changes", "impact", typeof(TermChanges), nameof(TermChanges.Impact),
@@ -596,6 +604,11 @@ namespace UnityGameTranslator.Common.Checks.Corpus
         private static Func<string, string>? Up(JsonElement e) => Str(e, "casing") == "first-letter" ? FirstUpper : (Func<string, string>?)null;
 
         private static Func<string, string>? Low(JsonElement e) => Str(e, "casing") == "first-letter" ? FirstLower : (Func<string, string>?)null;
+
+        private static System.Collections.Generic.IEnumerable<TranslationLine> ValuesOf(System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, TranslationLine>> lines)
+        {
+            foreach (var l in lines) yield return l.Value;
+        }
 
         private static string FirstUpper(string text) =>
             text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text.Substring(1);

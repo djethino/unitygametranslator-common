@@ -176,6 +176,21 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             return k => map.TryGetValue(k, out var found) ? found : (TranslationLine?)null;
         }
 
+        /// <summary>A line with every field, in the shape of a case's expectation (a map is an object, unlinked a list of keys).</summary>
+        public static Dictionary<string, object?> FullLine(TranslationLine line)
+        {
+            var forms = new Dictionary<string, object?>();
+            if (line.Forms != null) foreach (var f in line.Forms) forms[f.Key] = f.Value;
+            return new Dictionary<string, object?>
+            {
+                ["v"] = line.Value,
+                ["t"] = line.Tag,
+                ["forms"] = forms,
+                ["links"] = Canon(line.Links ?? (IReadOnlyList<LineLink>)new LineLink[0]),
+                ["unlinked"] = Canon(line.Unlinked ?? (IReadOnlyList<string>)new string[0]),
+            };
+        }
+
         /// <summary>An edit state in the corpus's form: <c>{text, passages:[{start,length,pending?}], links, unlinked, new_forms, format2?, damaged?}</c>.</summary>
         public static EditState StateOf(JsonElement e, string key)
         {

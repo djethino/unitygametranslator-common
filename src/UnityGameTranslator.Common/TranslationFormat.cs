@@ -45,6 +45,26 @@ namespace UnityGameTranslator.Common
         /// <summary>A file's format from its <c>_engine_version</c>: absent, 0 or less read as 1.</summary>
         public static int OfFile(int? engineVersion) => engineVersion.HasValue && engineVersion.Value > 1 ? engineVersion.Value : 1;
 
+        /// <summary>
+        /// The format a file must be STAMPED with (<c>_engine_version</c>): that of what it CONTAINS, never
+        /// the format the writer happens to speak. 2 only when the file holds something of the format 2 —
+        /// a game's list section (<c>_lists</c>) or a line with a field of it (term, forms, use, class,
+        /// oracle, links, unlinked) — else 1.
+        ///
+        /// 🔴 **Why not <see cref="Current"/>.** A writer that stamps its own format on every save would
+        /// mark every format 1 file as 2 the day <see cref="Current"/> moves, and close it to every older
+        /// mod for nothing. The marker alone is no evidence: <c>[!g*0]</c> in a file with no link is the
+        /// game's own text. A file that loses its last field of the format 2 is a format 1 file again.
+        /// </summary>
+        public static int OfContent(bool holdsGameLists, System.Collections.Generic.IEnumerable<TranslationLine> lines)
+        {
+            if (holdsGameLists) return 2;
+            if (lines != null)
+                foreach (var line in lines)
+                    if (line.HasFormat2Fields) return 2;
+            return 1;
+        }
+
         /// <summary>Whether a client reading up to <paramref name="readsUpTo"/> can use a file of <paramref name="fileFormat"/>.</summary>
         public static bool Reads(int readsUpTo, int fileFormat) => fileFormat <= readsUpTo;
 

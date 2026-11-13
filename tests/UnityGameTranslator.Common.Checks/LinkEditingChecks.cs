@@ -40,6 +40,9 @@ namespace UnityGameTranslator.Common.Checks
             // Warm up (JIT, static lists) so only the steady state is measured.
             Pass(line, plain, edited, 1);
 
+            check(ReferenceEquals(LineEndings.ToLf(plain), plain) && ReferenceEquals(LineEndings.ToLf(null), null),
+                "a text with no CR comes back as the same string", "the common case costs nothing");
+
             long before = GC.GetAllocatedBytesForCurrentThread();
             var shown = LinkEditing.Show(line, 1, Lookup, null, null);
             var same = LinkEditing.Reconcile(shown, plain, Lookup, null, null);

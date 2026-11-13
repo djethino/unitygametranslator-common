@@ -75,7 +75,11 @@ namespace UnityGameTranslator.Common.Checks
                     read2++;
                     string uuid = read.TryGetProperty("uuid", out var u) ? u.GetString()! : "";
                     var derived = JsonValues.Lines(read, "lines");
-                    check(ContentHash.Of(lines, uuid) == ContentHash.Of(derived, uuid),
+                    // The reader normalises line endings first (LineEndings.Of): the hash is taken over LF alone.
+                    var normalised = new List<KeyValuePair<string, TranslationLine>>();
+                    foreach (var l in lines)
+                        normalised.Add(new KeyValuePair<string, TranslationLine>(LineEndings.ToLf(l.Key)!, LineEndings.Of(l.Value)));
+                    check(ContentHash.Of(normalised, uuid) == ContentHash.Of(derived, uuid),
                         id + ": a reader of the format 2 keeps everything the hash covers",
                         "the lines it derives do not hash like the document's");
                 }
