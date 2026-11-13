@@ -275,28 +275,37 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 }),
 
             // ── text_diff / passage_border ────────────────────────────────────
-            new Operation("text_diff", "hunks", typeof(TextDiff), nameof(TextDiff.Hunks),
-                e => TextDiff.Hunks(Str(e, "old") ?? "", Str(e, "new") ?? "")),
+            new Operation("text_diff", "hunk", typeof(TextDiff), nameof(TextDiff.Hunk),
+                e => TextDiff.Hunk(Str(e, "old") ?? "", Str(e, "new") ?? "")),
             new Operation("passage_border", "touches", typeof(PassageBorder), nameof(PassageBorder.Touches),
-                e => PassageBorder.Touches(Int(e, "hunk_start"), Int(e, "hunk_end"), Int(e, "passage_start"), Int(e, "passage_end"))),
-            new Operation("passage_border", "adjacent", typeof(PassageBorder), nameof(PassageBorder.Adjacent),
-                e => PassageBorder.Adjacent(Int(e, "hunk_start"), Int(e, "hunk_end"), Int(e, "passage_start"), Int(e, "passage_end"))),
+                e => PassageBorder.Touches(Int(e, "hunk_start"), Int(e, "hunk_end"), Int(e, "passage_start"), Int(e, "passage_end"), Bool(e, "open"))),
             new Operation("passage_border", "straddles", typeof(PassageBorder), nameof(PassageBorder.Straddles),
-                e => PassageBorder.Straddles(Int(e, "hunk_start"), Int(e, "hunk_end"), Int(e, "passage_start"), Int(e, "passage_end"))),
+                e => PassageBorder.Straddles(Int(e, "hunk_start"), Int(e, "hunk_end"), Int(e, "passage_start"), Int(e, "passage_end"), Bool(e, "open"))),
+            new Operation("passage_border", "stays_open", typeof(PassageBorder), nameof(PassageBorder.StaysOpen),
+                e => PassageBorder.StaysOpen(Int(e, "hunk_start"), Int(e, "hunk_end"), Int(e, "passage_start"), Int(e, "passage_end"), Bool(e, "open"))),
+            new Operation("passage_border", "absorbed_at", typeof(PassageBorder), nameof(PassageBorder.AbsorbedAt),
+                e => PassageBorder.AbsorbedAt(Str(e, "text") ?? "", Int(e, "start"), Int(e, "end"), Str(e, "writing") ?? "")),
 
             // ── link_editing ──────────────────────────────────────────────────
             new Operation("link_editing", "show", typeof(LinkEditing), nameof(LinkEditing.Show),
                 e => LinkEditing.Show(LineRequired(e, "line"), Int(e, "file_format", 2), LineLookup(e, "entries"), Up(e), Low(e))),
             new Operation("link_editing", "view", typeof(LinkEditing), nameof(LinkEditing.View),
                 e => LinkEditing.View(StateOf(e, "state"), LineLookup(e, "entries"), Up(e), Low(e))),
-            new Operation("link_editing", "reconcile", typeof(LinkEditing), nameof(LinkEditing.Reconcile),
-                e => LinkEditing.Reconcile(StateOf(e, "state"), Str(e, "final_text") ?? "", LineLookup(e, "entries"), Up(e), Low(e))),
+            new Operation("link_editing", "step", typeof(LinkEditing), nameof(LinkEditing.Step),
+                e =>
+                {
+                    var state = StateOf(e, "state");
+                    foreach (var text in Strings(e, "steps")) state = LinkEditing.Step(state, text);
+                    return state;
+                }),
+            new Operation("link_editing", "settle", typeof(LinkEditing), nameof(LinkEditing.Settle),
+                e => LinkEditing.Settle(StateOf(e, "state"), LineLookup(e, "entries"), Up(e), Low(e))),
             new Operation("link_editing", "next_question", typeof(LinkEditing), nameof(LinkEditing.NextQuestion),
-                e => LinkEditing.NextQuestion(StateOf(e, "state"))),
+                e => LinkEditing.NextQuestion(StateOf(e, "state"), LineLookup(e, "entries"), Up(e), Low(e))),
             new Operation("link_editing", "answer", typeof(LinkEditing), nameof(LinkEditing.Answer),
-                e => LinkEditing.Answer(StateOf(e, "state"), QuestionOf(e, "question"), EnumRequired<EditAnswer>(e, "answer"), LineLookup(e, "entries"))),
+                e => LinkEditing.Answer(StateOf(e, "state"), QuestionOf(e, "question"), EnumRequired<EditAnswer>(e, "answer"), LineLookup(e, "entries"), Up(e), Low(e))),
             new Operation("link_editing", "unlink", typeof(LinkEditing), nameof(LinkEditing.Unlink),
-                e => LinkEditing.Unlink(StateOf(e, "state"), Int(e, "passage"), LineLookup(e, "entries"))),
+                e => LinkEditing.Unlink(StateOf(e, "state"), Int(e, "passage"), LineLookup(e, "entries"), Up(e), Low(e))),
             new Operation("link_editing", "link_to", typeof(LinkEditing), nameof(LinkEditing.LinkTo),
                 e => LinkEditing.LinkTo(StateOf(e, "state"), Int(e, "start"), Int(e, "length"), Str(e, "entry")!, Str(e, "form"),
                                         LineLookup(e, "entries"), Up(e), Low(e))),

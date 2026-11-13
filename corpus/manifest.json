@@ -20,10 +20,10 @@
       "line_writes": ["refusal"],
       "template_ids": ["of"],
       "term_changes": ["impact"],
-      "text_diff": ["hunks"],
+      "text_diff": ["hunk"],
       "line_endings": ["to_lf", "of_line"],
-      "passage_border": ["touches", "straddles", "adjacent"],
-      "link_editing": ["show", "view", "reconcile", "next_question", "answer", "unlink", "link_to", "mark_as_read", "resume"],
+      "passage_border": ["touches", "straddles", "stays_open", "absorbed_at"],
+      "link_editing": ["show", "view", "step", "settle", "next_question", "answer", "unlink", "link_to", "mark_as_read", "resume"],
       "translation_file_keys": ["is_metadata_key", "is_line"],
       "placeholders": ["frozen_sequences", "accepts_edit", "tokens", "invented", "tally"]
     }

@@ -197,10 +197,28 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             if (!e.TryGetProperty(key, out var s) || s.ValueKind != JsonValueKind.Object)
                 throw new InvalidOperationException($"'{key}' must be an edit state");
 
+            string text0 = Str(s, "text") ?? "";
             var passages = new List<Passage>();
             if (s.TryGetProperty("passages", out var ps) && ps.ValueKind == JsonValueKind.Array)
                 foreach (var p in ps.EnumerateArray())
-                    passages.Add(new Passage { Start = Int(p, "start"), Length = Int(p, "length"), Pending = Bool(p, "pending") });
+                {
+                    int start = Int(p, "start"), length = Int(p, "length");
+                    // No origin written: the passage is as it was shown (its origin is its words).
+                    string? origin = p.TryGetProperty("origin", out var o) ? o.GetString() : text0.Substring(start, length);
+                    passages.Add(new Passage { Start = start, Length = length, Origin = origin, Open = Bool(p, "open"), Order = Int(p, "order", passages.Count) });
+                }
+
+            var lost = new List<LostPassage>();
+            if (s.TryGetProperty("lost", out var lj) && lj.ValueKind == JsonValueKind.Array)
+                foreach (var l in lj.EnumerateArray())
+                    lost.Add(new LostPassage
+                    {
+                        Words = Str(l, "words") ?? "",
+                        Origin = Str(l, "origin") ?? Str(l, "words"),
+                        Link = l.TryGetProperty("link", out var lk) ? LinkOf(lk) : new LineLink(),
+                        Reason = EnumOf<PassageReason>(l, "reason") ?? PassageReason.Deleted,
+                        Order = Int(l, "order", lost.Count),
+                    });
 
             var links = new List<LineLink>();
             if (s.TryGetProperty("links", out var ls) && ls.ValueKind == JsonValueKind.Array)
@@ -213,10 +231,11 @@ namespace UnityGameTranslator.Common.Checks.Corpus
 
             return new EditState
             {
-                Text = Str(s, "text") ?? "",
+                Text = text0,
                 Format2 = Bool(s, "format2", true),
                 Passages = passages,
                 Links = links,
+                Lost = lost,
                 Unlinked = Strings(s, "unlinked"),
                 NewForms = forms,
                 Damaged = Bool(s, "damaged"),
@@ -379,7 +398,16 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         ["old_start"] = hunk.OldStart, ["old_end"] = hunk.OldEnd, ["new_start"] = hunk.NewStart, ["new_end"] = hunk.NewEnd,
                     };
                 case Passage passage:
-                    return new Dictionary<string, object?> { ["start"] = passage.Start, ["length"] = passage.Length, ["pending"] = passage.Pending };
+                    return new Dictionary<string, object?>
+                    {
+                        ["start"] = passage.Start, ["length"] = passage.Length, ["origin"] = passage.Origin, ["open"] = passage.Open, ["order"] = passage.Order,
+                    };
+                case LostPassage lostPassage:
+                    return new Dictionary<string, object?>
+                    {
+                        ["words"] = lostPassage.Words, ["origin"] = lostPassage.Origin, ["reason"] = lostPassage.Reason.ToString(),
+                        ["order"] = lostPassage.Order, ["link"] = Canon(lostPassage.Link),
+                    };
                 case NewForm form:
                     return new Dictionary<string, object?> { ["entry"] = form.Entry, ["id"] = form.Id, ["text"] = form.Text };
                 case EditState state:
@@ -390,17 +418,10 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         ["passages"] = Canon(state.Passages),
                         ["links"] = Canon(state.Links),
                         ["unlinked"] = Canon(state.Unlinked),
+                        ["lost"] = Canon(state.Lost ?? new LostPassage[0]),
                         ["new_forms"] = Canon(state.NewForms),
                         ["damaged"] = state.Damaged,
                     };
-                case PassageChange change:
-                    return new Dictionary<string, object?>
-                    {
-                        ["outcome"] = change.Outcome.ToString(), ["reason"] = change.Reason.ToString(),
-                        ["new_start"] = change.NewStart, ["new_length"] = change.NewLength,
-                    };
-                case Reconciliation rec:
-                    return new Dictionary<string, object?> { ["state"] = Canon(rec.State), ["changes"] = Canon(rec.Changes) };
                 case EditQuestion q:
                     return new Dictionary<string, object?> { ["entry"] = q.Entry, ["text"] = q.Text, ["passages"] = Canon(q.Passages) };
                 case EditAct act:
@@ -409,7 +430,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     return new Dictionary<string, object?>
                     {
                         ["start"] = view.Start, ["length"] = view.Length, ["source"] = view.Source.ToString(),
-                        ["needs_review"] = view.NeedsReview, ["case_not_applied"] = view.CaseNotApplied, ["pending"] = view.Pending,
+                        ["needs_review"] = view.NeedsReview, ["case_not_applied"] = view.CaseNotApplied, ["pending"] = view.Pending, ["open"] = view.Open,
                     };
                 case EditOutcome outcome:
                     return new Dictionary<string, object?>

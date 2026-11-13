@@ -10,8 +10,27 @@ namespace UnityGameTranslator.Common
         public int Start;
         public int Length;
 
-        /// <summary>The words were changed and the person has not said what they are yet (<see cref="LinkEditing.NextQuestion"/>).</summary>
-        public bool Pending;
+        /// <summary>
+        /// The words it had when its link was last settled (opening, an answer, an act). Null reads as its current
+        /// words. Words that differ from it, and are no known writing, wait for the question.
+        /// </summary>
+        public string? Origin;
+
+        /// <summary>Its end was just replaced or erased: the next characters typed there are its own (<see cref="PassageBorder"/>).</summary>
+        public bool Open;
+
+        /// <summary>Its place at opening, never reused: what orders the lost ones when a paste restores one.</summary>
+        public int Order;
+    }
+
+    /// <summary>A passage a step removed, kept so a later step can bring it back.</summary>
+    public struct LostPassage
+    {
+        public string Words;
+        public string? Origin;
+        public LineLink Link;
+        public PassageReason Reason;
+        public int Order;
     }
 
     /// <summary>A written form to add to a term when the editing is saved.</summary>
@@ -22,21 +41,41 @@ namespace UnityGameTranslator.Common
         public string Text;
     }
 
+    public enum PassageReason
+    {
+        None,
+
+        /// <summary>All its words were erased.</summary>
+        Deleted,
+
+        /// <summary>A change covered the passage AND words around it: nothing is guessed.</summary>
+        Straddled,
+
+        /// <summary>The term no longer exists: its words stay, as ordinary text.</summary>
+        EntryGone,
+    }
+
     /// <summary>
-    /// Everything an editor holds while a person edits a sentence, and all of it: the text in clear
-    /// (links replaced by their words), the linked stretches, the link behind each one (passage
-    /// <c>i</c> ↔ link <c>i</c>, one passage one link), the refused entries and the forms to add.
-    /// The editor keeps this value and replaces it with what the rules return; it computes nothing.
+    /// Everything an editor holds while a person edits a sentence, and all of it. The editor keeps this value and
+    /// replaces it with what the rules return; it computes nothing (spec/translation-file/editing.md §3).
     /// </summary>
     public struct EditState
     {
+        /// <summary>The text in clear: every link replaced by its words.</summary>
         public string Text;
 
         /// <summary>The file is of the format 2. In a format 1 file nothing below exists.</summary>
         public bool Format2;
 
+        /// <summary>The linked stretches, in reading order.</summary>
         public IReadOnlyList<Passage> Passages;
+
+        /// <summary>The link behind each passage (passage i, link i): one passage, one link.</summary>
         public IReadOnlyList<LineLink> Links;
+
+        /// <summary>The passages removed by a step, remembered (spec §5).</summary>
+        public IReadOnlyList<LostPassage> Lost;
+
         public IReadOnlyList<string> Unlinked;
         public IReadOnlyList<NewForm> NewForms;
 
@@ -44,63 +83,13 @@ namespace UnityGameTranslator.Common
         public bool Damaged;
     }
 
-    public enum PassageOutcome
-    {
-        /// <summary>Nothing touched it: it follows its text.</summary>
-        Intact,
-
-        /// <summary>Its words changed (or it is a known writing now).</summary>
-        Modified,
-
-        /// <summary>It was cut and pasted elsewhere; the link follows.</summary>
-        Moved,
-
-        /// <summary>The link is gone; the text typed around is ordinary.</summary>
-        Gone,
-    }
-
-    public enum PassageReason
-    {
-        None,
-
-        /// <summary>The words were deleted.</summary>
-        Deleted,
-
-        /// <summary>A change covers the passage AND the words around it: nothing is guessed.</summary>
-        Straddled,
-
-        /// <summary>Its words reappear in several places, or several lost passages claim one place: nothing is chosen for the person.</summary>
-        Ambiguous,
-
-        /// <summary>The term no longer exists: its words stay, as ordinary text.</summary>
-        EntryGone,
-    }
-
-    /// <summary>What became of one passage of the original text.</summary>
-    public struct PassageChange
-    {
-        public PassageOutcome Outcome;
-        public PassageReason Reason;
-
-        /// <summary>For Intact, Modified, Moved: where it is now.</summary>
-        public int NewStart;
-        public int NewLength;
-    }
-
-    /// <summary>The state after the comparison, and what became of each original passage.</summary>
-    public struct Reconciliation
-    {
-        public EditState State;
-        public IReadOnlyList<PassageChange> Changes;
-    }
-
-    /// <summary>The ONE question asked about changed words: is this another writing of the term for everybody, or for this text only?</summary>
+    /// <summary>The ONE question asked about changed words: another writing of the term for everybody, or for this text only?</summary>
     public struct EditQuestion
     {
         public string Entry;
         public string Text;
 
-        /// <summary>The passages (indices in the state) it settles: several when they are the same term with the same new words.</summary>
+        /// <summary>The passages (indices in the SETTLED state) it settles: several when they are the same term with the same new words.</summary>
         public IReadOnlyList<int> Passages;
     }
 
@@ -146,26 +135,27 @@ namespace UnityGameTranslator.Common
         public LinkSource Source;
         public bool NeedsReview;
         public bool CaseNotApplied;
+
+        /// <summary>Changed words nobody has said what they are yet.</summary>
         public bool Pending;
+        public bool Open;
     }
 
     /// <summary>
-    /// The text a person edits with its links (analyse/smart-edition-cas.md): the same pure rules for the
-    /// four editors, which only draw.
+    /// The text a person edits, with its links (spec/translation-file/editing.md): the same pure rules for the four
+    /// editors, which only draw.
     ///
-    /// 🔴 **The person never sees a marker or a number.** She edits the sentence in clear; the colour of
-    /// the linked words is the editor's. At saving, a <c>v</c> with markers and consistent
-    /// <c>links</c> are rebuilt — from TWO texts, the one shown and the one she left
-    /// (<see cref="Reconcile"/>), never from keystrokes: no editor has to follow a keyboard, and
-    /// undo, composition, drag and paste are all just another text.
+    /// 🔴 **The person never sees a marker or a number.** She edits the sentence in clear; the colour of the linked
+    /// words is the editor's. The editor calls <see cref="Step"/> at every change of the text it sees — one
+    /// keystroke, paste, undo or composition is one change, one hunk, EXACT — and keeps the state it gets back.
+    /// That is not following the keyboard: no cursor, no key, no clipboard, only two successive texts.
     ///
-    /// ⚠ **A link is known, never guessed** (R4): words that were never a passage stay ordinary,
-    /// even when they spell a term exactly. A change that cannot be read as the same link
-    /// (<see cref="PassageReason.Straddled"/>, <see cref="PassageReason.Ambiguous"/>) drops the link
-    /// and says why; the preview loses the colour and the person links again in one gesture.
+    /// ⚠ **A link is known, never guessed** (R4): words that were never a passage stay ordinary, even when they
+    /// spell a term exactly. A change that cannot be read as the same link (<see cref="PassageReason.Straddled"/>)
+    /// drops the link and says why; the preview loses the colour and the person links again in one gesture.
     ///
-    /// ⚠ **A format 1 text goes through untouched**: no link, no decision, the same string
-    /// (checked, including that it allocates nothing).
+    /// ⚠ **A format 1 text goes through untouched**: no link, no decision, the same string (checked, including
+    /// that it allocates nothing).
     /// </summary>
     public static class LinkEditing
     {
@@ -173,7 +163,7 @@ namespace UnityGameTranslator.Common
         private static readonly LineLink[] NoLinks = new LineLink[0];
         private static readonly string[] NoStrings = new string[0];
         private static readonly NewForm[] NoForms = new NewForm[0];
-        private static readonly PassageChange[] NoChanges = new PassageChange[0];
+        private static readonly LostPassage[] NoLost = new LostPassage[0];
 
         // ── Show ────────────────────────────────────────────────────────────
 
@@ -206,7 +196,7 @@ namespace UnityGameTranslator.Common
 
                 LineLink link = links[span.Number];
                 string shown = LinkReading.Read(link, entryOf, upperFirst, lowerFirst).Text;
-                passages.Add(new Passage { Start = text.Length, Length = shown.Length });
+                passages.Add(new Passage { Start = text.Length, Length = shown.Length, Origin = shown, Order = passages.Count });
                 kept.Add(link);
                 text.Append(shown);
             }
@@ -218,22 +208,24 @@ namespace UnityGameTranslator.Common
                 Format2 = true,
                 Passages = passages,
                 Links = kept,
+                Lost = NoLost,
                 Unlinked = unlinked,
                 NewForms = NoForms,
                 Damaged = damaged,
             };
         }
 
-        /// <summary>How each passage reads now: its source, whether it is « to read again », for the colour and the hint under the field.</summary>
+        /// <summary>How each passage reads now: its source, whether it is « to read again », whether it waits for its question.</summary>
         public static List<PassageView> View(EditState state, Func<string, TranslationLine?> entryOf,
                                              Func<string, string>? upperFirst, Func<string, string>? lowerFirst)
         {
+            var settled = Settle(state, entryOf, upperFirst, lowerFirst);
+            var lookup = WithNewForms(entryOf, settled.NewForms);
             var views = new List<PassageView>();
-            var lookup = WithNewForms(entryOf, state.NewForms);
-            for (int i = 0; i < CountOf(state.Passages); i++)
+            for (int i = 0; i < CountOf(settled.Passages); i++)
             {
-                Passage p = state.Passages![i];
-                LineLink link = state.Links![i];
+                Passage p = settled.Passages![i];
+                LineLink link = settled.Links![i];
                 var read = LinkReading.Read(link, lookup, upperFirst, lowerFirst);
                 views.Add(new PassageView
                 {
@@ -242,285 +234,272 @@ namespace UnityGameTranslator.Common
                     Source = read.Source,
                     NeedsReview = LinkReading.NeedsReview(link, read),
                     CaseNotApplied = read.CaseNotApplied,
-                    Pending = p.Pending,
+                    Pending = IsPending(settled, i),
+                    Open = p.Open,
                 });
             }
             return views;
         }
 
-        // ── Reconcile ───────────────────────────────────────────────────────
+        // ── Step ────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// What became of each passage between the text shown and the one the person left.
-        /// Re-run at every change of the field for the preview, and at saving.
+        /// What one change of the text does to the passages (spec §4). Call it at every change of the text; the state
+        /// it returns is the base of the next call. The links are not touched: whether changed words are a known
+        /// writing is read by <see cref="Settle"/>, when somebody needs to know.
         /// </summary>
-        public static Reconciliation Reconcile(EditState before, string finalText, Func<string, TranslationLine?> entryOf,
-                                               Func<string, string>? upperFirst, Func<string, string>? lowerFirst)
+        public static EditState Step(EditState state, string newText)
         {
-            if (finalText == null) throw new ArgumentNullException(nameof(finalText));
+            if (newText == null) throw new ArgumentNullException(nameof(newText));
+            if (string.Equals(state.Text, newText, StringComparison.Ordinal)) return state;
 
-            if (string.Equals(before.Text, finalText, StringComparison.Ordinal))
-                return new Reconciliation { State = before, Changes = Unchanged(before) };
-
-            if (CountOf(before.Passages) == 0)
+            // No passage, nothing remembered: the text is only a text.
+            if (CountOf(state.Passages) == 0 && CountOf(state.Lost) == 0)
             {
-                EditState plain = before;
-                plain.Text = finalText;
-                return new Reconciliation { State = plain, Changes = NoChanges };
+                state.Text = newText;
+                return state;
             }
 
-            return Compare(before, finalText, entryOf, upperFirst, lowerFirst);
+            return StepCore(state, newText);
         }
 
-        // Apart from Reconcile on purpose: this method's lambdas make the compiler allocate a closure on ENTRY,
-        // and the plain paths above must allocate nothing.
-        private static Reconciliation Compare(EditState before, string finalText, Func<string, TranslationLine?> entryOf,
-                                              Func<string, string>? upperFirst, Func<string, string>? lowerFirst)
+        // Apart from Step on purpose: the plain paths above must allocate nothing.
+        private static EditState StepCore(EditState state, string newText)
         {
-            var hunks = Slide(before.Text, finalText, TextDiff.Hunks(before.Text, finalText), before.Passages!);
-            int count = before.Passages!.Count;
-            var changes = new PassageChange[count];
-            var texts = new string?[count];         // the new words of a surviving passage
-            var spans = new int[count][];           // new [start, end) of a surviving passage
+            TextHunk hunk = Slide(state.Text, newText, TextDiff.Hunk(state.Text, newText)!.Value, state.Passages);
+            int shift = (hunk.NewEnd - hunk.NewStart) - (hunk.OldEnd - hunk.OldStart);
 
-            // 1. Which passages are touched, and how.
-            for (int i = 0; i < count; i++)
+            var passages = new List<Passage>(CountOf(state.Passages) + 1);
+            var links = new List<LineLink>(CountOf(state.Passages) + 1);
+            var lost = new List<LostPassage>(state.Lost ?? NoLost);
+            var before = new List<LostPassage>(lost);   // what a LATER step may bring back: not what this one removes
+
+            for (int i = 0; i < CountOf(state.Passages); i++)
             {
-                Passage p = before.Passages[i];
+                Passage p = state.Passages![i];
                 int a = p.Start, b = p.Start + p.Length;
-                int delta = 0, touchDelta = 0;
-                bool touched = false, straddled = false;
+                LineLink link = state.Links![i];
 
-                foreach (var h in hunks)
+                if (PassageBorder.Straddles(hunk.OldStart, hunk.OldEnd, a, b, p.Open))
                 {
-                    int shift = (h.NewEnd - h.NewStart) - (h.OldEnd - h.OldStart);
-                    if (PassageBorder.Touches(h.OldStart, h.OldEnd, a, b))
-                    {
-                        touched = true;
-                        touchDelta += shift;
-                        if (PassageBorder.Straddles(h.OldStart, h.OldEnd, a, b)) straddled = true;
-                    }
-                    else if (h.OldEnd <= a) delta += shift;
-                }
-
-                if (straddled) { changes[i] = Gone(PassageReason.Straddled); continue; }
-
-                int newStart = a + delta;
-                int newEnd = b + delta + touchDelta;
-
-                if (!touched)
-                {
-                    changes[i] = new PassageChange { Outcome = PassageOutcome.Intact, NewStart = newStart, NewLength = newEnd - newStart };
-                    spans[i] = new[] { newStart, newEnd };
+                    lost.Add(new LostPassage { Words = state.Text.Substring(a, p.Length), Origin = p.Origin, Link = link, Reason = PassageReason.Straddled, Order = p.Order });
                     continue;
                 }
 
-                string words = finalText.Substring(newStart, newEnd - newStart);
-                if (words.Length == 0) { changes[i] = Gone(PassageReason.Deleted); continue; }
-
-                texts[i] = words;
-                spans[i] = new[] { newStart, newEnd };
-                changes[i] = new PassageChange { Outcome = PassageOutcome.Modified, NewStart = newStart, NewLength = newEnd - newStart };
-            }
-
-            // 2. A lost passage whose exact words come back ONCE, inserted elsewhere, has moved.
-            var lost = new bool[count];
-            for (int i = 0; i < count; i++)
-                lost[i] = changes[i].Outcome == PassageOutcome.Gone && changes[i].Reason == PassageReason.Deleted;
-
-            for (int i = 0; i < count; i++)
-            {
-                if (!lost[i]) continue;
-
-                string words = before.Text.Substring(before.Passages[i].Start, before.Passages[i].Length);
-                var found = new List<int>();
-                foreach (var h in hunks)
+                if (PassageBorder.Touches(hunk.OldStart, hunk.OldEnd, a, b, p.Open))
                 {
-                    for (int from = h.NewStart; from + words.Length <= h.NewEnd; from++)
+                    int end = b + shift;
+                    if (end <= a)
                     {
-                        int hit = finalText.IndexOf(words, from, h.NewEnd - from, StringComparison.Ordinal);
-                        if (hit < 0) break;
-                        if (!Overlaps(spans, hit, hit + words.Length)) found.Add(hit);
-                        from = hit;
+                        lost.Add(new LostPassage { Words = state.Text.Substring(a, p.Length), Origin = p.Origin, Link = link, Reason = PassageReason.Deleted, Order = p.Order });
+                        continue;
                     }
+                    p.Length = end - a;
+                    p.Open = PassageBorder.StaysOpen(hunk.OldStart, hunk.OldEnd, a, b, p.Open);
+                }
+                else
+                {
+                    if (hunk.OldEnd <= a) p.Start = a + shift;
+                    p.Open = false;
                 }
 
-                int claimants = 0;
-                for (int j = 0; j < count; j++)
-                    if (lost[j]
-                        && string.Equals(before.Text.Substring(before.Passages[j].Start, before.Passages[j].Length), words, StringComparison.Ordinal))
-                        claimants++;
-
-                if (found.Count == 1 && claimants == 1)
-                {
-                    changes[i] = new PassageChange { Outcome = PassageOutcome.Moved, NewStart = found[0], NewLength = words.Length };
-                    spans[i] = new[] { found[0], found[0] + words.Length };
-                }
-                else if (found.Count >= 1)
-                    changes[i] = Gone(PassageReason.Ambiguous);
-            }
-
-            // 3. The new passages, in reading order; the words of a modified one are settled when known.
-            var order = new List<int>();
-            for (int i = 0; i < count; i++)
-                if (changes[i].Outcome != PassageOutcome.Gone) order.Add(i);
-            order.Sort((x, y) => spans[x][0].CompareTo(spans[y][0]));
-
-            var passages = new List<Passage>();
-            var links = new List<LineLink>();
-            int lastEnd = -1;
-            foreach (int i in order)
-            {
-                if (spans[i][0] < lastEnd) { changes[i] = Gone(PassageReason.Ambiguous); continue; }
-
-                LineLink link = before.Links![i];
-                bool pending = false;
-
-                if (changes[i].Outcome == PassageOutcome.Modified)
-                {
-                    TranslationLine? entry = string.IsNullOrEmpty(link.To) ? (TranslationLine?)null : WithNewForms(entryOf, before.NewForms)(link.To!);
-                    if (!entry.HasValue) { changes[i] = Gone(PassageReason.EntryGone); continue; }
-
-                    // Words typed right against a changed passage are outside it (the border rule), but when
-                    // they complete a writing the term already has, the person retyped that writing.
-                    Passage was = before.Passages[i];
-                    int lead = 0, trail = 0;
-                    foreach (var h in hunks)
-                    {
-                        int side = PassageBorder.Adjacent(h.OldStart, h.OldEnd, was.Start, was.Start + was.Length);
-                        if (side < 0 && h.NewEnd == spans[i][0]) lead = h.NewEnd - h.NewStart;
-                        if (side > 0 && h.NewStart == spans[i][1]) trail = h.NewEnd - h.NewStart;
-                    }
-
-                    string? matchedForm = null, matchedCase = null;
-                    int takeLead = 0, takeTrail = 0;
-                    bool known = false;
-                    foreach (var choice in new[] { new[] { 0, 0 }, new[] { lead, 0 }, new[] { 0, trail }, new[] { lead, trail } })
-                    {
-                        string candidate = finalText.Substring(spans[i][0] - choice[0], spans[i][1] - spans[i][0] + choice[0] + choice[1]);
-                        if (Known(entry.GetValueOrDefault(), candidate, upperFirst, lowerFirst, out matchedForm, out matchedCase))
-                        {
-                            known = true; takeLead = choice[0]; takeTrail = choice[1];
-                            texts[i] = candidate;
-                            break;
-                        }
-                    }
-
-                    if (known)
-                    {
-                        spans[i] = new[] { spans[i][0] - takeLead, spans[i][1] + takeTrail };
-                        changes[i] = new PassageChange { Outcome = PassageOutcome.Modified, NewStart = spans[i][0], NewLength = spans[i][1] - spans[i][0] };
-                        link = new LineLink { To = link.To, Form = matchedForm, Case = matchedCase, By = LinkReading.ByPerson, Was = texts[i] };
-                    }
-                    else
-                        pending = true;
-                }
-
-                passages.Add(new Passage { Start = spans[i][0], Length = spans[i][1] - spans[i][0], Pending = pending });
+                passages.Add(p);
                 links.Add(link);
-                lastEnd = spans[i][1];
             }
 
-            return new Reconciliation
+            // A passage lost EARLIER comes back when the words inserted now are exactly its words, once.
+            int inserted = hunk.NewEnd - hunk.NewStart;
+            if (inserted > 0 && before.Count > 0)
             {
-                State = new EditState
+                string words = newText.Substring(hunk.NewStart, inserted);
+                int pick = -1;
+                for (int i = 0; i < before.Count; i++)
+                    if (before[i].Reason != PassageReason.EntryGone && string.Equals(before[i].Words, words, StringComparison.Ordinal)
+                        && (pick < 0 || before[i].Order < before[pick].Order)) pick = i;
+
+                if (pick >= 0 && !OverlapsAny(passages, hunk.NewStart, hunk.NewEnd))
                 {
-                    Text = finalText,
-                    Format2 = before.Format2,
-                    Passages = passages,
-                    Links = links,
-                    Unlinked = before.Unlinked ?? NoStrings,
-                    NewForms = before.NewForms ?? NoForms,
-                    Damaged = before.Damaged,
-                },
-                Changes = changes,
-            };
+                    LostPassage back = before[pick];
+                    int at = 0;
+                    while (at < passages.Count && passages[at].Start < hunk.NewStart) at++;
+                    passages.Insert(at, new Passage { Start = hunk.NewStart, Length = inserted, Origin = back.Origin, Order = back.Order });
+                    links.Insert(at, back.Link);
+                    lost.Remove(back);
+                }
+            }
+
+            state.Text = newText;
+            state.Passages = passages;
+            state.Links = links;
+            state.Lost = lost;
+            return state;
         }
 
         /// <summary>
-        /// A difference can often be placed in more than one way without changing what the two texts
-        /// say (deleting the last word of a passage is « word + space » or « space + word »); the
-        /// definition of <see cref="TextDiff"/> picks the rightmost, which sometimes covers a
-        /// character past the edge of a passage that the person never touched. Here each hunk may
-        /// slide while the text it moves over is the text it leaves behind, and takes the placement
-        /// that straddles the fewest passages — the unslid one first, then one step to the left,
-        /// one to the right, two to the left… (the first of equals wins; no passage is involved
-        /// in a difference that does not need it).
+        /// A hunk can often be placed more than one way with no change in what the texts say (erasing the last word of
+        /// a passage with the space after it, or the space before it). The three lines of the diff place it at the
+        /// right-most; it slides left or right while the text it passes over is the text it leaves behind, to the
+        /// placement that straddles the fewest passages — the unslid one first, then one step left, one step right,
+        /// two steps left… (spec §4).
         /// </summary>
-        private static List<TextHunk> Slide(string o, string f, List<TextHunk> hunks, IReadOnlyList<Passage> passages)
+        private static TextHunk Slide(string o, string f, TextHunk cur, IReadOnlyList<Passage>? passages)
         {
-            if (hunks.Count == 0) return hunks;
-            var placed = new List<TextHunk>(hunks.Count);
+            int count = CountOf(passages);
+            if (count == 0) return cur;
 
-            for (int h = 0; h < hunks.Count; h++)
+            int maxLeft = 0;
+            while (cur.OldStart - maxLeft - 1 >= 0 && cur.NewStart - maxLeft - 1 >= 0
+                   && o[cur.OldStart - maxLeft - 1] == o[cur.OldEnd - maxLeft - 1]
+                   && f[cur.NewStart - maxLeft - 1] == f[cur.NewEnd - maxLeft - 1]
+                   && !char.IsSurrogate(o[cur.OldStart - maxLeft - 1]) && !char.IsSurrogate(f[cur.NewStart - maxLeft - 1]))
+                maxLeft++;
+
+            int maxRight = 0;
+            while (cur.OldEnd + maxRight < o.Length && cur.NewEnd + maxRight < f.Length
+                   && o[cur.OldStart + maxRight] == o[cur.OldEnd + maxRight]
+                   && f[cur.NewStart + maxRight] == f[cur.NewEnd + maxRight]
+                   && !char.IsSurrogate(o[cur.OldEnd + maxRight]) && !char.IsSurrogate(f[cur.NewEnd + maxRight]))
+                maxRight++;
+
+            TextHunk best = cur;
+            int bestCost = Straddled(cur, passages!);
+            for (int step = 1; bestCost > 0 && (step <= maxLeft || step <= maxRight); step++)
             {
-                TextHunk cur = hunks[h];
-                int leftOld = h == 0 ? 0 : placed[h - 1].OldEnd;
-                int leftNew = h == 0 ? 0 : placed[h - 1].NewEnd;
-                int rightOld = h + 1 < hunks.Count ? hunks[h + 1].OldStart : o.Length;
-                int rightNew = h + 1 < hunks.Count ? hunks[h + 1].NewStart : f.Length;
-
-                int maxLeft = 0;
-                while (cur.OldStart - maxLeft - 1 >= leftOld && cur.NewStart - maxLeft - 1 >= leftNew
-                       && o[cur.OldStart - maxLeft - 1] == o[cur.OldEnd - maxLeft - 1]
-                       && f[cur.NewStart - maxLeft - 1] == f[cur.NewEnd - maxLeft - 1]
-                       && !char.IsSurrogate(o[cur.OldStart - maxLeft - 1]) && !char.IsSurrogate(f[cur.NewStart - maxLeft - 1]))
-                    maxLeft++;
-
-                int maxRight = 0;
-                while (cur.OldEnd + maxRight < rightOld && cur.NewEnd + maxRight < rightNew
-                       && o[cur.OldStart + maxRight] == o[cur.OldEnd + maxRight]
-                       && f[cur.NewStart + maxRight] == f[cur.NewEnd + maxRight]
-                       && !char.IsSurrogate(o[cur.OldEnd + maxRight]) && !char.IsSurrogate(f[cur.NewEnd + maxRight]))
-                    maxRight++;
-
-                TextHunk best = cur;
-                int bestCost = Straddled(cur, passages);
-                for (int step = 1; bestCost > 0 && (step <= maxLeft || step <= maxRight); step++)
+                for (int side = 0; side < 2; side++)
                 {
-                    foreach (int shift in new[] { -step, step })
+                    int shift = side == 0 ? -step : step;
+                    if (shift < 0 ? -shift > maxLeft : shift > maxRight) continue;
+                    var moved = new TextHunk
                     {
-                        if (shift < 0 ? -shift > maxLeft : shift > maxRight) continue;
-                        var moved = new TextHunk
-                        {
-                            OldStart = cur.OldStart + shift, OldEnd = cur.OldEnd + shift,
-                            NewStart = cur.NewStart + shift, NewEnd = cur.NewEnd + shift,
-                        };
-                        int cost = Straddled(moved, passages);
-                        if (cost < bestCost) { best = moved; bestCost = cost; }
-                    }
+                        OldStart = cur.OldStart + shift, OldEnd = cur.OldEnd + shift,
+                        NewStart = cur.NewStart + shift, NewEnd = cur.NewEnd + shift,
+                    };
+                    int cost = Straddled(moved, passages!);
+                    if (cost < bestCost) { best = moved; bestCost = cost; }
                 }
-                placed.Add(best);
             }
-            return placed;
+            return best;
         }
 
         private static int Straddled(TextHunk h, IReadOnlyList<Passage> passages)
         {
             int n = 0;
             foreach (var p in passages)
-                if (PassageBorder.Straddles(h.OldStart, h.OldEnd, p.Start, p.Start + p.Length)) n++;
+                if (PassageBorder.Straddles(h.OldStart, h.OldEnd, p.Start, p.Start + p.Length, p.Open)) n++;
             return n;
+        }
+
+        private static bool OverlapsAny(List<Passage> passages, int from, int to)
+        {
+            foreach (var p in passages)
+                if (from < p.Start + p.Length && to > p.Start) return true;
+            return false;
+        }
+
+        // ── Settle ──────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Reads what the changed passages are: words equal to their <c>Origin</c> are as they were; words that are a
+        /// writing the term already has (exact, or with the first letter's case) point the link at it; words that
+        /// complete such a writing found in the text are widened to it (absorption); a term that no longer exists
+        /// drops the passage (its words stay, as ordinary text). What remains changed is waiting for its question
+        /// (<see cref="NextQuestion"/>). Idempotent; the acts and <see cref="Resume"/> call it first.
+        /// </summary>
+        public static EditState Settle(EditState state, Func<string, TranslationLine?> entryOf,
+                                       Func<string, string>? upperFirst, Func<string, string>? lowerFirst)
+        {
+            int n = CountOf(state.Passages);
+            if (n == 0) return state;
+
+            bool any = false;
+            for (int i = 0; i < n; i++) if (IsPending(state, i)) { any = true; break; }
+            if (!any) return state;
+
+            var lookup = WithNewForms(entryOf, state.NewForms);
+            var passages = new List<Passage>(state.Passages!);
+            var links = new List<LineLink>(state.Links!);
+            var lost = new List<LostPassage>(state.Lost ?? NoLost);
+            var dropped = new List<int>();
+
+            for (int i = 0; i < n; i++)
+            {
+                if (!IsPending(state, i)) continue;
+
+                Passage p = passages[i];
+                LineLink link = links[i];
+                string words = state.Text.Substring(p.Start, p.Length);
+                TranslationLine? entry = string.IsNullOrEmpty(link.To) ? (TranslationLine?)null : lookup(link.To!);
+
+                if (!entry.HasValue)
+                {
+                    lost.Add(new LostPassage { Words = words, Origin = p.Origin, Link = link, Reason = PassageReason.EntryGone, Order = p.Order });
+                    dropped.Add(i);
+                    continue;
+                }
+
+                string? form, casing;
+                if (!Known(entry.Value, words, upperFirst, lowerFirst, out form, out casing))
+                {
+                    if (!Absorb(state, passages, i, entry.Value, upperFirst, lowerFirst, out int start, out string? absorbed)) continue;   // still pending
+                    p.Start = start; p.Length = absorbed!.Length; words = absorbed;
+                    Known(entry.Value, words, upperFirst, lowerFirst, out form, out casing);
+                }
+
+                p.Origin = words;
+                passages[i] = p;
+                links[i] = new LineLink { To = link.To, Form = form, Case = casing, By = LinkReading.ByPerson, Was = words };
+            }
+
+            for (int k = dropped.Count - 1; k >= 0; k--) { passages.RemoveAt(dropped[k]); links.RemoveAt(dropped[k]); }
+
+            state.Passages = passages;
+            state.Links = links;
+            state.Lost = lost;
+            return state;
+        }
+
+        /// <summary>A writing of the term that contains the changed words, found in the text and overlapping no other passage.</summary>
+        private static bool Absorb(EditState state, List<Passage> passages, int index, TranslationLine entry,
+                                   Func<string, string>? upperFirst, Func<string, string>? lowerFirst, out int start, out string? words)
+        {
+            Passage p = passages[index];
+            foreach (string writing in Variants(entry, upperFirst, lowerFirst))
+            {
+                int at = PassageBorder.AbsorbedAt(state.Text, p.Start, p.Start + p.Length, writing);
+                if (at < 0) continue;
+
+                bool clash = false;
+                for (int j = 0; j < passages.Count && !clash; j++)
+                    clash = j != index && at < passages[j].Start + passages[j].Length && at + writing.Length > passages[j].Start;
+                if (clash) continue;
+
+                start = at; words = writing;
+                return true;
+            }
+            start = 0; words = null;
+            return false;
         }
 
         // ── The question ────────────────────────────────────────────────────
 
         /// <summary>
-        /// The one question to ask next, or null. Passages that are the same term with the same new
-        /// words share it (one answer for both: it is the same writing of the same term); others
-        /// are asked one at a time.
+        /// The one question to ask next, or null. Passages that are the same term with the same new words share it
+        /// (one answer for both: it is the same writing of the same term); others are asked one at a time.
+        /// The indices are those of <see cref="Settle"/>'s state.
         /// </summary>
-        public static EditQuestion? NextQuestion(EditState state)
+        public static EditQuestion? NextQuestion(EditState state, Func<string, TranslationLine?> entryOf,
+                                                 Func<string, string>? upperFirst, Func<string, string>? lowerFirst)
         {
+            state = Settle(state, entryOf, upperFirst, lowerFirst);
             for (int i = 0; i < CountOf(state.Passages); i++)
             {
-                if (!state.Passages![i].Pending) continue;
+                if (!IsPending(state, i)) continue;
 
-                string words = state.Text.Substring(state.Passages[i].Start, state.Passages[i].Length);
+                string words = state.Text.Substring(state.Passages![i].Start, state.Passages[i].Length);
                 string entry = state.Links![i].To ?? string.Empty;
                 var same = new List<int> { i };
                 for (int j = i + 1; j < state.Passages.Count; j++)
-                    if (state.Passages[j].Pending && (state.Links[j].To ?? string.Empty) == entry
+                    if (IsPending(state, j) && (state.Links[j].To ?? string.Empty) == entry
                         && string.Equals(state.Text.Substring(state.Passages[j].Start, state.Passages[j].Length), words, StringComparison.Ordinal))
                         same.Add(j);
                 return new EditQuestion { Entry = entry, Text = words, Passages = same };
@@ -529,8 +508,10 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>The answer to <see cref="NextQuestion"/>.</summary>
-        public static EditState Answer(EditState state, EditQuestion question, EditAnswer answer, Func<string, TranslationLine?> entryOf)
+        public static EditState Answer(EditState state, EditQuestion question, EditAnswer answer, Func<string, TranslationLine?> entryOf,
+                                       Func<string, string>? upperFirst, Func<string, string>? lowerFirst)
         {
+            state = Settle(state, entryOf, upperFirst, lowerFirst);
             var passages = new List<Passage>(state.Passages!);
             var links = new List<LineLink>(state.Links!);
             var forms = new List<NewForm>(state.NewForms ?? NoForms);
@@ -560,22 +541,23 @@ namespace UnityGameTranslator.Common
                     ? new LineLink { To = link.To, Form = id, By = LinkReading.ByPerson, Was = question.Text }
                     : new LineLink { To = link.To, Form = link.Form, By = LinkReading.ByPerson, Was = question.Text, Own = question.Text };
                 Passage p = passages[i];
-                p.Pending = false;
+                p.Origin = question.Text;
                 passages[i] = p;
             }
 
-            EditState next = state;
-            next.Passages = passages;
-            next.Links = links;
-            next.NewForms = forms;
-            return next;
+            state.Passages = passages;
+            state.Links = links;
+            state.NewForms = forms;
+            return state;
         }
 
         // ── The acts of the person ─────────────────────────────────────────
 
         /// <summary><c>Unlink</c>: the words stay, the link goes, and the term is retained as « not here » for the machine.</summary>
-        public static EditAct Unlink(EditState state, int passage, Func<string, TranslationLine?> entryOf)
+        public static EditAct Unlink(EditState state, int passage, Func<string, TranslationLine?> entryOf,
+                                     Func<string, string>? upperFirst, Func<string, string>? lowerFirst)
         {
+            state = Settle(state, entryOf, upperFirst, lowerFirst);
             if (HasPending(state)) return Problem(state, "answer-first");
             if (passage < 0 || passage >= CountOf(state.Passages)) return Problem(state, "no-such-passage");
 
@@ -598,21 +580,21 @@ namespace UnityGameTranslator.Common
                     links[i] = l;
                 }
 
-            EditState next = state;
-            next.Passages = passages;
-            next.Links = links;
-            next.Unlinked = unlinked;
-            return new EditAct { State = next };
+            state.Passages = passages;
+            state.Links = links;
+            state.Unlinked = unlinked;
+            return new EditAct { State = state };
         }
 
         /// <summary>
-        /// <c>Link to term</c>: the selected words become a passage of that term. With a form given,
-        /// the selection is replaced by that form's words. A selection that is not a known writing
-        /// becomes a pending passage — the same question as changed words.
+        /// <c>Link to term</c>: the selected words become a passage of that term. With a form given, the selection is
+        /// replaced by that form's words. A selection that is not a known writing becomes a changed passage — the same
+        /// question as changed words.
         /// </summary>
         public static EditAct LinkTo(EditState state, int start, int length, string entryKey, string? formId,
                                      Func<string, TranslationLine?> entryOf, Func<string, string>? upperFirst, Func<string, string>? lowerFirst)
         {
+            state = Settle(state, entryOf, upperFirst, lowerFirst);
             if (HasPending(state)) return Problem(state, "answer-first");
             if (start < 0 || length <= 0 || start + length > state.Text.Length) return Problem(state, "bad-selection");
 
@@ -627,7 +609,7 @@ namespace UnityGameTranslator.Common
             string text = state.Text;
             string words = text.Substring(start, length);
             LineLink link = new LineLink { To = entryKey, By = LinkReading.ByPerson, Was = words };
-            bool pending = false;
+            string? origin = words;
 
             if (formId != null)
             {
@@ -640,34 +622,39 @@ namespace UnityGameTranslator.Common
                 link.Form = formId == LinkReading.OwnForm ? null : formId;
                 link.Was = writing;
                 length = writing.Length;
+                origin = writing;
             }
             else if (Known(entry.Value, words, upperFirst, lowerFirst, out string? form, out string? casing))
             {
                 link.Form = form;
                 link.Case = casing;
             }
-            else pending = true;
+            else origin = string.Empty;   // not a writing of the term: it waits for its question like changed words
+
+            int order = 0;
+            foreach (var p in passages) order = Math.Max(order, p.Order + 1);
+            foreach (var l in state.Lost ?? NoLost) order = Math.Max(order, l.Order + 1);
 
             int at = 0;
             while (at < passages.Count && passages[at].Start < start) at++;
-            passages.Insert(at, new Passage { Start = start, Length = length, Pending = pending });
+            passages.Insert(at, new Passage { Start = start, Length = length, Origin = origin, Order = order });
             links.Insert(at, link);
 
             var unlinked = new List<string>(state.Unlinked ?? NoStrings);
             unlinked.Remove(entryKey);
 
-            EditState next = state;
-            next.Text = text;
-            next.Passages = passages;
-            next.Links = links;
-            next.Unlinked = unlinked;
-            return new EditAct { State = next };
+            state.Text = text;
+            state.Passages = passages;
+            state.Links = links;
+            state.Unlinked = unlinked;
+            return new EditAct { State = state };
         }
 
         /// <summary><c>Mark as read</c>: every link takes the words it reads today as the ones a person read. Nothing else moves.</summary>
         public static EditAct MarkAsRead(EditState state, Func<string, TranslationLine?> entryOf,
                                          Func<string, string>? upperFirst, Func<string, string>? lowerFirst)
         {
+            state = Settle(state, entryOf, upperFirst, lowerFirst);
             if (HasPending(state)) return Problem(state, "answer-first");
 
             var lookup = WithNewForms(entryOf, state.NewForms);
@@ -685,25 +672,25 @@ namespace UnityGameTranslator.Common
             // The term is gone: there is nothing to read again, and the person is told what to do instead.
             if (!any) return Problem(state, "nothing-to-read");
 
-            EditState next = state;
-            next.Links = links;
-            return new EditAct { State = next };
+            state.Links = links;
+            return new EditAct { State = state };
         }
 
         // ── Resume ──────────────────────────────────────────────────────────
 
         /// <summary>
-        /// What to write: <c>v</c> with its markers, the links, the forms to add, the refused
-        /// entries — or the question still to ask, or why the text cannot be saved.
+        /// What to write: <c>v</c> with its markers, the links, the forms to add, the refused entries — or the question
+        /// still to ask, or why the text cannot be saved. <paramref name="original"/> is the state <see cref="Show"/> gave.
         ///
-        /// A real modification confirms the links of the line (they were under the person's eyes):
-        /// each takes the words it reads now as <c>was</c> and becomes <c>by: H</c>. Saving with
-        /// nothing different writes nothing. <c>Mark as read</c> alone moves only <c>was</c>.
+        /// A real modification confirms the links of the line (they were under the person's eyes): each takes the
+        /// words it reads now as <c>was</c> and becomes <c>by: H</c>. Saving with nothing different writes nothing.
+        /// <c>Mark as read</c> alone moves only <c>was</c>.
         /// </summary>
         public static EditOutcome Resume(EditState original, EditState current, Func<string, TranslationLine?> entryOf,
                                          Func<string, string>? upperFirst, Func<string, string>? lowerFirst)
         {
-            var question = NextQuestion(current);
+            current = Settle(current, entryOf, upperFirst, lowerFirst);
+            var question = NextQuestion(current, entryOf, upperFirst, lowerFirst);
             if (question.HasValue) return new EditOutcome { Changed = true, Question = question };
 
             if (current.Format2 && current.Text.IndexOf("[!g*", StringComparison.Ordinal) >= 0
@@ -767,36 +754,27 @@ namespace UnityGameTranslator.Common
             Format2 = format2,
             Passages = NoPassages,
             Links = NoLinks,
+            Lost = NoLost,
             Unlinked = unlinked,
             NewForms = NoForms,
         };
-
-        private static PassageChange[] Unchanged(EditState state)
-        {
-            int n = CountOf(state.Passages);
-            if (n == 0) return NoChanges;
-            var all = new PassageChange[n];
-            for (int i = 0; i < n; i++)
-                all[i] = new PassageChange { Outcome = PassageOutcome.Intact, NewStart = state.Passages![i].Start, NewLength = state.Passages[i].Length };
-            return all;
-        }
-
-        private static PassageChange Gone(PassageReason reason) => new PassageChange { Outcome = PassageOutcome.Gone, Reason = reason };
 
         private static EditAct Problem(EditState state, string code) => new EditAct { State = state, Problem = code };
 
         private static int CountOf<T>(IReadOnlyList<T>? list) => list == null ? 0 : list.Count;
 
-        private static bool HasPending(EditState state)
+        /// <summary>Changed words: not what the passage had when its link was last settled.</summary>
+        private static bool IsPending(EditState state, int index)
         {
-            for (int i = 0; i < CountOf(state.Passages); i++) if (state.Passages![i].Pending) return true;
-            return false;
+            Passage p = state.Passages![index];
+            if (p.Origin == null) return false;
+            return p.Origin.Length != p.Length
+                || string.CompareOrdinal(state.Text, p.Start, p.Origin, 0, p.Length) != 0;
         }
 
-        private static bool Overlaps(int[][] spans, int from, int to)
+        private static bool HasPending(EditState state)
         {
-            foreach (var s in spans)
-                if (s != null && from < s[1] && to > s[0]) return true;
+            for (int i = 0; i < CountOf(state.Passages); i++) if (IsPending(state, i)) return true;
             return false;
         }
 
@@ -815,9 +793,27 @@ namespace UnityGameTranslator.Common
             return null;
         }
 
+        /// <summary>The writings of a term, each with the first-letter case variants the caller's functions give — in order.</summary>
+        private static IEnumerable<string> Variants(TranslationLine entry, Func<string, string>? upperFirst, Func<string, string>? lowerFirst)
+        {
+            var writings = new List<string> { entry.Value ?? string.Empty };
+            if (entry.Forms != null) foreach (var f in entry.Forms) writings.Add(f.Value);
+
+            var seen = new List<string>();
+            foreach (string w in writings)
+            {
+                if (w.Length == 0) continue;
+                var variants = new List<string> { w };
+                if (upperFirst != null) variants.Add(upperFirst(w));
+                if (lowerFirst != null) variants.Add(lowerFirst(w));
+                foreach (string variant in variants)
+                    if (!string.IsNullOrEmpty(variant) && !seen.Contains(variant)) { seen.Add(variant); yield return variant; }
+            }
+        }
+
         /// <summary>
-        /// Are these words a writing the term already has? Exactly, or with the first letter's case
-        /// the caller's own functions give. A known writing needs no question.
+        /// Are these words a writing the term already has? Exactly, or with the first letter's case the caller's own
+        /// functions give. A known writing needs no question.
         /// </summary>
         private static bool Known(TranslationLine entry, string words, Func<string, string>? upperFirst, Func<string, string>? lowerFirst,
                                   out string? form, out string? casing)
