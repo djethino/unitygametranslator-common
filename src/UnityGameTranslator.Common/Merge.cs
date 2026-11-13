@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace UnityGameTranslator.Common
 {
@@ -29,6 +30,12 @@ namespace UnityGameTranslator.Common
 
         /// <summary>Changed there, deleted here.</summary>
         RemoteModifiedLocalDeleted,
+
+        /// <summary>
+        /// The machine rewrote the words of a sentence on which a person had set a link: the
+        /// person's line is shown and somebody decides. (The machine never replaces a person's decision.)
+        /// </summary>
+        PersonDecisionLost,
     }
 
     /// <summary>
@@ -85,6 +92,22 @@ namespace UnityGameTranslator.Common
         /// merged line holds none. Said, so a caller can show it.
         /// </summary>
         public bool LinksDropped;
+
+        /// <summary>
+        /// The refused entries (<c>unlinked</c>) the merged line must carry when they are not the
+        /// chosen line's own — null when the chosen line's already are the merge. Merged ELEMENT by
+        /// element, three ways: a refusal one side added is kept, one a side took back stays taken
+        /// back, and a side's refusal is never lost because the other side won the line.
+        /// </summary>
+        public IReadOnlyList<string>? MergedUnlinked;
+
+        /// <summary>
+        /// The links the merged line must carry when they are not the chosen line's own — only
+        /// when both lines hold the same words (a link means something for its words alone), null
+        /// otherwise. Merged link by link: one side moved it and the other did not, that move
+        /// stands; both moved it, the one a person set stands over a machine's.
+        /// </summary>
+        public IReadOnlyList<LineLink>? MergedLinks;
     }
 
     /// <summary>
@@ -271,6 +294,9 @@ public static MergeDecision Decide(TranslationLine? local, TranslationLine? remo
 
             if (decision.Verdict == MergeVerdict.Drop || !local.HasValue || !remote.HasValue) return decision;
 
+            if (localFormat >= 2 && remoteFormat >= 2)
+                KeepPeopleDecisions(ref decision, local.GetValueOrDefault(), remote.GetValueOrDefault(), ancestor, ancestorFormat);
+
             bool takesLocal = decision.Verdict == MergeVerdict.TakeLocal;
             TranslationLine taken = takesLocal ? local.GetValueOrDefault() : remote.GetValueOrDefault();
             TranslationLine other = takesLocal ? remote.GetValueOrDefault() : local.GetValueOrDefault();
@@ -285,6 +311,105 @@ public static MergeDecision Decide(TranslationLine? local, TranslationLine? remo
             }
 
             return decision;
+        }
+
+        /// <summary>
+        /// 🔴 **The machine never replaces a decision of a person**, whatever won the line: what a
+        /// person decided on a line that is NOT in the text — the entries they refused, the links
+        /// they set — is merged element by element, not carried away with the line the verdict
+        /// names. Only lines of the format 2 on both sides: a format 1 side holds none.
+        /// </summary>
+        private static void KeepPeopleDecisions(ref MergeDecision decision, TranslationLine local, TranslationLine remote,
+                                                TranslationLine? ancestor, int ancestorFormat)
+        {
+            bool takesLocal = decision.Verdict == MergeVerdict.TakeLocal;
+            TranslationLine chosen = takesLocal ? local : remote;
+            TranslationLine other = takesLocal ? remote : local;
+            bool sameWords = string.Equals(chosen.Value, other.Value, StringComparison.Ordinal);
+
+            // The machine rewrote the words of a sentence a person had linked: not its call.
+            if (!decision.IsConflict && !sameWords && Tag(chosen) == "A" && HasPersonLink(other))
+            {
+                decision.Verdict = takesLocal ? MergeVerdict.TakeRemote : MergeVerdict.TakeLocal;
+                decision.IsConflict = true;
+                decision.Conflict = ConflictKind.PersonDecisionLost;
+                decision.Reason = MergeReason.Conflict;
+                takesLocal = !takesLocal;
+                TranslationLine swap = chosen; chosen = other; other = swap;
+            }
+
+            TranslationLine? was = ancestor.HasValue && ancestorFormat >= 2 ? ancestor : null;
+
+            // Refused entries: a set, merged three ways.
+            var merged = new List<string>();
+            AddMerged(merged, chosen.Unlinked, other.Unlinked, was.HasValue ? was.Value.Unlinked : null);
+            AddMerged(merged, other.Unlinked, chosen.Unlinked, was.HasValue ? was.Value.Unlinked : null);
+            merged.Sort(StringComparer.Ordinal);
+            if (!SameSet(merged, chosen.Unlinked)) decision.MergedUnlinked = merged;
+
+            // Links: only for the same words, and the same number of them.
+            if (sameWords && CountOf(chosen.Links) == CountOf(other.Links) && CountOf(chosen.Links) > 0)
+            {
+                bool ancestorKnows = was.HasValue && string.Equals(was.Value.Value, chosen.Value, StringComparison.Ordinal)
+                                     && CountOf(was.Value.Links) == CountOf(chosen.Links);
+                var links = new List<LineLink>();
+                bool differs = false;
+                for (int i = 0; i < chosen.Links!.Count; i++)
+                {
+                    LineLink c = chosen.Links[i], o = other.Links![i];
+                    LineLink pick = c;
+                    if (!SameLink(c, o))
+                    {
+                        bool ancestorLink = ancestorKnows;
+                        LineLink a = ancestorKnows ? was!.Value.Links![i] : default;
+                        if (ancestorLink && SameLink(c, a)) pick = o;
+                        else if (ancestorLink && SameLink(o, a)) pick = c;
+                        else if (o.By == LinkReading.ByPerson && c.By != LinkReading.ByPerson) pick = o;
+                    }
+                    if (!SameLink(pick, c)) differs = true;
+                    links.Add(pick);
+                }
+                if (differs) decision.MergedLinks = links;
+            }
+        }
+
+        private static void AddMerged(List<string> into, IReadOnlyList<string>? side, IReadOnlyList<string>? otherSide, IReadOnlyList<string>? was)
+        {
+            if (side == null) return;
+            foreach (string x in side)
+            {
+                if (into.Contains(x)) continue;
+                bool inOther = Has(otherSide, x), inWas = Has(was, x);
+                // Kept when both hold it, or when it is new (not in the ancestor); dropped when the
+                // ancestor held it and the other side took it back.
+                if (inOther || !inWas) into.Add(x);
+            }
+        }
+
+        private static bool Has(IReadOnlyList<string>? list, string x)
+        {
+            if (list == null) return false;
+            foreach (string item in list) if (string.Equals(item, x, StringComparison.Ordinal)) return true;
+            return false;
+        }
+
+        private static int CountOf<T>(IReadOnlyList<T>? list) => list == null ? 0 : list.Count;
+
+        private static bool HasPersonLink(TranslationLine line)
+        {
+            if (line.Links != null)
+                foreach (var link in line.Links) if (link.By == LinkReading.ByPerson) return true;
+            return false;
+        }
+
+        private static bool SameLink(LineLink a, LineLink b) =>
+            a.To == b.To && a.Form == b.Form && a.Case == b.Case && a.By == b.By && a.Was == b.Was;
+
+        private static bool SameSet(List<string> merged, IReadOnlyList<string>? held)
+        {
+            if (merged.Count != CountOf(held)) return false;
+            foreach (string x in merged) if (!Has(held, x)) return false;
+            return true;
         }
 
         private static MergeDecision Settle(TranslationLine? local, TranslationLine? remote,

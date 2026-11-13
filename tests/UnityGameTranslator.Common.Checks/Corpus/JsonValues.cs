@@ -229,6 +229,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         ["reason"] = decision.Reason.ToString(),
                         ["fields_from"] = decision.FieldsFrom.ToString(),
                         ["links_dropped"] = decision.LinksDropped,
+                        ["merged_unlinked"] = Canon(decision.MergedUnlinked),
+                        ["merged_links"] = decision.MergedLinks == null ? null : Canon(decision.MergedLinks),
                     };
                 case Badge badge:
                     return new Dictionary<string, object?>
@@ -310,6 +312,11 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         ["text_changes"] = use.TextChanges,
                         ["needs_review_after"] = use.NeedsReviewAfter,
                         ["source_after"] = use.SourceAfter.ToString(),
+                    };
+                case LineLink link:
+                    return new Dictionary<string, object?>
+                    {
+                        ["to"] = link.To, ["form"] = link.Form, ["case"] = link.Case, ["by"] = link.By, ["was"] = link.Was,
                     };
                 case ClosedSlot slot:
                     return new Dictionary<string, object?> { ["list"] = slot.List, ["repeated"] = slot.Repeated, ["agrees"] = slot.Agrees };
