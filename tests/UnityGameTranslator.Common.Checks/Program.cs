@@ -83,6 +83,7 @@ namespace UnityGameTranslator.Common.Checks
             Section("The format 2 of a translation file, against its spec", check => TranslationFileFormat2Checks.Run(check, CommonRoot()));
             Section("Template identifiers", TemplateIdsChecks.Run);
             Section("First-letter case tables", check => CasingChecks.Run(check, CommonRoot()));
+            Section("Finding links in a text", LinkFindingChecks.Run);
             Section("Editing a text with links", LinkEditingChecks.Run);
         }
 

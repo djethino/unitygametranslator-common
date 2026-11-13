@@ -262,6 +262,16 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("casing", "lower_first", typeof(Casing), nameof(Casing.LowerFirst),
                 e => Casing.LowerFirst(Str(e, "text"))),
 
+            // ── word_glue / link_finding ──────────────────────────────────────
+            new Operation("word_glue", "is_glued", typeof(WordGlue), nameof(WordGlue.IsGlued),
+                e => WordGlue.IsGlued(Int(e, "code_point"))),
+            new Operation("word_glue", "edge_before", typeof(WordGlue), nameof(WordGlue.EdgeBefore),
+                e => WordGlue.EdgeBefore(Str(e, "text") ?? "", Int(e, "index"))),
+            new Operation("word_glue", "edge_after", typeof(WordGlue), nameof(WordGlue.EdgeAfter),
+                e => WordGlue.EdgeAfter(Str(e, "text") ?? "", Int(e, "index"))),
+            new Operation("link_finding", "find", typeof(LinkFinding), nameof(LinkFinding.Find),
+                e => LinkFinding.Find(TermIndex.Build(Lines(e, "terms")), Str(e, "text") ?? "", Str(e, "source") ?? "", Line(e, "before"))),
+
             // ── line_endings ──────────────────────────────────────────────────
             new Operation("line_endings", "to_lf", typeof(LineEndings), nameof(LineEndings.ToLf),
                 e => LineEndings.ToLf(Str(e, "text"))),

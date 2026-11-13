@@ -392,6 +392,11 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     {
                         ["to"] = link.To, ["form"] = link.Form, ["case"] = link.Case, ["by"] = link.By, ["was"] = link.Was, ["own"] = link.Own,
                     };
+                case FoundLinks found:
+                    return new Dictionary<string, object?>
+                    {
+                        ["v"] = found.V, ["links"] = Canon(found.Links), ["not_found"] = Canon(found.NotFound), ["problem"] = found.Problem,
+                    };
                 case TextHunk hunk:
                     return new Dictionary<string, object?>
                     {
