@@ -1,9 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace UnityGameTranslator.Common.UnityFiles
 {
+    /// <summary>What a stream starts like, as <see cref="SerializedFile.Probe"/> says it.</summary>
+    public enum SerializedProbe
+    {
+        /// <summary>Not a serialized file: nothing to say about it.</summary>
+        NotSerialized,
+
+        /// <summary>A serialized file whose size is the size it declares.</summary>
+        Serialized,
+
+        /// <summary>The header of a serialized file, in a file of another size: cut short, or not the file it was.</summary>
+        SizeDisagrees,
+    }
+
     /// <summary>
     /// A Unity serialized file (.assets, sharedassets, level files, globalgamemanagers, a bundle's
     /// CAB-…): its header, its types (with their type tree when the build kept them) and its table of
@@ -36,6 +50,9 @@ namespace UnityGameTranslator.Common.UnityFiles
         }
 
         public int Format { get; private set; }
+
+        /// <summary>The byte order of the file's values — its objects' too (the header says it once).</summary>
+        public bool BigEndian { get; private set; }
         /// <summary>The engine version the file says ("2021.3.27f1"); empty or "0.0.0" when it says none.</summary>
         public string EngineVersion { get; private set; } = "";
         public bool TypeTreesKept { get; private set; }
@@ -43,29 +60,68 @@ namespace UnityGameTranslator.Common.UnityFiles
         public string? TreeRefused { get; private set; }
         public IReadOnlyList<ObjectInfo> Objects => _objects;
 
+        /// <summary>One file this one points into: a reference (PPtr) whose file id is N + 1 names entry N.</summary>
+        public sealed class ExternalFile
+        {
+            internal ExternalFile(string pathName, string guid, int type) { PathName = pathName; Guid = guid; Type = type; }
+
+            /// <summary>The path Unity wrote ("archive:/CAB-…/CAB-…", "globalgamemanagers.assets", "Library/unity default resources").</summary>
+            public string PathName { get; }
+
+            /// <summary>The 16 bytes written beside it, as 32 hexadecimal digits.</summary>
+            public string Guid { get; }
+
+            /// <summary>Unity's kind of external (0 for an asset file of the player).</summary>
+            public int Type { get; }
+        }
+
+        /// <summary>
+        /// The files this one points into, in the order the file lists them. A reference's file id 0 is
+        /// THIS file; id N is entry N − 1 here. Read the first time it is asked, from where the object
+        /// table ended — a caller that never asks (the fonts) is not made to depend on it — so the
+        /// stream must still be open then. <see cref="UnityFileFormatException"/> when the table does not read.
+        /// </summary>
+        public IReadOnlyList<ExternalFile> Externals => _externals ?? (_externals = ReadExternals());
+
+        private long _afterObjects;
+        private List<ExternalFile>? _externals;
+
         private SerializedFile(Stream stream) { _reader = new UnityFileReader(stream, bigEndian: true); }
 
         /// <summary>
-        /// Whether the stream starts like a serialized file — its header's sizes agree with the
-        /// stream's. Read without throwing (a game's folder holds many other files); the stream is
-        /// left where it was.
+        /// Whether the stream is a serialized file: <see cref="Probe"/> says
+        /// <see cref="SerializedProbe.Serialized"/>. A header that is valid but whose size is wrong
+        /// answers false here — a caller that must tell it from "not one at all" asks <see cref="Probe"/>.
         /// </summary>
-        public static bool LooksLikeOne(Stream stream)
+        public static bool LooksLikeOne(Stream stream) => Probe(stream, out _) == SerializedProbe.Serialized;
+
+        /// <summary>
+        /// What the stream starts like, said in three answers instead of a yes and a no: a game's
+        /// folder holds many other files (nothing to say), serialized files, and — the case a boolean
+        /// hid — a file whose header IS a serialized file's but that is not the size it says it is
+        /// (cut short by a failed copy, a half-finished update). The last one is a file somebody must
+        /// be told about, not one to skip silently.
+        ///
+        /// Read without throwing; the stream is left where it was. <paramref name="detail"/> says what
+        /// disagrees, for the third answer only.
+        /// </summary>
+        public static SerializedProbe Probe(Stream stream, out string? detail)
         {
+            detail = null;
             long at = stream.Position;
             try
             {
-                if (stream.Length < 32) return false;
+                if (stream.Length < 32) return SerializedProbe.NotSerialized;
                 var head = new byte[48];
                 int n = 0;
                 stream.Position = 0;
                 while (n < head.Length) { int got = stream.Read(head, n, head.Length - n); if (got <= 0) break; n += got; }
                 uint format = BigU32(head, 8);
-                if (format < 9 || format > 64) return false;
+                if (format < 9 || format > 64) return SerializedProbe.NotSerialized;
                 long fileSize, dataOffset, metadata;
                 if (format >= 22)
                 {
-                    if (n < 48) return false;
+                    if (n < 48) return SerializedProbe.NotSerialized;
                     metadata = BigU32(head, 20);
                     fileSize = (long)BigU64(head, 24);
                     dataOffset = (long)BigU64(head, 32);
@@ -76,7 +132,14 @@ namespace UnityGameTranslator.Common.UnityFiles
                     fileSize = BigU32(head, 4);
                     dataOffset = BigU32(head, 12);
                 }
-                return fileSize == stream.Length && dataOffset <= fileSize && metadata > 0 && metadata < fileSize && head[16] <= 1;
+
+                // A header that holds together under the size IT declares: what the file would be if whole.
+                bool holdsTogether = fileSize > 0 && dataOffset <= fileSize && metadata > 0 && metadata < fileSize && head[16] <= 1;
+                if (!holdsTogether) return SerializedProbe.NotSerialized;
+                if (fileSize == stream.Length) return SerializedProbe.Serialized;
+
+                detail = $"the header of a serialized file (format {format}) says {fileSize} byte(s), the file has {stream.Length}";
+                return SerializedProbe.SizeDisagrees;
             }
             finally { stream.Position = at; }
         }
@@ -111,6 +174,7 @@ namespace UnityGameTranslator.Common.UnityFiles
                 r.I64();
             }
             r.BigEndian = bigEndian;
+            BigEndian = bigEndian;
 
             EngineVersion = Format >= 7 ? r.Zstring(64) : "";
             if (Format >= 8) r.I32();   // target platform
@@ -150,7 +214,45 @@ namespace UnityGameTranslator.Common.UnityFiles
                 _objects.Add(new ObjectInfo(pathId, start, size, classId, typeIndex));
             }
             // What follows (script types, externals, reference types, user information) is not needed
-            // to read an object.
+            // to read an object; the externals are read when somebody asks (Externals).
+            _afterObjects = r.Position;
+        }
+
+        private List<ExternalFile> ReadExternals()
+        {
+            var r = _reader;
+            long at = r.Position;
+            try
+            {
+                r.Position = _afterObjects;
+
+                // Script types: (file index, id) per script, from format 11. Only passed over here.
+                if (Format >= 11)
+                {
+                    int scripts = r.Count(8);
+                    for (int i = 0; i < scripts; i++)
+                    {
+                        r.I32();
+                        if (Format >= 14) { r.Align(); r.I64(); }
+                        else r.I32();
+                    }
+                }
+
+                int count = r.Count(1);
+                var list = new List<ExternalFile>(count);
+                for (int i = 0; i < count; i++)
+                {
+                    r.Zstring(256);                       // an empty string, written by the editor
+                    var guid = r.Bytes(16);
+                    int type = r.I32();
+                    string path = r.Zstring(1024);
+                    var hex = new StringBuilder(32);
+                    foreach (byte b in guid) hex.Append(b.ToString("x2"));
+                    list.Add(new ExternalFile(path, hex.ToString(), type));
+                }
+                return list;
+            }
+            finally { r.Position = at; }
         }
 
         private SerializedType ReadType(bool isReference)
@@ -233,11 +335,23 @@ namespace UnityGameTranslator.Common.UnityFiles
         /// <see cref="TypeTreeWalker.Fields"/>.
         /// </summary>
         public Dictionary<string, object?> Fields(ObjectInfo info, IReadOnlyList<TypeNode> tree, ICollection<string> wanted,
-                                                  ICollection<string>? measured = null)
+                                                  ICollection<string>? measured = null) =>
+            Fields(info, tree, wanted, measured, null, out _);
+
+        /// <summary>
+        /// As above, with the string fields named in <paramref name="raw"/> given as bytes (see
+        /// <see cref="TypeTreeWalker.Fields(ICollection{string}, ICollection{string}, ICollection{string})"/>)
+        /// and <paramref name="end"/>, where the last field read ended: a caller whose tree is the
+        /// whole of the layout can check the object ends there.
+        /// </summary>
+        public Dictionary<string, object?> Fields(ObjectInfo info, IReadOnlyList<TypeNode> tree, ICollection<string> wanted,
+                                                  ICollection<string>? measured, ICollection<string>? raw, out long end)
         {
             _reader.Position = info.Start;
-            var fields = new TypeTreeWalker(_reader, tree).Fields(wanted, measured ?? Array.Empty<string>());
-            if (_reader.Position > info.Start + info.Size)
+            var walker = new TypeTreeWalker(_reader, tree);
+            var fields = walker.Fields(wanted, measured ?? Array.Empty<string>(), raw ?? Array.Empty<string>());
+            end = walker.Position;
+            if (end > info.Start + info.Size)
                 throw new UnityFileFormatException($"object {info.PathId} read past its {info.Size} byte(s): not the layout it was written with");
             return fields;
         }

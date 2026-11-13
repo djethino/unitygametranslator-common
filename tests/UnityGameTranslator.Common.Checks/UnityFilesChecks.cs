@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using UnityGameTranslator.Common.UnityFiles;
@@ -49,6 +50,8 @@ namespace UnityGameTranslator.Common.Checks
                 check(Sha(LzmaDecoder.Decode(stream, v.size)) == v.sha,
                     $"LZMA decodes a stream liblzma wrote ({v.name})", "a bundle compressed with LZMA gives back its files byte for byte");
             }
+            ObjectLayoutChecks(check);
+            ObjectWalkerChecks.Run(check);
             var records = Records();
             foreach (var (name, stream) in new[] { ("lc3", UnityFilesVectors.RecordsLc3), ("lc0 lp2 pb0", UnityFilesVectors.RecordsLp2) })
             {
@@ -102,6 +105,30 @@ namespace UnityGameTranslator.Common.Checks
         }
 
         /// <summary>The records <see cref="UnityFilesVectors"/> compress: the same generator as the Python that wrote them.</summary>
+        private static string Names(IReadOnlyList<TypeNode>? tree) =>
+            tree == null ? "none" : string.Join(",", tree.Where(n => n.Depth == 1).Select(n => n.Name));
+
+        private static void ObjectLayoutChecks(Action<bool, string, string> check)
+        {
+            ulong V(string v) => UnityVersions.Key(v);
+            check(ObjectLayouts.SourceSha256 == FontLayouts.SourceSha256,
+                "the object layouts and the Font layouts come from the same dump", "one dated source for every generated table: changed for all of them at once");
+            check(Names(ObjectLayouts.For(ObjectLayouts.TextAssetClassId, V("2021.3.27f1"), out _)) == "m_Name,m_Script"
+                  && Names(ObjectLayouts.For(ObjectLayouts.TextAssetClassId, V("2017.1.0b2"), out _)) == "m_Name,m_Script"
+                  && Names(ObjectLayouts.For(ObjectLayouts.TextAssetClassId, V("5.6.5f1"), out _)) == "m_Name,m_Script,m_PathName",
+                "TextAsset: two strings from 2017.1, a path name after them before", "m_PathName is what the older layout adds");
+            check(Names(ObjectLayouts.For(ObjectLayouts.MonoBehaviourClassId, V("2021.3.27f1"), out _)) == "m_GameObject,m_Enabled,m_Script,m_Name",
+                "MonoBehaviour: its header, whose own fields come from the game's code", "the script's fields are never in this table");
+            check(Names(ObjectLayouts.For(ObjectLayouts.MonoScriptClassId, V("2021.3.27f1"), out _)) == "m_Name,m_ExecutionOrder,m_PropertiesHash,m_ClassName,m_Namespace,m_AssemblyName",
+                "MonoScript: the class name, the namespace and the assembly", "what names the class of a MonoBehaviour");
+            check(ObjectLayouts.For(ObjectLayouts.TextAssetClassId, 0, out _) == null && ObjectLayouts.For(ObjectLayouts.TextAssetClassId, V("1.0.0f1"), out _) == null,
+                "an unknown or older version gives no layout", "never a guess");
+            check(!ObjectLayouts.Has(128) && ObjectLayouts.For(128, V("2021.3.27f1"), out _) == null && ObjectLayouts.Has(114),
+                "a class the table does not hold gives none, and Has says so", "Font stays in FontLayouts");
+            ObjectLayouts.For(ObjectLayouts.TextAssetClassId, V("9999.1.0f1"), out bool newer);
+            check(newer, "a version newer than the dump is said so", "the closest layout below is given and may be wrong");
+        }
+
         internal static byte[] Records()
         {
             uint x = 12345;
@@ -162,8 +189,19 @@ namespace UnityGameTranslator.Common.Checks
             m.Write(0L);          // start in the data
             m.Write((uint)objBytes.Length);
             m.Write(0);           // type index
-            m.Write(0);           // script types
-            m.Write(0);           // externals
+            m.Write(1);           // script types: one, (file 1, path id 4242), the id aligned to four
+            m.Write(1);
+            while ((headerSize + meta.Length) % 4 != 0) m.Write((byte)0);
+            m.Write(4242L);
+            m.Write(2);           // externals: two
+            m.Write((byte)0);     // its empty string
+            m.Write(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0xAB });
+            m.Write(0);
+            m.Write(Encoding.ASCII.GetBytes("globalgamemanagers.assets\0"));
+            m.Write((byte)0);
+            m.Write(new byte[16]);
+            m.Write(3);
+            m.Write(Encoding.ASCII.GetBytes("archive:/CAB-0123/CAB-0123\0"));
             m.Write(0);           // reference types
             m.Write((byte)0);     // user information
             var metaBytes = meta.ToArray();
@@ -182,7 +220,20 @@ namespace UnityGameTranslator.Common.Checks
             file.Position = 0;
 
             check(SerializedFile.LooksLikeOne(file), "a format 22 file is recognised by its header", "its sizes agree with the stream");
+            check(SerializedFile.Probe(file, out var wholeDetail) == SerializedProbe.Serialized && wholeDetail == null,
+                "a whole file probes as serialized, with nothing to say", "the answer for a game's own files");
+            var cut = new MemoryStream(file.ToArray(), 0, (int)file.Length - 6);
+            check(SerializedFile.Probe(cut, out var cutDetail) == SerializedProbe.SizeDisagrees && cutDetail != null && cutDetail.Contains("format 22") && !SerializedFile.LooksLikeOne(cut),
+                "a header that is right in a file that is not the size it says is told apart from a file that is not one", cutDetail ?? "no detail");
+            var longer = new MemoryStream(file.ToArray().Concat(new byte[10]).ToArray());
+            check(SerializedFile.Probe(longer, out _) == SerializedProbe.SizeDisagrees, "a file longer than its header says is the same case", "a copy with a tail");
+            var png = new byte[200];
+            new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13 }.CopyTo(png, 0);
+            check(SerializedFile.Probe(new MemoryStream(png), out _) == SerializedProbe.NotSerialized, "a PNG is not mistaken for one", "its first chunk's length is 13: a version the table accepts");
             var read = SerializedFile.Open(file);
+            check(read.Externals.Count == 2 && read.Externals[0].PathName == "globalgamemanagers.assets" && read.Externals[0].Guid == "0102030405060708090a0b0c0d0e0fab"
+                  && read.Externals[0].Type == 0 && read.Externals[1].PathName == "archive:/CAB-0123/CAB-0123" && read.Externals[1].Type == 3,
+                "the files a file points into are read, after the script types", "a reference's file id N is entry N - 1: how a script is found in another file");
             check(read.Objects.Count == 1 && read.Objects[0].ClassId == FontLayouts.FontClassId && read.Objects[0].PathId == 7,
                 "the object table is read", "path id, class, place");
             var fields = read.Fields(read.Objects[0], tree, new[] { "m_Name", "m_FontData", "m_FontNames" });
@@ -190,6 +241,28 @@ namespace UnityGameTranslator.Common.Checks
                   && fields["m_FontData"] is byte[] data && Sha(data) == Sha(fontFile)
                   && fields["m_FontNames"] is List<object?> names && names.Count == 1 && names[0] as string == "Bench Family",
                 "a Font without type tree gives back its name, its whole file and its family", "what the export writes and the UI.Text backup names");
+            check(!read.BigEndian, "the file's byte order is said", "a little-endian file: its objects are read so");
+            var rawName = read.Fields(read.Objects[0], tree, new[] { "m_Name" }, null, new[] { "m_Name" }, out long fieldEnd);
+            check(rawName["m_Name"] is byte[] nameBytes && Encoding.UTF8.GetString(nameBytes) == "Bench Font" && fieldEnd > read.Objects[0].Start && fieldEnd <= read.Objects[0].Start + read.Objects[0].Size,
+                "a string field can be asked as the bytes the file holds", "and where the reading ended is said");
+
+            // A string whose bytes are not UTF-8: as text it loses them, as bytes it keeps them.
+            var oddTree = new[]
+            {
+                new TypeNode(0, "TextAsset", "Base", -1, 0, 0),
+                new TypeNode(1, "string", "m_Script", -1, 0, 0x8001),
+                new TypeNode(2, "Array", "Array", -1, 1, 0x4001),
+                new TypeNode(3, "int", "size", 4, 0, 0x1),
+                new TypeNode(3, "char", "data", 1, 0, 0x1),
+            };
+            var oddBytes = new byte[] { 3, 0, 0, 0, 0xFF, 0xFE, 0x41, 0 };
+            var odd = new TypeTreeWalker(new UnityFileReader(new MemoryStream(oddBytes), bigEndian: false), oddTree);
+            var asText = odd.Fields(new[] { "m_Script" });
+            var asBytes = new TypeTreeWalker(new UnityFileReader(new MemoryStream(oddBytes), bigEndian: false), oddTree)
+                .Fields(new[] { "m_Script" }, new string[0], new[] { "m_Script" });
+            check(asBytes["m_Script"] is byte[] kept && kept.SequenceEqual(new byte[] { 0xFF, 0xFE, 0x41 }) && asText["m_Script"] is string text && text != "ÿþA",
+                "bytes that are not UTF-8 survive when asked as bytes", "a UTF-16 mark or a cipher must not become replacement characters");
+
             // The same file in a data folder: indexed without its bytes, the index written and read
             // back, then the one font read alone.
             string folder = Path.Combine(Path.GetTempPath(), "ugt-check-gamefonts-" + Guid.NewGuid().ToString("N"));

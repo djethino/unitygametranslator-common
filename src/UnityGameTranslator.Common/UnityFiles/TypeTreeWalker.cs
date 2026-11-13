@@ -48,7 +48,22 @@ namespace UnityGameTranslator.Common.UnityFiles
         /// — arrays of one-byte values (a font file) — read past and given as their length (an int):
         /// what an index needs without holding every font of a game in memory.
         /// </summary>
-        public Dictionary<string, object?> Fields(ICollection<string> wanted, ICollection<string> measured)
+        public Dictionary<string, object?> Fields(ICollection<string> wanted, ICollection<string> measured) =>
+            Fields(wanted, measured, System.Array.Empty<string>());
+
+        /// <summary>The reader's position: after the fields read, where a caller checks the object ends where its layout says.</summary>
+        public long Position => _r.Position;
+
+        // True while a top-level field named in `raw` is read: its strings are given as their bytes.
+        private bool _rawNow;
+
+        /// <summary>
+        /// As above, and the string fields named in <paramref name="raw"/> are given as the
+        /// <c>byte[]</c> the file holds, not as UTF-8 text: a zero byte, a UTF-16 mark or a binary
+        /// content is told apart only by the bytes (a TextAsset's m_Script). A field that is a list of
+        /// strings gives a list of byte arrays.
+        /// </summary>
+        public Dictionary<string, object?> Fields(ICollection<string> wanted, ICollection<string> measured, ICollection<string> raw)
         {
             var found = new Dictionary<string, object?>();
             int expected = wanted.Count + measured.Count;
@@ -64,7 +79,9 @@ namespace UnityGameTranslator.Common.UnityFiles
                     continue;
                 }
                 bool keep = wanted.Contains(name);
+                _rawNow = keep && raw.Contains(name);
                 var value = Value(child, keep);
+                _rawNow = false;
                 if (keep) found[name] = value;
             }
             return found;
@@ -83,7 +100,7 @@ namespace UnityGameTranslator.Common.UnityFiles
             else if (node.Type == "string")
             {
                 var bytes = Value(kids[0], keep) as byte[];
-                if (keep) result = bytes == null ? "" : Encoding.UTF8.GetString(bytes);
+                if (keep) result = _rawNow ? (object)(bytes ?? new byte[0]) : bytes == null ? "" : Encoding.UTF8.GetString(bytes);
             }
             else if (node.Type == "TypelessData") result = Array(index, keep);
             else if (kids.Count == 1 && _nodes[kids[0]].IsArray) result = Value(kids[0], keep);   // vector, map, set…
