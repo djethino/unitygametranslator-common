@@ -3,6 +3,7 @@
   "classes": ["PassageBorder"],
   "note": "THE border rule, in one place (PassageBorder.cs) so it can be changed alone: which differences touch a linked passage. The default of 2026-11-13: a difference stuck to the edge is OUTSIDE the passage. The user's opinion on it is pending: changing the rule is changing these cases and PassageBorder.Touches, nothing else.",
   "operations": {
+    "adjacent": { "in": "same", "out": "-1 stuck before the passage, +1 stuck after, 0 neither (absorption: a changed passage may take adjacent typed words into a known writing)" },
     "touches": {"in": {"hunk_start": "int", "hunk_end": "int", "passage_start": "int", "passage_end": "int"}, "out": "bool"},
     "straddles": {"in": "same", "out": "bool: it touches AND reaches outside the passage"}
   },
@@ -66,6 +67,34 @@
     { "id": "passage_border/straddles/outside-does-not-straddle", "op": "straddles",
       "in": {"hunk_start": 0, "hunk_end": 3, "passage_start": 5, "passage_end": 10},
       "out": false,
-      "why": "it does not touch" }
+      "why": "it does not touch" },
+    { "id": "passage_border/adjacent/adjacent-before-insertion", "op": "adjacent",
+      "in": { "hunk_start": 5, "hunk_end": 5, "passage_start": 5, "passage_end": 10 },
+      "out": -1,
+      "why": "an insertion at the start is stuck before the passage" },
+    { "id": "passage_border/adjacent/adjacent-after-insertion", "op": "adjacent",
+      "in": { "hunk_start": 10, "hunk_end": 10, "passage_start": 5, "passage_end": 10 },
+      "out": 1,
+      "why": "and at the end, after it" },
+    { "id": "passage_border/adjacent/adjacent-before-deletion", "op": "adjacent",
+      "in": { "hunk_start": 3, "hunk_end": 5, "passage_start": 5, "passage_end": 10 },
+      "out": -1,
+      "why": "a deletion that stops where the passage begins" },
+    { "id": "passage_border/adjacent/adjacent-after-replacement", "op": "adjacent",
+      "in": { "hunk_start": 10, "hunk_end": 12, "passage_start": 5, "passage_end": 10 },
+      "out": 1,
+      "why": "a replacement that starts where it ends" },
+    { "id": "passage_border/adjacent/touching-is-not-adjacent", "op": "adjacent",
+      "in": { "hunk_start": 4, "hunk_end": 6, "passage_start": 5, "passage_end": 10 },
+      "out": 0,
+      "why": "a hunk that touches the passage is part of the change, not next to it" },
+    { "id": "passage_border/adjacent/inside-is-not-adjacent", "op": "adjacent",
+      "in": { "hunk_start": 7, "hunk_end": 7, "passage_start": 5, "passage_end": 10 },
+      "out": 0,
+      "why": "strictly inside" },
+    { "id": "passage_border/adjacent/far-is-not-adjacent", "op": "adjacent",
+      "in": { "hunk_start": 0, "hunk_end": 2, "passage_start": 5, "passage_end": 10 },
+      "out": 0,
+      "why": "neither" }
   ]
 }

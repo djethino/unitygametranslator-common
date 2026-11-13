@@ -279,6 +279,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => TextDiff.Hunks(Str(e, "old") ?? "", Str(e, "new") ?? "")),
             new Operation("passage_border", "touches", typeof(PassageBorder), nameof(PassageBorder.Touches),
                 e => PassageBorder.Touches(Int(e, "hunk_start"), Int(e, "hunk_end"), Int(e, "passage_start"), Int(e, "passage_end"))),
+            new Operation("passage_border", "adjacent", typeof(PassageBorder), nameof(PassageBorder.Adjacent),
+                e => PassageBorder.Adjacent(Int(e, "hunk_start"), Int(e, "hunk_end"), Int(e, "passage_start"), Int(e, "passage_end"))),
             new Operation("passage_border", "straddles", typeof(PassageBorder), nameof(PassageBorder.Straddles),
                 e => PassageBorder.Straddles(Int(e, "hunk_start"), Int(e, "hunk_end"), Int(e, "passage_start"), Int(e, "passage_end"))),
 

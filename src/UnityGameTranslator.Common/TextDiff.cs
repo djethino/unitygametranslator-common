@@ -128,6 +128,13 @@ namespace UnityGameTranslator.Common
     /// it: text typed right after « pièces d'étoile » is not part of the term. To change the rule,
     /// change <see cref="Touches"/> and the cases of corpus/rules/passage_border.json — nothing else
     /// in the editing rules knows where an edge is.
+    ///
+    /// The border rule has three companions that move with it, all defined from the same notion of « stuck
+    /// to the edge », and all in the corpus (rules/passage_border.json, rules/link_editing.json):
+    /// <see cref="Straddles"/> (a change that reaches outside the passage drops the link), the SLIDING of a
+    /// hunk to the placement that straddles fewest passages (LinkEditing.Slide — a case that fails without
+    /// it: k5-last-word-deleted), and the ABSORPTION of typed words stuck to a changed passage when they
+    /// complete a known writing (<see cref="Adjacent"/> — a case that fails without it: c2-a-known-writing).
     /// </summary>
     public static class PassageBorder
     {
@@ -140,6 +147,21 @@ namespace UnityGameTranslator.Common
             hunkStart == hunkEnd
                 ? passageStart < hunkStart && hunkStart < passageEnd
                 : hunkStart < passageEnd && hunkEnd > passageStart;
+
+        /// <summary>
+        /// On which side of a passage a hunk sits stuck to it: -1 when it ends exactly where the passage
+        /// begins, +1 when it begins exactly where the passage ends, 0 otherwise (a hunk that touches the
+        /// passage is never adjacent to it). These are the words the <b>absorption</b> rule may take into a
+        /// CHANGED passage when they complete a writing the term already has (LinkEditing.Reconcile): it lives
+        /// here because it is the other half of « stuck to the edge ».
+        /// </summary>
+        public static int Adjacent(int hunkStart, int hunkEnd, int passageStart, int passageEnd)
+        {
+            if (Touches(hunkStart, hunkEnd, passageStart, passageEnd)) return 0;
+            if (hunkEnd == passageStart) return -1;
+            if (hunkStart == passageEnd) return 1;
+            return 0;
+        }
 
         /// <summary>A touching hunk that also reaches outside the passage: it covers words around it.</summary>
         public static bool Straddles(int hunkStart, int hunkEnd, int passageStart, int passageEnd) =>

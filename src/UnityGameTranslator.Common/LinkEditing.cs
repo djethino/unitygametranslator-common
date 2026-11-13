@@ -387,8 +387,9 @@ namespace UnityGameTranslator.Common
                     int lead = 0, trail = 0;
                     foreach (var h in hunks)
                     {
-                        if (h.OldEnd == was.Start && h.NewEnd == spans[i][0]) lead = h.NewEnd - h.NewStart;
-                        if (h.OldStart == was.Start + was.Length && h.NewStart == spans[i][1]) trail = h.NewEnd - h.NewStart;
+                        int side = PassageBorder.Adjacent(h.OldStart, h.OldEnd, was.Start, was.Start + was.Length);
+                        if (side < 0 && h.NewEnd == spans[i][0]) lead = h.NewEnd - h.NewStart;
+                        if (side > 0 && h.NewStart == spans[i][1]) trail = h.NewEnd - h.NewStart;
                     }
 
                     string? matchedForm = null, matchedCase = null;

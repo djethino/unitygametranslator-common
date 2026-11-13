@@ -22,7 +22,7 @@
       "term_changes": ["impact"],
       "text_diff": ["hunks"],
       "line_endings": ["to_lf", "of_line"],
-      "passage_border": ["touches", "straddles"],
+      "passage_border": ["touches", "straddles", "adjacent"],
       "link_editing": ["show", "view", "reconcile", "next_question", "answer", "unlink", "link_to", "mark_as_read", "resume"],
       "translation_file_keys": ["is_metadata_key", "is_line"],
       "placeholders": ["frozen_sequences", "accepts_edit", "tokens", "invented", "tally"]
