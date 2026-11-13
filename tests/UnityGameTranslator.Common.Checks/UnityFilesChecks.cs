@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using UnityGameTranslator.Common.UnityFiles;
@@ -182,6 +183,16 @@ namespace UnityGameTranslator.Common.Checks
             file.Position = 0;
 
             check(SerializedFile.LooksLikeOne(file), "a format 22 file is recognised by its header", "its sizes agree with the stream");
+            check(SerializedFile.Probe(file, out var wholeDetail) == SerializedProbe.Serialized && wholeDetail == null,
+                "a whole file probes as serialized, with nothing to say", "the answer for a game's own files");
+            var cut = new MemoryStream(file.ToArray(), 0, (int)file.Length - 6);
+            check(SerializedFile.Probe(cut, out var cutDetail) == SerializedProbe.SizeDisagrees && cutDetail != null && cutDetail.Contains("format 22") && !SerializedFile.LooksLikeOne(cut),
+                "a header that is right in a file that is not the size it says is told apart from a file that is not one", cutDetail ?? "no detail");
+            var longer = new MemoryStream(file.ToArray().Concat(new byte[10]).ToArray());
+            check(SerializedFile.Probe(longer, out _) == SerializedProbe.SizeDisagrees, "a file longer than its header says is the same case", "a copy with a tail");
+            var png = new byte[200];
+            new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13 }.CopyTo(png, 0);
+            check(SerializedFile.Probe(new MemoryStream(png), out _) == SerializedProbe.NotSerialized, "a PNG is not mistaken for one", "its first chunk's length is 13: a version the table accepts");
             var read = SerializedFile.Open(file);
             check(read.Objects.Count == 1 && read.Objects[0].ClassId == FontLayouts.FontClassId && read.Objects[0].PathId == 7,
                 "the object table is read", "path id, class, place");

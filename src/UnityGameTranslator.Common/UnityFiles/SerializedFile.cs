@@ -4,6 +4,19 @@ using System.IO;
 
 namespace UnityGameTranslator.Common.UnityFiles
 {
+    /// <summary>What a stream starts like, as <see cref="SerializedFile.Probe"/> says it.</summary>
+    public enum SerializedProbe
+    {
+        /// <summary>Not a serialized file: nothing to say about it.</summary>
+        NotSerialized,
+
+        /// <summary>A serialized file whose size is the size it declares.</summary>
+        Serialized,
+
+        /// <summary>The header of a serialized file, in a file of another size: cut short, or not the file it was.</summary>
+        SizeDisagrees,
+    }
+
     /// <summary>
     /// A Unity serialized file (.assets, sharedassets, level files, globalgamemanagers, a bundle's
     /// CAB-…): its header, its types (with their type tree when the build kept them) and its table of
@@ -46,26 +59,39 @@ namespace UnityGameTranslator.Common.UnityFiles
         private SerializedFile(Stream stream) { _reader = new UnityFileReader(stream, bigEndian: true); }
 
         /// <summary>
-        /// Whether the stream starts like a serialized file — its header's sizes agree with the
-        /// stream's. Read without throwing (a game's folder holds many other files); the stream is
-        /// left where it was.
+        /// Whether the stream is a serialized file: <see cref="Probe"/> says
+        /// <see cref="SerializedProbe.Serialized"/>. A header that is valid but whose size is wrong
+        /// answers false here — a caller that must tell it from "not one at all" asks <see cref="Probe"/>.
         /// </summary>
-        public static bool LooksLikeOne(Stream stream)
+        public static bool LooksLikeOne(Stream stream) => Probe(stream, out _) == SerializedProbe.Serialized;
+
+        /// <summary>
+        /// What the stream starts like, said in three answers instead of a yes and a no: a game's
+        /// folder holds many other files (nothing to say), serialized files, and — the case a boolean
+        /// hid — a file whose header IS a serialized file's but that is not the size it says it is
+        /// (cut short by a failed copy, a half-finished update). The last one is a file somebody must
+        /// be told about, not one to skip silently.
+        ///
+        /// Read without throwing; the stream is left where it was. <paramref name="detail"/> says what
+        /// disagrees, for the third answer only.
+        /// </summary>
+        public static SerializedProbe Probe(Stream stream, out string? detail)
         {
+            detail = null;
             long at = stream.Position;
             try
             {
-                if (stream.Length < 32) return false;
+                if (stream.Length < 32) return SerializedProbe.NotSerialized;
                 var head = new byte[48];
                 int n = 0;
                 stream.Position = 0;
                 while (n < head.Length) { int got = stream.Read(head, n, head.Length - n); if (got <= 0) break; n += got; }
                 uint format = BigU32(head, 8);
-                if (format < 9 || format > 64) return false;
+                if (format < 9 || format > 64) return SerializedProbe.NotSerialized;
                 long fileSize, dataOffset, metadata;
                 if (format >= 22)
                 {
-                    if (n < 48) return false;
+                    if (n < 48) return SerializedProbe.NotSerialized;
                     metadata = BigU32(head, 20);
                     fileSize = (long)BigU64(head, 24);
                     dataOffset = (long)BigU64(head, 32);
@@ -76,7 +102,14 @@ namespace UnityGameTranslator.Common.UnityFiles
                     fileSize = BigU32(head, 4);
                     dataOffset = BigU32(head, 12);
                 }
-                return fileSize == stream.Length && dataOffset <= fileSize && metadata > 0 && metadata < fileSize && head[16] <= 1;
+
+                // A header that holds together under the size IT declares: what the file would be if whole.
+                bool holdsTogether = fileSize > 0 && dataOffset <= fileSize && metadata > 0 && metadata < fileSize && head[16] <= 1;
+                if (!holdsTogether) return SerializedProbe.NotSerialized;
+                if (fileSize == stream.Length) return SerializedProbe.Serialized;
+
+                detail = $"the header of a serialized file (format {format}) says {fileSize} byte(s), the file has {stream.Length}";
+                return SerializedProbe.SizeDisagrees;
             }
             finally { stream.Position = at; }
         }
