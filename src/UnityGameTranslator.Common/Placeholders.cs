@@ -35,8 +35,20 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public const int MaxAttempts = 3;
 
-        /// <summary>The grammar of a token, written once: [!v*N], [!t*N], [!STR*N], [!nl].</summary>
-        private const string TokenGrammar = @"\[!(?:v\*\d+|t\*\d+|STR\*\d+|nl)\]";
+        /// <summary>
+        /// The grammar of a token, written once: [!v*N], [!t*N], [!STR*N], [!nl] — and the three markers of
+        /// the format 2, whose patterns are LineMarkers' own: [!g*N] (a link), [!L*name…] (a closed slot),
+        /// [!T*N] (an open slot).
+        ///
+        /// 🔴 **A marker of the format 2 never goes to a model and never comes back from one without
+        /// a rule.** The model is shown the sentence in clear (a link is its words, a template is
+        /// asked as the text the game shows); the program, not the model, finds the links again in what
+        /// comes back. So a marker in a reply is a token the source never had — « invented », refused
+        /// and sent back with the usual correction — and one in a text a person types is refused the
+        /// same way. A text that really holds one in its SOURCE keeps it, like any other token.
+        /// </summary>
+        private const string TokenGrammar = @"(?:\[!(?:v\*\d+|t\*\d+|STR\*\d+|nl)\]|"
+            + LineMarkers.LinkPattern + "|" + LineMarkers.ClosedSlotPattern + "|" + LineMarkers.OpenSlotPattern + ")";
 
         /// <summary>Every frozen token: [!v*N], [!t*N], [!STR*N], [!nl].</summary>
         private static readonly Regex TokenPattern = new Regex(TokenGrammar, RegexOptions.Compiled);
