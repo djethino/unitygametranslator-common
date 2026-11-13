@@ -72,6 +72,29 @@ namespace UnityGameTranslator.Common
             return numbers;
         }
 
+        /// <summary>Where a link marker sits in a text: UTF-16 start, length, and its N.</summary>
+        internal struct MarkerSpan
+        {
+            public int Start;
+            public int Length;
+            public int Number;
+        }
+
+        /// <summary>Every <c>[!g*N]</c> of the text with its place, in reading order.</summary>
+        internal static List<MarkerSpan> LinkSpans(string? text)
+        {
+            var spans = new List<MarkerSpan>();
+            if (string.IsNullOrEmpty(text)) return spans;
+            foreach (Match m in Link.Matches(text!))
+                spans.Add(new MarkerSpan
+                {
+                    Start = m.Index,
+                    Length = m.Length,
+                    Number = int.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture),
+                });
+            return spans;
+        }
+
         /// <summary>Every closed slot of the text, in reading order.</summary>
         public static List<ClosedSlot> ClosedSlots(string? text)
         {

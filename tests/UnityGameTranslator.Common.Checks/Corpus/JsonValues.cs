@@ -176,6 +176,46 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             return k => map.TryGetValue(k, out var found) ? found : (TranslationLine?)null;
         }
 
+        /// <summary>An edit state in the corpus's form: <c>{text, passages:[{start,length,pending?}], links, unlinked, new_forms, format2?, damaged?}</c>.</summary>
+        public static EditState StateOf(JsonElement e, string key)
+        {
+            if (!e.TryGetProperty(key, out var s) || s.ValueKind != JsonValueKind.Object)
+                throw new InvalidOperationException($"'{key}' must be an edit state");
+
+            var passages = new List<Passage>();
+            if (s.TryGetProperty("passages", out var ps) && ps.ValueKind == JsonValueKind.Array)
+                foreach (var p in ps.EnumerateArray())
+                    passages.Add(new Passage { Start = Int(p, "start"), Length = Int(p, "length"), Pending = Bool(p, "pending") });
+
+            var links = new List<LineLink>();
+            if (s.TryGetProperty("links", out var ls) && ls.ValueKind == JsonValueKind.Array)
+                foreach (var l in ls.EnumerateArray()) links.Add(LinkOf(l));
+
+            var forms = new List<NewForm>();
+            if (s.TryGetProperty("new_forms", out var fs) && fs.ValueKind == JsonValueKind.Array)
+                foreach (var f in fs.EnumerateArray())
+                    forms.Add(new NewForm { Entry = Str(f, "entry")!, Id = Str(f, "id")!, Text = Str(f, "text")! });
+
+            return new EditState
+            {
+                Text = Str(s, "text") ?? "",
+                Format2 = Bool(s, "format2", true),
+                Passages = passages,
+                Links = links,
+                Unlinked = Strings(s, "unlinked"),
+                NewForms = forms,
+                Damaged = Bool(s, "damaged"),
+            };
+        }
+
+        public static EditQuestion QuestionOf(JsonElement e, string key)
+        {
+            var q = e.GetProperty(key);
+            var indices = new List<int>();
+            foreach (var i in q.GetProperty("passages").EnumerateArray()) indices.Add(i.GetInt32());
+            return new EditQuestion { Entry = Str(q, "entry")!, Text = Str(q, "text")!, Passages = indices };
+        }
+
         private static List<KeyValuePair<string, string>>? StringMap(JsonElement e, string key) =>
             e.TryGetProperty(key, out var v) && v.ValueKind == JsonValueKind.Object ? StringPairs(v) : null;
 
@@ -318,6 +358,55 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     {
                         ["to"] = link.To, ["form"] = link.Form, ["case"] = link.Case, ["by"] = link.By, ["was"] = link.Was, ["own"] = link.Own,
                     };
+                case TextHunk hunk:
+                    return new Dictionary<string, object?>
+                    {
+                        ["old_start"] = hunk.OldStart, ["old_end"] = hunk.OldEnd, ["new_start"] = hunk.NewStart, ["new_end"] = hunk.NewEnd,
+                    };
+                case Passage passage:
+                    return new Dictionary<string, object?> { ["start"] = passage.Start, ["length"] = passage.Length, ["pending"] = passage.Pending };
+                case NewForm form:
+                    return new Dictionary<string, object?> { ["entry"] = form.Entry, ["id"] = form.Id, ["text"] = form.Text };
+                case EditState state:
+                    return new Dictionary<string, object?>
+                    {
+                        ["text"] = state.Text,
+                        ["format2"] = state.Format2,
+                        ["passages"] = Canon(state.Passages),
+                        ["links"] = Canon(state.Links),
+                        ["unlinked"] = Canon(state.Unlinked),
+                        ["new_forms"] = Canon(state.NewForms),
+                        ["damaged"] = state.Damaged,
+                    };
+                case PassageChange change:
+                    return new Dictionary<string, object?>
+                    {
+                        ["outcome"] = change.Outcome.ToString(), ["reason"] = change.Reason.ToString(),
+                        ["new_start"] = change.NewStart, ["new_length"] = change.NewLength,
+                    };
+                case Reconciliation rec:
+                    return new Dictionary<string, object?> { ["state"] = Canon(rec.State), ["changes"] = Canon(rec.Changes) };
+                case EditQuestion q:
+                    return new Dictionary<string, object?> { ["entry"] = q.Entry, ["text"] = q.Text, ["passages"] = Canon(q.Passages) };
+                case EditAct act:
+                    return new Dictionary<string, object?> { ["state"] = Canon(act.State), ["problem"] = act.Problem };
+                case PassageView view:
+                    return new Dictionary<string, object?>
+                    {
+                        ["start"] = view.Start, ["length"] = view.Length, ["source"] = view.Source.ToString(),
+                        ["needs_review"] = view.NeedsReview, ["case_not_applied"] = view.CaseNotApplied, ["pending"] = view.Pending,
+                    };
+                case EditOutcome outcome:
+                    return new Dictionary<string, object?>
+                    {
+                        ["changed"] = outcome.Changed,
+                        ["problem"] = outcome.Problem,
+                        ["question"] = outcome.Question.HasValue ? Canon(outcome.Question.Value) : null,
+                        ["v"] = outcome.V,
+                        ["links"] = outcome.Links == null ? null : Canon(outcome.Links),
+                        ["new_forms"] = outcome.NewForms == null ? null : Canon(outcome.NewForms),
+                        ["unlinked"] = outcome.Unlinked == null ? null : Canon(outcome.Unlinked),
+                    };
                 case ClosedSlot slot:
                     return new Dictionary<string, object?> { ["list"] = slot.List, ["repeated"] = slot.Repeated, ["agrees"] = slot.Agrees };
                 case LinkRead read:
@@ -373,6 +462,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     return false;
 
                 case JsonValueKind.Number:
+                    if (actual is int whole) actual = (long)whole;
                     if (actual is long l && expected.TryGetInt64(out long el) && l == el) return true;
                     if (actual is double d && Math.Abs(d - expected.GetDouble()) < 1e-9) return true;
                     if (actual is long l2 && Math.Abs(l2 - expected.GetDouble()) < 1e-9) return true;

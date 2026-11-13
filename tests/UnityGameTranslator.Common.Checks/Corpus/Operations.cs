@@ -266,6 +266,35 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     return TermChanges.Impact(Str(e, "entry_key")!, Lines(e, "lines"), lists, Line(e, "after"));
                 }),
 
+            // ── text_diff / passage_border ────────────────────────────────────
+            new Operation("text_diff", "hunks", typeof(TextDiff), nameof(TextDiff.Hunks),
+                e => TextDiff.Hunks(Str(e, "old") ?? "", Str(e, "new") ?? "")),
+            new Operation("passage_border", "touches", typeof(PassageBorder), nameof(PassageBorder.Touches),
+                e => PassageBorder.Touches(Int(e, "hunk_start"), Int(e, "hunk_end"), Int(e, "passage_start"), Int(e, "passage_end"))),
+            new Operation("passage_border", "straddles", typeof(PassageBorder), nameof(PassageBorder.Straddles),
+                e => PassageBorder.Straddles(Int(e, "hunk_start"), Int(e, "hunk_end"), Int(e, "passage_start"), Int(e, "passage_end"))),
+
+            // ── link_editing ──────────────────────────────────────────────────
+            new Operation("link_editing", "show", typeof(LinkEditing), nameof(LinkEditing.Show),
+                e => LinkEditing.Show(LineRequired(e, "line"), Int(e, "file_format", 2), LineLookup(e, "entries"), Up(e), Low(e))),
+            new Operation("link_editing", "view", typeof(LinkEditing), nameof(LinkEditing.View),
+                e => LinkEditing.View(StateOf(e, "state"), LineLookup(e, "entries"), Up(e), Low(e))),
+            new Operation("link_editing", "reconcile", typeof(LinkEditing), nameof(LinkEditing.Reconcile),
+                e => LinkEditing.Reconcile(StateOf(e, "state"), Str(e, "final_text") ?? "", LineLookup(e, "entries"), Up(e), Low(e))),
+            new Operation("link_editing", "next_question", typeof(LinkEditing), nameof(LinkEditing.NextQuestion),
+                e => LinkEditing.NextQuestion(StateOf(e, "state"))),
+            new Operation("link_editing", "answer", typeof(LinkEditing), nameof(LinkEditing.Answer),
+                e => LinkEditing.Answer(StateOf(e, "state"), QuestionOf(e, "question"), EnumRequired<EditAnswer>(e, "answer"), LineLookup(e, "entries"))),
+            new Operation("link_editing", "unlink", typeof(LinkEditing), nameof(LinkEditing.Unlink),
+                e => LinkEditing.Unlink(StateOf(e, "state"), Int(e, "passage"), LineLookup(e, "entries"))),
+            new Operation("link_editing", "link_to", typeof(LinkEditing), nameof(LinkEditing.LinkTo),
+                e => LinkEditing.LinkTo(StateOf(e, "state"), Int(e, "start"), Int(e, "length"), Str(e, "entry")!, Str(e, "form"),
+                                        LineLookup(e, "entries"), Up(e), Low(e))),
+            new Operation("link_editing", "mark_as_read", typeof(LinkEditing), nameof(LinkEditing.MarkAsRead),
+                e => LinkEditing.MarkAsRead(StateOf(e, "state"), LineLookup(e, "entries"), Up(e), Low(e))),
+            new Operation("link_editing", "resume", typeof(LinkEditing), nameof(LinkEditing.Resume),
+                e => LinkEditing.Resume(StateOf(e, "original"), StateOf(e, "current"), LineLookup(e, "entries"), Up(e), Low(e))),
+
             // ── template_ids ──────────────────────────────────────────────────
             new Operation("template_ids", "of", typeof(TemplateIds), nameof(TemplateIds.Of),
                 e => TemplateIds.Of(Str(e, "key")!)),
@@ -563,6 +592,10 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 ["at_rest"] = give.AtRest,
             };
         }
+
+        private static Func<string, string>? Up(JsonElement e) => Str(e, "casing") == "first-letter" ? FirstUpper : (Func<string, string>?)null;
+
+        private static Func<string, string>? Low(JsonElement e) => Str(e, "casing") == "first-letter" ? FirstLower : (Func<string, string>?)null;
 
         private static string FirstUpper(string text) =>
             text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text.Substring(1);
