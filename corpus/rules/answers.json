@@ -33,6 +33,10 @@
       "why": "picking one would invent an opinion the model did not give" },
     { "id": "answers/read_rating/out-of-range-is-not-a-mark", "op": "read_rating", "in": { "answer": "11" }, "out": null,
       "why": "0 and 10 both mean something; 11 means it misread the question" },
+    { "id": "answers/read_rating/a-mark-in-other-digits-is-no-mark", "op": "read_rating", "in": { "answer": "٨" }, "out": null,
+      "why": "the mark is read in ASCII digits: a digit of another script is not one (the pattern used to take it and the number parser refuse it, by two different rules)" },
+    { "id": "answers/read_rating/the-ascii-number-is-the-only-one-counted", "op": "read_rating", "in": { "answer": "8 (٨)" }, "out": 8,
+      "why": "one number, then: the other is not a number to this rule, so the answer is not ambiguous" },
     { "id": "answers/read_rating/nothing-in-no-mark-out", "op": "read_rating", "in": { "answer": "" }, "out": null, "why": "an empty cell says the model would not answer" },
 
     { "id": "answers/clean/markdown-emphasis-comes-off", "op": "clean", "in": { "answer": "**Démarrer**", "source": "Start" }, "out": "Démarrer",

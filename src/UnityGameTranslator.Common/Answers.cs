@@ -86,7 +86,7 @@ namespace UnityGameTranslator.Common
             // "7/10" is one answer, not two numbers: the ten is the scale we asked for.
             string text = Regex.Replace(answer, @"/\s*10\b", " ");
 
-            var numbers = Regex.Matches(text, @"-?\d+(?:[.,]\d+)?");
+            var numbers = Regex.Matches(text, @"-?[0-9]+(?:[.,][0-9]+)?");
             if (numbers.Count != 1) return null;
 
             string found = numbers[0].Value.Replace(',', '.');
