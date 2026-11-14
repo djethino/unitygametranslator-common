@@ -19,6 +19,7 @@
       { "kind": "label", "name": "ReviewLine", "text": { "bind": "reviewLine" }, "policy": "Excluded", "role": "Small", "tone": "Info", "fill": "Stretch", "autoHeight": true, "visible": false },
       { "kind": "label", "name": "ZoneProblem", "text": { "bind": "zoneProblem" }, "policy": "Excluded", "role": "Small", "tone": "Error", "richText": false, "fill": "Stretch", "autoHeight": true, "visible": false },
       { "kind": "label", "name": "ZoneGone", "text": "This term no longer exists.", "role": "Small", "tone": "Warning", "visible": false },
+      { "kind": "label", "name": "WaitingLine", "text": { "bind": "waitingLine" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "fill": "Stretch", "autoHeight": true, "visible": false },
       { "kind": "row", "name": "ZoneButtons", "spacing": "SmallSpacing", "pad": 0, "minHeight": "RowHeightNormal", "placement": "MiddleRight", "children": [
         { "kind": "button", "name": "CancelBtn", "text": "Cancel", "size": "Compact", "minWidth": 80, "act": "closeTerm" },
         { "kind": "button", "name": "ApplyBtn", "text": "Apply", "tone": "Primary", "size": "Compact", "minWidth": 100, "act": "applyTerm" }

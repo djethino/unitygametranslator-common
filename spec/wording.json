@@ -419,6 +419,22 @@
       ],
       "carried_by": "the mod's EditChecks, if it says a placeholder fault as the site does",
       "fault": "invented"
+    },
+    "edit.changes_waiting": {
+      "text": "Changes not applied: {count}",
+      "params": [
+        "count"
+      ],
+      "site": "editor.gestures_waiting",
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "WaitingLine",
+          "field": "bind",
+          "value": "waitingLine"
+        }
+      ],
+      "note": "Said on the first attempt to leave a term that holds changes not applied; the second attempt goes through. Cancel does not ask again."
     }
   }
 }
