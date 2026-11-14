@@ -89,7 +89,7 @@
     "state": "draft",
     "lookup": "{key: line}"
    },
-   "out": "empty-key | bad-key | key-is-term | cites | empty-word | empty-form | null"
+   "out": "empty-key | bad-key | key-is-term | cites | empty-word | empty-form | word-has-marker | form-has-marker | word-placeholders | form-placeholders | null"
   },
   "after": {
    "in": {
@@ -4070,6 +4070,475 @@
    },
    "why": "the mod's own words keep M for the same reason"
   },
-    {"id": "term_edit/blockers/a-template-uses-the-form-in-the-slots-of-a-list", "op": "blockers", "in": {"state": {"key": "柏", "word": "Bo", "word_touched": false, "forms": [{"id": "f1", "text": "Bai", "added": false}], "selected": null, "is_new": false, "becomes": false, "original": {"v": "Bo", "forms": [{"id": "f1", "text": "Bai"}]}}, "id": "f1", "file": {"柏": {"v": "Bo", "t": "A", "forms": {"f1": "Bai"}, "use": {"tc701839d3afe": "0", "tc701839d3afe:GenerateRandomHeroGivenName": "f1"}}}}, "out": {"sentences": [], "template": true}, "why": "a form a `T:LIST` key names is a form a template takes: it cannot go"}
+    {"id": "term_edit/blockers/a-template-uses-the-form-in-the-slots-of-a-list", "op": "blockers", "in": {"state": {"key": "柏", "word": "Bo", "word_touched": false, "forms": [{"id": "f1", "text": "Bai", "added": false}], "selected": null, "is_new": false, "becomes": false, "original": {"v": "Bo", "forms": [{"id": "f1", "text": "Bai"}]}}, "id": "f1", "file": {"柏": {"v": "Bo", "t": "A", "forms": {"f1": "Bai"}, "use": {"tc701839d3afe": "0", "tc701839d3afe:GenerateRandomHeroGivenName": "f1"}}}}, "out": {"sentences": [], "template": true}, "why": "a form a `T:LIST` key names is a form a template takes: it cannot go"},
+  {
+   "id": "term_edit/problem/a-link-marker-in-the-word",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pièce [!g*0]",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pièces d'étoile",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pièce d'étoile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pièces d'étoile"
+       }
+      ]
+     }
+    },
+    "lookup": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile"
+      }
+     },
+     "Press [!v*0]": {
+      "v": "Appuyer sur [!v*0]",
+      "t": "V",
+      "term": true
+     }
+    }
+   },
+   "out": "word-has-marker",
+   "why": "a term is a word of the game: the file refuses it when written, said before the click (a term cites no term)"
+  },
+  {
+   "id": "term_edit/problem/a-slot-in-the-word",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pièce [!L*weapon]",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pièces d'étoile",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pièce d'étoile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pièces d'étoile"
+       }
+      ]
+     }
+    },
+    "lookup": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile"
+      }
+     },
+     "Press [!v*0]": {
+      "v": "Appuyer sur [!v*0]",
+      "t": "V",
+      "term": true
+     }
+    }
+   },
+   "out": "word-has-marker",
+   "why": "a term is a word of the game: the file refuses it when written, said before the click: a slot belongs to a template, whose key holds it — a term's never does"
+  },
+  {
+   "id": "term_edit/problem/an-open-slot-in-the-word",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pièce [!T*0]",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pièces d'étoile",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pièce d'étoile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pièces d'étoile"
+       }
+      ]
+     }
+    },
+    "lookup": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile"
+      }
+     },
+     "Press [!v*0]": {
+      "v": "Appuyer sur [!v*0]",
+      "t": "V",
+      "term": true
+     }
+    }
+   },
+   "out": "word-has-marker",
+   "why": "a term is a word of the game: the file refuses it when written, said before the click: an open slot needs the key to hold it"
+  },
+  {
+   "id": "term_edit/problem/a-link-marker-in-a-form",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pièce d'étoile",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pièces [!g*0]",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pièce d'étoile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pièces d'étoile"
+       }
+      ]
+     }
+    },
+    "lookup": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile"
+      }
+     },
+     "Press [!v*0]": {
+      "v": "Appuyer sur [!v*0]",
+      "t": "V",
+      "term": true
+     }
+    }
+   },
+   "out": "form-has-marker",
+   "why": "a form is set inside sentences and read through their links: it holds no marker either"
+  },
+  {
+   "id": "term_edit/problem/a-slot-in-a-form",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pièce d'étoile",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pièces d'étoile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "[!L*weapon]",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pièce d'étoile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pièces d'étoile"
+       }
+      ]
+     }
+    },
+    "lookup": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile"
+      }
+     },
+     "Press [!v*0]": {
+      "v": "Appuyer sur [!v*0]",
+      "t": "V",
+      "term": true
+     }
+    }
+   },
+   "out": "form-has-marker",
+   "why": "the same for a slot"
+  },
+  {
+   "id": "term_edit/problem/a-link-marker-in-the-word-of-a-new-term",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Gem",
+     "word": "Gemme [!g*0]",
+     "word_touched": true,
+     "forms": [],
+     "selected": null,
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "Pièce d'étoile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pièces d'étoile"
+       }
+      ]
+     }
+    },
+    "lookup": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile"
+      }
+     },
+     "Press [!v*0]": {
+      "v": "Appuyer sur [!v*0]",
+      "t": "V",
+      "term": true
+     }
+    }
+   },
+   "out": "word-has-marker",
+   "why": "a new term is held to the same"
+  },
+  {
+   "id": "term_edit/problem/a-placeholder-the-key-lacks-in-the-word",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pièce [!v*0]",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pièces d'étoile",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pièce d'étoile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pièces d'étoile"
+       }
+      ]
+     }
+    },
+    "lookup": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile"
+      }
+     },
+     "Press [!v*0]": {
+      "v": "Appuyer sur [!v*0]",
+      "t": "V",
+      "term": true
+     }
+    }
+   },
+   "out": "word-placeholders",
+   "why": "the game's own placeholders are the key's: the save refuses an invented one (Placeholders.AcceptsEdit) after the click"
+  },
+  {
+   "id": "term_edit/problem/a-placeholder-the-key-lacks-in-a-form",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pièce d'étoile",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pièces [!v*0]",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pièce d'étoile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pièces d'étoile"
+       }
+      ]
+     }
+    },
+    "lookup": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile"
+      }
+     },
+     "Press [!v*0]": {
+      "v": "Appuyer sur [!v*0]",
+      "t": "V",
+      "term": true
+     }
+    }
+   },
+   "out": "form-placeholders",
+   "why": "a form lands inside sentences whose own placeholders are counted: it adds none the key lacks"
+  },
+  {
+   "id": "term_edit/problem/the-keys-own-placeholder-is-kept",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Press [!v*0]",
+     "word": "Appuyer sur [!v*0]",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "Appuyez",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pièce d'étoile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pièces d'étoile"
+       }
+      ]
+     }
+    },
+    "lookup": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile"
+      }
+     },
+     "Press [!v*0]": {
+      "v": "Appuyer sur [!v*0]",
+      "t": "V",
+      "term": true
+     }
+    }
+   },
+   "out": null,
+   "why": "a term whose key holds a placeholder keeps it in its word: nothing to refuse"
+  },
+  {
+   "id": "term_edit/problem/the-keys-placeholder-dropped",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Press [!v*0]",
+     "word": "Appuyer",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "Appuyez",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pièce d'étoile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pièces d'étoile"
+       }
+      ]
+     }
+    },
+    "lookup": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile"
+      }
+     },
+     "Press [!v*0]": {
+      "v": "Appuyer sur [!v*0]",
+      "t": "V",
+      "term": true
+     }
+    }
+   },
+   "out": "word-placeholders",
+   "why": "the save keeps every placeholder of the key: said before the click"
+  }
  ]
 }

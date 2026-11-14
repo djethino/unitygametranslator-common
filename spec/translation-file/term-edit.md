@@ -20,7 +20,12 @@ A draft: `{key, word, word_touched, forms:[{id, text, added}], selected, is_new,
   N of `Apply (N)`: nothing is written until then.
 - **`problem`** — why Apply cannot write: `empty-key`, `bad-key` (a name of the file, a template, a text holding a marker),
   `key-is-term` (that window is opened, not made again), `cites` (a term does not cite another term, `LineWrites`: a line that holds links
-  or `[!g*` cannot become one), `empty-word`, `empty-form`. In this order.
+  or `[!g*` cannot become one), `empty-word`, `empty-form`, then what the file would refuse when written, said BEFORE the click:
+  `word-has-marker` / `form-has-marker` (a link marker `[!g*N]`, a slot `[!L*…]` or an open slot `[!T*N]` in the word or a form: a term is a word,
+  not a sentence — it cites no term — and not a template, whose key holds the slots a term's never does; `LineWrites` refuses them all),
+  `word-placeholders` (the word does not keep the key's own placeholders `[!v*N]`, `[!nl]`… or adds one: `Placeholders.AcceptsEdit`, the rule
+  of every edit's save), `form-placeholders` (a form adds a placeholder the key lacks: it is set inside sentences, whose own placeholders are
+  counted). In this order.
 - **`after`** / **`effect`** — the line as it would be (the other fields untouched, no `forms` member when none is left, `term` for a term
   made), and what the change does, said BEFORE: `TermChanges.Impact` on the file as it stands with that line laid over — how many texts change
   (`texts`) and how many sentences are to be read again (`review`). Never a count of the window's own.

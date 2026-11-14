@@ -260,7 +260,7 @@ namespace UnityGameTranslator.Common
         /// <summary>The N of <c>Apply (N)</c>.</summary>
         public static int Count(TermDraft draft) => Changes(draft).Count;
 
-        /// <summary>Why Apply cannot write what the window holds, or null: <c>empty-key</c>, <c>bad-key</c>, <c>key-is-term</c>, <c>cites</c>, <c>empty-word</c>, <c>empty-form</c>.</summary>
+        /// <summary>Why Apply cannot write what the window holds, or null: <c>empty-key</c>, <c>bad-key</c>, <c>key-is-term</c>, <c>cites</c>, <c>empty-word</c>, <c>empty-form</c>, <c>word-has-marker</c>, <c>form-has-marker</c>, <c>word-placeholders</c>, <c>form-placeholders</c>.</summary>
         /// <param name="lookup">The line of the file by its key; null when there is none.</param>
         public static string? Problem(TermDraft draft, Func<string, TranslationLine?> lookup)
         {
@@ -280,8 +280,22 @@ namespace UnityGameTranslator.Common
             }
             if (draft.Word.TrimSpaces().Length == 0) return "empty-word";
             foreach (var form in draft.Forms) if (form.Text.TrimSpaces().Length == 0) return "empty-form";
+
+            // A term is a word of the game, not a sentence nor a template: no link marker (a term cites no term), no slot (a template's
+            // key holds them, a term's never does). The file refuses all of these when written (LineWrites), after the click.
+            if (HoldsMarker(draft.Word)) return "word-has-marker";
+            foreach (var form in draft.Forms) if (HoldsMarker(form.Text)) return "form-has-marker";
+
+            // The game's own placeholders (`[!v*0]`, `[!nl]`…) are the key's: the word keeps them as the save asks of any edit
+            // (Placeholders.AcceptsEdit), and a form — set inside sentences, whose own placeholders are counted — adds none the key lacks.
+            string source = draft.IsNew ? draft.Key.TrimSpaces() : draft.Key;
+            if (!Placeholders.AcceptsEdit(source, draft.Word, Placeholders.FrozenSequences(source), out _)) return "word-placeholders";
+            foreach (var form in draft.Forms) if (Placeholders.Invented(source, form.Text).Count > 0) return "form-placeholders";
             return null;
         }
+
+        private static bool HoldsMarker(string text)
+            => LineMarkers.LinkNumbers(text).Count > 0 || LineMarkers.ClosedSlots(text).Count > 0 || LineMarkers.OpenSlots(text).Count > 0;
 
         /// <summary>The term's line as it would be: its other fields untouched, its word and forms as the window holds them.</summary>
         public static TranslationLine After(TermDraft draft, TranslationLine original)
