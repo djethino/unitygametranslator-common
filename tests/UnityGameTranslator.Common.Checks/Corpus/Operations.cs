@@ -189,6 +189,9 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                                   Int(e, "local_format"), Int(e, "remote_format"), Int(e, "ancestor_format"))),
             new Operation("merge", "same_formats", typeof(Merge), nameof(Merge.Same),
                 e => Merge.Same(LineRequired(e, "a"), Int(e, "a_format"), LineRequired(e, "b"), Int(e, "b_format"))),
+            new Operation("merge", "terms_that_differ", typeof(Merge), nameof(Merge.TermsThatDiffer),
+                e => Merge.TermsThatDiffer(KeyedLines(e.GetProperty("mine")), Int(e, "mine_format"), KeyedLines(e.GetProperty("theirs")), Int(e, "theirs_format"))
+                    .Select(d => (object?)new Dictionary<string, object?> { ["key"] = d.Key, ["difference"] = d.Value.ToString().ToLowerInvariant() }).ToList()),
             new Operation("merge", "same_as_ancestor", typeof(Merge), nameof(Merge.SameAsAncestor),
                 e => Merge.SameAsAncestor(LineRequired(e, "line"), Int(e, "line_format"), LineRequired(e, "ancestor"), Int(e, "ancestor_format"))),
 
@@ -829,6 +832,10 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 default: return new AnswerFault { Kind = AnswerFaultKind.TagInvented, Tag = Str(f, "tag")! };
             }
         }
+
+        /// <summary>The lines of a file as the corpus writes them: a list of {key, line}, in file order.</summary>
+        private static List<KeyValuePair<string, TranslationLine>> KeyedLines(JsonElement array) =>
+            array.EnumerateArray().Select(item => new KeyValuePair<string, TranslationLine>(Str(item, "key")!, LineRequired(item, "line"))).ToList();
 
         private static List<string?> EntryArray(JsonElement e)
         {

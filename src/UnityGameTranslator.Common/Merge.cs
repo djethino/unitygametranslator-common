@@ -3,6 +3,19 @@ using System.Collections.Generic;
 
 namespace UnityGameTranslator.Common
 {
+    /// <summary>What became of a term between two versions of a file (<see cref="Merge.TermsThatDiffer"/>).</summary>
+    public enum TermDifference
+    {
+        /// <summary>Held by both, and not the same.</summary>
+        Changed,
+
+        /// <summary>Held by the second only.</summary>
+        Added,
+
+        /// <summary>Held by the first only.</summary>
+        Removed,
+    }
+
     /// <summary>What to put in the merged set for one key.</summary>
     public enum MergeVerdict
     {
@@ -530,6 +543,48 @@ public static MergeDecision Decide(TranslationLine? local, TranslationLine? remo
 
         private static string Tag(TranslationLine line) =>
             string.IsNullOrEmpty(line.Tag) ? "A" : line.Tag;
+
+        /// <summary>
+        /// The terms that differ between two versions of a file, one entry per key and what became of it — what a screen that says
+        /// « N terms » over two files counts, with the rule the merge grid already reads (<see cref="Same(TranslationLine, int, TranslationLine, int)"/>).
+        ///
+        /// A key is a TERM when either side holds it with the mark (<see cref="TranslationLine.Term"/>). Held by both and not the same
+        /// (the words, the tag, and the fields when both files are of the format 2): <see cref="TermDifference.Changed"/>. Held by
+        /// <paramref name="theirs"/> only: <see cref="TermDifference.Added"/>. Held by <paramref name="mine"/> only:
+        /// <see cref="TermDifference.Removed"/>. A sentence (its links, its refused entries) is never listed, nor a line that is a term
+        /// on neither side.
+        ///
+        /// ⚠ It does not say which kinds a notification adds up: that is the caller's, and it is the answer to « how does that
+        /// notification count its lines » (N terms are the terms among THOSE lines, never another count). Order: the keys of
+        /// <paramref name="theirs"/> in their order, then the removed ones in the order of <paramref name="mine"/>.
+        /// </summary>
+        public static List<KeyValuePair<string, TermDifference>> TermsThatDiffer(
+            IReadOnlyList<KeyValuePair<string, TranslationLine>> mine, int mineFormat,
+            IReadOnlyList<KeyValuePair<string, TranslationLine>> theirs, int theirsFormat)
+        {
+            var result = new List<KeyValuePair<string, TermDifference>>();
+            var mineByKey = new Dictionary<string, TranslationLine>(StringComparer.Ordinal);
+            foreach (var line in mine) mineByKey[line.Key] = line.Value;
+            var theirKeys = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (var line in theirs)
+            {
+                theirKeys.Add(line.Key);
+                if (!mineByKey.TryGetValue(line.Key, out TranslationLine mineLine))
+                {
+                    if (line.Value.Term) result.Add(new KeyValuePair<string, TermDifference>(line.Key, TermDifference.Added));
+                    continue;
+                }
+                if ((line.Value.Term || mineLine.Term) && !Same(mineLine, mineFormat, line.Value, theirsFormat))
+                    result.Add(new KeyValuePair<string, TermDifference>(line.Key, TermDifference.Changed));
+            }
+
+            foreach (var line in mine)
+                if (line.Value.Term && !theirKeys.Contains(line.Key))
+                    result.Add(new KeyValuePair<string, TermDifference>(line.Key, TermDifference.Removed));
+
+            return result;
+        }
 
         private static MergeDecision Decision(MergeVerdict verdict, MergeReason reason) =>
             new MergeDecision { Verdict = verdict, Reason = reason };

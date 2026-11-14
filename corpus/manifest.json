@@ -24,7 +24,7 @@
       "translation_file_keys": ["is_metadata_key", "is_line"],
       "translation_format": ["announced", "of_file", "reads", "of_content"],
       "settings": ["all", "json_key", "section_of"],
-      "merge": ["priority_of", "contribution_wins", "same", "same_formats"],
+      "merge": ["priority_of", "contribution_wins", "same", "same_formats", "terms_that_differ"],
       "placeholders": ["frozen_sequences", "accepts_edit", "edit_faults", "tokens", "invented", "tally"],
       "game_names": ["same"]
     },
