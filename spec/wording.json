@@ -408,7 +408,7 @@
         "found",
         "expected"
       ],
-      "carried_by": "the mod's EditChecks, if it says a placeholder fault as the site does",
+      "carried_by": "the mod's FailureWords (Failures tab), for a placeholder AND for a bracket of the whole text (AnswerFaultKind.Brackets, the bracket in quotes as the token): one fact, one sentence; through AnswerFaults.GameWords. The mod's EditChecks, if it says a placeholder fault as the site does",
       "fault": "count"
     },
     "placeholder.invented": {
@@ -417,8 +417,64 @@
       "params": [
         "token"
       ],
-      "carried_by": "the mod's EditChecks, if it says a placeholder fault as the site does",
+      "carried_by": "the mod's FailureWords (Failures tab), for a placeholder AND for a tag the answer wrote (AnswerFaultKind.TagInvented, the tag as the token): one fact, one sentence; through AnswerFaults.GameWords. The mod's EditChecks, if it says a placeholder fault as the site does",
       "fault": "invented"
+    },
+    "answer.labels_lost": {
+      "text": "Brackets missing around {labels}",
+      "site": null,
+      "why": "the site never judges the answer of an AI: only the mod's Failures tab says why a proposal was refused",
+      "params": [
+        "labels"
+      ],
+      "carried_by": "the mod's FailureWords (Failures tab): AnswerFaultKind.Labels, the labels of the source joined by a comma and a space",
+      "fault": "labels"
+    },
+    "answer.letters_added": {
+      "text": "Extra letters between {first} and {second}: \"{answered}\"",
+      "site": null,
+      "why": "same: a check only a model is held to",
+      "params": [
+        "first",
+        "second",
+        "answered"
+      ],
+      "carried_by": "the mod's FailureWords (Failures tab): AnswerFaultKind.LettersAdded",
+      "fault": "letters_added"
+    },
+    "answer.values_joined": {
+      "text": "Nothing between {first} and {second}. The source has \"{joint}\".",
+      "site": null,
+      "why": "same: a check only a model is held to",
+      "params": [
+        "first",
+        "second",
+        "joint"
+      ],
+      "carried_by": "the mod's FailureWords (Failures tab): AnswerFaultKind.ValuesRunTogether. Reads like answer.tag_emptied: two neighbouring facts, one grammar",
+      "fault": "values_run_together"
+    },
+    "answer.tag_order": {
+      "text": "{closing} comes before {opening}",
+      "site": null,
+      "why": "the site has no check of the markup of a line",
+      "params": [
+        "closing",
+        "opening"
+      ],
+      "carried_by": "the mod's FailureWords (Failures tab): AnswerFaultKind.TagOutOfOrder, through AnswerFaults.GameWords (the game's own tags in place of the tokens). Markup.KeptByEdit says the same fact in other words: to move here in the next batch",
+      "fault": "tag_out_of_order"
+    },
+    "answer.tag_emptied": {
+      "text": "Nothing between {opening} and {closing}. The source has words there.",
+      "site": null,
+      "why": "the site has no check of the markup of a line",
+      "params": [
+        "opening",
+        "closing"
+      ],
+      "carried_by": "the mod's FailureWords (Failures tab): AnswerFaultKind.TagEmptied, through AnswerFaults.GameWords. Markup.KeptByEdit says the same fact in other words: to move here in the next batch",
+      "fault": "tag_emptied"
     },
     "edit.changes_waiting": {
       "text": "Changes not applied: {count}",

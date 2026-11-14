@@ -40,3 +40,33 @@ In this order: the sequences (in the order of the source), then the counts (in t
 list a person's edit gets; the site's `editProblems` (`resources/js/rules/placeholders.js`) is its port and answers the same shape — held by the same
 cases in `corpus/rules/placeholders.json` (`edit_faults`, which the C# and the editors both replay; every case of `accepts_edit` is there, derived from
 its English lines). The sentence for the model is unchanged, byte for byte (`accepts` and `accepts_edit` cases).
+
+## Why an answer of the AI was refused, as facts: `AnswerFaults`
+
+The checks a MODEL's answer goes through (`Placeholders.Accepts`, the markup checks, `LineTranslation.Keeps`) say their findings as facts
+(`AnswerFault`), in the order the model has always been told. `AnswerFaults.ModelSentence` is the sentence it is sent back, the one the
+checks used to build inline, word for word: the prompts measured on the AI do not move (`accepts` and `answer_faults/model_sentence` cases).
+A person reads the Failures tab's wording of the same fact (`spec/wording.json`). One fact, one sentence: when the fact is the same as one
+of a person's edit, the sentence is that one.
+
+| kind | fields | meaning | what a PERSON reads |
+|---|---|---|---|
+| `sequence`, `count`, `invented` | as above | a placeholder (see `EditFaults`) | `placeholder.*` |
+| `brackets` | `bracket`, `found`, `expected` | a bracket of `{ } [ ]` appears a number of times other than the source's, over the whole text | `placeholder.count`, the bracket in quotes as the token |
+| `labels` | `labels` | the game's own labels, said once after the counts | `answer.labels_lost` |
+| `letters_added` | `first`, `second`, `joint`, `answered` | letters between two values the source separates with none | `answer.letters_added` |
+| `values_run_together` | `first`, `second`, `joint`, `answered` | two values the source separates with a word, left side by side | `answer.values_joined` |
+| `tag_out_of_order` | `opening`, `closing` | a closing tag before the opening one it closes | `answer.tag_order` |
+| `tag_emptied` | `opening`, `closing` | a pair that styled words in the source styles none | `answer.tag_emptied` |
+| `tag_invented` | `tag` | a tag the answer wrote | `placeholder.invented`, the tag as the token |
+
+⚠ The list of the model is not the list of a person's edit (`EditFaults`): a person is not held to the count of brackets, nor to the letters
+between two values. The facts are shared; the lists are not.
+
+⚠ **A person never sees `[!t*N]`.** A tag is lifted into a token before a text is sent, and the answer is judged on that text, so the facts and
+the model's sentences name tokens. A sentence read by a person goes through `AnswerFaults.GameWords(source, sentence)`, which puts the game's
+own tag in the token's place (`Markup.Restore`): `[!t*1] comes before [!t*0]` is read `</color> comes before <color=red>`. The other tokens
+(`[!v*N]`, `[!STR*N]`, `[!nl]`) are in the text a person reads and stay. A token the source does not have stays too. An EMPTY answer is every
+fault to this judge (nothing came back where a line should be) and none to a person: it is a capture, or a server that refused, and the stored
+words stand. Not a fact, so no sentence of a person: the correction sent back to the model (never stored) and the text a server or the
+transport answered (shown as it came).

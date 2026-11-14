@@ -144,6 +144,27 @@
       "why": "the sentence of a person is worded first, then its tokens are put back: whatever surrounds a token stays"
     },
     {
+      "id": "answer_faults/game_words/a-count-of-a-tag-token",
+      "op": "game_words",
+      "in": { "source": "Say <b>Hi</b> now", "sentence": "[!t*0]: found 0, expected 1" },
+      "out": "<b>: found 0, expected 1",
+      "why": "the count of a placeholder is said with the tag the game wrote"
+    },
+    {
+      "id": "answer_faults/game_words/an-invented-tag-token",
+      "op": "game_words",
+      "in": { "source": "Say <b>Hi</b> now", "sentence": "[!t*1] is not in the source text" },
+      "out": "</b> is not in the source text",
+      "why": "an invented token that the source also has is said with its tag"
+    },
+    {
+      "id": "answer_faults/game_words/a-tag-token-the-source-does-not-have",
+      "op": "game_words",
+      "in": { "source": "Hello", "sentence": "[!t*0] is not in the source text" },
+      "out": "[!t*0] is not in the source text",
+      "why": "a token the source never had stays as it is: nothing is invented to put in its place, nothing breaks"
+    },
+    {
       "id": "answer_faults/game_words/the-other-tokens-stay",
       "op": "game_words",
       "in": { "source": "<b>Hi</b> [!v*0] and [!STR*1]", "sentence": "[!v*0], [!STR*1] and [!t*0] are in the source" },
