@@ -1,0 +1,507 @@
+{
+ "rule": "game_names",
+ "classes": [
+  "GameNames"
+ ],
+ "note": "When two names are the same game's title: case, spaces and punctuation aside, by the letters and numbers (L and N, any script, any plane, by code point). The site's `GameNaming::flatten` answers the same with its engine's `\\p{L}\\p{N}` and `mb_strtolower`: held by the `same` vectors, which only use characters that engine knows (PHP 8.4 / PCRE2 10.44 is behind Unicode 18, and a browser's ICU differs again). `flat` is the socle's own form (in capitals): a port is not asked for it. Known differences with the site, on no real title: the Greek final sigma is one letter here, two there.",
+ "operations": {
+  "same": {
+   "in": {
+    "a": "string",
+    "b": "string"
+   },
+   "out": "bool: both names flatten to something, and to the same thing"
+  },
+  "flat": {
+   "in": {
+    "name": "string or null"
+   },
+   "out": "the name's letters and numbers, in capitals (the socle's form; not a port's)"
+  },
+  "which": {
+   "in": {
+    "candidates": "list of names, in the server's order",
+    "asked": "string or null: the name searched with, null when found by Steam id"
+   },
+   "out": "{chosen: indices kept, ambiguous: bool}"
+  }
+ },
+ "cases": [
+  {
+   "id": "game_names/same/case-and-punctuation",
+   "op": "same",
+   "in": {
+    "a": "Hollow Knight",
+    "b": "hollow-knight"
+   },
+   "out": true,
+   "why": "the whole difference between a shop title and a product name"
+  },
+  {
+   "id": "game_names/same/short-name-is-not-the-title",
+   "op": "same",
+   "in": {
+    "a": "LONESTAR",
+    "b": "LoneStar: The Game"
+   },
+   "out": false,
+   "why": "equal means equal: that one name holds the other is another question (the caller's)"
+  },
+  {
+   "id": "game_names/same/short-title",
+   "op": "same",
+   "in": {
+    "a": "Rez",
+    "b": "REZ"
+   },
+   "out": true,
+   "why": "a three-letter title is a title"
+  },
+  {
+   "id": "game_names/same/punctuation-only-difference",
+   "op": "same",
+   "in": {
+    "a": "HALP!",
+    "b": "halp"
+   },
+   "out": true,
+   "why": ""
+  },
+  {
+   "id": "game_names/same/han",
+   "op": "same",
+   "in": {
+    "a": "\u9f99\u80e4\u7acb\u5fd7\u4f20",
+    "b": "\u9f99\u80e4\u7acb\u5fd7\u4f20"
+   },
+   "out": true,
+   "why": "a title in another script is not emptied"
+  },
+  {
+   "id": "game_names/same/han-another-title",
+   "op": "same",
+   "in": {
+    "a": "\u9f99\u80e4\u7acb\u5fd7\u4f20",
+    "b": "\u9f99\u80e4\u7acb\u5fd7"
+   },
+   "out": false,
+   "why": ""
+  },
+  {
+   "id": "game_names/same/accents-fold-with-case",
+   "op": "same",
+   "in": {
+    "a": "Caf\u00e9",
+    "b": "CAF\u00c9"
+   },
+   "out": true,
+   "why": ""
+  },
+  {
+   "id": "game_names/same/an-accent-is-a-letter",
+   "op": "same",
+   "in": {
+    "a": "Caf\u00e9",
+    "b": "Cafe"
+   },
+   "out": false,
+   "why": ""
+  },
+  {
+   "id": "game_names/same/a-letter-beyond-the-plane-is-kept",
+   "op": "same",
+   "in": {
+    "a": "\ud842\udfb7\u91ce\u5bb6",
+    "b": "\u91ce\u5bb6"
+   },
+   "out": false,
+   "why": "U+20BB7 is a letter: it makes the names two (read by UTF-16 unit, it was dropped and they were one)"
+  },
+  {
+   "id": "game_names/same/spaces-inside-are-nothing",
+   "op": "same",
+   "in": {
+    "a": "\ud842\udfb7\u91ce\u5bb6",
+    "b": "\ud842\udfb7 \u91ce \u5bb6"
+   },
+   "out": true,
+   "why": ""
+  },
+  {
+   "id": "game_names/same/roman-numeral-has-its-case",
+   "op": "same",
+   "in": {
+    "a": "\u2167",
+    "b": "\u2177"
+   },
+   "out": true,
+   "why": "Nl is a number and is kept: both cases of it"
+  },
+  {
+   "id": "game_names/same/roman-numeral-is-not-a-digit",
+   "op": "same",
+   "in": {
+    "a": "\u2167",
+    "b": "8"
+   },
+   "out": false,
+   "why": "kept, not read as an 8"
+  },
+  {
+   "id": "game_names/same/superscript-is-kept",
+   "op": "same",
+   "in": {
+    "a": "\u00b2",
+    "b": "2"
+   },
+   "out": false,
+   "why": "No is a number"
+  },
+  {
+   "id": "game_names/same/digits",
+   "op": "same",
+   "in": {
+    "a": "Area 51",
+    "b": "area-51"
+   },
+   "out": true,
+   "why": ""
+  },
+  {
+   "id": "game_names/same/another-number",
+   "op": "same",
+   "in": {
+    "a": "Area 51",
+    "b": "Area 5"
+   },
+   "out": false,
+   "why": ""
+  },
+  {
+   "id": "game_names/same/nothing-to-compare",
+   "op": "same",
+   "in": {
+    "a": "!!!",
+    "b": "???"
+   },
+   "out": false,
+   "why": "two names that flatten to nothing are not the same name: there is nothing to say"
+  },
+  {
+   "id": "game_names/same/dotted-capital-i-is-i-and-a-mark",
+   "op": "same",
+   "in": {
+    "a": "\u0130stanbul",
+    "b": "Istanbul"
+   },
+   "out": true,
+   "why": "the one bridge: a dot above is a mark, and a mark is not kept (the site's lower case writes i and a mark)"
+  },
+  {
+   "id": "game_names/same/dotless-i-is-its-own-letter",
+   "op": "same",
+   "in": {
+    "a": "\u0131sparta",
+    "b": "Isparta"
+   },
+   "out": false,
+   "why": "no bridge for it"
+  },
+  {
+   "id": "game_names/same/sharp-s-is-not-ss",
+   "op": "same",
+   "in": {
+    "a": "\u00df",
+    "b": "SS"
+   },
+   "out": false,
+   "why": "one code point to one: its capital is two letters, so it is its own letter"
+  },
+  {
+   "id": "game_names/same/cyrillic",
+   "op": "same",
+   "in": {
+    "a": "\u041f\u0440\u0438\u0432\u0435\u0442 \u043c\u0438\u0440",
+    "b": "\u041f\u0420\u0418\u0412\u0415\u0422-\u041c\u0418\u0420"
+   },
+   "out": true,
+   "why": ""
+  },
+  {
+   "id": "game_names/same/greek-with-tonos",
+   "op": "same",
+   "in": {
+    "a": "\u0395\u03bb\u03bb\u03ac\u03b4\u03b1",
+    "b": "\u0395\u039b\u039b\u0386\u0394\u0391"
+   },
+   "out": true,
+   "why": ""
+  },
+  {
+   "id": "game_names/same/titlecase-digraph",
+   "op": "same",
+   "in": {
+    "a": "\u01c5",
+    "b": "\u01c6"
+   },
+   "out": true,
+   "why": ""
+  },
+  {
+   "id": "game_names/same/fullwidth",
+   "op": "same",
+   "in": {
+    "a": "\uff21\uff22",
+    "b": "\uff41\uff42"
+   },
+   "out": true,
+   "why": ""
+  },
+  {
+   "id": "game_names/same/deseret-beyond-the-plane",
+   "op": "same",
+   "in": {
+    "a": "\ud801\udc00",
+    "b": "\ud801\udc28"
+   },
+   "out": true,
+   "why": "a letter outside the plane has its case too"
+  },
+  {
+   "id": "game_names/same/arabic-indic-digit",
+   "op": "same",
+   "in": {
+    "a": "\u0663",
+    "b": "3"
+   },
+   "out": false,
+   "why": "a digit of another script is its own"
+  },
+  {
+   "id": "game_names/same/a-mark-is-dropped",
+   "op": "same",
+   "in": {
+    "a": "Mark\u0301",
+    "b": "Mark"
+   },
+   "out": true,
+   "why": "M is not kept"
+  },
+  {
+   "id": "game_names/same/a-precomposed-letter-is-not-its-decomposition",
+   "op": "same",
+   "in": {
+    "a": "\u00e9",
+    "b": "e\u0301"
+   },
+   "out": false,
+   "why": "no normal form: the letter with its accent is not the letter and a mark"
+  },
+  {
+   "id": "game_names/flat/capitals",
+   "op": "flat",
+   "in": {
+    "name": "Lone Star: The Game!"
+   },
+   "out": "LONESTARTHEGAME",
+   "why": "written in capitals; only ever compared with another flat name"
+  },
+  {
+   "id": "game_names/flat/han",
+   "op": "flat",
+   "in": {
+    "name": "\u9f99\u80e4\u7acb\u5fd7\u4f20"
+   },
+   "out": "\u9f99\u80e4\u7acb\u5fd7\u4f20",
+   "why": ""
+  },
+  {
+   "id": "game_names/flat/dotted-capital-i",
+   "op": "flat",
+   "in": {
+    "name": "\u0130stanbul"
+   },
+   "out": "ISTANBUL",
+   "why": "the dotted capital I is an I and a mark"
+  },
+  {
+   "id": "game_names/flat/roman-numerals",
+   "op": "flat",
+   "in": {
+    "name": "\u2177 \u00b2"
+   },
+   "out": "\u2167\u00b2",
+   "why": "Nl and No are kept"
+  },
+  {
+   "id": "game_names/flat/beyond-the-plane",
+   "op": "flat",
+   "in": {
+    "name": "\ud842\udfb7!"
+   },
+   "out": "\ud842\udfb7",
+   "why": "kept whole"
+  },
+  {
+   "id": "game_names/flat/nothing",
+   "op": "flat",
+   "in": {
+    "name": "!!!"
+   },
+   "out": "",
+   "why": ""
+  },
+  {
+   "id": "game_names/flat/null",
+   "op": "flat",
+   "in": {
+    "name": null
+   },
+   "out": "",
+   "why": ""
+  },
+  {
+   "id": "game_names/which/found-by-id",
+   "op": "which",
+   "in": {
+    "candidates": [
+     "Cat"
+    ],
+    "asked": null
+   },
+   "out": {
+    "chosen": [
+     0
+    ],
+    "ambiguous": false
+   },
+   "why": "an id is exact: whatever came back is the game"
+  },
+  {
+   "id": "game_names/which/a-single-loose-candidate-wins",
+   "op": "which",
+   "in": {
+    "candidates": [
+     "Foo: Deluxe Edition"
+    ],
+    "asked": "Foo"
+   },
+   "out": {
+    "chosen": [
+     0
+    ],
+    "ambiguous": false
+   },
+   "why": "the ordinary case loose matching exists for"
+  },
+  {
+   "id": "game_names/which/an-exact-name-wins",
+   "op": "which",
+   "in": {
+    "candidates": [
+     "Cattails",
+     "Cat",
+     "Cat Quest II"
+    ],
+    "asked": "Cat"
+   },
+   "out": {
+    "chosen": [
+     1
+    ],
+    "ambiguous": false
+   },
+   "why": ""
+  },
+  {
+   "id": "game_names/which/case-and-spaces-are-ignored",
+   "op": "which",
+   "in": {
+    "candidates": [
+     "Cattails",
+     "  cat "
+    ],
+    "asked": "CAT"
+   },
+   "out": {
+    "chosen": [
+     1
+    ],
+    "ambiguous": false
+   },
+   "why": ""
+  },
+  {
+   "id": "game_names/which/several-loose-and-no-exact",
+   "op": "which",
+   "in": {
+    "candidates": [
+     "Cattails",
+     "Cat Quest II"
+    ],
+    "asked": "Cat "
+   },
+   "out": {
+    "chosen": [
+     0,
+     1
+    ],
+    "ambiguous": true
+   },
+   "why": "all kept, and said to be several"
+  },
+  {
+   "id": "game_names/which/namesakes-are-all-kept",
+   "op": "which",
+   "in": {
+    "candidates": [
+     "Cat",
+     "Cat",
+     "Cattails"
+    ],
+    "asked": "Cat"
+   },
+   "out": {
+    "chosen": [
+     0,
+     1
+    ],
+    "ambiguous": true
+   },
+   "why": "two games carry the name: which one has to be confirmed"
+  },
+  {
+   "id": "game_names/which/nothing",
+   "op": "which",
+   "in": {
+    "candidates": [],
+    "asked": "Cat"
+   },
+   "out": {
+    "chosen": [],
+    "ambiguous": false
+   },
+   "why": ""
+  },
+  {
+   "id": "game_names/which/accents-fold-with-case",
+   "op": "which",
+   "in": {
+    "candidates": [
+     "\u00c9clair",
+     "\u00e9clair",
+     "Eclair"
+    ],
+    "asked": "\u00c9CLAIR"
+   },
+   "out": {
+    "chosen": [
+     0,
+     1
+    ],
+    "ambiguous": true
+   },
+   "why": "the capital of an accented letter; the same word without its accent is another name"
+  }
+ ]
+}

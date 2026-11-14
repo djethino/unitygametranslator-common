@@ -272,6 +272,20 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("link_finding", "find", typeof(LinkFinding), nameof(LinkFinding.Find),
                 e => LinkFinding.Find(TermIndex.Build(Lines(e, "terms")), Str(e, "text") ?? "", Str(e, "source") ?? "", Line(e, "before"))),
 
+            // ── game_names ────────────────────────────────────────────────────────
+            new Operation("game_names", "same", typeof(GameNames), nameof(GameNames.Flat),
+                e => { var x = GameNames.Flat(Str(e, "a")); return x.Length > 0 && x == GameNames.Flat(Str(e, "b")); }),
+            new Operation("game_names", "which", typeof(GameNames), nameof(GameNames.Which),
+                e =>
+                {
+                    var candidates = new List<string>();
+                    foreach (var item in e.GetProperty("candidates").EnumerateArray()) candidates.Add(item.GetString()!);
+                    var match = GameNames.Which(candidates, Str(e, "asked")!);
+                    return new Dictionary<string, object?> { ["chosen"] = new List<int>(match.Chosen), ["ambiguous"] = match.Ambiguous };
+                }),
+            new Operation("game_names", "flat", typeof(GameNames), nameof(GameNames.Flat),
+                e => GameNames.Flat(Str(e, "name"))),
+
             // ── names ────────────────────────────────────────────────────────
             new Operation("names", "fold", typeof(Names), nameof(Names.Fold),
                 e => Names.Fold(Str(e, "text") ?? "")),

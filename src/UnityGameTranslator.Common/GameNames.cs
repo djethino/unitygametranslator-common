@@ -87,23 +87,48 @@ namespace UnityGameTranslator.Common
 
         /// <summary>
         /// A name with case, spaces and punctuation removed — the whole difference between a
-        /// product name and a shop title ("LONESTAR", "LoneStar", "Lone Star: The Game").
+        /// product name and a shop title ("LONESTAR", "LoneStar", "Lone Star: The Game") — written
+        /// in capitals, which only ever means « compared with another flat name ».
         ///
-        /// ⚠ Letters and digits of ANY script: the site's own version once kept `[a-z0-9]` only and
-        /// emptied every title written in another alphabet. Same rule as the site's
-        /// `App\Support\GameNaming::flatten`, so the three products compare names alike.
+        /// ⚠ Letters and numbers of ANY script and ANY plane (L and N: a Roman numeral and a
+        /// superscript are kept, a hieroglyph beyond the plane too), by code point: the site's own
+        /// version once kept `[a-z0-9]` only and emptied every title written in another alphabet, and
+        /// this one once read UTF-16 units and dropped every letter beyond the plane. The rule is that of
+        /// `App\Support\GameNaming::flatten` (`[^\p{L}\p{N}]` removed, then lower case), with the project's Unicode
+        /// (<see cref="UnicodeCategories"/>, <see cref="Names"/>) instead of the engine's, so that a Manager, a
+        /// game and a test answer alike. The shared vectors: corpus/rules/game_names.json.
+        ///
+        /// ⚠ **The one bridge between ASCII and the rest**: « İ » is « I » with a dot above, and the dot is a mark,
+        /// which is not kept — the site's lower-casing writes it as « i » and a mark, so « İstanbul » and
+        /// « Istanbul » are one title there and here. « ı » and « ſ » are letters of their own, as there.
+        ///
+        /// ⚠ Known differences with the site, none of them on a title anybody has: the Greek final sigma (« ς », « σ » and « Σ »
+        /// are one letter here, two there), and the letters newer than the site's engine knows (PCRE2 10.44 is behind
+        /// Unicode 18). The vectors use neither.
         /// </summary>
         public static string Flat(string? name)
         {
             if (string.IsNullOrEmpty(name)) return "";
 
             var flat = new System.Text.StringBuilder(name!.Length);
-            foreach (var c in name.ToLowerInvariant())
+            for (int i = 0; i < name.Length; i++)
             {
-                if (char.IsLetterOrDigit(c)) flat.Append(c);
+                char c = name[i];
+                int codePoint = c;
+                if (char.IsHighSurrogate(c) && i + 1 < name.Length && char.IsLowSurrogate(name[i + 1]))
+                {
+                    codePoint = char.ConvertToUtf32(c, name[i + 1]);
+                    i++;
+                }
+
+                if (codePoint == DottedCapitalI) codePoint = 'I';
+                string category = UnicodeCategories.Of(codePoint);
+                if (category[0] == 'L' || category[0] == 'N') flat.Append(char.ConvertFromUtf32(Names.Fold(codePoint)));
             }
 
             return flat.ToString();
         }
+
+        private const int DottedCapitalI = 0x130;
     }
 }

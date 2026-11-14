@@ -122,7 +122,7 @@ namespace UnityGameTranslator.Common.Checks
                 "a product name that is a form of the title, or nothing read, says nothing",
                 "case, spaces and punctuation aside");
 
-            check(GameNames.Flat("龙胤立志传") == "龙胤立志传" && GameNames.Flat("Lone Star: The Game!") == "lonestarthegame",
+            check(GameNames.Flat("龙胤立志传") == "龙胤立志传" && GameNames.Flat("Lone Star: The Game!") == "LONESTARTHEGAME",
                 "names are compared on letters and digits of any script", "the site's flatten, the same rule");
 
             check(GameCandidates.NothingFound.Contains("Steam ID"),

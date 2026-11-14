@@ -128,10 +128,29 @@ namespace UnityGameTranslator.Common.Checks
             var sb = new StringBuilder();
             sb.Append("# Runtime Unicode calls still in common/src: one line per file and kind — file TAB kind TAB count.\n");
             sb.Append("# A RATCHET (NoRuntimeUnicode.cs): the count may only go down, and this file follows it. Regenerate: dotnet run -- unicode-list runtime-unicode.baseline\n");
-            foreach (var (file, kind, count) in inventory)
+            foreach (var (file, kind, raw) in inventory)
+            {
+                // the named exceptions are no debt: counted off here exactly as Run counts them off
+                int count = raw;
+                foreach (var ex in Exceptions)
+                    if (ex.File == file && ex.Kind == kind) count = Math.Max(0, count - ex.Count);
+                if (count == 0) continue;
                 sb.Append(file).Append('\t').Append(kind).Append('\t').Append(count.ToString(System.Globalization.CultureInfo.InvariantCulture)).Append('\n');
+            }
             return sb.ToString();
         }
+
+        /// <summary>
+        /// What the library still asks the runtime on purpose, each with its reason. Counted exactly: a new call of the same
+        /// kind in the same file is a new debt, and an exception whose call has been removed must go.
+        /// </summary>
+        private static readonly (string File, string Kind, int Count, string Reason)[] Exceptions =
+        {
+            ("UnityFiles/GameFonts.cs", "OrdinalIgnoreCase", 1,
+                "a PATH (the game's data folder against a font's path): the case of a path is the file system's own table, not Unicode's — nothing of ours can say it"),
+            ("UnityFiles/GameFonts.cs", "char.Is*", 1,
+                "char.IsControl, the C0 and C1 controls (Cc): a category no Unicode version has ever changed, read to keep them out of a file name"),
+        };
 
         public static void Run(Action<bool, string, string> check, string? commonRoot)
         {
@@ -155,6 +174,18 @@ namespace UnityGameTranslator.Common.Checks
 
             var now = new Dictionary<string, int>(StringComparer.Ordinal);
             foreach (var (file, kind, count) in Inventory(sources)) now[file + "\t" + kind] = count;
+
+            // The named exceptions: counted off first, exactly — one that is no longer there is a failure too.
+            var gone = new List<string>();
+            foreach (var (file, kind, count, _) in Exceptions)
+            {
+                string key = file + "\t" + kind;
+                now.TryGetValue(key, out int have);
+                if (have < count) gone.Add(file + " " + kind + ": " + have + " of " + count);
+                if (have > 0) now[key] = Math.Max(0, have - count);
+            }
+            check(gone.Count == 0, "every named exception is still there (" + Exceptions.Length + ")",
+                gone.Count == 0 ? "each one has its reason in the list" : "remove the exception: " + string.Join(" | ", gone));
 
             var up = new List<string>();
             var down = new List<string>();
