@@ -359,6 +359,12 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("game_tokens", "refusal_of_list", typeof(GameTokenList), nameof(GameTokenList.Refusal),
                 e => Refusal(GameTokenList.Refusal(TokenArray(e)!.Select(t => t ?? "").ToList()))),
 
+            // ── list_join ──────────────────────────────────────────────────────────
+            new Operation("list_join", "join", typeof(ListJoin), nameof(ListJoin.Join),
+                e => ListJoin.Join(EntryArray(e), Str(e, "between"), Str(e, "join_case"))),
+            new Operation("list_join", "is_case", typeof(ListJoin), nameof(ListJoin.IsCase),
+                e => ListJoin.IsCase(Str(e, "join_case"))),
+
             // ── game_names ────────────────────────────────────────────────────────
             new Operation("game_names", "same", typeof(GameNames), nameof(GameNames.Flat),
                 e => { var x = GameNames.Flat(Str(e, "a")); return x.Length > 0 && x == GameNames.Flat(Str(e, "b")); }),
@@ -649,6 +655,14 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             foreach (var item in array.EnumerateArray())
                 writings.Add(new LinkFinding.LinkWriting { Words = item.GetProperty("words").GetString()!, Form = item.TryGetProperty("form", out var f) && f.ValueKind == JsonValueKind.String ? f.GetString() : null });
             return writings;
+        }
+
+        private static List<string?> EntryArray(JsonElement e)
+        {
+            var list = new List<string?>();
+            if (e.TryGetProperty("entries", out var array) && array.ValueKind == JsonValueKind.Array)
+                foreach (var item in array.EnumerateArray()) list.Add(item.ValueKind == JsonValueKind.String ? item.GetString() : null);
+            return list;
         }
 
         private static List<string?>? TokenArray(JsonElement e)

@@ -79,7 +79,8 @@
             "type": "object",
             "properties": {
               "values": { "type": "array", "items": { "type": "string" }, "description": "The entries, in the game's own order." },
-              "join": { "type": "string", "description": "How repeated entries are joined when no text holds them." }
+              "join": { "type": "string", "description": "How repeated entries are joined when no text holds them: the text written between two entries." },
+              "join_case": { "enum": ["lower-first", "upper-first"], "description": "The case of the first letter of each entry AFTER the first, when they are joined (the vocabulary of a link's `case`, `ListJoin`). Absent = every entry keeps its own capital. Outside the content hash like the rest of `_lists`. A reader that does not know it, or meets a value it does not know, writes « TuQuan » for « Tuquan »: a wrong capital, never a file refused (spec/translation-file/lists.md)." }
             },
             "required": ["values"]
           }
