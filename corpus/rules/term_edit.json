@@ -1,0 +1,3922 @@
+{
+ "rule": "term_edit",
+ "classes": [
+  "TermEdit"
+ ],
+ "note": "The window of a term (spec/translation-file/term-edit.md): its word and its written forms, every act answering a NEW draft. ONE act writes: `write` (Apply (N), N = `count`); the impact is said before (`effect`, from term_changes); a form a sentence cites cannot be removed (`blockers`). A draft is `{key, word, word_touched, forms:[{id, text, added}], selected, is_new, becomes, original:{v, forms:[{id, text}]}}`; a line is the file's: `{v, t, term?, forms?, use?, class?, oracle?, links?, unlinked?}`. Lines of `file` are in the file's order; `lookup` is `{key: line}`; `lists` is `{name: [values]}`.",
+ "operations": {
+  "open": {
+   "in": {
+    "key": "string",
+    "line": "line | null",
+    "file_format": "int"
+   },
+   "out": "draft | null"
+  },
+  "open_new": {
+   "in": {
+    "key": "string",
+    "selected": "string",
+    "existing": "line | absent"
+   },
+   "out": "draft"
+  },
+  "rebase": {
+   "in": {
+    "state": "draft",
+    "line": "line"
+   },
+   "out": "draft"
+  },
+  "set_key": {
+   "in": {
+    "state": "draft",
+    "text": "string",
+    "existing": "line | absent"
+   },
+   "out": "draft"
+  },
+  "set_word": {
+   "in": {
+    "state": "draft",
+    "text": "string"
+   },
+   "out": "draft"
+  },
+  "set_form": {
+   "in": {
+    "state": "draft",
+    "id": "string",
+    "text": "string"
+   },
+   "out": "draft"
+  },
+  "add_form": {
+   "in": {
+    "state": "draft"
+   },
+   "out": "draft"
+  },
+  "remove_form": {
+   "in": {
+    "state": "draft",
+    "id": "string"
+   },
+   "out": "draft"
+  },
+  "blockers": {
+   "in": {
+    "state": "draft",
+    "id": "string",
+    "file": "{key: line}"
+   },
+   "out": "{sentences: [key], template: bool}"
+  },
+  "changes": {
+   "in": {
+    "state": "draft"
+   },
+   "out": "[{kind: term|word|form-added|form-text|form-removed, id?}]"
+  },
+  "count": {
+   "in": {
+    "state": "draft"
+   },
+   "out": "int: the N of Apply (N)"
+  },
+  "problem": {
+   "in": {
+    "state": "draft",
+    "lookup": "{key: line}"
+   },
+   "out": "empty-key | bad-key | key-is-term | cites | empty-word | empty-form | null"
+  },
+  "after": {
+   "in": {
+    "state": "draft",
+    "original": "line"
+   },
+   "out": "line: the term's line as it would be"
+  },
+  "effect": {
+   "in": {
+    "state": "draft",
+    "original": "line",
+    "file": "{key: line}",
+    "lists": "{name: [values]}"
+   },
+   "out": "{texts, review, uses: [{key, kind, text_changes, needs_review_after}], forms_to_redo}"
+  },
+  "write": {
+   "in": {
+    "state": "draft",
+    "original": "line"
+   },
+   "out": "{key, value, value_changed, tag, original_value, original_tag, is_new, fields} | null"
+  }
+ },
+ "cases": [
+  {
+   "id": "term_edit/open/a-term",
+   "op": "open",
+   "in": {
+    "key": "Star Coin",
+    "line": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "t": "V",
+     "term": true,
+     "forms": {
+      "f1": "pi\u00e8ces d'\u00e9toile",
+      "f2": "de la pi\u00e8ce d'\u00e9toile",
+      "f3": "des pi\u00e8ces"
+     }
+    },
+    "file_format": 2
+   },
+   "out": {
+    "key": "Star Coin",
+    "word": "Pi\u00e8ce d'\u00e9toile",
+    "word_touched": false,
+    "forms": [
+     {
+      "id": "f1",
+      "text": "pi\u00e8ces d'\u00e9toile",
+      "added": false
+     },
+     {
+      "id": "f2",
+      "text": "de la pi\u00e8ce d'\u00e9toile",
+      "added": false
+     },
+     {
+      "id": "f3",
+      "text": "des pi\u00e8ces",
+      "added": false
+     }
+    ],
+    "selected": null,
+    "is_new": false,
+    "becomes": false,
+    "original": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile"
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile"
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces"
+      }
+     ]
+    }
+   },
+   "why": "the window of a term holds its word and its forms, and remembers them as the original"
+  },
+  {
+   "id": "term_edit/open/a-file-of-the-format-1-has-none",
+   "op": "open",
+   "in": {
+    "key": "Star Coin",
+    "line": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "t": "V",
+     "term": true,
+     "forms": {
+      "f1": "pi\u00e8ces d'\u00e9toile",
+      "f2": "de la pi\u00e8ce d'\u00e9toile",
+      "f3": "des pi\u00e8ces"
+     }
+    },
+    "file_format": 1
+   },
+   "out": null,
+   "why": "there is no such window below the format 2"
+  },
+  {
+   "id": "term_edit/open/a-line-that-is-gone-has-none",
+   "op": "open",
+   "in": {
+    "key": "Gone",
+    "line": null,
+    "file_format": 2
+   },
+   "out": null,
+   "why": "nothing to open"
+  },
+  {
+   "id": "term_edit/open/a-term-without-forms",
+   "op": "open",
+   "in": {
+    "key": "Guardian",
+    "line": {
+     "v": "Gardienne",
+     "t": "A",
+     "term": true
+    },
+    "file_format": 2
+   },
+   "out": {
+    "key": "Guardian",
+    "word": "Gardienne",
+    "word_touched": false,
+    "forms": [],
+    "selected": null,
+    "is_new": false,
+    "becomes": false,
+    "original": {
+     "v": "Gardienne",
+     "forms": []
+    }
+   },
+   "why": "no forms: an empty list"
+  },
+  {
+   "id": "term_edit/open_new/keys-and-words-are-trimmed",
+   "op": "open_new",
+   "in": {
+    "key": "  Star Gate ",
+    "selected": " Porte d'\u00e9toile "
+   },
+   "out": {
+    "key": "Star Gate",
+    "word": "Porte d'\u00e9toile",
+    "word_touched": false,
+    "forms": [],
+    "selected": "Porte d'\u00e9toile",
+    "is_new": true,
+    "becomes": false,
+    "original": {
+     "v": "",
+     "forms": []
+    }
+   },
+   "why": "a term made from two selections: the source's words (the key of the line) and the translation's (its word)"
+  },
+  {
+   "id": "term_edit/open_new/a-line-the-file-holds-becomes-a-term",
+   "op": "open_new",
+   "in": {
+    "key": "Play",
+    "selected": "Lancer",
+    "existing": {
+     "v": "Jouer",
+     "t": "A"
+    }
+   },
+   "out": {
+    "key": "Play",
+    "word": "Jouer",
+    "word_touched": false,
+    "forms": [],
+    "selected": "Lancer",
+    "is_new": true,
+    "becomes": true,
+    "original": {
+     "v": "Jouer",
+     "forms": []
+    }
+   },
+   "why": "the key is very often a line the file ALREADY holds (the name of an object is its own line): it is not made twice, that line BECOMES a term and its translation is the word proposed"
+  },
+  {
+   "id": "term_edit/open_new/its-forms-come-along",
+   "op": "open_new",
+   "in": {
+    "key": "Coin",
+    "selected": "x",
+    "existing": {
+     "v": "Pi\u00e8ce",
+     "t": "A",
+     "forms": {
+      "f1": "pi\u00e8ces"
+     }
+    }
+   },
+   "out": {
+    "key": "Coin",
+    "word": "Pi\u00e8ce",
+    "word_touched": false,
+    "forms": [
+     {
+      "id": "f1",
+      "text": "pi\u00e8ces",
+      "added": false
+     }
+    ],
+    "selected": "x",
+    "is_new": true,
+    "becomes": true,
+    "original": {
+     "v": "Pi\u00e8ce",
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces"
+      }
+     ]
+    }
+   },
+   "why": "a line that already has forms keeps them when it becomes a term"
+  },
+  {
+   "id": "term_edit/set_key/the-line-is-looked-at-again",
+   "op": "set_key",
+   "in": {
+    "state": {
+     "key": "",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "text": "Play",
+    "existing": {
+     "v": "Jouer",
+     "t": "A"
+    }
+   },
+   "out": {
+    "key": "Play",
+    "word": "Jouer",
+    "word_touched": false,
+    "forms": [],
+    "selected": "Porte",
+    "is_new": true,
+    "becomes": true,
+    "original": {
+     "v": "Jouer",
+     "forms": []
+    }
+   },
+   "why": "typing a key that names a line of the file: its translation replaces the selection while the person has not written the word"
+  },
+  {
+   "id": "term_edit/set_key/a-word-the-person-wrote-stays",
+   "op": "set_key",
+   "in": {
+    "state": {
+     "key": "Play",
+     "word": "Mon mot",
+     "word_touched": true,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": true,
+     "original": {
+      "v": "Jouer",
+      "forms": []
+     }
+    },
+    "text": "Quit",
+    "existing": {
+     "v": "Quitter",
+     "t": "A"
+    }
+   },
+   "out": {
+    "key": "Quit",
+    "word": "Mon mot",
+    "word_touched": true,
+    "forms": [],
+    "selected": "Porte",
+    "is_new": true,
+    "becomes": true,
+    "original": {
+     "v": "Quitter",
+     "forms": []
+    }
+   },
+   "why": "the word written stays when another key is typed; the original is the new line's"
+  },
+  {
+   "id": "term_edit/set_key/the-key-is-kept-as-typed",
+   "op": "set_key",
+   "in": {
+    "state": {
+     "key": "",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "text": "Quit ",
+    "existing": null
+   },
+   "out": {
+    "key": "Quit ",
+    "word": "Porte",
+    "word_touched": false,
+    "forms": [],
+    "selected": "Porte",
+    "is_new": true,
+    "becomes": false,
+    "original": {
+     "v": "",
+     "forms": []
+    }
+   },
+   "why": "the typed key is not trimmed until it is written (the caller looks the trimmed one up)"
+  },
+  {
+   "id": "term_edit/set_key/a-form-made-here-stays",
+   "op": "set_key",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "x",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces",
+       "added": true
+      }
+     ],
+     "selected": "x",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "text": "Coin2",
+    "existing": null
+   },
+   "out": {
+    "key": "Coin2",
+    "word": "x",
+    "word_touched": false,
+    "forms": [
+     {
+      "id": "f1",
+      "text": "pi\u00e8ces",
+      "added": true
+     }
+    ],
+    "selected": "x",
+    "is_new": true,
+    "becomes": false,
+    "original": {
+     "v": "",
+     "forms": []
+    }
+   },
+   "why": "forms made in the window are kept when the key changes"
+  },
+  {
+   "id": "term_edit/rebase/counted-against-another-line",
+   "op": "rebase",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pi\u00e8ce stellaire",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       },
+       {
+        "id": "f3",
+        "text": "des pi\u00e8ces"
+       }
+      ]
+     }
+    },
+    "line": {
+     "v": "Pi\u00e8ce stellaire",
+     "t": "H",
+     "term": true
+    }
+   },
+   "out": {
+    "key": "Star Coin",
+    "word": "Pi\u00e8ce stellaire",
+    "word_touched": true,
+    "forms": [
+     {
+      "id": "f1",
+      "text": "pi\u00e8ces d'\u00e9toile",
+      "added": false
+     },
+     {
+      "id": "f2",
+      "text": "de la pi\u00e8ce d'\u00e9toile",
+      "added": false
+     },
+     {
+      "id": "f3",
+      "text": "des pi\u00e8ces",
+      "added": false
+     }
+    ],
+    "selected": null,
+    "is_new": false,
+    "becomes": false,
+    "original": {
+     "v": "Pi\u00e8ce stellaire",
+     "forms": []
+    }
+   },
+   "why": "what Apply stages is the difference from the STORED line, whatever was staged when the window opened"
+  },
+  {
+   "id": "term_edit/set_word/marks-the-word-as-written",
+   "op": "set_word",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       },
+       {
+        "id": "f3",
+        "text": "des pi\u00e8ces"
+       }
+      ]
+     }
+    },
+    "text": "Pi\u00e8ce stellaire"
+   },
+   "out": {
+    "key": "Star Coin",
+    "word": "Pi\u00e8ce stellaire",
+    "word_touched": true,
+    "forms": [
+     {
+      "id": "f1",
+      "text": "pi\u00e8ces d'\u00e9toile",
+      "added": false
+     },
+     {
+      "id": "f2",
+      "text": "de la pi\u00e8ce d'\u00e9toile",
+      "added": false
+     },
+     {
+      "id": "f3",
+      "text": "des pi\u00e8ces",
+      "added": false
+     }
+    ],
+    "selected": null,
+    "is_new": false,
+    "becomes": false,
+    "original": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile"
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile"
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces"
+      }
+     ]
+    }
+   },
+   "why": "a word typed is the person's"
+  },
+  {
+   "id": "term_edit/set_form/a-form-text",
+   "op": "set_form",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       },
+       {
+        "id": "f3",
+        "text": "des pi\u00e8ces"
+       }
+      ]
+     }
+    },
+    "id": "f1",
+    "text": "pi\u00e8ces stellaires"
+   },
+   "out": {
+    "key": "Star Coin",
+    "word": "Pi\u00e8ce d'\u00e9toile",
+    "word_touched": false,
+    "forms": [
+     {
+      "id": "f1",
+      "text": "pi\u00e8ces stellaires",
+      "added": false
+     },
+     {
+      "id": "f2",
+      "text": "de la pi\u00e8ce d'\u00e9toile",
+      "added": false
+     },
+     {
+      "id": "f3",
+      "text": "des pi\u00e8ces",
+      "added": false
+     }
+    ],
+    "selected": null,
+    "is_new": false,
+    "becomes": false,
+    "original": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile"
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile"
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces"
+      }
+     ]
+    }
+   },
+   "why": "only that form"
+  },
+  {
+   "id": "term_edit/set_form/an-unknown-id-changes-nothing",
+   "op": "set_form",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       },
+       {
+        "id": "f3",
+        "text": "des pi\u00e8ces"
+       }
+      ]
+     }
+    },
+    "id": "f9",
+    "text": "x"
+   },
+   "out": {
+    "key": "Star Coin",
+    "word": "Pi\u00e8ce d'\u00e9toile",
+    "word_touched": false,
+    "forms": [
+     {
+      "id": "f1",
+      "text": "pi\u00e8ces d'\u00e9toile",
+      "added": false
+     },
+     {
+      "id": "f2",
+      "text": "de la pi\u00e8ce d'\u00e9toile",
+      "added": false
+     },
+     {
+      "id": "f3",
+      "text": "des pi\u00e8ces",
+      "added": false
+     }
+    ],
+    "selected": null,
+    "is_new": false,
+    "becomes": false,
+    "original": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile"
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile"
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces"
+      }
+     ]
+    }
+   },
+   "why": ""
+  },
+  {
+   "id": "term_edit/remove_form/drops-the-form",
+   "op": "remove_form",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       },
+       {
+        "id": "f3",
+        "text": "des pi\u00e8ces"
+       }
+      ]
+     }
+    },
+    "id": "f3"
+   },
+   "out": {
+    "key": "Star Coin",
+    "word": "Pi\u00e8ce d'\u00e9toile",
+    "word_touched": false,
+    "forms": [
+     {
+      "id": "f1",
+      "text": "pi\u00e8ces d'\u00e9toile",
+      "added": false
+     },
+     {
+      "id": "f2",
+      "text": "de la pi\u00e8ce d'\u00e9toile",
+      "added": false
+     }
+    ],
+    "selected": null,
+    "is_new": false,
+    "becomes": false,
+    "original": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile"
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile"
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces"
+      }
+     ]
+    }
+   },
+   "why": "the form leaves the window; the original still remembers it"
+  },
+  {
+   "id": "term_edit/add_form/the-next-free-number-above-one-just-removed",
+   "op": "add_form",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       },
+       {
+        "id": "f3",
+        "text": "des pi\u00e8ces"
+       }
+      ]
+     }
+    }
+   },
+   "out": {
+    "key": "Star Coin",
+    "word": "Pi\u00e8ce d'\u00e9toile",
+    "word_touched": false,
+    "forms": [
+     {
+      "id": "f1",
+      "text": "pi\u00e8ces d'\u00e9toile",
+      "added": false
+     },
+     {
+      "id": "f2",
+      "text": "de la pi\u00e8ce d'\u00e9toile",
+      "added": false
+     },
+     {
+      "id": "f4",
+      "text": "",
+      "added": true
+     }
+    ],
+    "selected": null,
+    "is_new": false,
+    "becomes": false,
+    "original": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile"
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile"
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces"
+      }
+     ]
+    }
+   },
+   "why": "f3 is not handed out again while the window remembers it: a number is given once"
+  },
+  {
+   "id": "term_edit/add_form/the-first",
+   "op": "add_form",
+   "in": {
+    "state": {
+     "key": "Guardian",
+     "word": "Gardienne",
+     "word_touched": false,
+     "forms": [],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Gardienne",
+      "forms": []
+     }
+    }
+   },
+   "out": {
+    "key": "Guardian",
+    "word": "Gardienne",
+    "word_touched": false,
+    "forms": [
+     {
+      "id": "f1",
+      "text": "",
+      "added": true
+     }
+    ],
+    "selected": null,
+    "is_new": false,
+    "becomes": false,
+    "original": {
+     "v": "Gardienne",
+     "forms": []
+    }
+   },
+   "why": "no form yet: f1"
+  },
+  {
+   "id": "term_edit/add_form/an-id-that-is-no-number-counts-for-nothing",
+   "op": "add_form",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "x",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "x",
+       "text": "y",
+       "added": false
+      },
+      {
+       "id": "f12",
+       "text": "z",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "x",
+      "forms": [
+       {
+        "id": "x",
+        "text": "y"
+       }
+      ]
+     }
+    }
+   },
+   "out": {
+    "key": "Coin",
+    "word": "x",
+    "word_touched": false,
+    "forms": [
+     {
+      "id": "x",
+      "text": "y",
+      "added": false
+     },
+     {
+      "id": "f12",
+      "text": "z",
+      "added": false
+     },
+     {
+      "id": "f13",
+      "text": "",
+      "added": true
+     }
+    ],
+    "selected": null,
+    "is_new": false,
+    "becomes": false,
+    "original": {
+     "v": "x",
+     "forms": [
+      {
+       "id": "x",
+       "text": "y"
+      }
+     ]
+    }
+   },
+   "why": "only ids written fN count: f12 gives f13, x gives nothing"
+  },
+  {
+   "id": "term_edit/blockers/a-sentence-names-the-form",
+   "op": "blockers",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     }
+    },
+    "id": "f1",
+    "file": {
+     "Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile"
+      }
+     },
+     "S1": {
+      "v": "Une [!g*0] brille.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "A",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S2": {
+      "v": "Des [!g*0] brillent.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f1",
+        "by": "A",
+        "was": "pi\u00e8ces d'\u00e9toile"
+       }
+      ]
+     },
+     "S3": {
+      "v": "Le prix [!g*0].",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f2",
+        "by": "A",
+        "was": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S4": {
+      "v": "Des [!g*0].",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "pi\u00e8ces rares",
+        "own": "pi\u00e8ces rares"
+       }
+      ]
+     },
+     "S5": {
+      "v": "Cette [!g*0] est \u00e0 moi.",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S6": {
+      "v": "Rien ici.",
+      "t": "A"
+     }
+    }
+   },
+   "out": {
+    "sentences": [
+     "S2"
+    ],
+    "template": false
+   },
+   "why": "the sentences whose link names the form, in the file's order"
+  },
+  {
+   "id": "term_edit/blockers/the-word-has-no-blocker-by-id",
+   "op": "blockers",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     }
+    },
+    "id": "f2",
+    "file": {
+     "Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile"
+      }
+     },
+     "S1": {
+      "v": "Une [!g*0] brille.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "A",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S2": {
+      "v": "Des [!g*0] brillent.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f1",
+        "by": "A",
+        "was": "pi\u00e8ces d'\u00e9toile"
+       }
+      ]
+     },
+     "S3": {
+      "v": "Le prix [!g*0].",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f2",
+        "by": "A",
+        "was": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S4": {
+      "v": "Des [!g*0].",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "pi\u00e8ces rares",
+        "own": "pi\u00e8ces rares"
+       }
+      ]
+     },
+     "S5": {
+      "v": "Cette [!g*0] est \u00e0 moi.",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S6": {
+      "v": "Rien ici.",
+      "t": "A"
+     }
+    }
+   },
+   "out": {
+    "sentences": [
+     "S3"
+    ],
+    "template": false
+   },
+   "why": ""
+  },
+  {
+   "id": "term_edit/blockers/a-form-made-here-is-needed-by-nobody",
+   "op": "blockers",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f4",
+       "text": "dup",
+       "added": true
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     }
+    },
+    "id": "f4",
+    "file": {
+     "Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile"
+      }
+     },
+     "S1": {
+      "v": "Une [!g*0] brille.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "A",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S2": {
+      "v": "Des [!g*0] brillent.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f1",
+        "by": "A",
+        "was": "pi\u00e8ces d'\u00e9toile"
+       }
+      ]
+     },
+     "S3": {
+      "v": "Le prix [!g*0].",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f2",
+        "by": "A",
+        "was": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S4": {
+      "v": "Des [!g*0].",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "pi\u00e8ces rares",
+        "own": "pi\u00e8ces rares"
+       }
+      ]
+     },
+     "S5": {
+      "v": "Cette [!g*0] est \u00e0 moi.",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S6": {
+      "v": "Rien ici.",
+      "t": "A"
+     }
+    }
+   },
+   "out": {
+    "sentences": [],
+    "template": false
+   },
+   "why": "added in this window: no sentence can name it yet"
+  },
+  {
+   "id": "term_edit/blockers/a-form-not-in-the-window",
+   "op": "blockers",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     }
+    },
+    "id": "f9",
+    "file": {
+     "Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile"
+      }
+     },
+     "S1": {
+      "v": "Une [!g*0] brille.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "A",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S2": {
+      "v": "Des [!g*0] brillent.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f1",
+        "by": "A",
+        "was": "pi\u00e8ces d'\u00e9toile"
+       }
+      ]
+     },
+     "S3": {
+      "v": "Le prix [!g*0].",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f2",
+        "by": "A",
+        "was": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S4": {
+      "v": "Des [!g*0].",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "pi\u00e8ces rares",
+        "own": "pi\u00e8ces rares"
+       }
+      ]
+     },
+     "S5": {
+      "v": "Cette [!g*0] est \u00e0 moi.",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S6": {
+      "v": "Rien ici.",
+      "t": "A"
+     }
+    }
+   },
+   "out": {
+    "sentences": [],
+    "template": false
+   },
+   "why": ""
+  },
+  {
+   "id": "term_edit/blockers/a-template-uses-the-form",
+   "op": "blockers",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "Pi\u00e8ce",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces"
+       }
+      ]
+     }
+    },
+    "id": "f1",
+    "file": {
+     "Coin": {
+      "v": "Pi\u00e8ce",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces"
+      },
+      "use": {
+       "t0123456789ab": "f1"
+      }
+     }
+    }
+   },
+   "out": {
+    "sentences": [],
+    "template": true
+   },
+   "why": "the term's own `use` of a template names it: it cannot go either"
+  },
+  {
+   "id": "term_edit/blockers/a-template-uses-the-form-by-class",
+   "op": "blockers",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "Pi\u00e8ce",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces"
+       }
+      ]
+     }
+    },
+    "id": "f1",
+    "file": {
+     "Coin": {
+      "v": "Pi\u00e8ce",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces"
+      },
+      "use": {
+       "t0123456789ab": {
+        "c0": "0",
+        "c1": "f1"
+       }
+      }
+     }
+    }
+   },
+   "out": {
+    "sentences": [],
+    "template": true
+   },
+   "why": "a use by class names forms too"
+  },
+  {
+   "id": "term_edit/blockers/another-terms-sentences-do-not-count",
+   "op": "blockers",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     }
+    },
+    "id": "f1",
+    "file": {
+     "Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile"
+      }
+     },
+     "Other": {
+      "v": "x",
+      "t": "V",
+      "term": true
+     },
+     "S": {
+      "v": "[!g*0]",
+      "t": "A",
+      "links": [
+       {
+        "to": "Other",
+        "form": "f1",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     }
+    }
+   },
+   "out": {
+    "sentences": [],
+    "template": false
+   },
+   "why": "a link to another term's f1 is that term's"
+  },
+  {
+   "id": "term_edit/changes/nothing",
+   "op": "changes",
+   "in": {
+    "state": {
+     "key": "Guardian",
+     "word": "Gardienne",
+     "word_touched": false,
+     "forms": [],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Gardienne",
+      "forms": []
+     }
+    }
+   },
+   "out": [],
+   "why": ""
+  },
+  {
+   "id": "term_edit/changes/the-word-each-form-edited-added-removed",
+   "op": "changes",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pi\u00e8ce stellaire",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces stellaires",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f4",
+       "text": "des pi\u00e8ces stellaires",
+       "added": true
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       },
+       {
+        "id": "f3",
+        "text": "des pi\u00e8ces"
+       }
+      ]
+     }
+    }
+   },
+   "out": [
+    {
+     "kind": "word"
+    },
+    {
+     "kind": "form-text",
+     "id": "f1"
+    },
+    {
+     "kind": "form-added",
+     "id": "f4"
+    },
+    {
+     "kind": "form-removed",
+     "id": "f3"
+    }
+   ],
+   "why": "one entry per word or form, in this order: the word, the forms of the window, then the forms gone"
+  },
+  {
+   "id": "term_edit/count/is-the-number-of-changes",
+   "op": "count",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pi\u00e8ce stellaire",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces stellaires",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f4",
+       "text": "des pi\u00e8ces stellaires",
+       "added": true
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       },
+       {
+        "id": "f3",
+        "text": "des pi\u00e8ces"
+       }
+      ]
+     }
+    }
+   },
+   "out": 4,
+   "why": "the N of Apply (N)"
+  },
+  {
+   "id": "term_edit/count/typing-the-old-word-back-is-no-change",
+   "op": "count",
+   "in": {
+    "state": {
+     "key": "Guardian",
+     "word": "Gardienne",
+     "word_touched": true,
+     "forms": [],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Gardienne",
+      "forms": []
+     }
+    }
+   },
+   "out": 0,
+   "why": ""
+  },
+  {
+   "id": "term_edit/changes/a-new-term-is-one-act",
+   "op": "changes",
+   "in": {
+    "state": {
+     "key": "Star Gate",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    }
+   },
+   "out": [
+    {
+     "kind": "term"
+    }
+   ],
+   "why": "a line created: its word is part of that one act"
+  },
+  {
+   "id": "term_edit/changes/a-line-that-becomes-a-term-is-one-act",
+   "op": "changes",
+   "in": {
+    "state": {
+     "key": "Play",
+     "word": "Jouer",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Lancer",
+     "is_new": true,
+     "becomes": true,
+     "original": {
+      "v": "Jouer",
+      "forms": []
+     }
+    }
+   },
+   "out": [
+    {
+     "kind": "term"
+    }
+   ],
+   "why": "the words are the ones it had"
+  },
+  {
+   "id": "term_edit/changes/and-its-word-changed-on-the-way",
+   "op": "changes",
+   "in": {
+    "state": {
+     "key": "Play",
+     "word": "Lancer",
+     "word_touched": true,
+     "forms": [],
+     "selected": "Lancer",
+     "is_new": true,
+     "becomes": true,
+     "original": {
+      "v": "Jouer",
+      "forms": []
+     }
+    }
+   },
+   "out": [
+    {
+     "kind": "term"
+    },
+    {
+     "kind": "word"
+    }
+   ],
+   "why": "two acts"
+  },
+  {
+   "id": "term_edit/problem/nothing",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       },
+       {
+        "id": "f3",
+        "text": "des pi\u00e8ces"
+       }
+      ]
+     }
+    },
+    "lookup": {}
+   },
+   "out": null,
+   "why": ""
+  },
+  {
+   "id": "term_edit/problem/an-empty-word",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "  ",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       },
+       {
+        "id": "f3",
+        "text": "des pi\u00e8ces"
+       }
+      ]
+     }
+    },
+    "lookup": {}
+   },
+   "out": "empty-word",
+   "why": ""
+  },
+  {
+   "id": "term_edit/problem/an-empty-form",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces",
+       "added": false
+      },
+      {
+       "id": "f4",
+       "text": "",
+       "added": true
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       },
+       {
+        "id": "f3",
+        "text": "des pi\u00e8ces"
+       }
+      ]
+     }
+    },
+    "lookup": {}
+   },
+   "out": "empty-form",
+   "why": ""
+  },
+  {
+   "id": "term_edit/problem/an-empty-key",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "lookup": {
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile",
+       "f3": "des pi\u00e8ces"
+      }
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    }
+   },
+   "out": "empty-key",
+   "why": ""
+  },
+  {
+   "id": "term_edit/problem/a-name-of-the-file",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "_uuid",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "lookup": {
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile",
+       "f3": "des pi\u00e8ces"
+      }
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    }
+   },
+   "out": "bad-key",
+   "why": "not a text of the game"
+  },
+  {
+   "id": "term_edit/problem/a-template",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "[!L*quality] coin",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "lookup": {
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile",
+       "f3": "des pi\u00e8ces"
+      }
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    }
+   },
+   "out": "bad-key",
+   "why": ""
+  },
+  {
+   "id": "term_edit/problem/a-marker",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Gate [!g*0]",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "lookup": {
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile",
+       "f3": "des pi\u00e8ces"
+      }
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    }
+   },
+   "out": "bad-key",
+   "why": ""
+  },
+  {
+   "id": "term_edit/problem/no-word-for-a-new-term",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Star Gate",
+     "word": "  ",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "lookup": {
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile",
+       "f3": "des pi\u00e8ces"
+      }
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    }
+   },
+   "out": "empty-word",
+   "why": ""
+  },
+  {
+   "id": "term_edit/problem/a-new-term-is-fine",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Star Gate",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "lookup": {
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile",
+       "f3": "des pi\u00e8ces"
+      }
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    }
+   },
+   "out": null,
+   "why": ""
+  },
+  {
+   "id": "term_edit/problem/a-key-that-is-already-a-term",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "lookup": {
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile",
+       "f3": "des pi\u00e8ces"
+      }
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    }
+   },
+   "out": "key-is-term",
+   "why": "that window is opened, not made again"
+  },
+  {
+   "id": "term_edit/problem/a-text-that-cites-terms-cannot-become-one",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Not enough Star Coins!",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "lookup": {
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile",
+       "f3": "des pi\u00e8ces"
+      }
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    }
+   },
+   "out": "cites",
+   "why": "a term does not cite another term (LineWrites)"
+  },
+  {
+   "id": "term_edit/problem/a-text-that-shows-a-marker",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Marked",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "lookup": {
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile",
+       "f3": "des pi\u00e8ces"
+      }
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    }
+   },
+   "out": "cites",
+   "why": ""
+  },
+  {
+   "id": "term_edit/problem/an-ordinary-line-may-become-one",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "Play",
+     "word": "Jouer",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Lancer",
+     "is_new": true,
+     "becomes": true,
+     "original": {
+      "v": "Jouer",
+      "forms": []
+     }
+    },
+    "lookup": {
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile",
+       "f3": "des pi\u00e8ces"
+      }
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    }
+   },
+   "out": null,
+   "why": ""
+  },
+  {
+   "id": "term_edit/problem/the-key-is-trimmed-to-look-it-up",
+   "op": "problem",
+   "in": {
+    "state": {
+     "key": "  Star Coin ",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "lookup": {
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile",
+       "f3": "des pi\u00e8ces"
+      }
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    }
+   },
+   "out": "key-is-term",
+   "why": ""
+  },
+  {
+   "id": "term_edit/after/its-other-fields-are-untouched",
+   "op": "after",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "Gemme",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces"
+       }
+      ]
+     }
+    },
+    "original": {
+     "v": "Pi\u00e8ce",
+     "t": "V",
+     "term": true,
+     "forms": {
+      "f1": "pi\u00e8ces"
+     },
+     "use": {
+      "t0123456789ab": "f1"
+     },
+     "class": {
+      "t0123456789ab": "c0"
+     },
+     "oracle": "accepted"
+    }
+   },
+   "out": {
+    "v": "Gemme",
+    "t": "V",
+    "term": true,
+    "forms": {
+     "f1": "pi\u00e8ces"
+    },
+    "use": {
+     "t0123456789ab": "f1"
+    },
+    "class": {
+     "t0123456789ab": "c0"
+    },
+    "oracle": "accepted"
+   },
+   "why": "word and forms as the window holds them; the rest as the line had it"
+  },
+  {
+   "id": "term_edit/after/no-forms-no-member",
+   "op": "after",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "Pi\u00e8ce",
+     "word_touched": false,
+     "forms": [],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce",
+      "forms": []
+     }
+    },
+    "original": {
+     "v": "Pi\u00e8ce",
+     "t": "V",
+     "term": true,
+     "forms": {
+      "f1": "pi\u00e8ces"
+     },
+     "use": {
+      "t0123456789ab": "f1"
+     },
+     "class": {
+      "t0123456789ab": "c0"
+     },
+     "oracle": "accepted"
+    }
+   },
+   "out": {
+    "v": "Pi\u00e8ce",
+    "t": "V",
+    "term": true,
+    "use": {
+     "t0123456789ab": "f1"
+    },
+    "class": {
+     "t0123456789ab": "c0"
+    },
+    "oracle": "accepted"
+   },
+   "why": "removing every form leaves a term line with no forms member"
+  },
+  {
+   "id": "term_edit/after/a-new-term-carries-the-mark",
+   "op": "after",
+   "in": {
+    "state": {
+     "key": "Star Gate",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "original": {}
+   },
+   "out": {
+    "v": "Porte",
+    "term": true
+   },
+   "why": "a line made or marked is a term"
+  },
+  {
+   "id": "term_edit/effect/a-new-word-reaches-the-sentences-that-follow-it",
+   "op": "effect",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "Pi\u00e8ce stellaire",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     }
+    },
+    "original": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "t": "V",
+     "term": true,
+     "forms": {
+      "f1": "pi\u00e8ces d'\u00e9toile",
+      "f2": "de la pi\u00e8ce d'\u00e9toile"
+     }
+    },
+    "file": {
+     "Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile"
+      }
+     },
+     "S1": {
+      "v": "Une [!g*0] brille.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "A",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S2": {
+      "v": "Des [!g*0] brillent.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f1",
+        "by": "A",
+        "was": "pi\u00e8ces d'\u00e9toile"
+       }
+      ]
+     },
+     "S3": {
+      "v": "Le prix [!g*0].",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f2",
+        "by": "A",
+        "was": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S4": {
+      "v": "Des [!g*0].",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "pi\u00e8ces rares",
+        "own": "pi\u00e8ces rares"
+       }
+      ]
+     },
+     "S5": {
+      "v": "Cette [!g*0] est \u00e0 moi.",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S6": {
+      "v": "Rien ici.",
+      "t": "A"
+     }
+    },
+    "lists": {}
+   },
+   "out": {
+    "texts": 2,
+    "review": 2,
+    "uses": [
+     {
+      "key": "S1",
+      "kind": "Link",
+      "text_changes": true,
+      "needs_review_after": true
+     },
+     {
+      "key": "S2",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     },
+     {
+      "key": "S3",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     },
+     {
+      "key": "S4",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     },
+     {
+      "key": "S5",
+      "kind": "Link",
+      "text_changes": true,
+      "needs_review_after": true
+     }
+    ],
+    "forms_to_redo": [
+     "f1",
+     "f2"
+    ]
+   },
+   "why": "S1 and S5 follow the word; S2 and S3 name a form; S4 keeps its own writing \u2014 and a sentence a person wrote is to be read again, never rewritten. The forms stayed as they were while the word moved: they were derived from the old word and are to be redone"
+  },
+  {
+   "id": "term_edit/effect/one-form",
+   "op": "effect",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces stellaires",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     }
+    },
+    "original": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "t": "V",
+     "term": true,
+     "forms": {
+      "f1": "pi\u00e8ces d'\u00e9toile",
+      "f2": "de la pi\u00e8ce d'\u00e9toile"
+     }
+    },
+    "file": {
+     "Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile"
+      }
+     },
+     "S1": {
+      "v": "Une [!g*0] brille.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "A",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S2": {
+      "v": "Des [!g*0] brillent.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f1",
+        "by": "A",
+        "was": "pi\u00e8ces d'\u00e9toile"
+       }
+      ]
+     },
+     "S3": {
+      "v": "Le prix [!g*0].",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f2",
+        "by": "A",
+        "was": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S4": {
+      "v": "Des [!g*0].",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "pi\u00e8ces rares",
+        "own": "pi\u00e8ces rares"
+       }
+      ]
+     },
+     "S5": {
+      "v": "Cette [!g*0] est \u00e0 moi.",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S6": {
+      "v": "Rien ici.",
+      "t": "A"
+     }
+    },
+    "lists": {}
+   },
+   "out": {
+    "texts": 1,
+    "review": 1,
+    "uses": [
+     {
+      "key": "S1",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     },
+     {
+      "key": "S2",
+      "kind": "Link",
+      "text_changes": true,
+      "needs_review_after": true
+     },
+     {
+      "key": "S3",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     },
+     {
+      "key": "S4",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     },
+     {
+      "key": "S5",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     }
+    ],
+    "forms_to_redo": []
+   },
+   "why": "a form changed reaches only the sentences that name it"
+  },
+  {
+   "id": "term_edit/effect/a-form-removed-falls-back-on-the-word",
+   "op": "effect",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     }
+    },
+    "original": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "t": "V",
+     "term": true,
+     "forms": {
+      "f1": "pi\u00e8ces d'\u00e9toile",
+      "f2": "de la pi\u00e8ce d'\u00e9toile"
+     }
+    },
+    "file": {
+     "Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile"
+      }
+     },
+     "S1": {
+      "v": "Une [!g*0] brille.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "A",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S2": {
+      "v": "Des [!g*0] brillent.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f1",
+        "by": "A",
+        "was": "pi\u00e8ces d'\u00e9toile"
+       }
+      ]
+     },
+     "S3": {
+      "v": "Le prix [!g*0].",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f2",
+        "by": "A",
+        "was": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S4": {
+      "v": "Des [!g*0].",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "pi\u00e8ces rares",
+        "own": "pi\u00e8ces rares"
+       }
+      ]
+     },
+     "S5": {
+      "v": "Cette [!g*0] est \u00e0 moi.",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S6": {
+      "v": "Rien ici.",
+      "t": "A"
+     }
+    },
+    "lists": {}
+   },
+   "out": {
+    "texts": 1,
+    "review": 1,
+    "uses": [
+     {
+      "key": "S1",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     },
+     {
+      "key": "S2",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     },
+     {
+      "key": "S3",
+      "kind": "Link",
+      "text_changes": true,
+      "needs_review_after": true
+     },
+     {
+      "key": "S4",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     },
+     {
+      "key": "S5",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     }
+    ],
+    "forms_to_redo": []
+   },
+   "why": "S3 read f2, which is gone: it shows the word, and is to be read again"
+  },
+  {
+   "id": "term_edit/effect/nothing-changed",
+   "op": "effect",
+   "in": {
+    "state": {
+     "key": "Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     }
+    },
+    "original": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "t": "V",
+     "term": true,
+     "forms": {
+      "f1": "pi\u00e8ces d'\u00e9toile",
+      "f2": "de la pi\u00e8ce d'\u00e9toile"
+     }
+    },
+    "file": {
+     "Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile"
+      }
+     },
+     "S1": {
+      "v": "Une [!g*0] brille.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "A",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S2": {
+      "v": "Des [!g*0] brillent.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f1",
+        "by": "A",
+        "was": "pi\u00e8ces d'\u00e9toile"
+       }
+      ]
+     },
+     "S3": {
+      "v": "Le prix [!g*0].",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f2",
+        "by": "A",
+        "was": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S4": {
+      "v": "Des [!g*0].",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "pi\u00e8ces rares",
+        "own": "pi\u00e8ces rares"
+       }
+      ]
+     },
+     "S5": {
+      "v": "Cette [!g*0] est \u00e0 moi.",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S6": {
+      "v": "Rien ici.",
+      "t": "A"
+     }
+    },
+    "lists": {}
+   },
+   "out": {
+    "texts": 0,
+    "review": 0,
+    "uses": [
+     {
+      "key": "S1",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     },
+     {
+      "key": "S2",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     },
+     {
+      "key": "S3",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     },
+     {
+      "key": "S4",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     },
+     {
+      "key": "S5",
+      "kind": "Link",
+      "text_changes": false,
+      "needs_review_after": false
+     }
+    ],
+    "forms_to_redo": []
+   },
+   "why": "the term left as it is changes nothing and asks for nothing"
+  },
+  {
+   "id": "term_edit/effect/a-new-term-changes-nothing-elsewhere",
+   "op": "effect",
+   "in": {
+    "state": {
+     "key": "Star Gate",
+     "word": "Porte",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "original": {},
+    "file": {
+     "Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pi\u00e8ces d'\u00e9toile",
+       "f2": "de la pi\u00e8ce d'\u00e9toile"
+      }
+     },
+     "S1": {
+      "v": "Une [!g*0] brille.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "A",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S2": {
+      "v": "Des [!g*0] brillent.",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f1",
+        "by": "A",
+        "was": "pi\u00e8ces d'\u00e9toile"
+       }
+      ]
+     },
+     "S3": {
+      "v": "Le prix [!g*0].",
+      "t": "A",
+      "links": [
+       {
+        "to": "Coin",
+        "form": "f2",
+        "by": "A",
+        "was": "de la pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S4": {
+      "v": "Des [!g*0].",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "pi\u00e8ces rares",
+        "own": "pi\u00e8ces rares"
+       }
+      ]
+     },
+     "S5": {
+      "v": "Cette [!g*0] est \u00e0 moi.",
+      "t": "H",
+      "links": [
+       {
+        "to": "Coin",
+        "by": "H",
+        "was": "Pi\u00e8ce d'\u00e9toile"
+       }
+      ]
+     },
+     "S6": {
+      "v": "Rien ici.",
+      "t": "A"
+     }
+    },
+    "lists": {}
+   },
+   "out": {
+    "texts": 0,
+    "review": 0,
+    "uses": [],
+    "forms_to_redo": []
+   },
+   "why": "nothing points at a term not made yet"
+  },
+  {
+   "id": "term_edit/write/nothing-changed-writes-nothing",
+   "op": "write",
+   "in": {
+    "state": {
+     "key": "Guardian",
+     "word": "Gardienne",
+     "word_touched": false,
+     "forms": [],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Gardienne",
+      "forms": []
+     }
+    },
+    "original": {
+     "v": "Gardienne",
+     "t": "V",
+     "term": true
+    }
+   },
+   "out": null,
+   "why": ""
+  },
+  {
+   "id": "term_edit/write/a-changed-word-is-a-persons",
+   "op": "write",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pi\u00e8ce stellaire",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       },
+       {
+        "id": "f3",
+        "text": "des pi\u00e8ces"
+       }
+      ]
+     }
+    },
+    "original": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "t": "V",
+     "term": true,
+     "forms": {
+      "f1": "pi\u00e8ces d'\u00e9toile",
+      "f2": "de la pi\u00e8ce d'\u00e9toile",
+      "f3": "des pi\u00e8ces"
+     }
+    }
+   },
+   "out": {
+    "key": "Star Coin",
+    "value": "Pi\u00e8ce stellaire",
+    "value_changed": true,
+    "tag": "H",
+    "original_value": "Pi\u00e8ce d'\u00e9toile",
+    "original_tag": "V",
+    "is_new": false,
+    "fields": {
+     "term": true,
+     "forms": {
+      "f1": "pi\u00e8ces d'\u00e9toile",
+      "f2": "de la pi\u00e8ce d'\u00e9toile",
+      "f3": "des pi\u00e8ces"
+     }
+    }
+   },
+   "why": "the term's own line alone, its other fields kept; a changed word is marked H"
+  },
+  {
+   "id": "term_edit/write/forms-alone-keep-the-tag",
+   "op": "write",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pi\u00e8ce d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pi\u00e8ces d'\u00e9toile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pi\u00e8ce stellaire",
+       "added": false
+      },
+      {
+       "id": "f3",
+       "text": "des pi\u00e8ces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pi\u00e8ces d'\u00e9toile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pi\u00e8ce d'\u00e9toile"
+       },
+       {
+        "id": "f3",
+        "text": "des pi\u00e8ces"
+       }
+      ]
+     }
+    },
+    "original": {
+     "v": "Pi\u00e8ce d'\u00e9toile",
+     "t": "V",
+     "term": true,
+     "forms": {
+      "f1": "pi\u00e8ces d'\u00e9toile",
+      "f2": "de la pi\u00e8ce d'\u00e9toile",
+      "f3": "des pi\u00e8ces"
+     }
+    }
+   },
+   "out": {
+    "key": "Star Coin",
+    "value": "Pi\u00e8ce d'\u00e9toile",
+    "value_changed": false,
+    "tag": "V",
+    "original_value": "Pi\u00e8ce d'\u00e9toile",
+    "original_tag": "V",
+    "is_new": false,
+    "fields": {
+     "term": true,
+     "forms": {
+      "f1": "pi\u00e8ces d'\u00e9toile",
+      "f2": "de la pi\u00e8ce stellaire",
+      "f3": "des pi\u00e8ces"
+     }
+    }
+   },
+   "why": "a change of forms alone keeps the tag the line has and the word it had"
+  },
+  {
+   "id": "term_edit/write/no-forms-no-member",
+   "op": "write",
+   "in": {
+    "state": {
+     "key": "Portal",
+     "word": "Portail",
+     "word_touched": false,
+     "forms": [],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Portail",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "portails"
+       }
+      ]
+     }
+    },
+    "original": {
+     "v": "Portail",
+     "t": "V",
+     "term": true,
+     "forms": {
+      "f1": "portails"
+     }
+    }
+   },
+   "out": {
+    "key": "Portal",
+    "value": "Portail",
+    "value_changed": false,
+    "tag": "V",
+    "original_value": "Portail",
+    "original_tag": "V",
+    "is_new": false,
+    "fields": {
+     "term": true
+    }
+   },
+   "why": "every form removed: a term line with no forms member"
+  },
+  {
+   "id": "term_edit/write/a-new-term-is-one-line-of-a-persons",
+   "op": "write",
+   "in": {
+    "state": {
+     "key": "  Star Gate ",
+     "word": "Porte d'\u00e9toile",
+     "word_touched": false,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "portes d'\u00e9toile",
+       "added": true
+      }
+     ],
+     "selected": "Porte",
+     "is_new": true,
+     "becomes": false,
+     "original": {
+      "v": "",
+      "forms": []
+     }
+    },
+    "original": {}
+   },
+   "out": {
+    "key": "Star Gate",
+    "value": "Porte d'\u00e9toile",
+    "value_changed": true,
+    "tag": "H",
+    "original_value": "",
+    "original_tag": "H",
+    "is_new": true,
+    "fields": {
+     "term": true,
+     "forms": {
+      "f1": "portes d'\u00e9toile"
+     }
+    }
+   },
+   "why": "the key is trimmed when written; the term is marked and its word a person's"
+  },
+  {
+   "id": "term_edit/write/a-line-that-becomes-a-term-keeps-its-tag",
+   "op": "write",
+   "in": {
+    "state": {
+     "key": "Play",
+     "word": "Jouer",
+     "word_touched": false,
+     "forms": [],
+     "selected": "Lancer",
+     "is_new": true,
+     "becomes": true,
+     "original": {
+      "v": "Jouer",
+      "forms": []
+     }
+    },
+    "original": {
+     "v": "Jouer",
+     "t": "A"
+    }
+   },
+   "out": {
+    "key": "Play",
+    "value": "Jouer",
+    "value_changed": false,
+    "tag": "A",
+    "original_value": "Jouer",
+    "original_tag": "A",
+    "is_new": true,
+    "fields": {
+     "term": true
+    }
+   },
+   "why": "the words are the ones it had: its tag stays, and it is marked"
+  }
+ ]
+}

@@ -397,6 +397,49 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("line_endings", "of_line", typeof(LineEndings), nameof(LineEndings.Of),
                 e => FullLine(LineEndings.Of(LineRequired(e, "line")))),
 
+            // ── term_edit ─────────────────────────────────────────────────────
+            new Operation("term_edit", "open", typeof(TermEdit), nameof(TermEdit.Open),
+                e => { var d = TermEdit.Open(Str(e, "key") ?? "", Line(e, "line"), Int(e, "file_format", 2)); return d.HasValue ? TermEditJson.Json(d.Value) : null; }),
+            new Operation("term_edit", "open_new", typeof(TermEdit), nameof(TermEdit.OpenNew),
+                e => TermEditJson.Json(TermEdit.OpenNew(Str(e, "key"), Str(e, "selected"), Line(e, "existing")))),
+            new Operation("term_edit", "rebase", typeof(TermEdit), nameof(TermEdit.Rebase),
+                e => TermEditJson.Json(TermEdit.Rebase(TermEditJson.DraftOf(e, "state"), LineRequired(e, "line")))),
+            new Operation("term_edit", "set_key", typeof(TermEdit), nameof(TermEdit.SetKey),
+                e => TermEditJson.Json(TermEdit.SetKey(TermEditJson.DraftOf(e, "state"), Str(e, "text"), Line(e, "existing")))),
+            new Operation("term_edit", "set_word", typeof(TermEdit), nameof(TermEdit.SetWord),
+                e => TermEditJson.Json(TermEdit.SetWord(TermEditJson.DraftOf(e, "state"), Str(e, "text")))),
+            new Operation("term_edit", "set_form", typeof(TermEdit), nameof(TermEdit.SetForm),
+                e => TermEditJson.Json(TermEdit.SetForm(TermEditJson.DraftOf(e, "state"), Str(e, "id") ?? "", Str(e, "text")))),
+            new Operation("term_edit", "add_form", typeof(TermEdit), nameof(TermEdit.AddForm),
+                e => TermEditJson.Json(TermEdit.AddForm(TermEditJson.DraftOf(e, "state")))),
+            new Operation("term_edit", "remove_form", typeof(TermEdit), nameof(TermEdit.RemoveForm),
+                e => TermEditJson.Json(TermEdit.RemoveForm(TermEditJson.DraftOf(e, "state"), Str(e, "id") ?? ""))),
+            new Operation("term_edit", "blockers", typeof(TermEdit), nameof(TermEdit.Blockers),
+                e =>
+                {
+                    var b = TermEdit.Blockers(TermEditJson.DraftOf(e, "state"), Str(e, "id") ?? "", Lines(e, "file"));
+                    return new Dictionary<string, object?> { ["sentences"] = new List<string>(b.Sentences), ["template"] = b.Template };
+                }),
+            new Operation("term_edit", "changes", typeof(TermEdit), nameof(TermEdit.Changes),
+                e => TermEditJson.Json(TermEdit.Changes(TermEditJson.DraftOf(e, "state")))),
+            new Operation("term_edit", "count", typeof(TermEdit), nameof(TermEdit.Count),
+                e => TermEdit.Count(TermEditJson.DraftOf(e, "state"))),
+            new Operation("term_edit", "problem", typeof(TermEdit), nameof(TermEdit.Problem),
+                e => TermEdit.Problem(TermEditJson.DraftOf(e, "state"), LineLookup(e, "lookup"))),
+            new Operation("term_edit", "after", typeof(TermEdit), nameof(TermEdit.After),
+                e => TermEditJson.Present(TermEdit.After(TermEditJson.DraftOf(e, "state"), LineRequired(e, "original")))),
+            new Operation("term_edit", "effect", typeof(TermEdit), nameof(TermEdit.Effect),
+                e =>
+                {
+                    var effect = TermEdit.Effect(TermEditJson.DraftOf(e, "state"), LineRequired(e, "original"), Lines(e, "file"), TermEditJson.Lists(e));
+                    var uses = new List<Dictionary<string, object?>>();
+                    foreach (var u in effect.Uses)
+                        uses.Add(new Dictionary<string, object?> { ["key"] = u.Key, ["kind"] = u.Kind.ToString(), ["text_changes"] = u.TextChanges, ["needs_review_after"] = u.NeedsReviewAfter });
+                    return new Dictionary<string, object?> { ["texts"] = effect.Texts, ["review"] = effect.Review, ["uses"] = uses, ["forms_to_redo"] = new List<string>(effect.FormsToRedo) };
+                }),
+            new Operation("term_edit", "write", typeof(TermEdit), nameof(TermEdit.Write),
+                e => { var w = TermEdit.Write(TermEditJson.DraftOf(e, "state"), LineRequired(e, "original")); return w.HasValue ? TermEditJson.Json(w.Value) : null; }),
+
             // ── term_changes ──────────────────────────────────────────────────
             new Operation("term_changes", "impact", typeof(TermChanges), nameof(TermChanges.Impact),
                 e =>
