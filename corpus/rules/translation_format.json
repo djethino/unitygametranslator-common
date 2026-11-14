@@ -67,6 +67,51 @@
       "why": "a header value may carry the spaces of its transport"
     },
     {
+      "id": "translation_format/announced/a-tab-is-white-space-too",
+      "op": "announced",
+      "in": {
+        "value": "\t2\t"
+      },
+      "out": 2,
+      "why": "the space and the tab are the optional white space of a header (RFC 9110): the only two dropped, by every reader"
+    },
+    {
+      "id": "translation_format/announced/a-no-break-space-makes-it-unreadable",
+      "op": "announced",
+      "in": {
+        "value": "\u00a02\u00a0"
+      },
+      "out": 1,
+      "why": "a protocol header is ASCII: Unicode's white space is no white space here, and an unreadable value is silence. The C# used to read this 2 (it trimmed every White_Space) and the site's trim() 1"
+    },
+    {
+      "id": "translation_format/announced/an-ideographic-space-too",
+      "op": "announced",
+      "in": {
+        "value": "2\u3000"
+      },
+      "out": 1,
+      "why": "same rule, any non-ASCII blank"
+    },
+    {
+      "id": "translation_format/announced/a-line-break-is-no-white-space-either",
+      "op": "announced",
+      "in": {
+        "value": "2\n"
+      },
+      "out": 1,
+      "why": "a header value never holds one; if one gets through, the value is not readable"
+    },
+    {
+      "id": "translation_format/announced/fullwidth-digit",
+      "op": "announced",
+      "in": {
+        "value": "\uff12"
+      },
+      "out": 1,
+      "why": "digits are 0-9"
+    },
+    {
       "id": "translation_format/announced/nonsense-is-silence",
       "op": "announced",
       "in": {

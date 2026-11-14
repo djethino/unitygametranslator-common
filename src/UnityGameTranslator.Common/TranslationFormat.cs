@@ -32,11 +32,21 @@ namespace UnityGameTranslator.Common
         /// <summary>
         /// The format a client announced: the header's (or the parameter's) value, or
         /// <see cref="Unannounced"/> when it is absent or not a whole number of at least 1.
+        ///
+        /// 🔴 **A protocol header is ASCII.** Only the space and the tab around the value are dropped (the optional white
+        /// space of HTTP, RFC 9110), on every side — here, on the site (PHP <c>trim($value, " 	")</c>), anywhere a port
+        /// reads it. Any other character, a no-break space or an ideographic one included, makes the value unreadable, and
+        /// an unreadable value is silence. Never Unicode's White_Space: a « 2 » between no-break spaces was read 2 here
+        /// and 1 by the site's <c>trim()</c>, two readings of one header.
         /// </summary>
         public static int Announced(string? value)
         {
-            if (Spaces.IsBlank(value)) return Unannounced;
-            return int.TryParse(value!.TrimSpaces(), System.Globalization.NumberStyles.None,
+            if (value == null) return Unannounced;
+            int from = 0, to = value.Length;
+            while (from < to && (value[from] == ' ' || value[from] == '	')) from++;
+            while (to > from && (value[to - 1] == ' ' || value[to - 1] == '	')) to--;
+            if (from == to) return Unannounced;
+            return int.TryParse(value.Substring(from, to - from), System.Globalization.NumberStyles.None,
                                 System.Globalization.CultureInfo.InvariantCulture, out int n) && n >= 1
                 ? n
                 : Unannounced;
