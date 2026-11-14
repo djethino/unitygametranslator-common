@@ -6,6 +6,22 @@ using System.Text.RegularExpressions;
 
 namespace UnityGameTranslator.Common
 {
+    /// <summary>A label of the game's own in a text — « [攻] », « {Hard} » —: where it stands and what it says.</summary>
+    public struct PlaceholderLabel
+    {
+        /// <summary>The index of its opening bracket, in UTF-16 units of the text.</summary>
+        public int Start;
+
+        /// <summary>Its length with both brackets.</summary>
+        public int Length;
+
+        /// <summary>The label as written, brackets included.</summary>
+        public string Text;
+
+        /// <summary>The words between the brackets.</summary>
+        public string Inside;
+    }
+
     /// <summary>
     /// The rules a machine translation has to obey to be usable in a game, and what to say to a
     /// model that broke them.
@@ -122,13 +138,31 @@ namespace UnityGameTranslator.Common
         public static List<string> Labels(string text)
         {
             var labels = new List<string>();
+            foreach (PlaceholderLabel label in LabelsOf(text))
+                if (!labels.Contains(label.Text)) labels.Add(label.Text);
+            return labels;
+        }
+
+        /// <summary>
+        /// EVERY occurrence of a label — where it stands and what it says — the same pairs <see cref="Labels"/> names once each: a pair of the
+        /// brackets <see cref="Accepts"/> counts (<c>[ ]</c> and <c>{ }</c>) with no bracket of those inside, holding a letter, that is not a
+        /// placeholder. For a caller that must put something in the label's place and bring it back (a name the game fills: the Manager's
+        /// repair of a line the model would not keep it in), so that none keeps a copy of the pattern.
+        ///
+        /// ⚠ What this pattern does NOT exclude, and a caller may filter on <see cref="PlaceholderLabel.Inside"/>: a line break, or a
+        /// <c>&lt;</c> / <c>&gt;</c>, inside the pair. Only <c>[</c> <c>]</c> <c>{</c> <c>}</c> are brackets here — see spec/placeholders.md for
+        /// where that list comes from.
+        /// </summary>
+        public static List<PlaceholderLabel> LabelsOf(string text)
+        {
+            var labels = new List<PlaceholderLabel>();
             if (string.IsNullOrEmpty(text)) return labels;
 
             foreach (Match match in BracketedPattern.Matches(text))
             {
                 if (TokenPattern.IsMatch(match.Value)) continue;
                 if (!HasLetter(match.Value)) continue;
-                if (!labels.Contains(match.Value)) labels.Add(match.Value);
+                labels.Add(new PlaceholderLabel { Start = match.Index, Length = match.Length, Text = match.Value, Inside = match.Value.Substring(1, match.Length - 2) });
             }
 
             return labels;

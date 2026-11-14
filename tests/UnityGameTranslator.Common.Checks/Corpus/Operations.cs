@@ -648,6 +648,9 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => Placeholders.MandatorySequences(Strings(e, "frozen"))),
             new Operation("placeholders", "labels", typeof(Placeholders), nameof(Placeholders.Labels),
                 e => Placeholders.Labels(Str(e, "text") ?? "")),
+            new Operation("placeholders", "labels_of", typeof(Placeholders), nameof(Placeholders.LabelsOf),
+                e => Placeholders.LabelsOf(Str(e, "text") ?? "").Select(l => (object?)new Dictionary<string, object?>
+                    { ["start"] = l.Start, ["length"] = l.Length, ["text"] = l.Text, ["inside"] = l.Inside }).ToList()),
             new Operation("placeholders", "tokens", typeof(Placeholders), nameof(Placeholders.Tokens),
                 e => Placeholders.Tokens(Str(e, "text") ?? "")),
             new Operation("placeholders", "invented", typeof(Placeholders), nameof(Placeholders.Invented),

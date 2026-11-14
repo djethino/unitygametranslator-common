@@ -10,6 +10,7 @@
     "correction": { "in": { "errors": "[string]", "frozen": "[string]" }, "out": "the second attempt's message, verbatim" },
     "mandatory_sequences": { "in": { "frozen": "[string]" }, "out": "the last attempt's extra instructions, verbatim" },
     "labels": { "in": { "text": "string" }, "out": "list: the game's own bracketed labels — a [ ] or { } pair holding a word, not a placeholder — once each, in order" },
+    "labels_of": { "in": { "text": "string" }, "out": "list of {start, length, text, inside}: EVERY occurrence of such a label, in order (UTF-16 units)" },
     "tokens": { "in": { "text": "string" }, "out": "list: every placeholder in order, repeats included" },
     "invented": { "in": { "source": "string", "translation": "string?" }, "out": "list: the tokens the answer carries that the source never had, once each" },
     "markup_kept_by_edit": { "in": { "source": "string", "edited": "string" }, "out": "list: what a PERSON's edit lost of the source's markup — a tag missing, a pair out of order, a pair emptied — as lines read on a screen; a tag of their own is theirs" },
@@ -376,6 +377,18 @@
       "why": "a scanner stops on a marker as on any token" },
     { "id": "placeholders/length_at/format2-leading-zero-is-not-one", "op": "length_at",
       "in": {"text": "[!g*01]", "index": 0}, "out": 0,
-      "why": "and not on a text that only looks like one" }
+      "why": "and not on a text that only looks like one" },
+    {"id": "placeholders/labels_of/a-label-and-where", "op": "labels_of", "in": {"text": "Hit [攻] now"}, "out": [{"start": 4, "length": 3, "text": "[攻]", "inside": "攻"}], "why": "its place in the text and what it says: what a caller needs to put something there and bring it back"},
+    {"id": "placeholders/labels_of/every-occurrence", "op": "labels_of", "in": {"text": "[攻] and [攻]"}, "out": [{"start": 0, "length": 3, "text": "[攻]", "inside": "攻"}, {"start": 8, "length": 3, "text": "[攻]", "inside": "攻"}], "why": "`labels` names it once; each place is its own here"},
+    {"id": "placeholders/labels_of/braces-as-well", "op": "labels_of", "in": {"text": "{Hard} mode"}, "out": [{"start": 0, "length": 6, "text": "{Hard}", "inside": "Hard"}], "why": "a pair of braces is counted by Accepts as a pair of square brackets is"},
+    {"id": "placeholders/labels_of/placeholders-are-not-labels", "op": "labels_of", "in": {"text": "[!v*0] [攻] [!t*0]"}, "out": [{"start": 7, "length": 3, "text": "[攻]", "inside": "攻"}], "why": "a placeholder is never a label"},
+    {"id": "placeholders/labels_of/no-letter-no-label", "op": "labels_of", "in": {"text": "[12] {0}"}, "out": [], "why": "a number or a format index is no word"},
+    {"id": "placeholders/labels_of/after-a-pair-of-surrogates", "op": "labels_of", "in": {"text": "𐐀[攻]"}, "out": [{"start": 2, "length": 3, "text": "[攻]", "inside": "攻"}], "why": "positions are UTF-16 units: the letter beyond the plane counts for two"},
+    {"id": "placeholders/labels_of/two-kinds-in-order", "op": "labels_of", "in": {"text": "a [x] b {y}"}, "out": [{"start": 2, "length": 3, "text": "[x]", "inside": "x"}, {"start": 8, "length": 3, "text": "{y}", "inside": "y"}], "why": "in reading order, whichever the brackets"},
+    {"id": "placeholders/labels_of/nothing-nested", "op": "labels_of", "in": {"text": "[a [b]]"}, "out": [{"start": 3, "length": 3, "text": "[b]", "inside": "b"}], "why": "a pair holds no bracket of its own: the inner one is the label"},
+    {"id": "placeholders/labels_of/a-line-break-inside-is-not-excluded", "op": "labels_of", "in": {"text": "[a\nb]"}, "out": [{"start": 0, "length": 5, "text": "[a\nb]", "inside": "a\nb"}], "why": "the pattern does not look at line breaks: a caller that wants none filters on `inside`"},
+    {"id": "placeholders/labels_of/a-tag-sign-inside-is-not-excluded", "op": "labels_of", "in": {"text": "[<b>x]"}, "out": [{"start": 0, "length": 6, "text": "[<b>x]", "inside": "<b>x"}], "why": "nor at `<` and `>`"},
+    {"id": "placeholders/labels_of/an-exclamation-that-is-no-token", "op": "labels_of", "in": {"text": "[!foo bar]"}, "out": [{"start": 0, "length": 10, "text": "[!foo bar]", "inside": "!foo bar"}], "why": "only the placeholders of the grammar are excluded, not every `[!`: as `labels` has always done"},
+    {"id": "placeholders/labels_of/empty", "op": "labels_of", "in": {"text": ""}, "out": [], "why": "nothing"}
   ]
 }
