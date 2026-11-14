@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Not part of any build of the library: a developer's tool (tools/diff-returns.ps1). CommonProject = the library to probe. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <CommonProject Condition="'$(CommonProject)' == ''">$(MSBuildThisFileDirectory)../../src/UnityGameTranslator.Common/UnityGameTranslator.Common.csproj</CommonProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(CommonProject)" />
+  </ItemGroup>
+</Project>

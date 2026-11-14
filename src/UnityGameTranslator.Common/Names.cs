@@ -16,6 +16,12 @@ namespace UnityGameTranslator.Common
     /// with ASCII letters only (as <see cref="Ascii"/>); a text DECLARED ASCII (an extension, a digest, a code) goes through
     /// <see cref="Ascii"/>, a name through here.
     ///
+    /// ⚠ **This is not the order a game's FILES are walked in** (the Manager's <c>GameFileOrder</c> writes capitals by
+    /// <see cref="Casing"/> — « ß » as « SS », « ı » as « I », a digraph in title case — and differs from this on 109 code points):
+    /// another question with its own rule, never to be joined to this one. And it is not the file system's opinion either: two
+    /// names that differ only by a letter whose capital Unicode gave after the running runtime's table (the 75 pairs of
+    /// NamesChecks) are the same name here and two files there.
+    ///
     /// ⚠ One code point to one: « ß » stays « ß » (its capital is two letters). Never culture, never a normal form: « é »
     /// written as one code point and as « e » + accent are two names, as they are to the file system.
     /// </summary>
