@@ -263,6 +263,22 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => Casing.LowerFirst(Str(e, "text"))),
 
             // ── word_glue / link_finding ──────────────────────────────────────
+            new Operation("link_finding", "cites", typeof(LinkFinding), nameof(LinkFinding.Cites),
+                e =>
+                {
+                    var keys = new List<string>();
+                    foreach (var k in e.GetProperty("terms").EnumerateArray()) keys.Add(k.GetString()!);
+                    List<string>? refused = null;
+                    if (e.TryGetProperty("unlinked", out var u) && u.ValueKind == JsonValueKind.Array)
+                    {
+                        refused = new List<string>();
+                        foreach (var k in u.EnumerateArray()) refused.Add(k.GetString()!);
+                    }
+                    var places = new List<Dictionary<string, object?>>();
+                    foreach (var c in LinkFinding.Cites(TermIndex.OfKeys(keys), Str(e, "source") ?? "", refused))
+                        places.Add(new Dictionary<string, object?> { ["term"] = c.Key, ["start"] = c.Start, ["end"] = c.End });
+                    return places;
+                }),
             new Operation("word_glue", "is_glued", typeof(WordGlue), nameof(WordGlue.IsGlued),
                 e => WordGlue.IsGlued(Int(e, "code_point"))),
             new Operation("word_glue", "edge_before", typeof(WordGlue), nameof(WordGlue.EdgeBefore),

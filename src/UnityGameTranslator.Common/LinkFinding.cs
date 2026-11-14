@@ -33,7 +33,7 @@ namespace UnityGameTranslator.Common
         /// <summary>How many terms.</summary>
         public int Count => Keys.Length;
 
-        private TermIndex(List<KeyValuePair<string, TranslationLine>> terms)
+        private TermIndex(List<KeyValuePair<string, TranslationLine>> terms, bool withWritings = true)
         {
             // Terms in the ORDINAL order of their keys: an identifier means the same whatever order the file lists them in.
             terms.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
@@ -45,6 +45,8 @@ namespace UnityGameTranslator.Common
                 Keys[t] = terms[t].Key;
                 TermOfKey[terms[t].Key] = t;
                 AddText(KeyRoot, terms[t].Key, t, null);
+
+                if (!withWritings) continue;
 
                 var line = terms[t].Value;
                 var seen = new List<string>();
@@ -79,6 +81,22 @@ namespace UnityGameTranslator.Common
                     && LineMarkers.ClosedSlots(line.Key).Count == 0)
                     terms.Add(line);
             return new TermIndex(terms);
+        }
+
+        /// <summary>
+        /// An index of KEYS only — what a source cites, with nothing to find in a text (<see cref="LinkFinding.Find"/> over it
+        /// finds nothing). For asking « which sentences cite this word » of a word that is not a term yet, or of terms whose
+        /// writings do not matter (<see cref="LinkFinding.Cites"/>). A key that is empty or a template is no key.
+        /// </summary>
+        public static TermIndex OfKeys(IEnumerable<string> keys)
+        {
+            if (keys == null) throw new ArgumentNullException(nameof(keys));
+            var terms = new List<KeyValuePair<string, TranslationLine>>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string key in keys)
+                if (!string.IsNullOrEmpty(key) && LineMarkers.ClosedSlots(key).Count == 0 && seen.Add(key))
+                    terms.Add(new KeyValuePair<string, TranslationLine>(key, new TranslationLine { Term = true }));
+            return new TermIndex(terms, withWritings: false);
         }
 
         private static void AddText(Node root, string text, int term, string? form)
@@ -169,7 +187,8 @@ namespace UnityGameTranslator.Common
                 KeepPeopleLinks(index, text, before.Value.Links, claimed, accepted, notFound, decided);
 
             // 2. The terms the SOURCE cites: the longest first, never overlapping, none a person refused.
-            var cited = Cited(index, source, before.HasValue ? before.Value.Unlinked : null);
+            var cited = new HashSet<int>();
+            foreach (var place in CitedPlaces(index, source, before.HasValue ? before.Value.Unlinked : null)) cited.Add(place.Term);
             cited.RemoveWhere(t => decided.Contains(t));
 
             // 3. Where their writings are in the text.
@@ -279,8 +298,37 @@ namespace UnityGameTranslator.Common
             }
         }
 
-        /// <summary>The terms a source cites: occurrences of their keys at word edges, the longest first and never overlapping.</summary>
-        private static HashSet<int> Cited(TermIndex index, string source, IReadOnlyList<string>? refused)
+        /// <summary>One place where a source cites a term.</summary>
+        public struct CitedTerm
+        {
+            /// <summary>The key of the term cited.</summary>
+            public string Key;
+
+            /// <summary>Where, in the source: UTF-16 units, <c>[Start, End)</c>.</summary>
+            public int Start, End;
+        }
+
+        /// <summary>
+        /// WHERE a source cites the terms of an index — the « candidate » half of <see cref="Find"/> (spec/translation-file/finding.md §3,
+        /// §8): the keys found in the source at word edges, the first letter in either case, the longest first, never overlapping,
+        /// a term refused by <paramref name="refused"/> (the line's <c>unlinked</c>) never proposed — its place still taken. In
+        /// reading order; a term cited twice is two places. A term's own line and a template cite nothing.
+        /// </summary>
+        public static IReadOnlyList<CitedTerm> Cites(TermIndex index, string source, IReadOnlyList<string>? refused)
+        {
+            if (index == null) throw new ArgumentNullException(nameof(index));
+            var none = new List<CitedTerm>();
+            if (string.IsNullOrEmpty(source) || index.Count == 0) return none;
+            if (index.TermOfKey.ContainsKey(source) || source.IndexOf("[!L*", StringComparison.Ordinal) >= 0) return none;
+
+            var places = CitedPlaces(index, source, refused);
+            places.Sort((a, b) => a.Start.CompareTo(b.Start));
+            foreach (var place in places) none.Add(new CitedTerm { Key = index.Keys[place.Term], Start = place.Start, End = place.End });
+            return none;
+        }
+
+        /// <summary>The places a source cites terms at: occurrences of their keys at word edges, the longest first and never overlapping.</summary>
+        private static List<Place> CitedPlaces(TermIndex index, string source, IReadOnlyList<string>? refused)
         {
             var found = new List<Place>();
             for (int i = 0; i < source.Length; i++)
@@ -303,16 +351,19 @@ namespace UnityGameTranslator.Common
                 return c != 0 ? c : a.Start.CompareTo(b.Start);
             });
 
-            var cited = new HashSet<int>();
+            // Kept in place: the list is the caller's already, and this runs once per sentence.
+            int kept = 0;
             var taken = new List<int[]>();
-            foreach (var place in found)
+            for (int i = 0; i < found.Count; i++)
             {
+                var place = found[i];
                 if (Overlaps(taken, place.Start, place.End)) continue;
                 taken.Add(new[] { place.Start, place.End });
                 if (refused != null && Contains(refused, index.Keys[place.Term])) continue;
-                cited.Add(place.Term);
+                found[kept++] = place;
             }
-            return cited;
+            found.RemoveRange(kept, found.Count - kept);
+            return found;
         }
 
         private static bool Contains(IReadOnlyList<string> list, string key)
