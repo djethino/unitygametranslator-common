@@ -105,6 +105,7 @@ namespace UnityGameTranslator.Common.Checks
             Section("Template identifiers", TemplateIdsChecks.Run);
             Section("First-letter case tables", check => CasingChecks.Run(check, CommonRoot()));
             Section("Finding links in a text", LinkFindingChecks.Run);
+            Section("Where one term is written in a text", WrittenInChecks.Run);
             Section("What a port needs to know where a source cites a term", check => CitesBenchChecks.Run(check, CommonRoot()));
             Section("The shape of a key", check => KeyShapeChecks.Run(check, CommonRoot()));
             Section("One Unicode version", check => UnicodeVersionChecks.Run(check, CommonRoot()));

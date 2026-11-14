@@ -216,6 +216,10 @@ namespace UnityGameTranslator.Common
                     if (c != 0) return c;
                     c = a.Term.CompareTo(b.Term);                       // terms are numbered in the ordinal order of their keys
                     if (c != 0) return c;
+                    // A writing found AS IT IS beats the case of another one landing on the same words: what a person wrote as a
+                    // form is the form (LinkEditing.Known reads exact first, WrittenIn too).
+                    c = (a.Case == null ? 0 : 1).CompareTo(b.Case == null ? 0 : 1);
+                    if (c != 0) return c;
                     c = string.CompareOrdinal(a.Form ?? string.Empty, b.Form ?? string.Empty);
                     return c != 0 ? c : a.Start.CompareTo(b.Start);
                 });
@@ -325,6 +329,94 @@ namespace UnityGameTranslator.Common
             places.Sort((a, b) => a.Start.CompareTo(b.Start));
             foreach (var place in places) none.Add(new CitedTerm { Key = index.Keys[place.Term], Start = place.Start, End = place.End });
             return none;
+        }
+
+        /// <summary>One writing of a term: the words, and the form they are written by (<c>null</c> = the term's own word).</summary>
+        public struct LinkWriting
+        {
+            public string Words;
+            public string? Form;
+        }
+
+        /// <summary>One place a writing is found at.</summary>
+        public struct WrittenPlace
+        {
+            /// <summary>Which writing, by its position in the list given.</summary>
+            public int Writing;
+
+            /// <summary>Where, in the text: UTF-16 units, <c>[Start, End)</c>.</summary>
+            public int Start, End;
+
+            /// <summary>The case of the first letter applied (<see cref="LinkReading.UpperFirst"/>, <see cref="LinkReading.LowerFirst"/>); null when the text writes the words as they are.</summary>
+            public string? Case;
+        }
+
+        /// <summary>
+        /// WHERE ONE TERM is written in a text — the second half of <see cref="Find"/>, for one term and with every place kept
+        /// (spec/translation-file/finding.md §9). Each writing is looked for at word edges, its first letter in either case; the
+        /// places are taken the longest first, then in the order of the writings given, never overlapping each other nor a
+        /// <paramref name="claimed"/> span (a passage already linked) — and ALL of them are returned, in reading order: one
+        /// place is what <see cref="Find"/> would link, several are for the person to choose, none is « not found ».
+        ///
+        /// ⚠ The text is the text SHOWN (<c>EditState.Text</c>: no marker), and the claimed spans are the passages of that same
+        /// text. List the term's own word first, then its forms in the ordinal order of their ids, as <see cref="Find"/> numbers
+        /// them: at an equal length the first writing given has the place. A writing with no words, with a marker in it, or with
+        /// the same words as an earlier one has no place of its own. A text that holds a link marker answers nothing.
+        /// </summary>
+        public static IReadOnlyList<WrittenPlace> WrittenIn(string text, IReadOnlyList<LinkWriting> writings, IReadOnlyList<KeyValuePair<int, int>>? claimed)
+        {
+            if (text == null) throw new ArgumentNullException(nameof(text));
+            if (writings == null) throw new ArgumentNullException(nameof(writings));
+            var result = new List<WrittenPlace>();
+            if (text.Length == 0 || writings.Count == 0) return result;
+            if (text.IndexOf("[!g*", StringComparison.Ordinal) >= 0 && LineMarkers.LinkNumbers(text).Count > 0) return result;
+
+            var found = new List<WrittenPlace>();
+            var seen = new List<string>();
+            for (int w = 0; w < writings.Count; w++)
+            {
+                string words = writings[w].Words;
+                if (string.IsNullOrEmpty(words) || words.IndexOf("[!", StringComparison.Ordinal) >= 0 || seen.Contains(words)) continue;
+                seen.Add(words);
+
+                string up = Casing.UpperFirst(words)!, low = Casing.LowerFirst(words)!;
+                Look(text, words, null, w, found);
+                if (!string.Equals(up, words, StringComparison.Ordinal)) Look(text, up, LinkReading.UpperFirst, w, found);
+                if (!string.Equals(low, words, StringComparison.Ordinal)) Look(text, low, LinkReading.LowerFirst, w, found);
+            }
+
+            found.Sort((a, b) =>
+            {
+                int c = (b.End - b.Start).CompareTo(a.End - a.Start);
+                if (c != 0) return c;
+                // as written first: a writing the text holds as it is beats another writing's capital landing on the same words
+                c = (a.Case == null ? 0 : 1).CompareTo(b.Case == null ? 0 : 1);
+                if (c != 0) return c;
+                c = a.Writing.CompareTo(b.Writing);
+                return c != 0 ? c : a.Start.CompareTo(b.Start);
+            });
+
+            var taken = new List<int[]>();
+            if (claimed != null) foreach (var span in claimed) taken.Add(new[] { span.Key, span.Value });
+            foreach (var place in found)
+            {
+                if (Overlaps(taken, place.Start, place.End)) continue;
+                taken.Add(new[] { place.Start, place.End });
+                result.Add(place);
+            }
+            result.Sort((a, b) => a.Start.CompareTo(b.Start));
+            return result;
+        }
+
+        private static void Look(string text, string variant, string? casing, int writing, List<WrittenPlace> into)
+        {
+            for (int at = text.IndexOf(variant, StringComparison.Ordinal); at >= 0;
+                 at = at + 1 <= text.Length ? text.IndexOf(variant, at + 1, StringComparison.Ordinal) : -1)
+            {
+                int end = at + variant.Length;
+                if (WordGlue.EdgeBefore(text, at) && WordGlue.EdgeAfter(text, end))
+                    into.Add(new WrittenPlace { Writing = writing, Start = at, End = end, Case = casing });
+            }
         }
 
         /// <summary>The places a source cites terms at: occurrences of their keys at word edges, the longest first and never overlapping.</summary>

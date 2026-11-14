@@ -263,6 +263,27 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => Casing.LowerFirst(Str(e, "text"))),
 
             // ── word_glue / link_finding ──────────────────────────────────────
+            new Operation("link_finding", "written_in", typeof(LinkFinding), nameof(LinkFinding.WrittenIn),
+                e =>
+                {
+                    var writings = new List<LinkFinding.LinkWriting>();
+                    foreach (var item in e.GetProperty("writings").EnumerateArray())
+                        writings.Add(new LinkFinding.LinkWriting
+                        {
+                            Words = item.GetProperty("words").GetString()!,
+                            Form = item.TryGetProperty("form", out var f) && f.ValueKind == JsonValueKind.String ? f.GetString() : null,
+                        });
+                    List<KeyValuePair<int, int>>? claimed = null;
+                    if (e.TryGetProperty("claimed", out var c) && c.ValueKind == JsonValueKind.Array)
+                    {
+                        claimed = new List<KeyValuePair<int, int>>();
+                        foreach (var span in c.EnumerateArray()) claimed.Add(new KeyValuePair<int, int>(span[0].GetInt32(), span[1].GetInt32()));
+                    }
+                    var places = new List<Dictionary<string, object?>>();
+                    foreach (var p in LinkFinding.WrittenIn(Str(e, "text") ?? "", writings, claimed))
+                        places.Add(new Dictionary<string, object?> { ["writing"] = p.Writing, ["start"] = p.Start, ["end"] = p.End, ["case"] = p.Case });
+                    return places;
+                }),
             new Operation("link_finding", "cites", typeof(LinkFinding), nameof(LinkFinding.Cites),
                 e =>
                 {

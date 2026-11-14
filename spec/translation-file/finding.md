@@ -115,3 +115,50 @@ place in reading order, `source-index TAB key TAB start TAB end LF`, positions i
 made by a **naive reference written in Python only from these rules** (`tools/generate-cites-bench.py`, which reads the two data
 files and never the C#); the C# index gives the same 25 539 places, to the position. A port holds both: the same sha, and a
 time it chooses and measures itself — the corpus states no limit, because a limit is a machine's.
+
+## 9. For a port: « where is THIS term written in THIS text » (`LinkFinding.WrittenIn`)
+
+The second half of `Find`, for ONE term, every place kept — what the term window shows for each line that cites the term
+(§8): what the term REPLACES in the translation, by hand, as the smart optimisation would. Held by `corpus/rules/link_finding.json`
+(`written_in`, under `sides.editor`).
+
+`written_in(text, writings, claimed)` → `[{writing, start, end, case}]`:
+
+- `text` is the text SHOWN of the line (`EditState.Text` of `LinkEditing.Show`: no marker), in clear; a text that holds a link
+  marker answers nothing.
+- `writings` are the term's writings **in this order**: its own word (form `null`) first, then its forms in the ordinal order of their
+  ids (the order `Find` numbers them in), then any CANDIDATE the person has just selected and that is not yet a form. A candidate is a
+  writing like the others — the caller remembers which is which by the position (`writing` in the answer). A writing with no words, with
+  a marker in it, or with the words of an earlier one has no place of its own.
+- `claimed` are the spans `[start, end)` of the passages the line already links (`EditState.Passages`: `Start`, `Start + Length`):
+  a place that overlaps one is not offered.
+- Each writing is looked for at word edges (§5, `corpus/data/word-glue.json`), its first letter in either case
+  (`corpus/data/first-letter.json`); `case` says which was applied (`upper-first`, `lower-first`) or is `null` when the text holds the
+  words as they are.
+- The places are taken **the longest first**; at an equal length **a writing found as it is beats another writing's capital landing on
+  the same words**, then the first writing given; never overlapping each other nor a claimed span. **All of them are returned**, in
+  reading order: **one** place is what `Find` would link, **several** are the person's to choose (« this text writes it twice »), **none**
+  is « not found ».
+
+**It agrees with `Find` — one rule, two doors.** `WrittenInChecks` (1 500 random texts, fixed seed) holds it: where `written_in` gives one place,
+`Find` over the same term links THAT place with the same form, the same case and the same words; where it gives none or several, `Find`
+links nothing. (The tie above is the one place the two disagreed — a capital of « coin » landing on the form « Coin »; `Find` now takes
+the writing found as it is, like `LinkTo`.) Two things `Find` does that this does not: it looks only for the terms the source cites, jointly
+and longest-first ACROSS terms (here one term has the text to itself — the screen must not offer a place a longer word of another term has),
+and it keeps only the single place.
+
+**The line is written by `LinkEditing.LinkTo`, with no new case.** To link the places the person kept: `Show` the line, then one
+`LinkTo(state, start, end - start, term, null, …)` per place, in any order, with the places of THIS answer (the text does not change when no
+form is given, and the places do not overlap, so none is refused with `already-a-term`). With no form given `LinkTo` finds the writing
+by its words — exact first, then the capitals — and writes the same form and the same case the place announced (`WrittenInChecks` holds it,
+on lines that already hold a link too). A candidate writing becomes a form of the term BEFORE it is linked, by the term's edit (the entry
+`entryOf` answers is the term as it WOULD be, new form included); a selection that is not a known writing is the usual question of changed
+words, not a refusal. Several links on one line are several calls; a form created and linked in one gesture is the form's creation (the
+term's edit) and then the link.
+
+**What it costs.** C#: 1 000 lines of about sixty letters with ten writings, 6 ms in all (6 µs a line); a line costs its length times
+the number of writings (a native `indexOf` per writing and per case, and a word-edge test at each hit). A port should: call it only for
+the lines `cites` (§8) returned for the term — never the whole file; ask again when the term's writings change (a new word, a form added or
+changed, a candidate selected) — an event, never on a timer; compute it for the rows the window shows and keep the answer per line until
+the writings or the line change; and not build an index (a few writings do not need one). A few hundred lines at each change is a few
+milliseconds.

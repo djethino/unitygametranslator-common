@@ -33,7 +33,7 @@
       "template_ids": ["of"],
       "term_changes": ["impact"],
       "text_diff": ["hunk"],
-      "link_finding": ["cites"],
+      "link_finding": ["cites", "written_in"],
       "word_glue": ["is_glued", "edge_before", "edge_after"],
       "line_endings": ["to_lf", "of_line"],
       "casing": ["upper_first", "lower_first"],
