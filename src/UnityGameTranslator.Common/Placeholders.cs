@@ -323,24 +323,15 @@ namespace UnityGameTranslator.Common
         /// <summary>
         /// A letter, or what rides on one (a vowel sign, a tone mark), judged by Unicode category
         /// and never by script. ⚠ The same categories as the mod's TextNormalization.IsWordCategory,
-        /// which the socle cannot reach: the two answer the same question about a code point.
+        /// which the socle cannot reach: the two answer the same question about a code point — and, from the same
+        /// Unicode version, now the same answer.
         /// </summary>
         private static bool IsWordCharacter(string text, int i)
         {
-            switch (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(text, i))
-            {
-                case System.Globalization.UnicodeCategory.UppercaseLetter:
-                case System.Globalization.UnicodeCategory.LowercaseLetter:
-                case System.Globalization.UnicodeCategory.TitlecaseLetter:
-                case System.Globalization.UnicodeCategory.ModifierLetter:
-                case System.Globalization.UnicodeCategory.OtherLetter:
-                case System.Globalization.UnicodeCategory.NonSpacingMark:
-                case System.Globalization.UnicodeCategory.SpacingCombiningMark:
-                case System.Globalization.UnicodeCategory.PrivateUse:
-                    return true;
-                default:
-                    return false;
-            }
+            // The project's Unicode (UnicodeCategories), all planes — not the runtime's, which does not know the letters
+            // added since it was built, nor those of a game's older Mono.
+            string category = UnicodeCategories.Of(text, i);
+            return category[0] == 'L' || category == "Mn" || category == "Mc" || category == "Co";
         }
 
         /// <summary>

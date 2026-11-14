@@ -272,6 +272,18 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("link_finding", "find", typeof(LinkFinding), nameof(LinkFinding.Find),
                 e => LinkFinding.Find(TermIndex.Build(Lines(e, "terms")), Str(e, "text") ?? "", Str(e, "source") ?? "", Line(e, "before"))),
 
+            // ── unicode_categories ────────────────────────────────────────────
+            new Operation("unicode_categories", "of", typeof(UnicodeCategories), nameof(UnicodeCategories.Of),
+                e => UnicodeCategories.Of(Int(e, "code_point"))),
+            new Operation("unicode_categories", "of_in_text", typeof(UnicodeCategories), nameof(UnicodeCategories.Of),
+                e => UnicodeCategories.Of(Str(e, "text") ?? "", Int(e, "index"))),
+            new Operation("unicode_categories", "is_letter", typeof(UnicodeCategories), nameof(UnicodeCategories.IsLetter),
+                e => UnicodeCategories.IsLetter(Int(e, "code_point"))),
+            new Operation("unicode_categories", "is_mark", typeof(UnicodeCategories), nameof(UnicodeCategories.IsMark),
+                e => UnicodeCategories.IsMark(Int(e, "code_point"))),
+            new Operation("unicode_categories", "is_number", typeof(UnicodeCategories), nameof(UnicodeCategories.IsNumber),
+                e => UnicodeCategories.IsNumber(Int(e, "code_point"))),
+
             // ── key_shape / key_chars ─────────────────────────────────────────
             new Operation("key_shape", "of", typeof(KeyShape), nameof(KeyShape.Of),
                 e =>

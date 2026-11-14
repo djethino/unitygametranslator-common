@@ -1,0 +1,486 @@
+{
+ "rule": "unicode_categories",
+ "classes": [
+  "UnicodeCategories"
+ ],
+ "note": "The general category of every code point, from the project's Unicode (UnicodeCategories.Tables.g.cs, tools/generate-general-category.py, UNICODE_VERSION): all planes, never the runtime's \u2014 .NET 8.0.34 did not know 22 068 letters Unicode 18 does (27 in the Basic Multilingual Plane). The expected answers were read from UnicodeData.txt, not from the code. A code point nobody assigned, a lone surrogate and a value out of range are Cn.",
+ "operations": {
+  "of": {
+   "in": {
+    "code_point": "int"
+   },
+   "out": "the two-letter category, Cn when none"
+  },
+  "of_in_text": {
+   "in": {
+    "text": "string",
+    "index": "int, a UTF-16 index"
+   },
+   "out": "the category of the code point starting there (a surrogate pair read whole)"
+  },
+  "is_letter": {
+   "in": {
+    "code_point": "int"
+   },
+   "out": "bool: L*"
+  },
+  "is_mark": {
+   "in": {
+    "code_point": "int"
+   },
+   "out": "bool: M*"
+  },
+  "is_number": {
+   "in": {
+    "code_point": "int"
+   },
+   "out": "bool: N*"
+  }
+ },
+ "cases": [
+  {
+   "id": "unicode_categories/of/A",
+   "op": "of",
+   "in": {
+    "code_point": 65
+   },
+   "out": "Lu",
+   "why": "U+0041"
+  },
+  {
+   "id": "unicode_categories/of/a",
+   "op": "of",
+   "in": {
+    "code_point": 97
+   },
+   "out": "Ll",
+   "why": "U+0061"
+  },
+  {
+   "id": "unicode_categories/of/titlecase-dz",
+   "op": "of",
+   "in": {
+    "code_point": 453
+   },
+   "out": "Lt",
+   "why": "U+01C5"
+  },
+  {
+   "id": "unicode_categories/of/modifier-letter",
+   "op": "of",
+   "in": {
+    "code_point": 688
+   },
+   "out": "Lm",
+   "why": "U+02B0"
+  },
+  {
+   "id": "unicode_categories/of/han",
+   "op": "of",
+   "in": {
+    "code_point": 20013
+   },
+   "out": "Lo",
+   "why": "U+4E2D"
+  },
+  {
+   "id": "unicode_categories/of/combining-acute",
+   "op": "of",
+   "in": {
+    "code_point": 769
+   },
+   "out": "Mn",
+   "why": "U+0301"
+  },
+  {
+   "id": "unicode_categories/of/devanagari-sign-aa",
+   "op": "of",
+   "in": {
+    "code_point": 2366
+   },
+   "out": "Mc",
+   "why": "U+093E"
+  },
+  {
+   "id": "unicode_categories/of/combining-enclosing-circle",
+   "op": "of",
+   "in": {
+    "code_point": 8413
+   },
+   "out": "Me",
+   "why": "U+20DD"
+  },
+  {
+   "id": "unicode_categories/of/digit-zero",
+   "op": "of",
+   "in": {
+    "code_point": 48
+   },
+   "out": "Nd",
+   "why": "U+0030"
+  },
+  {
+   "id": "unicode_categories/of/roman-numeral-eight",
+   "op": "of",
+   "in": {
+    "code_point": 8551
+   },
+   "out": "Nl",
+   "why": "U+2167"
+  },
+  {
+   "id": "unicode_categories/of/superscript-two",
+   "op": "of",
+   "in": {
+    "code_point": 178
+   },
+   "out": "No",
+   "why": "U+00B2"
+  },
+  {
+   "id": "unicode_categories/of/low-line",
+   "op": "of",
+   "in": {
+    "code_point": 95
+   },
+   "out": "Pc",
+   "why": "U+005F"
+  },
+  {
+   "id": "unicode_categories/of/hyphen",
+   "op": "of",
+   "in": {
+    "code_point": 45
+   },
+   "out": "Pd",
+   "why": "U+002D"
+  },
+  {
+   "id": "unicode_categories/of/space",
+   "op": "of",
+   "in": {
+    "code_point": 32
+   },
+   "out": "Zs",
+   "why": "U+0020"
+  },
+  {
+   "id": "unicode_categories/of/line-separator",
+   "op": "of",
+   "in": {
+    "code_point": 8232
+   },
+   "out": "Zl",
+   "why": "U+2028"
+  },
+  {
+   "id": "unicode_categories/of/tab",
+   "op": "of",
+   "in": {
+    "code_point": 9
+   },
+   "out": "Cc",
+   "why": "U+0009"
+  },
+  {
+   "id": "unicode_categories/of/zero-width-space",
+   "op": "of",
+   "in": {
+    "code_point": 8203
+   },
+   "out": "Cf",
+   "why": "U+200B"
+  },
+  {
+   "id": "unicode_categories/of/private-use",
+   "op": "of",
+   "in": {
+    "code_point": 57344
+   },
+   "out": "Co",
+   "why": "U+E000"
+  },
+  {
+   "id": "unicode_categories/of/emoji",
+   "op": "of",
+   "in": {
+    "code_point": 128512
+   },
+   "out": "So",
+   "why": "U+1F600"
+  },
+  {
+   "id": "unicode_categories/of/han-extension-b",
+   "op": "of",
+   "in": {
+    "code_point": 134071
+   },
+   "out": "Lo",
+   "why": "U+20BB7"
+  },
+  {
+   "id": "unicode_categories/of/linear-b",
+   "op": "of",
+   "in": {
+    "code_point": 65536
+   },
+   "out": "Lo",
+   "why": "U+10000"
+  },
+  {
+   "id": "unicode_categories/of/cjk-extension-a-last",
+   "op": "of",
+   "in": {
+    "code_point": 40959
+   },
+   "out": "Lo",
+   "why": "U+9FFF"
+  },
+  {
+   "id": "unicode_categories/of/hangul-syllable",
+   "op": "of",
+   "in": {
+    "code_point": 44032
+   },
+   "out": "Lo",
+   "why": "U+AC00"
+  },
+  {
+   "id": "unicode_categories/of/unassigned-in-plane",
+   "op": "of",
+   "in": {
+    "code_point": 888
+   },
+   "out": "Cn",
+   "why": "U+0378"
+  },
+  {
+   "id": "unicode_categories/of/noncharacter",
+   "op": "of",
+   "in": {
+    "code_point": 65535
+   },
+   "out": "Cn",
+   "why": "U+FFFF"
+  },
+  {
+   "id": "unicode_categories/of/last-code-point",
+   "op": "of",
+   "in": {
+    "code_point": 1114111
+   },
+   "out": "Cn",
+   "why": "U+10FFFF"
+  },
+  {
+   "id": "unicode_categories/of/plane-15-private-use",
+   "op": "of",
+   "in": {
+    "code_point": 983040
+   },
+   "out": "Co",
+   "why": "U+F0000"
+  },
+  {
+   "id": "unicode_categories/of/bmp-letter-the-runtime-lacks-1",
+   "op": "of",
+   "in": {
+    "code_point": 1368
+   },
+   "out": "Lm",
+   "why": "U+0558 \u2014 a letter .NET 8's own tables did not know when measured (2026-11-14)"
+  },
+  {
+   "id": "unicode_categories/of/bmp-letter-the-runtime-lacks-2",
+   "op": "of",
+   "in": {
+    "code_point": 1419
+   },
+   "out": "Lm",
+   "why": "U+058B \u2014 a letter .NET 8's own tables did not know when measured (2026-11-14)"
+  },
+  {
+   "id": "unicode_categories/of/astral-letter-the-runtime-lacks-1",
+   "op": "of",
+   "in": {
+    "code_point": 250150
+   },
+   "out": "Lo",
+   "why": "U+3D126 \u2014 a letter .NET 8's own tables did not know when measured (2026-11-14)"
+  },
+  {
+   "id": "unicode_categories/of/astral-letter-the-runtime-lacks-2",
+   "op": "of",
+   "in": {
+    "code_point": 261183
+   },
+   "out": "Lo",
+   "why": "U+3FC3F \u2014 a letter .NET 8's own tables did not know when measured (2026-11-14)"
+  },
+  {
+   "id": "unicode_categories/of/astral-letter-the-runtime-lacks-3",
+   "op": "of",
+   "in": {
+    "code_point": 78944
+   },
+   "out": "Lo",
+   "why": "U+13460 \u2014 a letter .NET 8's own tables did not know when measured (2026-11-14)"
+  },
+  {
+   "id": "unicode_categories/of/a-lone-surrogate-is-none",
+   "op": "of",
+   "in": {
+    "code_point": 55296
+   },
+   "out": "Cn",
+   "why": "a surrogate is not a code point of a text"
+  },
+  {
+   "id": "unicode_categories/of/out-of-range",
+   "op": "of",
+   "in": {
+    "code_point": 1114112
+   },
+   "out": "Cn",
+   "why": "beyond Unicode"
+  },
+  {
+   "id": "unicode_categories/of/negative",
+   "op": "of",
+   "in": {
+    "code_point": -1
+   },
+   "out": "Cn",
+   "why": "no code point"
+  },
+  {
+   "id": "unicode_categories/of_in_text/a-pair-is-one-code-point",
+   "op": "of_in_text",
+   "in": {
+    "text": "a\ud80d\udc60b",
+    "index": 1
+   },
+   "out": "Lo",
+   "why": "the index of the high surrogate: the pair is read whole (U+13460, an Egyptian hieroglyph)"
+  },
+  {
+   "id": "unicode_categories/of_in_text/the-low-half-alone-is-none",
+   "op": "of_in_text",
+   "in": {
+    "text": "a\ud80d\udc60b",
+    "index": 2
+   },
+   "out": "Cn",
+   "why": "pointed at the low surrogate of a pair, there is no code point to answer for"
+  },
+  {
+   "id": "unicode_categories/of_in_text/an-ordinary-unit",
+   "op": "of_in_text",
+   "in": {
+    "text": "x1",
+    "index": 1
+   },
+   "out": "Nd",
+   "why": "a unit that is a code point of its own"
+  },
+  {
+   "id": "unicode_categories/is_letter/letter",
+   "op": "is_letter",
+   "in": {
+    "code_point": 65
+   },
+   "out": true,
+   "why": "U+0041"
+  },
+  {
+   "id": "unicode_categories/is_letter/digit",
+   "op": "is_letter",
+   "in": {
+    "code_point": 49
+   },
+   "out": false,
+   "why": "U+0031"
+  },
+  {
+   "id": "unicode_categories/is_letter/mark",
+   "op": "is_letter",
+   "in": {
+    "code_point": 8413
+   },
+   "out": false,
+   "why": "U+20DD"
+  },
+  {
+   "id": "unicode_categories/is_letter/astral-hieroglyph",
+   "op": "is_letter",
+   "in": {
+    "code_point": 78944
+   },
+   "out": true,
+   "why": "U+13460"
+  },
+  {
+   "id": "unicode_categories/is_mark/combining-acute",
+   "op": "is_mark",
+   "in": {
+    "code_point": 769
+   },
+   "out": true,
+   "why": "U+0301"
+  },
+  {
+   "id": "unicode_categories/is_mark/letter",
+   "op": "is_mark",
+   "in": {
+    "code_point": 65
+   },
+   "out": false,
+   "why": "U+0041"
+  },
+  {
+   "id": "unicode_categories/is_mark/spacing-mark",
+   "op": "is_mark",
+   "in": {
+    "code_point": 2366
+   },
+   "out": true,
+   "why": "U+093E"
+  },
+  {
+   "id": "unicode_categories/is_number/digit",
+   "op": "is_number",
+   "in": {
+    "code_point": 48
+   },
+   "out": true,
+   "why": "U+0030: N is Nd, Nl and No"
+  },
+  {
+   "id": "unicode_categories/is_number/roman-numeral",
+   "op": "is_number",
+   "in": {
+    "code_point": 8551
+   },
+   "out": true,
+   "why": "U+2167: N is Nd, Nl and No"
+  },
+  {
+   "id": "unicode_categories/is_number/superscript",
+   "op": "is_number",
+   "in": {
+    "code_point": 178
+   },
+   "out": true,
+   "why": "U+00B2: N is Nd, Nl and No"
+  },
+  {
+   "id": "unicode_categories/is_number/letter",
+   "op": "is_number",
+   "in": {
+    "code_point": 65
+   },
+   "out": false,
+   "why": "U+0041: N is Nd, Nl and No"
+  }
+ ]
+}
