@@ -302,12 +302,15 @@ namespace UnityGameTranslator.Common
 
         // One pattern per rule, asked of the answer to take it off and of the source to know
         // whether it is the game's own.
-        private static readonly Regex Think = new Regex(@"<think>[\s\S]*?</think>\s*", RegexOptions.IgnoreCase);
+        // 🔴 CultureInvariant is not optional: the case of a regular expression follows the CULTURE of the
+        // thread, and under a Turkish one « I » and « i » are no longer the same letter — « TRANSLATION: » was
+        // not recognised and the model's preamble was written into the game (AnswersCultureChecks holds it).
+        private static readonly Regex Think = new Regex(@"<think>[\s\S]*?</think>\s*", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         private static readonly Regex Emphasis = new Regex(@"\*\*([^*]+)\*\*");
         private static readonly Regex Announcing = new Regex(
-            @"^(Translation|Traduction|Here'?s?|The translation is)\s*[:\-]?\s*", RegexOptions.IgnoreCase);
+            @"^(Translation|Traduction|Here'?s?|The translation is)\s*[:\-]?\s*", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         private static readonly Regex Explaining = new Regex(
-            @"\n\n(Note:|I |This |Here |The above|Explanation:|Translation note:)", RegexOptions.IgnoreCase);
+            @"\n\n(Note:|I |This |Here |The above|Explanation:|Translation note:)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
         private static bool IsWrappedIn(string text, string quote) =>
             text.Length >= 2 * quote.Length

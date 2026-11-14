@@ -28,6 +28,10 @@ namespace UnityGameTranslator.Common.Checks
 
         private static int Main(string[] args)
         {
+            // The child of AnswersCultureChecks: the culture is set before the library is touched.
+            if (args.Length == 2 && args[0] == AnswersCultureChecks.Verb)
+                return AnswersCultureChecks.RunUnder(args[1]);
+
             // `dotnet run -- silent-list [file]`: where the silent catches of this library are.
             if (args.Length >= 1 && args[0] == "silent-list")
                 return SilentCatches.List(LibrarySources(), CommonRoot()!, args.Length >= 2 ? args[1] : null);
@@ -171,6 +175,7 @@ namespace UnityGameTranslator.Common.Checks
         private static void PromptWording()
         {
             Section("Prompts", PromptsChecks.Run);
+            Section("Cleaning an answer, under any culture", AnswersCultureChecks.Run);
         }
 
         /// <summary>What a player is told about a file, checked against the website's rules.</summary>
