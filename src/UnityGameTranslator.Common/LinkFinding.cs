@@ -145,6 +145,45 @@ namespace UnityGameTranslator.Common
     /// </summary>
     public static class LinkFinding
     {
+        /// <summary>
+        /// The tags of a text (<see cref="Markup.TagEnd"/>'s rule): a tag is MARKUP, not text, so nothing found in a text lies in one — the
+        /// <c>name=call</c> of a <c>&lt;sprite name=call&gt;</c> and the <c>red</c> of a <c>&lt;color=red&gt;</c> are no words of the
+        /// sentence. The word a tag surrounds (<c>&lt;b&gt;Coin&lt;/b&gt;</c>) is, the signs of a tag being edges (<see cref="WordGlue"/>).
+        /// A text with no <c>&lt;</c> costs one scan and nothing else.
+        /// </summary>
+        private readonly struct Tags
+        {
+            private readonly int[]? _spans;   // start, end (exclusive), start, end…
+
+            private Tags(int[] spans) { _spans = spans; }
+
+            public static Tags Of(string text)
+            {
+                int first = text.IndexOf('<');
+                if (first < 0) return default;
+                List<int>? spans = null;
+                for (int i = first; i < text.Length; i++)
+                {
+                    if (text[i] != '<') continue;
+                    int end = Markup.TagEnd(text, i);
+                    if (end < 0) continue;
+                    (spans ?? (spans = new List<int>())).Add(i);
+                    spans.Add(end + 1);
+                    i = end;
+                }
+                return spans == null ? default : new Tags(spans.ToArray());
+            }
+
+            /// <summary>Does [start, end) touch a tag?</summary>
+            public bool Touch(int start, int end)
+            {
+                if (_spans == null) return false;
+                for (int i = 0; i < _spans.Length; i += 2)
+                    if (_spans[i] < end && start < _spans[i + 1]) return true;
+                return false;
+            }
+        }
+
         private static readonly LineLink[] NoLinks = new LineLink[0];
 
         private struct Place
@@ -194,6 +233,7 @@ namespace UnityGameTranslator.Common
             // 3. Where their writings are in the text.
             if (cited.Count > 0)
             {
+                var tags = Tags.Of(text);
                 var places = new List<Place>();
                 for (int i = 0; i < text.Length; i++)
                 {
@@ -204,7 +244,7 @@ namespace UnityGameTranslator.Common
                         if (node.Next == null || !node.Next.TryGetValue(text[k], out node!)) break;
                         if (node.Hits == null || !WordGlue.EdgeAfter(text, k + 1)) continue;
                         foreach (var hit in node.Hits)
-                            if (cited.Contains(hit.Term))
+                            if (cited.Contains(hit.Term) && !tags.Touch(i, k + 1))
                                 places.Add(new Place { Start = i, End = k + 1, Term = hit.Term, Form = hit.Form, Case = hit.Case });
                     }
                 }
@@ -272,6 +312,8 @@ namespace UnityGameTranslator.Common
         private static void KeepPeopleLinks(TermIndex index, string text, IReadOnlyList<LineLink> before, List<int[]> claimed,
                                             List<KeyValuePair<int, LineLink>> accepted, List<LineLink> notFound, HashSet<int> decided)
         {
+            var tags = Tags.Of(text);
+
             // Group the person's links by their words: as many places as links, or none of them.
             var byWords = new Dictionary<string, List<LineLink>>(StringComparer.Ordinal);
             var order = new List<string>();
@@ -289,7 +331,8 @@ namespace UnityGameTranslator.Common
                 var places = new List<int>();
                 for (int at = text.IndexOf(words, StringComparison.Ordinal); at >= 0;
                      at = at + words.Length <= text.Length ? text.IndexOf(words, at + words.Length, StringComparison.Ordinal) : -1)
-                    if (WordGlue.EdgeBefore(text, at) && WordGlue.EdgeAfter(text, at + words.Length) && !Overlaps(claimed, at, at + words.Length))
+                    if (WordGlue.EdgeBefore(text, at) && WordGlue.EdgeAfter(text, at + words.Length) && !tags.Touch(at, at + words.Length)
+                        && !Overlaps(claimed, at, at + words.Length))
                         places.Add(at);
 
                 var links = byWords[words];
@@ -388,6 +431,7 @@ namespace UnityGameTranslator.Common
 
             var found = new List<WrittenPlace>();
             var seen = new List<string>();
+            var tags = Tags.Of(text);
             for (int w = 0; w < writings.Count; w++)
             {
                 string words = writings[w].Words;
@@ -395,9 +439,9 @@ namespace UnityGameTranslator.Common
                 seen.Add(words);
 
                 string up = Casing.UpperFirst(words)!, low = Casing.LowerFirst(words)!;
-                Look(text, words, null, w, found);
-                if (!string.Equals(up, words, StringComparison.Ordinal)) Look(text, up, LinkReading.UpperFirst, w, found);
-                if (!string.Equals(low, words, StringComparison.Ordinal)) Look(text, low, LinkReading.LowerFirst, w, found);
+                Look(text, tags, words, null, w, found);
+                if (!string.Equals(up, words, StringComparison.Ordinal)) Look(text, tags, up, LinkReading.UpperFirst, w, found);
+                if (!string.Equals(low, words, StringComparison.Ordinal)) Look(text, tags, low, LinkReading.LowerFirst, w, found);
             }
 
             found.Sort((a, b) =>
@@ -488,13 +532,13 @@ namespace UnityGameTranslator.Common
             return won;
         }
 
-        private static void Look(string text, string variant, string? casing, int writing, List<WrittenPlace> into)
+        private static void Look(string text, Tags tags, string variant, string? casing, int writing, List<WrittenPlace> into)
         {
             for (int at = text.IndexOf(variant, StringComparison.Ordinal); at >= 0;
                  at = at + 1 <= text.Length ? text.IndexOf(variant, at + 1, StringComparison.Ordinal) : -1)
             {
                 int end = at + variant.Length;
-                if (WordGlue.EdgeBefore(text, at) && WordGlue.EdgeAfter(text, end))
+                if (WordGlue.EdgeBefore(text, at) && WordGlue.EdgeAfter(text, end) && !tags.Touch(at, end))
                     into.Add(new WrittenPlace { Writing = writing, Start = at, End = end, Case = casing });
             }
         }
@@ -503,6 +547,7 @@ namespace UnityGameTranslator.Common
         private static List<Place> CitedPlaces(TermIndex index, string source, IReadOnlyList<string>? refused)
         {
             var found = new List<Place>();
+            var tags = Tags.Of(source);
             for (int i = 0; i < source.Length; i++)
             {
                 if (!WordGlue.EdgeBefore(source, i)) continue;
@@ -511,6 +556,7 @@ namespace UnityGameTranslator.Common
                 {
                     if (node.Next == null || !node.Next.TryGetValue(source[k], out node!)) break;
                     if (node.Hits == null || !WordGlue.EdgeAfter(source, k + 1)) continue;
+                    if (tags.Touch(i, k + 1)) continue;
                     foreach (var hit in node.Hits) found.Add(new Place { Start = i, End = k + 1, Term = hit.Term });
                 }
             }

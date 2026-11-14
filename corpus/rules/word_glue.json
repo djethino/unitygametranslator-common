@@ -1,7 +1,7 @@
 {
   "rule": "word_glue",
   "classes": ["WordGlue"],
-  "note": "Where a word ends, for finding a term in a text (spec/translation-file/finding.md): an edge cuts a word when the character inside it and the one outside are BOTH written stuck together into words — Unicode's line breaking classes AI AK AL AP AS CM H2 H3 HL JL JT JV NU VF VI ZWJ (WordGlue.Classes), at the project's Unicode version (WordGlue.UnicodeVersion, equal to the mod's). Everything else is an edge.",
+  "note": "Where a word ends, for finding a term in a text (spec/translation-file/finding.md): an edge cuts a word when the character inside it and the one outside are BOTH written stuck together into words: a character is glued when it is a constituent of a word (Word_Break, UAX #29: ALetter, Hebrew_Letter, Numeric, Extend, Format, ExtendNumLet, ZWJ — WordGlue.WordBreakValues) AND its Line_Break class (UAX #14) is one of AI AK AL AP AS CM H2 H3 HL JL JT JV NU VF VI ZWJ (WordGlue.Classes: the project's decisions — no ideograph, kana or SA), at the project's Unicode version (WordGlue.UnicodeVersion, equal to the mod's). Everything else is an edge: spaces, punctuation, and every sign and symbol (# * < > = ☆).",
   "operations": {
     "is_glued": {"in": {"code_point": "int"}, "out": "bool"},
     "edge_before": {"in": {"text": "string", "index": "int (UTF-16)"}, "out": "bool: a word may begin at the index"},
@@ -19,7 +19,7 @@
     { "id": "word_glue/is_glued/underscore", "op": "is_glued",
       "in": {"code_point": 95},
       "out": true,
-      "why": "Unicode files the low line with the letters for line breaking: stuck" },
+      "why": "the low line is a word constituent (UAX #29 ExtendNumLet): an identifier is one word, stuck" },
     { "id": "word_glue/is_glued/hyphen", "op": "is_glued",
       "in": {"code_point": 45},
       "out": false,
@@ -159,6 +159,20 @@
     { "id": "word_glue/edge_after/astral-letter-then-latin", "op": "edge_after",
       "in": {"text": "𐐨a", "index": 2},
       "out": false,
-      "why": "the letter before the index is decoded as one character, not as its second half" }
+      "why": "the letter before the index is decoded as one character, not as its second half" },
+    {"id": "word_glue/is_glued/number-sign", "op": "is_glued", "in": {"code_point": 35}, "out": false, "why": "a sign a game draws round a name is an edge (UAX #29: Other)"},
+    {"id": "word_glue/is_glued/less-than", "op": "is_glued", "in": {"code_point": 60}, "out": false, "why": "the angle brackets of a tag are edges"},
+    {"id": "word_glue/is_glued/greater-than", "op": "is_glued", "in": {"code_point": 62}, "out": false, "why": "the angle brackets of a tag are edges"},
+    {"id": "word_glue/is_glued/asterisk", "op": "is_glued", "in": {"code_point": 42}, "out": false, "why": "emphasis in a game's text"},
+    {"id": "word_glue/is_glued/at-sign", "op": "is_glued", "in": {"code_point": 64}, "out": false, "why": "a sign"},
+    {"id": "word_glue/is_glued/equals-sign", "op": "is_glued", "in": {"code_point": 61}, "out": false, "why": "a sign"},
+    {"id": "word_glue/is_glued/white-star", "op": "is_glued", "in": {"code_point": 9734}, "out": false, "why": "a symbol (So): UAX #14 files it with the letters, UAX #29 does not"},
+    {"id": "word_glue/is_glued/black-heart", "op": "is_glued", "in": {"code_point": 9829}, "out": false, "why": "a symbol"},
+    {"id": "word_glue/is_glued/copyright-sign", "op": "is_glued", "in": {"code_point": 169}, "out": false, "why": "a symbol"},
+    {"id": "word_glue/is_glued/zero-width-non-joiner", "op": "is_glued", "in": {"code_point": 8204}, "out": true, "why": "a format character belongs to the word it is in (UAX #29: Extend)"},
+    {"id": "word_glue/is_glued/zero-width-joiner", "op": "is_glued", "in": {"code_point": 8205}, "out": true, "why": "the joiner too"},
+    {"id": "word_glue/is_glued/superscript-two-is-an-edge", "op": "is_glued", "in": {"code_point": 178}, "out": false, "why": "not a decimal digit (UAX #29: Other)"},
+    {"id": "word_glue/is_glued/hebrew-geresh", "op": "is_glued", "in": {"code_point": 1523}, "out": true, "why": "a letter of Hebrew's own (UAX #29: ALetter), though it looks like punctuation"},
+    {"id": "word_glue/is_glued/katakana-is-still-an-edge", "op": "is_glued", "in": {"code_point": 12459}, "out": false, "why": "the decision of the project, over UAX #29 (every position between kana is an edge)"}
   ]
 }

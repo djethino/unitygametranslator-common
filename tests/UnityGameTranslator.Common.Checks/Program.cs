@@ -109,6 +109,7 @@ namespace UnityGameTranslator.Common.Checks
             Section("Finding links in a text", LinkFindingChecks.Run);
             Section("Where one term is written in a text", WrittenInChecks.Run);
             Section("What a port needs to know where a source cites a term", check => CitesBenchChecks.Run(check, CommonRoot()));
+            Section("Sources with decorations and tags (invented, of the form of a real game)", check => CitesBenchChecks.Decorations(check, CommonRoot()));
             Section("The shape of a key", check => KeyShapeChecks.Run(check, CommonRoot()));
             Section("One Unicode version", check => UnicodeVersionChecks.Run(check, CommonRoot()));
             Section("Editing a text with links", LinkEditingChecks.Run);
