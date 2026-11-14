@@ -26,6 +26,7 @@ namespace UnityGameTranslator.Common.Checks
             check(Casing.UnicodeVersion == version, "the case tables carry it", "regenerate: python tools/generate-casing.py");
             check(WordGlue.UnicodeVersion == version, "the word table carries it", "regenerate: python tools/generate-word-glue.py");
             check(KeyChars.UnicodeVersion == version, "the key's character tables carry it", "regenerate: python tools/generate-key-chars.py");
+            check(Names.UnicodeVersion == version, "the case-mapping table carries it", "regenerate: python tools/generate-case-mapping.py");
             check(UnicodeCategories.UnicodeVersion == version, "the general-category table carries it", "regenerate: python tools/generate-general-category.py");
         }
     }

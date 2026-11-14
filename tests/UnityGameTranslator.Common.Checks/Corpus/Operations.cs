@@ -272,6 +272,18 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("link_finding", "find", typeof(LinkFinding), nameof(LinkFinding.Find),
                 e => LinkFinding.Find(TermIndex.Build(Lines(e, "terms")), Str(e, "text") ?? "", Str(e, "source") ?? "", Line(e, "before"))),
 
+            // ── names ────────────────────────────────────────────────────────
+            new Operation("names", "fold", typeof(Names), nameof(Names.Fold),
+                e => Names.Fold(Str(e, "text") ?? "")),
+            new Operation("names", "fold_code_point", typeof(Names), nameof(Names.Fold),
+                e => Names.Fold(Int(e, "code_point"))),
+            new Operation("names", "equals", typeof(Names), nameof(Names.Equals),
+                e => Names.Equals(Str(e, "a"), Str(e, "b"))),
+            new Operation("names", "index_of", typeof(Names), nameof(Names.IndexOf),
+                e => Names.IndexOf(Str(e, "text"), Str(e, "part") ?? "")),
+            new Operation("names", "compare", typeof(Names), nameof(Names.Compare),
+                e => Math.Sign(Names.Compare(Str(e, "a"), Str(e, "b")))),
+
             // ── unicode_categories ────────────────────────────────────────────
             new Operation("unicode_categories", "of", typeof(UnicodeCategories), nameof(UnicodeCategories.Of),
                 e => UnicodeCategories.Of(Int(e, "code_point"))),

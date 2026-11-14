@@ -80,6 +80,7 @@ namespace UnityGameTranslator.Common.Checks
             NothingSwallowed();
             Section("Texts declared ASCII", AsciiChecks.Run);
             Section("White space, by the table", SpacesChecks.Run);
+            Section("Names, by their capitals", NamesChecks.Run);
             Section("No runtime Unicode (a ratchet to zero)", check => NoRuntimeUnicode.Run(check, CommonRoot()));
 
             Console.WriteLine();

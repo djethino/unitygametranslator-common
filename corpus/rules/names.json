@@ -1,0 +1,463 @@
+{
+ "rule": "names",
+ "classes": [
+  "Names"
+ ],
+ "note": "How the NAMES of things (a game, a font, a sprite, a language, a file, a tag) are compared and ordered without caring about case: every code point is written as its simple capital, from the project's Unicode (UNICODE_VERSION, tools/generate-case-mapping.py), never the runtime's. The same answers and the same ORDER as .NET 8's OrdinalIgnoreCase wherever the runtime knows the letters (NamesChecks holds that over every code point); no bridge between ASCII and the rest. A text DECLARED ASCII (an extension, a digest, a code) goes through Ascii, not here. The order is by code point, NOT the UTF-16 code units of the content hash's keys.",
+ "operations": {
+  "fold": {
+   "in": {
+    "text": "string"
+   },
+   "out": "the text with every code point written as its simple capital"
+  },
+  "fold_code_point": {
+   "in": {
+    "code_point": "int"
+   },
+   "out": "its simple capital, or itself"
+  },
+  "equals": {
+   "in": {
+    "a": "string or null",
+    "b": "string or null"
+   },
+   "out": "bool: the same name but for case"
+  },
+  "index_of": {
+   "in": {
+    "text": "string or null",
+    "part": "string"
+   },
+   "out": "the UTF-16 index of the first place the part is found but for case, -1 when none"
+  },
+  "compare": {
+   "in": {
+    "a": "string or null",
+    "b": "string or null"
+   },
+   "out": "the sign of the order: -1, 0 or 1"
+  }
+ },
+ "cases": [
+  {
+   "id": "names/fold/ascii",
+   "op": "fold",
+   "in": {
+    "text": "Hello_World 12"
+   },
+   "out": "HELLO_WORLD 12",
+   "why": "the capitals; everything else as it is"
+  },
+  {
+   "id": "names/fold/accents",
+   "op": "fold",
+   "in": {
+    "text": "caf\u00e9 \u00c9t\u00e9"
+   },
+   "out": "CAF\u00c9 \u00c9T\u00c9",
+   "why": "a letter with an accent folds to its capital"
+  },
+  {
+   "id": "names/fold/sharp-s-stays",
+   "op": "fold",
+   "in": {
+    "text": "stra\u00dfe"
+   },
+   "out": "STRA\u00dfE",
+   "why": "one code point to one: its capital is two letters, so it keeps itself"
+  },
+  {
+   "id": "names/fold/dotless-i-has-no-bridge",
+   "op": "fold",
+   "in": {
+    "text": "\u0131"
+   },
+   "out": "\u0131",
+   "why": "no code point beyond ASCII becomes an ASCII letter: the dotless i stays"
+  },
+  {
+   "id": "names/fold/dotted-capital-i-has-no-bridge",
+   "op": "fold",
+   "in": {
+    "text": "\u0130i"
+   },
+   "out": "\u0130I",
+   "why": "the dotted capital I stays; the ASCII i folds to I"
+  },
+  {
+   "id": "names/fold/long-s-has-no-bridge",
+   "op": "fold",
+   "in": {
+    "text": "\u017f"
+   },
+   "out": "\u017f",
+   "why": "the long s is not an s"
+  },
+  {
+   "id": "names/fold/kelvin-has-no-bridge",
+   "op": "fold",
+   "in": {
+    "text": "\u212a"
+   },
+   "out": "\u212a",
+   "why": "the Kelvin sign is not a k, and has no capital"
+  },
+  {
+   "id": "names/fold/digraph-takes-its-simple-capital",
+   "op": "fold",
+   "in": {
+    "text": "\u01c6"
+   },
+   "out": "\u01c4",
+   "why": "the simple upper case, not the title case"
+  },
+  {
+   "id": "names/fold/greek-final-sigma",
+   "op": "fold",
+   "in": {
+    "text": "\u03c2"
+   },
+   "out": "\u03a3",
+   "why": "final sigma has the same capital as sigma"
+  },
+  {
+   "id": "names/fold/georgian",
+   "op": "fold",
+   "in": {
+    "text": "\u10d0\u10d1"
+   },
+   "out": "\u1c90\u1c91",
+   "why": "Georgian small letters fold to the Mtavruli capitals"
+  },
+  {
+   "id": "names/fold/cherokee",
+   "op": "fold",
+   "in": {
+    "text": "\uab70"
+   },
+   "out": "\u13a0",
+   "why": "Cherokee small letters fold to the capitals"
+  },
+  {
+   "id": "names/fold/deseret-beyond-the-plane",
+   "op": "fold",
+   "in": {
+    "text": "\ud801\udc28"
+   },
+   "out": "\ud801\udc00",
+   "why": "a pair of surrogates folds as ONE code point"
+  },
+  {
+   "id": "names/fold/a-letter-the-runtime-may-not-know",
+   "op": "fold",
+   "in": {
+    "text": "\ua7cd"
+   },
+   "out": "\ua7cc",
+   "why": "Latin Extended-D, Unicode 16: the table is the project's, whatever the runtime"
+  },
+  {
+   "id": "names/fold/empty",
+   "op": "fold",
+   "in": {
+    "text": ""
+   },
+   "out": "",
+   "why": "nothing in, nothing out"
+  },
+  {
+   "id": "names/fold_code_point/ascii-small",
+   "op": "fold_code_point",
+   "in": {
+    "code_point": 97
+   },
+   "out": 65,
+   "why": "a"
+  },
+  {
+   "id": "names/fold_code_point/ascii-already-capital",
+   "op": "fold_code_point",
+   "in": {
+    "code_point": 65
+   },
+   "out": 65,
+   "why": "A"
+  },
+  {
+   "id": "names/fold_code_point/digit",
+   "op": "fold_code_point",
+   "in": {
+    "code_point": 53
+   },
+   "out": 53,
+   "why": "no case"
+  },
+  {
+   "id": "names/fold_code_point/e-acute",
+   "op": "fold_code_point",
+   "in": {
+    "code_point": 233
+   },
+   "out": 201,
+   "why": "\u00e9"
+  },
+  {
+   "id": "names/fold_code_point/dotless-i",
+   "op": "fold_code_point",
+   "in": {
+    "code_point": 305
+   },
+   "out": 305,
+   "why": "no bridge to ASCII"
+  },
+  {
+   "id": "names/fold_code_point/deseret",
+   "op": "fold_code_point",
+   "in": {
+    "code_point": 66600
+   },
+   "out": 66560,
+   "why": "beyond the plane"
+  },
+  {
+   "id": "names/fold_code_point/han",
+   "op": "fold_code_point",
+   "in": {
+    "code_point": 20013
+   },
+   "out": 20013,
+   "why": "no case"
+  },
+  {
+   "id": "names/equals/same-but-case",
+   "op": "equals",
+   "in": {
+    "a": "Font_Name",
+    "b": "FONT_name"
+   },
+   "out": true,
+   "why": "a name is the same but for case"
+  },
+  {
+   "id": "names/equals/accents-differ",
+   "op": "equals",
+   "in": {
+    "a": "cafe",
+    "b": "caf\u00e9"
+   },
+   "out": false,
+   "why": "an accent is a letter"
+  },
+  {
+   "id": "names/equals/accented-case",
+   "op": "equals",
+   "in": {
+    "a": "\u00c9t\u00e9",
+    "b": "\u00e9T\u00c9"
+   },
+   "out": true,
+   "why": "accented letters fold"
+  },
+  {
+   "id": "names/equals/dotless-i-is-not-i",
+   "op": "equals",
+   "in": {
+    "a": "\u0131",
+    "b": "I"
+   },
+   "out": false,
+   "why": "no bridge between ASCII and the rest"
+  },
+  {
+   "id": "names/equals/deseret-pair",
+   "op": "equals",
+   "in": {
+    "a": "\ud801\udc00",
+    "b": "\ud801\udc28"
+   },
+   "out": true,
+   "why": "a pair of surrogates is one code point"
+  },
+  {
+   "id": "names/equals/two-nulls",
+   "op": "equals",
+   "in": {
+    "a": null,
+    "b": null
+   },
+   "out": true,
+   "why": "as string.Equals"
+  },
+  {
+   "id": "names/equals/a-null-is-no-name",
+   "op": "equals",
+   "in": {
+    "a": null,
+    "b": ""
+   },
+   "out": false,
+   "why": "as string.Equals"
+  },
+  {
+   "id": "names/equals/different-lengths",
+   "op": "equals",
+   "in": {
+    "a": "abc",
+    "b": "abcd"
+   },
+   "out": false,
+   "why": "a prefix is not the name"
+  },
+  {
+   "id": "names/equals/precomposed-and-combining-differ",
+   "op": "equals",
+   "in": {
+    "a": "\u00e9",
+    "b": "e\u0301"
+   },
+   "out": false,
+   "why": "no normal form: the file system does not read them alike either"
+  },
+  {
+   "id": "names/index_of/found-whatever-the-case",
+   "op": "index_of",
+   "in": {
+    "text": "The Haunted Island",
+    "part": "haunted"
+   },
+   "out": 4,
+   "why": "a name inside a name, case aside"
+  },
+  {
+   "id": "names/index_of/not-found",
+   "op": "index_of",
+   "in": {
+    "text": "Rez",
+    "part": "Infinite"
+   },
+   "out": -1,
+   "why": ""
+  },
+  {
+   "id": "names/index_of/empty-part",
+   "op": "index_of",
+   "in": {
+    "text": "Rez",
+    "part": ""
+   },
+   "out": 0,
+   "why": "as IndexOf"
+  },
+  {
+   "id": "names/index_of/null-text",
+   "op": "index_of",
+   "in": {
+    "text": null,
+    "part": "a"
+   },
+   "out": -1,
+   "why": "no text, no place"
+  },
+  {
+   "id": "names/index_of/after-a-pair",
+   "op": "index_of",
+   "in": {
+    "text": "\ud801\udc28x",
+    "part": "X"
+   },
+   "out": 2,
+   "why": "positions are UTF-16 units: the capital keeps the length"
+  },
+  {
+   "id": "names/compare/equal-but-case",
+   "op": "compare",
+   "in": {
+    "a": "abc",
+    "b": "ABC"
+   },
+   "out": 0,
+   "why": ""
+  },
+  {
+   "id": "names/compare/underscore-after-z",
+   "op": "compare",
+   "in": {
+    "a": "z",
+    "b": "_"
+   },
+   "out": -1,
+   "why": "in capitals the underscore is after Z and before the small letters: the order OrdinalIgnoreCase gave, which a pack was written in"
+  },
+  {
+   "id": "names/compare/underscore-after-a",
+   "op": "compare",
+   "in": {
+    "a": "_",
+    "b": "a"
+   },
+   "out": 1,
+   "why": "so it sorts AFTER the letters, not before them as a lower-case fold would put it"
+  },
+  {
+   "id": "names/compare/bracket-after-z",
+   "op": "compare",
+   "in": {
+    "a": "Z",
+    "b": "["
+   },
+   "out": -1,
+   "why": ""
+  },
+  {
+   "id": "names/compare/digits-before-letters",
+   "op": "compare",
+   "in": {
+    "a": "9",
+    "b": "a"
+   },
+   "out": -1,
+   "why": ""
+  },
+  {
+   "id": "names/compare/shorter-first",
+   "op": "compare",
+   "in": {
+    "a": "ab",
+    "b": "ABC"
+   },
+   "out": -1,
+   "why": ""
+  },
+  {
+   "id": "names/compare/beyond-the-plane-after-the-last-bmp",
+   "op": "compare",
+   "in": {
+    "a": "\ud801\udc00",
+    "b": "\ufffd"
+   },
+   "out": 1,
+   "why": "by code point, as .NET 8's OrdinalIgnoreCase: a letter beyond the plane sorts after U+FFFD (UTF-16 units would put it before U+E000)"
+  },
+  {
+   "id": "names/compare/null-first",
+   "op": "compare",
+   "in": {
+    "a": null,
+    "b": "a"
+   },
+   "out": -1,
+   "why": ""
+  },
+  {
+   "id": "names/compare/both-null",
+   "op": "compare",
+   "in": {
+    "a": null,
+    "b": null
+   },
+   "out": 0,
+   "why": ""
+  }
+ ]
+}
