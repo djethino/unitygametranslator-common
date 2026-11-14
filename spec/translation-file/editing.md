@@ -101,3 +101,7 @@ A link marker typed into the clear text of a format 2 file is refused (`text-has
 user's opinion on the default (stuck to the edge = outside) is pending, and changing it is changing those four
 methods and their cases in `corpus/rules/passage_border.json`. Sliding and absorption are described here and held
 by `link_editing.json` (`k5-last-word-deleted` fails without the first, `c2-a-known-writing` without the second).
+
+## 9. Passages are never settled on grapheme clusters
+
+A passage edge, a hunk, a link and a term are positions in UTF-16 code units, moved by whole code points (a surrogate pair is never cut: `TextDiff.Hunk`) and by Unicode's word glue (`WordGlue`, UAX #14) — never by extended grapheme clusters. No rule of this library depends on a cluster, because a cluster is the Unicode of whatever segments it (a browser's `Intl.Segmenter`, a runtime's `StringInfo`), while the project's rules read the one pinned in `UNICODE_VERSION`. A port may use clusters to DRAW (the cursor, a selection) and never to decide where a passage starts, ends, slides or is lost.
