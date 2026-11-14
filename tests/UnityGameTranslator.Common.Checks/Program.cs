@@ -78,6 +78,7 @@ namespace UnityGameTranslator.Common.Checks
             ProviderNegotiation();
             ProductColours();
             NothingSwallowed();
+            Section("Texts declared ASCII", AsciiChecks.Run);
             Section("No runtime Unicode (a ratchet to zero)", check => NoRuntimeUnicode.Run(check, CommonRoot()));
 
             Console.WriteLine();
