@@ -30,5 +30,10 @@ A draft: `{key, word, word_touched, forms:[{id, text, added}], selected, is_new,
   made), and what the change does, said BEFORE: `TermChanges.Impact` on the file as it stands with that line laid over — how many texts change
   (`texts`) and how many sentences are to be read again (`review`). Never a count of the window's own.
 - **`write`** — the one act: the term's own line and nothing else, or `null` when nothing changed. **A changed word is a person's writing
-  (`H`, `LineEditing.TagAfterPerson`: a line tagged `M` or `S` keeps it, as every save of the site always did)**; a change of forms alone keeps the tag the line has and the word it had. A key written is trimmed. No sentence is written: they read
+  (`H`, `LineEditing.TagAfterPerson`: a line tagged `M` or `S` keeps it, as every save of the site always did) — unless the word is the AI's PROPOSAL kept as it came (`ProposeWord`, then `Write`: `LineEditing.TagOfWords`), which is the machine's: `A`**; a change of forms alone keeps the tag the line has and the word it had. A key written is trimmed. No sentence is written: they read
   the term through their link, and a link a person made becomes « to read again » (its `was` still names the words read when it was set).
+
+- **`propose_word`** — the AI proposed this word: it becomes the word of the window like a typed one (nothing is written until Apply), and is remembered as the
+  `proposal`. `set_word` keeps the proposal and changes the word; `write` tags the word `A` only when it is still EQUAL to the proposal, to the letter
+  (retouched, then put back, it is kept). The site's `setTermWord` was the only door a proposal had and wrote every word `H`; a proposal goes through
+  `proposeWord` now, and the same rule files a SENTENCE's accepted proposal (`line_edit/tag_of_words`).

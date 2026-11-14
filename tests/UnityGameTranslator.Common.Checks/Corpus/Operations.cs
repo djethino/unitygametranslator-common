@@ -364,6 +364,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             // ── line_edit ──────────────────────────────────────────────────────────
             new Operation("line_edit", "run", typeof(LineEditing), LineEditJson.Methods, LineEditJson.Run),
             new Operation("line_edit", "term_choices", typeof(LineEditing), nameof(LineEditing.TermChoices), LineEditJson.Choices),
+            new Operation("line_edit", "tag_of_words", typeof(LineEditing), nameof(LineEditing.TagOfWords),
+                e => LineEditing.TagOfWords(Str(e, "stored"), Str(e, "written"), Str(e, "proposal"))),
             new Operation("line_edit", "tag_after_person", typeof(LineEditing), nameof(LineEditing.TagAfterPerson),
                 e => LineEditing.TagAfterPerson(Str(e, "stored"))),
 
@@ -520,6 +522,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => TermEditJson.Json(TermEdit.SetKey(TermEditJson.DraftOf(e, "state"), Str(e, "text"), Line(e, "existing")))),
             new Operation("term_edit", "set_word", typeof(TermEdit), nameof(TermEdit.SetWord),
                 e => TermEditJson.Json(TermEdit.SetWord(TermEditJson.DraftOf(e, "state"), Str(e, "text")))),
+            new Operation("term_edit", "propose_word", typeof(TermEdit), nameof(TermEdit.ProposeWord),
+                e => TermEditJson.Json(TermEdit.ProposeWord(TermEditJson.DraftOf(e, "state"), Str(e, "text")))),
             new Operation("term_edit", "set_form", typeof(TermEdit), nameof(TermEdit.SetForm),
                 e => TermEditJson.Json(TermEdit.SetForm(TermEditJson.DraftOf(e, "state"), Str(e, "id") ?? "", Str(e, "text")))),
             new Operation("term_edit", "add_form", typeof(TermEdit), nameof(TermEdit.AddForm),

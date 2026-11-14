@@ -156,6 +156,19 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static string TagAfterPerson(string? stored) => stored == "M" || stored == "S" ? stored : "H";
 
+        /// <summary>
+        /// The tag of words a person SAVES: <c>A</c> when they are the AI's proposal, kept as it came — filing it <c>H</c> would claim a review
+        /// nobody performed, and the tag drives the quality score, the A → V gesture and what the community sees — else
+        /// <see cref="TagAfterPerson"/> (<c>H</c>; a line tagged <c>M</c> or <c>S</c> stays what it is). A proposal she retouched is hers: equality with
+        /// the proposal, to the letter, is the whole rule, so retouching and putting it back is keeping it.
+        /// </summary>
+        /// <param name="stored">The tag the line has, or null.</param>
+        /// <param name="written">The words being saved.</param>
+        /// <param name="aiProposal">What the AI last proposed for this line, or null when it proposed nothing.</param>
+        public static string TagOfWords(string? stored, string? written, string? aiProposal)
+            => aiProposal != null && string.Equals(written, aiProposal, StringComparison.Ordinal) && stored != "M" && stored != "S"
+                ? "A" : TagAfterPerson(stored);
+
         // ── Opening and typing ──────────────────────────────────────────────
 
         /// <summary>

@@ -37,7 +37,9 @@ fails them.
 
 **The sentence's tag.** A person's writing is `H` (`LineEditing.TagAfterPerson`) — except a line tagged `M` (the mod's own words) or `S`
 (skipped), which stays what it is: every save of the site has always kept them (`EditSessionController`; `displayTag` of the page). A tag she
-chose by hand is the caller's and wins. The same rule writes the word of a term (`TermEdit.Write`). A term that gained a form keeps its own
+chose by hand is the caller's and wins. **A proposal of the AI she keeps as it came is `A`** (`LineEditing.TagOfWords(stored, written, proposal)`): filing it `H`
+would claim a review nobody performed, and the tag drives the quality score, the A → V gesture and what the community sees. Equality with the proposal,
+to the letter, is the whole rule; `M` and `S` stay what they are. The same rule writes the word of a term (`TermEdit.Write`). A term that gained a form keeps its own
 tag (`A` when it has none) and its own words.
 
 **What a line carries.** The line ENTIRE: its words with the markers, and every other field it held (term mark, forms, use, class, oracle) —

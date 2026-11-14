@@ -44,6 +44,9 @@ namespace UnityGameTranslator.Common
 
         /// <summary>The forms the line had when the window opened.</summary>
         public IReadOnlyList<DraftForm> OriginalForms;
+
+        /// <summary>What the AI last proposed for the word (<see cref="TermEdit.ProposeWord"/>), or null: a word equal to it is written <c>A</c>.</summary>
+        public string? Proposal;
     }
 
     /// <summary>One thing that changed in the window.</summary>
@@ -161,6 +164,7 @@ namespace UnityGameTranslator.Common
             next.Key = text ?? string.Empty;
             next.Word = draft.WordTouched ? draft.Word : next.Word;
             next.WordTouched = draft.WordTouched;
+            next.Proposal = draft.Proposal;
             next.Forms = keepsForms ? draft.Forms : next.Forms;
             return next;
         }
@@ -169,6 +173,18 @@ namespace UnityGameTranslator.Common
         {
             draft.Word = text ?? string.Empty;
             draft.WordTouched = true;
+            return draft;
+        }
+
+        /// <summary>
+        /// The AI proposed this word: it is the word of the window like a typed one (a proposal is never written until Apply), and it is
+        /// REMEMBERED as the proposal — a word still equal to it when written is the machine's (<see cref="LineEditing.TagOfWords"/>).
+        /// </summary>
+        public static TermDraft ProposeWord(TermDraft draft, string? text)
+        {
+            draft.Word = text ?? string.Empty;
+            draft.WordTouched = true;
+            draft.Proposal = draft.Word;
             return draft;
         }
 
@@ -355,7 +371,7 @@ namespace UnityGameTranslator.Common
                 Key = draft.IsNew ? draft.Key.TrimSpaces() : draft.Key,
                 Value = draft.Word,
                 ValueChanged = valueChanged,
-                Tag = valueChanged ? LineEditing.TagAfterPerson(original.Tag) : originalTag,
+                Tag = valueChanged ? LineEditing.TagOfWords(original.Tag, draft.Word, draft.Proposal) : originalTag,
                 OriginalValue = originalValue,
                 OriginalTag = originalTag,
                 IsNew = draft.IsNew,

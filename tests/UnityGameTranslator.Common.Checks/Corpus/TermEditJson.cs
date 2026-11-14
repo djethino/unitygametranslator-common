@@ -23,6 +23,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 Key = Str(s, "key") ?? "",
                 Word = Str(s, "word") ?? "",
                 WordTouched = Bool(s, "word_touched"),
+                Proposal = Str(s, "proposal"),
                 Forms = FormsOf(s, "forms"),
                 Selected = Str(s, "selected"),
                 IsNew = Bool(s, "is_new"),
@@ -47,7 +48,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             foreach (var f in draft.Forms) forms.Add(new Dictionary<string, object?> { ["id"] = f.Id, ["text"] = f.Text, ["added"] = f.Added });
             var original = new List<object?>();
             foreach (var f in draft.OriginalForms) original.Add(new Dictionary<string, object?> { ["id"] = f.Id, ["text"] = f.Text });
-            return new Dictionary<string, object?>
+            var json = new Dictionary<string, object?>
             {
                 ["key"] = draft.Key,
                 ["word"] = draft.Word,
@@ -58,6 +59,9 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 ["becomes"] = draft.Becomes,
                 ["original"] = new Dictionary<string, object?> { ["v"] = draft.OriginalWord, ["forms"] = original },
             };
+            // Said only when there is one: every draft of the cases before the proposal existed is what it was
+            if (draft.Proposal != null) json["proposal"] = draft.Proposal;
+            return json;
         }
 
         /// <summary>A line with only the fields it holds.</summary>

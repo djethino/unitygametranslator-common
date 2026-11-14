@@ -435,6 +435,45 @@
         }
       ],
       "note": "Said on the first attempt to leave a term that holds changes not applied; the second attempt goes through. Cancel does not ask again."
+    },
+    "edit.retranslate": {
+      "text": "Retranslate (AI)",
+      "site": null,
+      "why": "the site's wand carries no text, only a tooltip (edit.retranslate_help): the button's own word is the mod's, and it is the same on every row that asks the AI again",
+      "screens": [
+        {
+          "screen": "inspector",
+          "node": "RetranslateBtn",
+          "field": "text"
+        },
+        {
+          "screen": "tools",
+          "node": "FailRetranslateBtn",
+          "field": "text"
+        },
+        {
+          "screen": "parts/term-zone",
+          "node": "TranslateBtn",
+          "field": "text"
+        }
+      ]
+    },
+    "edit.retranslate_help": {
+      "text": "Re-translate with the game's AI",
+      "site": "edit_session.retranslate",
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "TranslateBtn",
+          "field": "help"
+        }
+      ],
+      "note": "The site's tooltip of its wand, which it follows with the model's name (« — model »)."
+    },
+    "edit.translate_no_line": {
+      "text": "Not available: this term is not a text of the file.",
+      "site": "editor.translate_ai_no_line",
+      "carried_by": "TermZone (TranslateReason): one of the reasons the button is greyed; the label is bound and the code chooses the sentence"
     }
   }
 }
