@@ -458,6 +458,70 @@
    },
    "out": 0,
    "why": ""
+  },
+  {
+   "id": "names/fold/greek-iota-subscript-alpha",
+   "op": "fold",
+   "in": {
+    "text": "ᾳ"
+   },
+   "out": "ᾼ",
+   "why": "its SIMPLE capital, one code point: an engine's toUpperCase gives the full upper case, two code points (U+0391 U+0399 for the Greek capital alpha and iota)"
+  },
+  {
+   "id": "names/fold/greek-iota-subscript-eta",
+   "op": "fold",
+   "in": {
+    "text": "ῃ"
+   },
+   "out": "ῌ",
+   "why": "its SIMPLE capital, one code point: an engine's toUpperCase gives the full upper case, two code points (U+0391 U+0399 for the Greek capital alpha and iota)"
+  },
+  {
+   "id": "names/fold/greek-iota-subscript-omega",
+   "op": "fold",
+   "in": {
+    "text": "ῳ"
+   },
+   "out": "ῼ",
+   "why": "its SIMPLE capital, one code point: an engine's toUpperCase gives the full upper case, two code points (U+0391 U+0399 for the Greek capital alpha and iota)"
+  },
+  {
+   "id": "names/fold/greek-iota-subscript-first-of-the-block",
+   "op": "fold",
+   "in": {
+    "text": "ᾀ"
+   },
+   "out": "ᾈ",
+   "why": "its SIMPLE capital, one code point: an engine's toUpperCase gives the full upper case, two code points (U+0391 U+0399 for the Greek capital alpha and iota)"
+  },
+  {
+   "id": "names/fold_code_point/greek-iota-subscript",
+   "op": "fold_code_point",
+   "in": {
+    "code_point": 8115
+   },
+   "out": 8124,
+   "why": "one code point to one, whatever the engine says"
+  },
+  {
+   "id": "names/equals/greek-iota-subscript-and-its-titlecase-capital",
+   "op": "equals",
+   "in": {
+    "a": "ᾳ",
+    "b": "ᾼ"
+   },
+   "out": true,
+   "why": "searching for the small letter finds a term written with its capital"
+  },
+  {
+   "id": "names/fold/a-letter-added-after-an-engine-knows-them",
+   "op": "fold",
+   "in": {
+    "text": "𐵰"
+   },
+   "out": "𐵐",
+   "why": "a Garay letter (Unicode 16): the table is the project's Unicode (18.0.0), never the engine of whoever runs it"
   }
  ]
 }

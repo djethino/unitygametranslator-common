@@ -85,6 +85,48 @@ namespace UnityGameTranslator.Common.Checks
             Order(check);
         }
 
+        /// <summary>
+        /// The two forms of the table, held equal: the C# one (<see cref="Names.Fold(int)"/>) and the file a port in another language reads
+        /// (corpus/data/simple-capital.json) — entry by entry, from the same Unicode version and the same source bytes. A port never asks its
+        /// engine for a capital: <c>toUpperCase</c> gives the FULL upper case (two code points for « ᾳ ») and the Unicode of the browser.
+        /// </summary>
+        public static void Data(Action<bool, string, string> check, string? commonRoot)
+        {
+            check(commonRoot != null, "the library's folder is found", "the data is read from it");
+            if (commonRoot == null) return;
+
+            string path = System.IO.Path.Combine(commonRoot, "corpus", "data", "simple-capital.json");
+            check(System.IO.File.Exists(path), "corpus/data/simple-capital.json is there", "the site's editor reads it");
+            if (!System.IO.File.Exists(path)) return;
+
+            using var doc = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText(path));
+            var root = doc.RootElement;
+            check(root.GetProperty("unicode_version").GetString() == Names.UnicodeVersion,
+                "the data and the table carry the same Unicode version (" + Names.UnicodeVersion + ")", "two versions would give two answers");
+
+            var fromJson = root.GetProperty("capital").EnumerateObject()
+                .Select(p => new KeyValuePair<int, int>(int.Parse(p.Name, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture),
+                                                          char.ConvertToUtf32(p.Value.GetString()!, 0)))
+                .OrderBy(p => p.Key).ToList();
+            var fromCode = Names.Entries().OrderBy(p => p.Key).ToList();
+            bool same = fromJson.Count == fromCode.Count && fromJson.Zip(fromCode, (a, b) => a.Key == b.Key && a.Value == b.Value).All(x => x);
+            check(same, "the entries are the same in the file and in the table (" + fromCode.Count + ")",
+                "the JSON has " + fromJson.Count + ", the table " + fromCode.Count + " — regenerate both with tools/generate-case-mapping.py");
+            check(root.GetProperty("capital").EnumerateObject().All(p => char.ConvertToUtf32(p.Value.GetString()!, 0) != int.Parse(p.Name, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture)
+                                                                         && p.Value.GetString()!.Length == (char.ConvertToUtf32(p.Value.GetString()!, 0) > 0xFFFF ? 2 : 1)),
+                "no entry is the identity, and each capital is ONE code point", "a table of what changes, one code point to one");
+
+            // The source's fingerprint is the one the generated table's header carries: the JSON and the C# come from the same bytes.
+            string header = System.IO.File.ReadAllText(System.IO.Path.Combine(commonRoot, "src", "UnityGameTranslator.Common", "CaseMapping.Tables.g.cs"));
+            string sha = root.GetProperty("sources_sha256").GetProperty("UnicodeData").GetString()!;
+            check(sha.Length == 64 && header.Contains("UnicodeData-sha256: " + sha, StringComparison.Ordinal),
+                "the file and the table were made from the same UnicodeData bytes", "a table made from other bytes must be visible");
+
+            // The one the issue showed: the Greek letters with a subscript iota give ONE code point, never the engine's two.
+            check(Names.Fold(0x1FB3) == 0x1FBC && Names.Fold(0x1FC3) == 0x1FCC && Names.Fold(0x1FF3) == 0x1FFC && Names.Fold(0x1F80) == 0x1F88 && Names.Fold(0x1FA0) == 0x1FA8 && Names.Fold(0x1FA8) == 0x1FA8,
+                "the letters with a subscript iota fold to their one-letter capital", "an engine's toUpperCase would say two letters");
+        }
+
         /// <summary>Every name and code the language catalogue holds: the same equalities, the same hash contract.</summary>
         private static void Catalogue(Action<bool, string, string> check)
         {

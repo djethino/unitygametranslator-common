@@ -130,6 +130,14 @@ namespace UnityGameTranslator.Common
                 : c;
         }
 
+        /// <summary>The table, small letter then capital, sorted: what corpus/data/simple-capital.json holds, for the check that holds them equal.</summary>
+        internal static System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<int, int>> Entries()
+        {
+            var entries = new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<int, int>>(Lower.Length);
+            for (int i = 0; i < Lower.Length; i++) entries.Add(new System.Collections.Generic.KeyValuePair<int, int>(Lower[i], Upper[i]));
+            return entries;
+        }
+
         /// <summary>The comparer for a dictionary, a set or a sort of names: <see cref="Equals(string, string)"/> and <see cref="Compare"/>.</summary>
         public static readonly NameComparer Comparer = new NameComparer();
     }
