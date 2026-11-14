@@ -673,6 +673,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             // ── answer_faults ─────────────────────────────────────────────────
             new Operation("answer_faults", "of", typeof(AnswerFaults), nameof(AnswerFaults.Of),
                 e => AnswerFaults.Of(Str(e, "source") ?? "", Str(e, "answer") ?? "").Select(f => (object?)FactOf(f)).ToList()),
+            new Operation("answer_faults", "game_words", typeof(AnswerFaults), nameof(AnswerFaults.GameWords),
+                e => AnswerFaults.GameWords(Str(e, "source") ?? "", Str(e, "sentence") ?? "")),
             new Operation("answer_faults", "model_sentence", typeof(AnswerFaults), nameof(AnswerFaults.ModelSentence),
                 e => AnswerFaults.ModelSentence(FaultOf(e.GetProperty("fault")))),
             new Operation("placeholders", "repair_trailing_breaks", typeof(Placeholders), nameof(Placeholders.RepairTrailingBreaks),
@@ -780,7 +782,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 case AnswerFaultKind.TagOutOfOrder:
                 case AnswerFaultKind.TagEmptied:
                     fact["kind"] = f.Kind == AnswerFaultKind.TagOutOfOrder ? "tag_out_of_order" : "tag_emptied";
-                    fact["opening"] = f.Opening; fact["closing"] = f.Closing; fact["opening_tag"] = f.OpeningTag; fact["closing_tag"] = f.ClosingTag;
+                    fact["opening"] = f.Opening; fact["closing"] = f.Closing;
                     break;
                 default:
                     fact["kind"] = "tag_invented"; fact["tag"] = f.Tag;
@@ -822,7 +824,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     return new AnswerFault
                     {
                         Kind = kind == "tag_out_of_order" ? AnswerFaultKind.TagOutOfOrder : AnswerFaultKind.TagEmptied,
-                        Opening = Str(f, "opening")!, Closing = Str(f, "closing")!, OpeningTag = Str(f, "opening_tag") ?? "", ClosingTag = Str(f, "closing_tag") ?? "",
+                        Opening = Str(f, "opening")!, Closing = Str(f, "closing")!,
                     };
                 default: return new AnswerFault { Kind = AnswerFaultKind.TagInvented, Tag = Str(f, "tag")! };
             }

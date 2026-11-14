@@ -37,8 +37,8 @@ namespace UnityGameTranslator.Common
     /// (spec/wording.json, <c>answer.*</c> and <c>placeholder.*</c>), said from the same fact.
     ///
     /// ⚠ The answer judged is the one the model SAW: a tag is lifted into <c>[!t*N]</c> before a text is sent, so the
-    /// model's sentences name those tokens. A person never sees them: the fact keeps the game's own tag beside the token
-    /// (<see cref="OpeningTag"/>, <see cref="ClosingTag"/>), and the wording of a person speaks of that.
+    /// facts name those tokens. A person never sees them: the sentence of a person goes through
+    /// <see cref="AnswerFaults.GameWords"/>, which says the game's own tag in their place.
     /// </summary>
     public sealed class AnswerFault
     {
@@ -71,11 +71,6 @@ namespace UnityGameTranslator.Common
         public string Opening = "";
 
         public string Closing = "";
-
-        /// <summary>The game's own tags the tokens stand for (empty when the caller did not know them).</summary>
-        public string OpeningTag = "";
-
-        public string ClosingTag = "";
 
         /// <summary>The tag as the answer wrote it, for <see cref="AnswerFaultKind.TagInvented"/>.</summary>
         public string Tag = "";
@@ -111,6 +106,17 @@ namespace UnityGameTranslator.Common
             faults.AddRange(Markup.EmptiedFaults(prepared.ToSend, answer, prepared.Tags));
             faults.AddRange(Markup.InventedFaults(answer));
             return faults;
+        }
+
+        /// <summary>
+        /// A sentence a PERSON reads about an answer to <paramref name="source"/>, with each tag token of the text as the game's own tag
+        /// (<c>[!t*1]</c> → <c>&lt;/color&gt;</c>): the answer is judged on the text with its markup lifted, which nobody but the model sees.
+        /// The other tokens (a value, a nested string, a line break) are in the text a person reads and stay as they are.
+        /// </summary>
+        public static string GameWords(string source, string sentence)
+        {
+            if (string.IsNullOrEmpty(sentence)) return sentence ?? "";
+            return Markup.Restore(sentence, Backends.Prepare(source ?? "").Tags);
         }
 
         /// <summary>What the model is told of a fault: the sentence the checks have always built, word for word.</summary>

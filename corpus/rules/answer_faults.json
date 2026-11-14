@@ -70,16 +70,16 @@
       "op": "of",
       "in": { "source": "Say <color=red>Hi</color> now", "answer": "Dis [!t*1]Salut[!t*0] maintenant" },
       "out": [
-        { "kind": "tag_out_of_order", "opening": "[!t*0]", "closing": "[!t*1]", "opening_tag": "<color=red>", "closing_tag": "</color>" }
+        { "kind": "tag_out_of_order", "opening": "[!t*0]", "closing": "[!t*1]" }
       ],
-      "why": "each token is there once, which a count cannot see; the fact keeps the game's own tags beside the tokens, because a person never sees the tokens; reversed, the pair is not also called emptied"
+      "why": "each token is there once, which a count cannot see; the fact names the tokens the model saw (a person is told the game's tags, see game_words); reversed, the pair is not also called emptied"
     },
     {
       "id": "answer_faults/of/a-pair-that-styles-nothing-any-more",
       "op": "of",
       "in": { "source": "Bob<color=red>Chief</color>", "answer": "Bob [!t*0][!t*1]" },
       "out": [
-        { "kind": "tag_emptied", "opening": "[!t*0]", "closing": "[!t*1]", "opening_tag": "<color=red>", "closing_tag": "</color>" }
+        { "kind": "tag_emptied", "opening": "[!t*0]", "closing": "[!t*1]" }
       ],
       "why": "the words the pair styled are gone, and the game would get an empty colour"
     },
@@ -103,7 +103,7 @@
         { "kind": "brackets", "bracket": "[", "found": 2, "expected": 4 },
         { "kind": "brackets", "bracket": "]", "found": 2, "expected": 4 },
         { "kind": "labels", "labels": ["[Att]"] },
-        { "kind": "tag_out_of_order", "opening": "[!t*0]", "closing": "[!t*1]", "opening_tag": "<b>", "closing_tag": "</b>" }
+        { "kind": "tag_out_of_order", "opening": "[!t*0]", "closing": "[!t*1]" }
       ],
       "why": "the order is a property: the sentences are sent back in it, and a model reads them in it. The four tokens of the text each hold a pair of brackets, which is why four are expected"
     },
@@ -112,8 +112,8 @@
       "op": "of",
       "in": { "source": "A <b>x</b> B <i>y</i> C", "answer": "A [!t*0][!t*1] B [!t*3]y[!t*2] C" },
       "out": [
-        { "kind": "tag_out_of_order", "opening": "[!t*2]", "closing": "[!t*3]", "opening_tag": "<i>", "closing_tag": "</i>" },
-        { "kind": "tag_emptied", "opening": "[!t*0]", "closing": "[!t*1]", "opening_tag": "<b>", "closing_tag": "</b>" }
+        { "kind": "tag_out_of_order", "opening": "[!t*2]", "closing": "[!t*3]" },
+        { "kind": "tag_emptied", "opening": "[!t*0]", "closing": "[!t*1]" }
       ],
       "why": "two pairs, two faults of two kinds: the order is the one the model has always been told, whichever pair comes first in the text"
     },
@@ -128,6 +128,34 @@
         { "kind": "brackets", "bracket": "]", "found": 0, "expected": 1 }
       ],
       "why": "the judge of a model sees nothing where there should be a line; a screen that shows an answer must not word these for a person (an empty answer is a capture, or a server that refused)"
+    },
+    {
+      "id": "answer_faults/game_words/a-tag-token-is-the-game-tag",
+      "op": "game_words",
+      "in": { "source": "Say <color=red>Hi</color> now", "sentence": "[!t*1] comes before [!t*0]" },
+      "out": "</color> comes before <color=red>",
+      "why": "a person never sees the tokens a markup is lifted into: the sentence names the tags the game wrote"
+    },
+    {
+      "id": "answer_faults/game_words/a-sequence-keeps-its-delimiters",
+      "op": "game_words",
+      "in": { "source": "Say ({<b>x</b>}) now", "sentence": "({[!t*0]}) is missing or changed. Keep it exactly as in the source text." },
+      "out": "({<b>}) is missing or changed. Keep it exactly as in the source text.",
+      "why": "the sentence of a person is worded first, then its tokens are put back: whatever surrounds a token stays"
+    },
+    {
+      "id": "answer_faults/game_words/the-other-tokens-stay",
+      "op": "game_words",
+      "in": { "source": "<b>Hi</b> [!v*0] and [!STR*1]", "sentence": "[!v*0], [!STR*1] and [!t*0] are in the source" },
+      "out": "[!v*0], [!STR*1] and <b> are in the source",
+      "why": "a value or a nested string is in the text a person reads, written so"
+    },
+    {
+      "id": "answer_faults/game_words/no-tag-no-change",
+      "op": "game_words",
+      "in": { "source": "Hello [!v*0]", "sentence": "[!v*0]: found 0, expected 1" },
+      "out": "[!v*0]: found 0, expected 1",
+      "why": "a text without markup has no tag to say"
     },
     {
       "id": "answer_faults/model_sentence/sequence",
@@ -167,14 +195,14 @@
     {
       "id": "answer_faults/model_sentence/tag-out-of-order",
       "op": "model_sentence",
-      "in": { "fault": { "kind": "tag_out_of_order", "opening": "[!t*0]", "closing": "[!t*1]", "opening_tag": "<b>", "closing_tag": "</b>" } },
+      "in": { "fault": { "kind": "tag_out_of_order", "opening": "[!t*0]", "closing": "[!t*1]" } },
       "out": "[!t*1] closes [!t*0], so it must come after it",
-      "why": "the model speaks of the tokens it was given, never of the game's tags (they stay beside the fact for a person)"
+      "why": "the model speaks of the tokens it was given, never of the game's tags"
     },
     {
       "id": "answer_faults/model_sentence/tag-emptied",
       "op": "model_sentence",
-      "in": { "fault": { "kind": "tag_emptied", "opening": "[!t*0]", "closing": "[!t*1]", "opening_tag": "<b>", "closing_tag": "</b>" } },
+      "in": { "fault": { "kind": "tag_emptied", "opening": "[!t*0]", "closing": "[!t*1]" } },
       "out": "[!t*0] and [!t*1] surround words in the source: put the translation of those words between them",
       "why": "the words themselves are not quoted back: small models copied them into the answer"
     },

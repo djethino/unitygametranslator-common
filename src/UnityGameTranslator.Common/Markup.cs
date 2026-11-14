@@ -239,7 +239,7 @@ namespace UnityGameTranslator.Common
                 int end = answer.IndexOf(closing, System.StringComparison.Ordinal);
 
                 if (at >= 0 && end >= 0 && end < at)
-                    errors.Add(new AnswerFault { Kind = AnswerFaultKind.TagOutOfOrder, Opening = opening, Closing = closing, OpeningTag = tags[open], ClosingTag = tags[close] });
+                    errors.Add(new AnswerFault { Kind = AnswerFaultKind.TagOutOfOrder, Opening = opening, Closing = closing });
             }
 
             return errors;
@@ -278,7 +278,7 @@ namespace UnityGameTranslator.Common
                 string closing = PlaceholderPrefix + close + PlaceholderSuffix;
                 if (string.IsNullOrEmpty(Between(source, opening, closing))) continue;
                 if (Between(answer, opening, closing) == "")
-                    errors.Add(new AnswerFault { Kind = AnswerFaultKind.TagEmptied, Opening = opening, Closing = closing, OpeningTag = tags[open], ClosingTag = tags[close] });
+                    errors.Add(new AnswerFault { Kind = AnswerFaultKind.TagEmptied, Opening = opening, Closing = closing });
             }
 
             return errors;
