@@ -22,6 +22,36 @@ namespace UnityGameTranslator.Common
         public string Inside;
     }
 
+    public enum PlaceholderFaultKind
+    {
+        /// <summary>A frozen sequence — a placeholder with the delimiters the game wrapped round it — is missing or altered (<see cref="PlaceholderFault.Sequence"/>).</summary>
+        Sequence,
+
+        /// <summary>A placeholder appears a number of times other than the source's (<see cref="PlaceholderFault.Token"/>, found, expected).</summary>
+        Count,
+
+        /// <summary>A placeholder the source never had (<see cref="PlaceholderFault.Token"/>).</summary>
+        Invented,
+    }
+
+    /// <summary>
+    /// One thing wrong with a text against its source, as a FACT a screen words in its own language: what a person is told is the product's
+    /// wording (spec/wording.json, <c>placeholder.*</c>), what a model is told is <see cref="Placeholders.Say"/>.
+    /// </summary>
+    public struct PlaceholderFault
+    {
+        public PlaceholderFaultKind Kind;
+
+        /// <summary>The sequence, for <see cref="PlaceholderFaultKind.Sequence"/>.</summary>
+        public string? Sequence;
+
+        /// <summary>The placeholder, for <see cref="PlaceholderFaultKind.Count"/> and <see cref="PlaceholderFaultKind.Invented"/>.</summary>
+        public string? Token;
+
+        public int Found;
+        public int Expected;
+    }
+
     /// <summary>
     /// The rules a machine translation has to obey to be usable in a game, and what to say to a
     /// model that broke them.
@@ -412,11 +442,22 @@ namespace UnityGameTranslator.Common
                                                   List<string> frozen, out List<string> errors)
         {
             errors = new List<string>();
+            foreach (var fault in Faults(source, translation, frozen)) errors.Add(Say(fault));
+        }
+
+        /// <summary>
+        /// What is wrong with a text against its source, as facts: the frozen sequences verbatim, then the placeholders as the same multiset
+        /// (nothing missing, duplicated or invented). The one computation behind <see cref="Accepts"/>, <see cref="AcceptsEdit"/> and
+        /// <see cref="EditFaults"/>: only the WORDING differs between who reads it.
+        /// </summary>
+        internal static List<PlaceholderFault> Faults(string source, string translation, List<string> frozen)
+        {
+            var faults = new List<PlaceholderFault>();
 
             foreach (string sequence in frozen)
             {
                 if (Occurrences(translation, sequence) < Occurrences(source, sequence))
-                    errors.Add($"the exact sequence \"{sequence}\" is missing or altered");
+                    faults.Add(new PlaceholderFault { Kind = PlaceholderFaultKind.Sequence, Sequence = sequence });
             }
 
             Dictionary<string, int> inSource = Tally(source);
@@ -427,14 +468,43 @@ namespace UnityGameTranslator.Common
                 int found;
                 inAnswer.TryGetValue(entry.Key, out found);
                 if (found != entry.Value)
-                    errors.Add($"token {entry.Key} appears {found} time(s) instead of {entry.Value}");
+                    faults.Add(new PlaceholderFault { Kind = PlaceholderFaultKind.Count, Token = entry.Key, Found = found, Expected = entry.Value });
             }
 
-            // ⚠ Through Invented, so this clause and the belt the mod puts after the backends are
-            // one implementation. Only the wording is decided here: these lines go to the model on
-            // the next attempt, and the belt has no model to talk to.
+            // ⚠ Through Invented, so this clause and the belt the mod puts after the backends are one implementation.
             foreach (string token in Invented(source, translation))
-                errors.Add($"token {token} does not exist in the source");
+                faults.Add(new PlaceholderFault { Kind = PlaceholderFaultKind.Invented, Token = token });
+
+            return faults;
+        }
+
+        /// <summary>
+        /// A fault in the words the model is sent on its next attempt: these lines go to the model, which is why they name the token and the
+        /// counts. Not what a person reads — a person reads the product's own wording (spec/wording.json).
+        /// </summary>
+        internal static string Say(PlaceholderFault fault)
+        {
+            switch (fault.Kind)
+            {
+                case PlaceholderFaultKind.Sequence: return $"the exact sequence \"{fault.Sequence}\" is missing or altered";
+                case PlaceholderFaultKind.Count: return $"token {fault.Token} appears {fault.Found} time(s) instead of {fault.Expected}";
+                default: return $"token {fault.Token} does not exist in the source";
+            }
+        }
+
+        /// <summary>
+        /// What is wrong with a translation somebody typed, as facts a screen words in its own language — the list <see cref="AcceptsEdit"/> turns into
+        /// its English lines. Empty when the edit is acceptable, and for an EMPTY edit whatever the source holds: it is a capture, not a translation
+        /// (the game shows its source and substitutes nothing, so there is no placeholder to keep).
+        ///
+        /// ⚠ The same list the site's editors compute (<c>editProblems</c>, held to the same cases): a person is told the same fact by the mod and by
+        /// the site, in the product's own wording.
+        /// </summary>
+        public static List<PlaceholderFault> EditFaults(string? source, string? edited)
+        {
+            source = source ?? string.Empty;
+            if (string.IsNullOrEmpty(edited)) return new List<PlaceholderFault>();
+            return Faults(source, edited!, FrozenSequences(source));
         }
 
         /// <summary>

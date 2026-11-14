@@ -640,6 +640,18 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("placeholders", "accepts_edit", typeof(Placeholders), nameof(Placeholders.AcceptsEdit),
                 e => Gate(Placeholders.AcceptsEdit(Str(e, "source") ?? "", Str(e, "edited") ?? "",
                                                    Placeholders.FrozenSequences(Str(e, "source") ?? ""), out var errors), errors)),
+            new Operation("placeholders", "edit_faults", typeof(Placeholders), nameof(Placeholders.EditFaults),
+                e => Placeholders.EditFaults(Str(e, "source"), Str(e, "edited")).Select(f =>
+                {
+                    var fact = new Dictionary<string, object?> { ["kind"] = f.Kind.ToString().ToLowerInvariant() };
+                    if (f.Kind == PlaceholderFaultKind.Sequence) fact["sequence"] = f.Sequence;
+                    else
+                    {
+                        fact["token"] = f.Token;
+                        if (f.Kind == PlaceholderFaultKind.Count) { fact["found"] = f.Found; fact["expected"] = f.Expected; }
+                    }
+                    return (object?)fact;
+                }).ToList()),
             new Operation("placeholders", "repair_trailing_breaks", typeof(Placeholders), nameof(Placeholders.RepairTrailingBreaks),
                 e => Placeholders.RepairTrailingBreaks(Str(e, "source") ?? "", Str(e, "translation") ?? "")),
             new Operation("placeholders", "correction", typeof(Placeholders), nameof(Placeholders.Correction),

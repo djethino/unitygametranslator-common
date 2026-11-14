@@ -24,7 +24,7 @@
       "translation_format": ["announced", "of_file", "reads", "of_content"],
       "settings": ["all", "json_key", "section_of"],
       "merge": ["priority_of", "contribution_wins", "same", "same_formats"],
-      "placeholders": ["frozen_sequences", "accepts_edit", "tokens", "invented", "tally"],
+      "placeholders": ["frozen_sequences", "accepts_edit", "edit_faults", "tokens", "invented", "tally"],
       "game_names": ["same"]
     },
     "editor": {
@@ -46,7 +46,7 @@
       "passage_border": ["touches", "straddles", "stays_open", "absorbed_at"],
       "link_editing": ["show", "view", "step", "settle", "next_question", "answer", "unlink", "link_to", "mark_as_read", "resume"],
       "translation_file_keys": ["is_metadata_key", "is_line"],
-      "placeholders": ["frozen_sequences", "accepts_edit", "tokens", "invented", "tally"]
+      "placeholders": ["frozen_sequences", "accepts_edit", "edit_faults", "tokens", "invented", "tally"]
     }
   }
 }
