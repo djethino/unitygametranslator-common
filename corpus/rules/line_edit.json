@@ -1,0 +1,2262 @@
+{
+ "rule": "line_edit",
+ "classes": [
+  "LineEditing"
+ ],
+ "note": "Editing a sentence that holds links, the whole conversation (spec/translation-file/line-edit.md): open it, be told every change of the text, draw the preview, act on a passage, answer the question saving needs, and hand back the lines to write. `run` replays a script of gestures and compares what each gesture that SAYS something said, in order: the state is never compared, but an editor that rebuilt it from the text between two gestures would answer a second question with the first again. The sentence is written H by a person (M and S stay); the file is asked (LineWrites.Refusal) before a write is offered.",
+ "operations": {
+  "run": {
+   "in": {
+    "key": "string",
+    "line": "a line or null",
+    "current": "a line or absent",
+    "file_format": "int (default 2)",
+    "entries": "{key: line} — the file",
+    "lists": "[names]",
+    "casing": "?",
+    "steps": "[{do: type|answer|unlink|link|mark_read|waiting|preview|finish, …}]"
+   },
+   "out": "[what each of unlink, link, mark_read, waiting, preview, finish said — type and answer say nothing]"
+  },
+  "term_choices": {
+   "in": {
+    "file": "{key: line}",
+    "query": "string",
+    "limit": "int (default 50)"
+   },
+   "out": "{items: [{key, text, forms:[{id,text}]}], total}"
+  },
+  "tag_after_person": {
+   "in": {
+    "stored": "string or null"
+   },
+   "out": "the tag a person's writing takes"
+  }
+ },
+ "cases": [
+  {
+   "id": "line_edit/run/nothing-typed",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de [!g*0] !",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "nothing"
+    }
+   ],
+   "why": "saving what was shown writes nothing"
+  },
+  {
+   "id": "line_edit/run/typed-then-undone",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de [!g*0] !",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "Pas assez de pièces d'étoile ?"
+     },
+     {
+      "do": "type",
+      "text": "Pas assez de pièces d'étoile !"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "nothing"
+    }
+   ],
+   "why": "the text back to what it was is nothing to write: judged against the file, not against the last gesture"
+  },
+  {
+   "id": "line_edit/run/a-plain-line-reworded-is-h",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Bonjour",
+     "t": "A"
+    },
+    "file_format": 2,
+    "entries": {},
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "Salut"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "Salut",
+       "t": "H",
+       "key": "sentence"
+      }
+     ]
+    }
+   ],
+   "why": "a person's rewording is hers: H"
+  },
+  {
+   "id": "line_edit/run/a-skipped-line-stays-s",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Bonjour",
+     "t": "S"
+    },
+    "file_format": 2,
+    "entries": {},
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "Salut"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "Salut",
+       "t": "S",
+       "key": "sentence"
+      }
+     ]
+    }
+   ],
+   "why": "M and S stay what they are when a person rewrites the words (the page and the site have always kept them)"
+  },
+  {
+   "id": "line_edit/run/a-mod-line-stays-m",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Bonjour",
+     "t": "M"
+    },
+    "file_format": 2,
+    "entries": {},
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "Salut"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "Salut",
+       "t": "M",
+       "key": "sentence"
+      }
+     ]
+    }
+   ],
+   "why": "the mod's own words stay M"
+  },
+  {
+   "id": "line_edit/run/a-key-with-no-line-yet",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": null,
+    "file_format": 2,
+    "entries": {},
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "Salut"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "Salut",
+       "t": "H",
+       "key": "sentence"
+      }
+     ]
+    }
+   ],
+   "why": "a sentence that is no line yet is written, by a person: H"
+  },
+  {
+   "id": "line_edit/run/a-format-1-file",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de [!g*0] !",
+     "t": "A"
+    },
+    "file_format": 1,
+    "entries": {},
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "Pas assez de [!g*0] ?"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "Pas assez de [!g*0] ?",
+       "t": "H",
+       "key": "sentence"
+      }
+     ]
+    }
+   ],
+   "why": "in a format 1 file nothing is a link: the text goes through as it is, written H, no field"
+  },
+  {
+   "id": "line_edit/run/an-edit-elsewhere-keeps-the-link",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de [!g*0] !",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "Pas assez de pièces d'étoile ?"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "Pas assez de [!g*0] ?",
+       "t": "H",
+       "links": [
+        {
+         "to": "Star Coin",
+         "form": "f1",
+         "by": "H",
+         "was": "pièces d'étoile"
+        }
+       ],
+       "key": "sentence"
+      }
+     ]
+    }
+   ],
+   "why": "the words around a link change: the line is written entire, the link confirmed by her"
+  },
+  {
+   "id": "line_edit/run/one-question-all-texts",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de [!g*0] !",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "Pas assez de pièces grosses d'étoile !"
+     },
+     {
+      "do": "waiting"
+     },
+     {
+      "do": "finish"
+     },
+     {
+      "do": "answer",
+      "choice": "AllTexts"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "waiting",
+     "question": {
+      "entry": "Star Coin",
+      "text": "pièces grosses d'étoile",
+      "passages": [
+       0
+      ]
+     }
+    },
+    {
+     "do": "finish",
+     "kind": "question",
+     "question": {
+      "entry": "Star Coin",
+      "text": "pièces grosses d'étoile",
+      "passages": [
+       0
+      ]
+     }
+    },
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "Pas assez de [!g*0] !",
+       "t": "H",
+       "links": [
+        {
+         "to": "Star Coin",
+         "form": "f3",
+         "by": "H",
+         "was": "pièces grosses d'étoile"
+        }
+       ],
+       "key": "sentence"
+      },
+      {
+       "v": "Pièce d'étoile",
+       "t": "V",
+       "term": true,
+       "forms": {
+        "f1": "pièces d'étoile",
+        "f2": "de la pièce d'étoile",
+        "f3": "pièces grosses d'étoile"
+       },
+       "key": "Star Coin"
+      }
+     ]
+    }
+   ],
+   "why": "changed words nobody has named ask once; « All texts » makes them a written form of the term, written with the sentence"
+  },
+  {
+   "id": "line_edit/run/one-question-only-this-text",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de [!g*0] !",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "Pas assez de pièces grosses d'étoile !"
+     },
+     {
+      "do": "finish"
+     },
+     {
+      "do": "answer",
+      "choice": "OnlyThisText"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "question",
+     "question": {
+      "entry": "Star Coin",
+      "text": "pièces grosses d'étoile",
+      "passages": [
+       0
+      ]
+     }
+    },
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "Pas assez de [!g*0] !",
+       "t": "H",
+       "links": [
+        {
+         "to": "Star Coin",
+         "form": "f1",
+         "by": "H",
+         "was": "pièces grosses d'étoile",
+         "own": "pièces grosses d'étoile"
+        }
+       ],
+       "key": "sentence"
+      }
+     ]
+    }
+   ],
+   "why": "« Only this text »: the sentence writes the term its own way, the term is not touched"
+  },
+  {
+   "id": "line_edit/run/two-questions-keep-the-first-answer",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "[!g*0] et [!g*1]",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      },
+      {
+       "to": "Key",
+       "by": "A",
+       "was": "Touche"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "pièces grosses d'étoile et Touche"
+     },
+     {
+      "do": "type",
+      "text": "pièces grosses d'étoile et Tourche"
+     },
+     {
+      "do": "finish"
+     },
+     {
+      "do": "answer",
+      "choice": "AllTexts"
+     },
+     {
+      "do": "finish"
+     },
+     {
+      "do": "answer",
+      "choice": "OnlyThisText"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "question",
+     "question": {
+      "entry": "Star Coin",
+      "text": "pièces grosses d'étoile",
+      "passages": [
+       0
+      ]
+     }
+    },
+    {
+     "do": "finish",
+     "kind": "question",
+     "question": {
+      "entry": "Key",
+      "text": "Tourche",
+      "passages": [
+       1
+      ]
+     }
+    },
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "[!g*0] et [!g*1]",
+       "t": "H",
+       "links": [
+        {
+         "to": "Star Coin",
+         "form": "f3",
+         "by": "H",
+         "was": "pièces grosses d'étoile"
+        },
+        {
+         "to": "Key",
+         "by": "H",
+         "was": "Tourche",
+         "own": "Tourche"
+        }
+       ],
+       "key": "sentence"
+      },
+      {
+       "v": "Pièce d'étoile",
+       "t": "V",
+       "term": true,
+       "forms": {
+        "f1": "pièces d'étoile",
+        "f2": "de la pièce d'étoile",
+        "f3": "pièces grosses d'étoile"
+       },
+       "key": "Star Coin"
+      }
+     ]
+    }
+   ],
+   "why": "🔴 the second question does not bring the first back: the state is kept between the two finishes"
+  },
+  {
+   "id": "line_edit/run/three-questions-in-order",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "[!g*0], [!g*1] et [!g*2]",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      },
+      {
+       "to": "Key",
+       "by": "A",
+       "was": "Touche"
+      },
+      {
+       "to": "Gem",
+       "by": "A",
+       "was": "gemmes",
+       "form": "f1"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "pièces grosses d'étoile, Touche et gemmes"
+     },
+     {
+      "do": "type",
+      "text": "pièces grosses d'étoile, Tourche et gemmes"
+     },
+     {
+      "do": "type",
+      "text": "pièces grosses d'étoile, Tourche et geimmes"
+     },
+     {
+      "do": "finish"
+     },
+     {
+      "do": "answer",
+      "choice": "AllTexts"
+     },
+     {
+      "do": "finish"
+     },
+     {
+      "do": "answer",
+      "choice": "OnlyThisText"
+     },
+     {
+      "do": "finish"
+     },
+     {
+      "do": "answer",
+      "choice": "AllTexts"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "question",
+     "question": {
+      "entry": "Star Coin",
+      "text": "pièces grosses d'étoile",
+      "passages": [
+       0
+      ]
+     }
+    },
+    {
+     "do": "finish",
+     "kind": "question",
+     "question": {
+      "entry": "Key",
+      "text": "Tourche",
+      "passages": [
+       1
+      ]
+     }
+    },
+    {
+     "do": "finish",
+     "kind": "question",
+     "question": {
+      "entry": "Gem",
+      "text": "geimmes",
+      "passages": [
+       2
+      ]
+     }
+    },
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "[!g*0], [!g*1] et [!g*2]",
+       "t": "H",
+       "links": [
+        {
+         "to": "Star Coin",
+         "form": "f3",
+         "by": "H",
+         "was": "pièces grosses d'étoile"
+        },
+        {
+         "to": "Key",
+         "by": "H",
+         "was": "Tourche",
+         "own": "Tourche"
+        },
+        {
+         "to": "Gem",
+         "form": "f2",
+         "by": "H",
+         "was": "geimmes"
+        }
+       ],
+       "key": "sentence"
+      },
+      {
+       "v": "Pièce d'étoile",
+       "t": "V",
+       "term": true,
+       "forms": {
+        "f1": "pièces d'étoile",
+        "f2": "de la pièce d'étoile",
+        "f3": "pièces grosses d'étoile"
+       },
+       "key": "Star Coin"
+      },
+      {
+       "v": "Gemme",
+       "t": "V",
+       "term": true,
+       "forms": {
+        "f1": "gemmes",
+        "f2": "geimmes"
+       },
+       "key": "Gem"
+      }
+     ]
+    }
+   ],
+   "why": "three terms changed, three questions one at a time, each answer kept until the write"
+  },
+  {
+   "id": "line_edit/run/typing-closes-the-question",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de [!g*0] !",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "Pas assez de pièces grosses d'étoile !"
+     },
+     {
+      "do": "finish"
+     },
+     {
+      "do": "type",
+      "text": "Pas assez de pièces énormes d'étoile !"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "question",
+     "question": {
+      "entry": "Star Coin",
+      "text": "pièces grosses d'étoile",
+      "passages": [
+       0
+      ]
+     }
+    },
+    {
+     "do": "finish",
+     "kind": "question",
+     "question": {
+      "entry": "Star Coin",
+      "text": "pièces énormes d'étoile",
+      "passages": [
+       0
+      ]
+     }
+    }
+   ],
+   "why": "a keystroke after the question moves the words under it: it is asked again from the new words"
+  },
+  {
+   "id": "line_edit/run/a-carriage-return-in-a-new-form-is-refused",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de [!g*0] !",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "Pas assez de pièces\rgrosses d'étoile !"
+     },
+     {
+      "do": "finish"
+     },
+     {
+      "do": "answer",
+      "choice": "AllTexts"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "question",
+     "question": {
+      "entry": "Star Coin",
+      "text": "pièces\rgrosses d'étoile",
+      "passages": [
+       0
+      ]
+     }
+    },
+    {
+     "do": "finish",
+     "kind": "refused",
+     "code": "carriage-return-in-text"
+    }
+   ],
+   "why": "the file would refuse a written form with a carriage return: the editor is told before it offers the save"
+  },
+  {
+   "id": "line_edit/run/a-slot-of-a-list-the-file-lacks-is-refused",
+   "op": "run",
+   "in": {
+    "key": "[!L*names] says hi",
+    "line": {
+     "v": "[!L*names] dit salut",
+     "t": "A"
+    },
+    "file_format": 2,
+    "entries": {},
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "[!L*names] dit coucou"
+     },
+     {
+      "do": "finish"
+     }
+    ],
+    "lists": []
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "refused",
+     "code": "slot-list-missing"
+    }
+   ],
+   "why": "the key reads a list the file does not hold: the file refuses, and the editor says so before the click"
+  },
+  {
+   "id": "line_edit/run/a-slot-of-a-list-the-file-holds-is-written",
+   "op": "run",
+   "in": {
+    "key": "[!L*names] says hi",
+    "line": {
+     "v": "[!L*names] dit salut",
+     "t": "A"
+    },
+    "file_format": 2,
+    "entries": {},
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "[!L*names] dit coucou"
+     },
+     {
+      "do": "finish"
+     }
+    ],
+    "lists": [
+     "names"
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "[!L*names] dit coucou",
+       "t": "H",
+       "key": "[!L*names] says hi"
+      }
+     ]
+    }
+   ],
+   "why": "the same edit, in a file that holds the list: written"
+  },
+  {
+   "id": "line_edit/run/a-marker-typed-is-a-problem",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de pièces",
+     "t": "A"
+    },
+    "file_format": 2,
+    "entries": {},
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "type",
+      "text": "Pas assez de [!g*1] !"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "problem",
+     "code": "text-has-link-marker"
+    }
+   ],
+   "why": "a marker in the clear text cannot be saved as it stands"
+  },
+  {
+   "id": "line_edit/run/unlink",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de [!g*0] !",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "unlink",
+      "passage": 0
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "unlink",
+     "problem": null
+    },
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "Pas assez de pièces d'étoile !",
+       "t": "H",
+       "unlinked": [
+        {
+         "to": "Star Coin"
+        }
+       ],
+       "key": "sentence"
+      }
+     ]
+    }
+   ],
+   "why": "the words stay, the link goes, the term is kept away from the machine in this sentence"
+  },
+  {
+   "id": "line_edit/run/unlink-no-such-passage",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de [!g*0] !",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "unlink",
+      "passage": 3
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "unlink",
+     "problem": "no-such-passage"
+    },
+    {
+     "do": "finish",
+     "kind": "nothing"
+    }
+   ],
+   "why": "an act that cannot be done says why, and the edit stays as it was"
+  },
+  {
+   "id": "line_edit/run/link-a-selection",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Il a une touche",
+     "t": "A"
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "link",
+      "start": 9,
+      "length": 6,
+      "term": "Key",
+      "form": null
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "link",
+     "problem": null
+    },
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "Il a une [!g*0]",
+       "t": "H",
+       "links": [
+        {
+         "to": "Key",
+         "case": "lower-first",
+         "by": "H",
+         "was": "touche"
+        }
+       ],
+       "key": "sentence"
+      }
+     ]
+    }
+   ],
+   "why": "the words selected become a passage of that term"
+  },
+  {
+   "id": "line_edit/run/link-a-selection-out-of-the-text",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Il a une touche",
+     "t": "A"
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "link",
+      "start": 40,
+      "length": 6,
+      "term": "Key",
+      "form": null
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "link",
+     "problem": "bad-selection"
+    },
+    {
+     "do": "finish",
+     "kind": "nothing"
+    }
+   ],
+   "why": "a selection outside the text is a problem, not a link"
+  },
+  {
+   "id": "line_edit/run/mark-as-read",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de [!g*0] !",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièce",
+       "form": "f1"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "mark_read"
+     },
+     {
+      "do": "finish"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "mark_read",
+     "problem": null
+    },
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "Pas assez de [!g*0] !",
+       "t": "H",
+       "links": [
+        {
+         "to": "Star Coin",
+         "form": "f1",
+         "by": "A",
+         "was": "pièces d'étoile"
+        }
+       ],
+       "key": "sentence"
+      }
+     ]
+    }
+   ],
+   "why": "every link takes the words it reads today as the ones a person read"
+  },
+  {
+   "id": "line_edit/run/preview-of-a-pending-passage",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de [!g*0] !",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "preview"
+     },
+     {
+      "do": "type",
+      "text": "Pas assez de pièces grosses d'étoile !"
+     },
+     {
+      "do": "preview"
+     }
+    ]
+   },
+   "out": [
+    {
+     "do": "preview",
+     "text": "Pas assez de pièces d'étoile !",
+     "passages": [
+      {
+       "index": 0,
+       "start": 13,
+       "length": 15,
+       "source": "Form",
+       "needs_review": false,
+       "case_not_applied": false,
+       "pending": false,
+       "open": false,
+       "term": "Star Coin",
+       "by": "A",
+       "own": false
+      }
+     ],
+     "lost": [],
+     "damaged": false,
+     "pending": false
+    },
+    {
+     "do": "preview",
+     "text": "Pas assez de pièces grosses d'étoile !",
+     "passages": [
+      {
+       "index": 0,
+       "start": 13,
+       "length": 23,
+       "source": "Form",
+       "needs_review": false,
+       "case_not_applied": false,
+       "pending": true,
+       "open": false,
+       "term": "Star Coin",
+       "by": "A",
+       "own": false
+      }
+     ],
+     "lost": [],
+     "damaged": false,
+     "pending": true
+    }
+   ],
+   "why": "the preview says what each passage reads like and that one waits for its answer"
+  },
+  {
+   "id": "line_edit/run/resumed-from-a-line-waiting-to-be-saved",
+   "op": "run",
+   "in": {
+    "key": "sentence",
+    "line": {
+     "v": "Pas assez de [!g*0] !",
+     "t": "A",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "A",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      }
+     ]
+    },
+    "file_format": 2,
+    "entries": {
+     "Star Coin": {
+      "v": "Pièce d'étoile",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "pièces d'étoile",
+       "f2": "de la pièce d'étoile"
+      }
+     },
+     "Key": {
+      "v": "Touche",
+      "t": "V",
+      "term": true
+     },
+     "Gem": {
+      "v": "Gemme",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "gemmes"
+      }
+     },
+     "Blank": {
+      "v": "",
+      "t": "H"
+     }
+    },
+    "casing": "first-letter",
+    "steps": [
+     {
+      "do": "finish"
+     }
+    ],
+    "current": {
+     "v": "Pas assez de [!g*0] ?",
+     "t": "H",
+     "links": [
+      {
+       "to": "Star Coin",
+       "by": "H",
+       "was": "pièces d'étoile",
+       "form": "f1"
+      }
+     ]
+    }
+   },
+   "out": [
+    {
+     "do": "finish",
+     "kind": "write",
+     "lines": [
+      {
+       "v": "Pas assez de [!g*0] ?",
+       "t": "H",
+       "links": [
+        {
+         "to": "Star Coin",
+         "form": "f1",
+         "by": "H",
+         "was": "pièces d'étoile"
+        }
+       ],
+       "key": "sentence"
+      }
+     ]
+    }
+   ],
+   "why": "the conversation resumes from the line already edited, while « nothing changed » is judged against the file"
+  },
+  {
+   "id": "line_edit/term_choices/every-term-in-key-order",
+   "op": "term_choices",
+   "in": {
+    "file": {
+     "b": {
+      "v": "x",
+      "t": "V",
+      "term": true
+     },
+     "B": {
+      "v": "y",
+      "t": "V",
+      "term": true
+     },
+     "a": {
+      "v": "z",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "zz"
+      }
+     },
+     "é": {
+      "v": "w",
+      "t": "V",
+      "term": true
+     },
+     "𐐀": {
+      "v": "deseret",
+      "t": "V",
+      "term": true
+     },
+     "Ａ": {
+      "v": "wide",
+      "t": "V",
+      "term": true
+     },
+     "not a term": {
+      "v": "q",
+      "t": "V"
+     }
+    },
+    "query": ""
+   },
+   "out": {
+    "items": [
+     {
+      "key": "B",
+      "text": "y",
+      "forms": []
+     },
+     {
+      "key": "a",
+      "text": "z",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "zz"
+       }
+      ]
+     },
+     {
+      "key": "b",
+      "text": "x",
+      "forms": []
+     },
+     {
+      "key": "é",
+      "text": "w",
+      "forms": []
+     },
+     {
+      "key": "𐐀",
+      "text": "deseret",
+      "forms": []
+     },
+     {
+      "key": "Ａ",
+      "text": "wide",
+      "forms": []
+     }
+    ],
+    "total": 6
+   },
+   "why": "only the lines marked term, in the ordinal order of their keys (UTF-16 units: a letter beyond the plane sorts BEFORE a full-width one)"
+  },
+  {
+   "id": "line_edit/term_choices/by-the-key-but-for-case",
+   "op": "term_choices",
+   "in": {
+    "file": {
+     "b": {
+      "v": "x",
+      "t": "V",
+      "term": true
+     },
+     "B": {
+      "v": "y",
+      "t": "V",
+      "term": true
+     },
+     "a": {
+      "v": "z",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "zz"
+      }
+     },
+     "é": {
+      "v": "w",
+      "t": "V",
+      "term": true
+     },
+     "𐐀": {
+      "v": "deseret",
+      "t": "V",
+      "term": true
+     },
+     "Ａ": {
+      "v": "wide",
+      "t": "V",
+      "term": true
+     },
+     "not a term": {
+      "v": "q",
+      "t": "V"
+     }
+    },
+    "query": " B "
+   },
+   "out": {
+    "items": [
+     {
+      "key": "B",
+      "text": "y",
+      "forms": []
+     },
+     {
+      "key": "b",
+      "text": "x",
+      "forms": []
+     }
+    ],
+    "total": 2
+   },
+   "why": "the query is looked for in the key, a letter's case not counting"
+  },
+  {
+   "id": "line_edit/term_choices/by-the-words",
+   "op": "term_choices",
+   "in": {
+    "file": {
+     "b": {
+      "v": "x",
+      "t": "V",
+      "term": true
+     },
+     "B": {
+      "v": "y",
+      "t": "V",
+      "term": true
+     },
+     "a": {
+      "v": "z",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "zz"
+      }
+     },
+     "é": {
+      "v": "w",
+      "t": "V",
+      "term": true
+     },
+     "𐐀": {
+      "v": "deseret",
+      "t": "V",
+      "term": true
+     },
+     "Ａ": {
+      "v": "wide",
+      "t": "V",
+      "term": true
+     },
+     "not a term": {
+      "v": "q",
+      "t": "V"
+     }
+    },
+    "query": "ESE"
+   },
+   "out": {
+    "items": [
+     {
+      "key": "𐐀",
+      "text": "deseret",
+      "forms": []
+     }
+    ],
+    "total": 1
+   },
+   "why": "and in the words of the term"
+  },
+  {
+   "id": "line_edit/term_choices/the-list-says-it-is-cut",
+   "op": "term_choices",
+   "in": {
+    "file": {
+     "b": {
+      "v": "x",
+      "t": "V",
+      "term": true
+     },
+     "B": {
+      "v": "y",
+      "t": "V",
+      "term": true
+     },
+     "a": {
+      "v": "z",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "zz"
+      }
+     },
+     "é": {
+      "v": "w",
+      "t": "V",
+      "term": true
+     },
+     "𐐀": {
+      "v": "deseret",
+      "t": "V",
+      "term": true
+     },
+     "Ａ": {
+      "v": "wide",
+      "t": "V",
+      "term": true
+     },
+     "not a term": {
+      "v": "q",
+      "t": "V"
+     }
+    },
+    "query": "",
+    "limit": 2
+   },
+   "out": {
+    "items": [
+     {
+      "key": "B",
+      "text": "y",
+      "forms": []
+     },
+     {
+      "key": "a",
+      "text": "z",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "zz"
+       }
+      ]
+     }
+    ],
+    "total": 6
+   },
+   "why": "the first of them, and how many there are"
+  },
+  {
+   "id": "line_edit/term_choices/no-term-at-all",
+   "op": "term_choices",
+   "in": {
+    "file": {
+     "b": {
+      "v": "x",
+      "t": "V",
+      "term": true
+     },
+     "B": {
+      "v": "y",
+      "t": "V",
+      "term": true
+     },
+     "a": {
+      "v": "z",
+      "t": "V",
+      "term": true,
+      "forms": {
+       "f1": "zz"
+      }
+     },
+     "é": {
+      "v": "w",
+      "t": "V",
+      "term": true
+     },
+     "𐐀": {
+      "v": "deseret",
+      "t": "V",
+      "term": true
+     },
+     "Ａ": {
+      "v": "wide",
+      "t": "V",
+      "term": true
+     },
+     "not a term": {
+      "v": "q",
+      "t": "V"
+     }
+    },
+    "query": "nothing"
+   },
+   "out": {
+    "items": [],
+    "total": 0
+   },
+   "why": "nothing matches: an empty list, a total of 0"
+  },
+  {
+   "id": "line_edit/term_choices/no-language-rule-for-the-dotted-capital-i",
+   "op": "term_choices",
+   "in": {
+    "file": {
+     "İ": {
+      "v": "dotted",
+      "t": "V",
+      "term": true
+     },
+     "I": {
+      "v": "plain",
+      "t": "V",
+      "term": true
+     }
+    },
+    "query": "i"
+   },
+   "out": {
+    "items": [
+     {
+      "key": "I",
+      "text": "plain",
+      "forms": []
+     }
+    ],
+    "total": 1
+   },
+   "why": "the case is Names', never the machine's: « i » does not find the dotted capital « İ » (a runtime that lowers it to « i » + a dot does)"
+  },
+  {
+   "id": "line_edit/term_choices/no-language-rule-for-the-final-sigma",
+   "op": "term_choices",
+   "in": {
+    "file": {
+     "ΟΔΟΣ": {
+      "v": "route",
+      "t": "V",
+      "term": true
+     }
+    },
+    "query": "οδοσ"
+   },
+   "out": {
+    "items": [
+     {
+      "key": "ΟΔΟΣ",
+      "text": "route",
+      "forms": []
+     }
+    ],
+    "total": 1
+   },
+   "why": "« ς » and « σ » are the same letter in capital: a final sigma is found, whatever the position"
+  },
+  {
+   "id": "line_edit/tag_after_person/none",
+   "op": "tag_after_person",
+   "in": {
+    "stored": null
+   },
+   "out": "H",
+   "why": "a person's writing is H, but M and S stay what they are"
+  },
+  {
+   "id": "line_edit/tag_after_person/a",
+   "op": "tag_after_person",
+   "in": {
+    "stored": "A"
+   },
+   "out": "H",
+   "why": ""
+  },
+  {
+   "id": "line_edit/tag_after_person/v",
+   "op": "tag_after_person",
+   "in": {
+    "stored": "V"
+   },
+   "out": "H",
+   "why": ""
+  },
+  {
+   "id": "line_edit/tag_after_person/h",
+   "op": "tag_after_person",
+   "in": {
+    "stored": "H"
+   },
+   "out": "H",
+   "why": ""
+  },
+  {
+   "id": "line_edit/tag_after_person/m",
+   "op": "tag_after_person",
+   "in": {
+    "stored": "M"
+   },
+   "out": "M",
+   "why": "a person's writing is H, but M and S stay what they are"
+  },
+  {
+   "id": "line_edit/tag_after_person/s",
+   "op": "tag_after_person",
+   "in": {
+    "stored": "S"
+   },
+   "out": "S",
+   "why": "a person's writing is H, but M and S stay what they are"
+  }
+ ]
+}

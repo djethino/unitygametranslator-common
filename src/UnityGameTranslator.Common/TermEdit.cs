@@ -341,7 +341,7 @@ namespace UnityGameTranslator.Common
                 Key = draft.IsNew ? draft.Key.TrimSpaces() : draft.Key,
                 Value = draft.Word,
                 ValueChanged = valueChanged,
-                Tag = valueChanged ? "H" : originalTag,
+                Tag = valueChanged ? LineEditing.TagAfterPerson(original.Tag) : originalTag,
                 OriginalValue = originalValue,
                 OriginalTag = originalTag,
                 IsNew = draft.IsNew,

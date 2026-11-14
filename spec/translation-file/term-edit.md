@@ -25,5 +25,5 @@ A draft: `{key, word, word_touched, forms:[{id, text, added}], selected, is_new,
   made), and what the change does, said BEFORE: `TermChanges.Impact` on the file as it stands with that line laid over — how many texts change
   (`texts`) and how many sentences are to be read again (`review`). Never a count of the window's own.
 - **`write`** — the one act: the term's own line and nothing else, or `null` when nothing changed. **A changed word is a person's writing
-  (`H`)**; a change of forms alone keeps the tag the line has and the word it had. A key written is trimmed. No sentence is written: they read
+  (`H`, `LineEditing.TagAfterPerson`: a line tagged `M` or `S` keeps it, as every save of the site always did)**; a change of forms alone keeps the tag the line has and the word it had. A key written is trimmed. No sentence is written: they read
   the term through their link, and a link a person made becomes « to read again » (its `was` still names the words read when it was set).

@@ -3917,6 +3917,158 @@
     }
    },
    "why": "the words are the ones it had: its tag stays, and it is marked"
+  },
+  {
+   "id": "term_edit/write/a-changed-word-keeps-tag-s",
+   "op": "write",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pièce stellaire",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pièces d'étoile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pièce d'étoile",
+       "added": false
+      },
+      {
+       "id": "f3",
+       "text": "des pièces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pièce d'étoile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pièces d'étoile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pièce d'étoile"
+       },
+       {
+        "id": "f3",
+        "text": "des pièces"
+       }
+      ]
+     }
+    },
+    "original": {
+     "v": "Pièce d'étoile",
+     "t": "S",
+     "term": true,
+     "forms": {
+      "f1": "pièces d'étoile",
+      "f2": "de la pièce d'étoile",
+      "f3": "des pièces"
+     }
+    }
+   },
+   "out": {
+    "key": "Star Coin",
+    "value": "Pièce stellaire",
+    "value_changed": true,
+    "tag": "S",
+    "original_value": "Pièce d'étoile",
+    "original_tag": "S",
+    "is_new": false,
+    "fields": {
+     "term": true,
+     "forms": {
+      "f1": "pièces d'étoile",
+      "f2": "de la pièce d'étoile",
+      "f3": "des pièces"
+     }
+    }
+   },
+   "why": "a skipped line stays skipped when a person rewrites its word: every save of the site has always kept M and S"
+  },
+  {
+   "id": "term_edit/write/a-changed-word-keeps-tag-m",
+   "op": "write",
+   "in": {
+    "state": {
+     "key": "Star Coin",
+     "word": "Pièce stellaire",
+     "word_touched": true,
+     "forms": [
+      {
+       "id": "f1",
+       "text": "pièces d'étoile",
+       "added": false
+      },
+      {
+       "id": "f2",
+       "text": "de la pièce d'étoile",
+       "added": false
+      },
+      {
+       "id": "f3",
+       "text": "des pièces",
+       "added": false
+      }
+     ],
+     "selected": null,
+     "is_new": false,
+     "becomes": false,
+     "original": {
+      "v": "Pièce d'étoile",
+      "forms": [
+       {
+        "id": "f1",
+        "text": "pièces d'étoile"
+       },
+       {
+        "id": "f2",
+        "text": "de la pièce d'étoile"
+       },
+       {
+        "id": "f3",
+        "text": "des pièces"
+       }
+      ]
+     }
+    },
+    "original": {
+     "v": "Pièce d'étoile",
+     "t": "M",
+     "term": true,
+     "forms": {
+      "f1": "pièces d'étoile",
+      "f2": "de la pièce d'étoile",
+      "f3": "des pièces"
+     }
+    }
+   },
+   "out": {
+    "key": "Star Coin",
+    "value": "Pièce stellaire",
+    "value_changed": true,
+    "tag": "M",
+    "original_value": "Pièce d'étoile",
+    "original_tag": "M",
+    "is_new": false,
+    "fields": {
+     "term": true,
+     "forms": {
+      "f1": "pièces d'étoile",
+      "f2": "de la pièce d'étoile",
+      "f3": "des pièces"
+     }
+    }
+   },
+   "why": "the mod's own words keep M for the same reason"
   }
  ]
 }

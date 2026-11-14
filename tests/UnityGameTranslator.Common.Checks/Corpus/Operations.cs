@@ -359,6 +359,12 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("game_tokens", "refusal_of_list", typeof(GameTokenList), nameof(GameTokenList.Refusal),
                 e => Refusal(GameTokenList.Refusal(TokenArray(e)!.Select(t => t ?? "").ToList()))),
 
+            // ── line_edit ──────────────────────────────────────────────────────────
+            new Operation("line_edit", "run", typeof(LineEditing), LineEditJson.Methods, LineEditJson.Run),
+            new Operation("line_edit", "term_choices", typeof(LineEditing), nameof(LineEditing.TermChoices), LineEditJson.Choices),
+            new Operation("line_edit", "tag_after_person", typeof(LineEditing), nameof(LineEditing.TagAfterPerson),
+                e => LineEditing.TagAfterPerson(Str(e, "stored"))),
+
             // ── list_join ──────────────────────────────────────────────────────────
             new Operation("list_join", "join", typeof(ListJoin), nameof(ListJoin.Join),
                 e => ListJoin.Join(EntryArray(e), Str(e, "between"), Str(e, "join_case"))),
