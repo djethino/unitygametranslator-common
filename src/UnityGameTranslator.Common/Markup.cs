@@ -92,22 +92,28 @@ namespace UnityGameTranslator.Common
         public static bool IsClosing(string tag) => tag != null && tag.Length > 2 && tag[0] == '<' && tag[1] == '/';
 
         /// <summary>
-        /// The name that pairs an opening tag with its closing one, in capitals (<see cref="Names"/>): "COLOR" for both
+        /// The name that pairs an opening tag with its closing one, in lower case: "color" for both
         /// &lt;color=red&gt; and &lt;/COLOR&gt;.
         ///
         /// ⚠ TextMesh Pro's short colour form &lt;#RRGGBB&gt; has no name and is closed by
-        /// &lt;/color&gt;, so it is named "COLOR" here. Left unnamed it was never paired, and a
+        /// &lt;/color&gt;, so it is named "color" here. Left unnamed it was never paired, and a
         /// right-to-left line coloured one letter instead of its span.
+        ///
+        /// 🔴 **This is a RETURN value, read by the mod (<c>RtlComposer</c> compares it to "br") and by the Manager**: for a
+        /// tag name in ASCII — every tag of Unity's rich text — it is exactly the lower-case string it has always been
+        /// (MarkupNameChecks holds the outputs the version before the Unicode work gave). A letter beyond ASCII comes back in
+        /// capitals: still one name for « &lt;Größe&gt; » and « &lt;/GRÖSSE&gt; » (what pairing needs), no longer the
+        /// runtime's lower case.
         /// </summary>
         public static string NameOf(string tag)
         {
             if (string.IsNullOrEmpty(tag) || tag[0] != '<') return "";
             int from = IsClosing(tag) ? 2 : 1;
-            if (from < tag.Length && tag[from] == '#') return "COLOR";
+            if (from < tag.Length && tag[from] == '#') return "color";
 
             int end = from;
             while (end < tag.Length && (UnicodeCategories.IsLetterOrDigit(tag[end]) || tag[end] == '-')) end++;
-            return Names.Fold(tag.Substring(from, end - from));
+            return Ascii.Lower(Names.Fold(tag.Substring(from, end - from)));
         }
 
         /// <summary>

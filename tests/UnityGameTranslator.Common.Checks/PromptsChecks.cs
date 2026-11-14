@@ -257,6 +257,29 @@ namespace UnityGameTranslator.Common.Checks
             check(!Markup.HasFilledPair("[!t*0][!t*3][!t*1]", pair), "a pair around another tag only holds nothing", "the tag between is left out");
             check(Markup.HasFilledPair("[!t*0][!t*٣][!t*1]", pair), "a pair around a token in other digits holds text",
                 "only ASCII digits make a token — the same rule as Placeholders");
+
+            MarkupNames(check);
+        }
+
+        /// <summary>
+        /// Markup.NameOf is a RETURN value the mod compares to a literal ("br", RtlComposer) and the Manager to itself: its
+        /// outputs are frozen here as the version before the Unicode work gave them (commit 9b96caf, executed — not remembered).
+        /// </summary>
+        private static void MarkupNames(Action<bool, string, string> check)
+        {
+            var before = new[]
+            {
+                ("<br>", "br"), ("<BR>", "br"), ("<Br/>", "br"), ("<color=#fff>", "color"), ("</color>", "color"), ("<#RRGGBB>", "color"),
+                ("<#ff00ff>", "color"), ("</b>", "b"), ("<B>", "b"), ("<size=12>", "size"), ("</SIZE>", "size"), ("<i>", "i"), ("<a-b>", "a-b"),
+                ("<x1>", "x1"), ("", ""), ("x", ""), ("<>", ""), ("</>", ""), ("<ABC def>", "abc"),
+            };
+            int differ = 0;
+            string first = "";
+            foreach (var (tag, expected) in before)
+                if (Markup.NameOf(tag) != expected) { differ++; if (first.Length == 0) first = tag + " gave " + Markup.NameOf(tag) + ", was " + expected; }
+            check(differ == 0, "Markup.NameOf gives, for every ASCII tag, the string it gave before (" + before.Length + " tags, from 9b96caf)", differ + " differ, first: " + first);
+            check(Markup.NameOf("<Größe>") == Markup.NameOf("</GRÖßE>"), "a tag name beyond ASCII still pairs with its closing tag in the other case",
+                "its capitals: not the runtime's lower case any more, for names no Unity tag has");
         }
 
         private static string Game(TextType textType, string? source = null, string? context = null,
