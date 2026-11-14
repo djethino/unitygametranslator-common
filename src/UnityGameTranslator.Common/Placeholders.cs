@@ -47,7 +47,7 @@ namespace UnityGameTranslator.Common
         /// and sent back with the usual correction — and one in a text a person types is refused the
         /// same way. A text that really holds one in its SOURCE keeps it, like any other token.
         /// </summary>
-        private const string TokenGrammar = @"(?:\[!(?:v\*\d+|t\*\d+|STR\*\d+|nl)\]|"
+        private const string TokenGrammar = @"(?:\[!(?:v\*[0-9]+|t\*[0-9]+|STR\*[0-9]+|nl)\]|"
             + LineMarkers.LinkPattern + "|" + LineMarkers.ClosedSlotPattern + "|" + LineMarkers.OpenSlotPattern + ")";
 
         /// <summary>Every frozen token: [!v*N], [!t*N], [!STR*N], [!nl].</summary>

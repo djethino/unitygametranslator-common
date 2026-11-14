@@ -366,7 +366,7 @@ namespace UnityGameTranslator.Common
             return false;
         }
 
-        private static readonly Regex TagToken = new Regex(@"\[!t\*\d+\]", RegexOptions.Compiled);
+        private static readonly Regex TagToken = new Regex(@"\[!t\*[0-9]+\]", RegexOptions.Compiled);
 
         /// <summary>
         /// What stands between the two tokens, taken in order — other tags left out, spacing

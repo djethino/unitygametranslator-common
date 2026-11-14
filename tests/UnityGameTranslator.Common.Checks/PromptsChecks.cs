@@ -251,6 +251,12 @@ namespace UnityGameTranslator.Common.Checks
                   && ui.Contains("- Keep the tone of the source")
                   && ui.Contains("- Keep it about as long as the source"),
                 "and it carries the same three shared rules", "one prompt fixed alone drifts from the other");
+
+            // A tag token is written with ASCII digits: [!t*٣] between a pair is text, not another tag.
+            var pair = new[] { "<b>", "</b>" };
+            check(!Markup.HasFilledPair("[!t*0][!t*3][!t*1]", pair), "a pair around another tag only holds nothing", "the tag between is left out");
+            check(Markup.HasFilledPair("[!t*0][!t*٣][!t*1]", pair), "a pair around a token in other digits holds text",
+                "only ASCII digits make a token — the same rule as Placeholders");
         }
 
         private static string Game(TextType textType, string? source = null, string? context = null,
