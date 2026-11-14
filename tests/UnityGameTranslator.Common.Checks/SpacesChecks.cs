@@ -27,6 +27,19 @@ namespace UnityGameTranslator.Common.Checks
                 trimDiffers + " / " + startDiffers + " / " + endDiffers + " differ (first U+" + firstDifferent + ")");
             check(blankDiffers == 0, "a text of one character is blank exactly when IsNullOrWhiteSpace said so", blankDiffers + " differ");
 
+            // The class written for the regular expressions of the library is the same table: held here, over the whole plane,
+            // against the runtime's own \s (what the old patterns said) — equal on .NET 8, so the patterns' answers do not move.
+            var space = new System.Text.RegularExpressions.Regex("^[" + KeyChars.RegexSpaceClassBody() + "]$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+            var runtimeSpace = new System.Text.RegularExpressions.Regex(@"^\s$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+            int classDiffers = 0;
+            for (int cp = 0; cp <= 0xFFFF; cp++)
+            {
+                if (cp >= 0xD800 && cp <= 0xDFFF) continue;
+                string c = ((char)cp).ToString();
+                if (space.IsMatch(c) != runtimeSpace.IsMatch(c)) classDiffers++;
+            }
+            check(classDiffers == 0, "the white-space class of the patterns is the runtime's \\s on .NET 8, character by character", classDiffers + " differ");
+
             check(Spaces.IsBlank(null) && Spaces.IsBlank("") && Spaces.IsBlank(" \t\u00A0\u3000\u2028") && !Spaces.IsBlank(" a "), "null, empty and only-spaces are blank", "IsNullOrWhiteSpace's three");
             string clean = new string('x', 3);
             check(ReferenceEquals(Spaces.TrimSpaces(clean), clean) && ReferenceEquals(Spaces.TrimSpacesStart(clean), clean) && ReferenceEquals(Spaces.TrimSpacesEnd(clean), clean),

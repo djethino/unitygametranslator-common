@@ -1,7 +1,5 @@
 # Runtime Unicode calls still in common/src: one line per file and kind — file TAB kind TAB count.
 # A RATCHET (NoRuntimeUnicode.cs): the count may only go down, and this file follows it. Regenerate: dotnet run -- unicode-list runtime-unicode.baseline
-Answers.cs	RegexOptions.IgnoreCase	3
-Answers.cs	regex class (d s w b)	4
 AssetPackWriter.cs	OrdinalIgnoreCase	3
 AssetPlanner.cs	OrdinalIgnoreCase	11
 Backups.cs	OrdinalIgnoreCase	1

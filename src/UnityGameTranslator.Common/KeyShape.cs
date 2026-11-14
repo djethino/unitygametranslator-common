@@ -24,6 +24,24 @@ namespace UnityGameTranslator.Common
         /// <summary>White_Space, of the Basic Multilingual Plane (what <c>Trim()</c> removes on .NET 8, checked equal).</summary>
         public static bool IsSpace(char c) => InRanges(SpaceRanges, c);
 
+        /// <summary>
+        /// The white space as the BODY of a regular-expression character class (<c>[…]</c>, or <c>[^…]</c>), written from the
+        /// same table — so a pattern says « white space » as Unicode does and not as the runtime's <c>\s</c> does.
+        /// Built on each call (a pattern is built once), never at type initialisation: the order of static fields across
+        /// the two files of this class is not promised.
+        /// </summary>
+        internal static string RegexSpaceClassBody()
+        {
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < SpaceRanges.Length; i += 2)
+            {
+                sb.Append("\\u").Append(SpaceRanges[i].ToString("X4", System.Globalization.CultureInfo.InvariantCulture));
+                if (SpaceRanges[i + 1] != SpaceRanges[i])
+                    sb.Append("-\\u").Append(SpaceRanges[i + 1].ToString("X4", System.Globalization.CultureInfo.InvariantCulture));
+            }
+            return sb.ToString();
+        }
+
         /// <summary>The text without the white space at its two ends; the very same string when it has none.</summary>
         public static string? Trim(string? text)
         {

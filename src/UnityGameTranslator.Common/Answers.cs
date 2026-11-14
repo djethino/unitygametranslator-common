@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace UnityGameTranslator.Common
@@ -84,7 +85,7 @@ namespace UnityGameTranslator.Common
             if (answer == null) return null;
 
             // "7/10" is one answer, not two numbers: the ten is the scale we asked for.
-            string text = Regex.Replace(answer, @"/\s*10\b", " ");
+            string text = WithoutTheScale(answer);
 
             var numbers = Regex.Matches(text, @"-?[0-9]+(?:[.,][0-9]+)?");
             if (numbers.Count != 1) return null;
@@ -98,6 +99,40 @@ namespace UnityGameTranslator.Common
             if (value < 0 || value > 10) return null;
 
             return (int)Math.Round(value, MidpointRounding.AwayFromZero);
+        }
+
+        /// <summary>
+        /// The « / 10 » of a mark taken out, where the ten ends a word: a slash, any white space, 10, and then no letter,
+        /// digit or underscore — the old pattern <c>/\s*10\b</c> written out, so that « white space » and « word » are the
+        /// project's Unicode and not the runtime's. Each match becomes one space; the scan goes on after it.
+        /// </summary>
+        private static string WithoutTheScale(string answer)
+        {
+            System.Text.StringBuilder? result = null;
+            int copied = 0;
+            for (int i = 0; i < answer.Length; i++)
+            {
+                if (answer[i] != '/') continue;
+                int j = i + 1;
+                while (j < answer.Length && KeyChars.IsSpace(answer[j])) j++;
+                if (j + 1 >= answer.Length) continue;
+                if (answer[j] != '1' || answer[j + 1] != '0') continue;
+                int end = j + 2;
+                if (end < answer.Length && IsWordUnit(answer, end)) continue;
+                result ??= new System.Text.StringBuilder(answer.Length);
+                result.Append(answer, copied, i - copied).Append(' ');
+                copied = end;
+                i = end - 1;
+            }
+            if (result == null) return answer;
+            return result.Append(answer, copied, answer.Length - copied).ToString();
+        }
+
+        /// <summary>A letter, a mark that rides on one, a decimal digit or a connector (the underscore): what a word is made of.</summary>
+        private static bool IsWordUnit(string text, int index)
+        {
+            string category = UnicodeCategories.Of(text, index);
+            return category[0] == 'L' || category == "Mn" || category == "Nd" || category == "Pc";
         }
 
         /// <summary>
@@ -302,15 +337,34 @@ namespace UnityGameTranslator.Common
 
         // One pattern per rule, asked of the answer to take it off and of the source to know
         // whether it is the game's own.
-        // 🔴 CultureInvariant is not optional: the case of a regular expression follows the CULTURE of the
-        // thread, and under a Turkish one « I » and « i » are no longer the same letter — « TRANSLATION: » was
-        // not recognised and the model's preamble was written into the game (AnswersCultureChecks holds it).
-        private static readonly Regex Think = new Regex(@"<think>[\s\S]*?</think>\s*", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        // 🔴 No regular-expression class of the runtime and no IgnoreCase: « white space » is Unicode's table
+        // (KeyChars) and the case of the ASCII words below is written out letter by letter. The case of a regular
+        // expression follows the CULTURE of the thread — under a Turkish one « I » and « i » are different letters,
+        // « TRANSLATION: » was not recognised and the model's preamble was written into the game (held by
+        // AnswersCultureChecks) — and its \s and \b follow the runtime's Unicode.
+        private static readonly string Blank = "[" + KeyChars.RegexSpaceClassBody() + "]";
+        private static readonly Regex Think = new Regex(Ci("<think>") + ".*?" + Ci("</think>") + Blank + "*", RegexOptions.Singleline | RegexOptions.CultureInvariant);
         private static readonly Regex Emphasis = new Regex(@"\*\*([^*]+)\*\*");
         private static readonly Regex Announcing = new Regex(
-            @"^(Translation|Traduction|Here'?s?|The translation is)\s*[:\-]?\s*", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            "^(" + Ci("Translation") + "|" + Ci("Traduction") + "|" + Ci("Here") + "'?" + Ci("s") + "?|" + Ci("The translation is") + ")"
+            + Blank + @"*[:\-]?" + Blank + "*", RegexOptions.CultureInvariant);
         private static readonly Regex Explaining = new Regex(
-            @"\n\n(Note:|I |This |Here |The above|Explanation:|Translation note:)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            "\n\n(" + string.Join("|", new[] { "Note:", "I ", "This ", "Here ", "The above", "Explanation:", "Translation note:" }.Select(Ci)) + ")",
+            RegexOptions.CultureInvariant);
+        private static readonly Regex NoWhiteSpaceOrBacktick = new Regex("^[^" + KeyChars.RegexSpaceClassBody() + "`]*$", RegexOptions.CultureInvariant);
+
+        /// <summary>A pattern that matches this ASCII text whatever the case of its letters: each letter as a two-letter class.</summary>
+        private static string Ci(string ascii)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (char c in ascii)
+            {
+                if (c >= 'A' && c <= 'Z') sb.Append('[').Append(c).Append((char)(c + 32)).Append(']');
+                else if (c >= 'a' && c <= 'z') sb.Append('[').Append((char)(c - 32)).Append(c).Append(']');
+                else sb.Append(Regex.Escape(c.ToString()));
+            }
+            return sb.ToString();
+        }
 
         private static bool IsWrappedIn(string text, string quote) =>
             text.Length >= 2 * quote.Length
@@ -353,7 +407,7 @@ namespace UnityGameTranslator.Common
             // language and which may not contain a backtick. Only that word, alone, is taken as
             // one — a line of several words is text somebody wrote.
             string opening = inner.Substring(0, firstBreak).TrimSpaces();
-            if (!Regex.IsMatch(opening, @"^[^\s`]*$")) return text;
+            if (!NoWhiteSpaceOrBacktick.IsMatch(opening)) return text;
 
             return inner.Substring(firstBreak + 1).TrimSpaces();
         }
