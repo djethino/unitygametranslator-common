@@ -10,8 +10,7 @@
       { "kind": "label", "name": "WordCaption", "text": "Translation", "role": "Caption", "tone": "Secondary" },
       { "kind": "row", "name": "WordRow", "spacing": 4, "pad": 0, "fill": "Stretch", "minHeight": "RowHeightNormal", "children": [
         { "kind": "field", "name": "WordInput", "gameText": "target", "placeholder": "Enter translation...", "richText": false, "fill": "Stretch", "minHeight": "RowHeightNormal" },
-        { "kind": "button", "name": "TranslateBtn", "text": "Retranslate (AI)", "size": "Compact", "minWidth": 110, "policy": "Excluded", "act": "translateWord", "visible": false,
-          "help": "Re-translate with the game's AI" }
+        { "kind": "button", "name": "TranslateBtn", "text": "Retranslate (AI)", "size": "Compact", "minWidth": 110, "policy": "Excluded", "act": "translateWord", "visible": false }
       ] },
       { "kind": "label", "name": "TranslateReason", "text": { "bind": "translateReason" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "fill": "Stretch", "autoHeight": true, "visible": false },
       { "kind": "label", "name": "WordProblems", "text": { "bind": "wordProblems" }, "policy": "Excluded", "role": "Small", "tone": "Error", "richText": false, "fill": "Stretch", "autoHeight": true, "visible": false },
