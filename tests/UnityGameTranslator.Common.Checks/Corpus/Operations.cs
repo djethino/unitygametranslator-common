@@ -272,6 +272,35 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("link_finding", "find", typeof(LinkFinding), nameof(LinkFinding.Find),
                 e => LinkFinding.Find(TermIndex.Build(Lines(e, "terms")), Str(e, "text") ?? "", Str(e, "source") ?? "", Line(e, "before"))),
 
+            // ── key_shape / key_chars ─────────────────────────────────────────
+            new Operation("key_shape", "of", typeof(KeyShape), nameof(KeyShape.Of),
+                e =>
+                {
+                    string? key = KeyShape.Of(Str(e, "text"), Bool(e, "normalize_numbers"), out var numbers);
+                    return new Dictionary<string, object?> { ["key"] = key, ["numbers"] = JsonValues.Canon(numbers) };
+                }),
+            new Operation("key_shape", "stored", typeof(KeyShape), nameof(KeyShape.Stored),
+                e => KeyShape.Stored(Str(e, "text"))),
+            new Operation("key_shape", "restore", typeof(KeyShape), nameof(KeyShape.Restore),
+                e => KeyShape.Restore(Str(e, "text"), Strings(e, "numbers"))),
+            new Operation("key_shape", "restore_by_slot", typeof(KeyShape), nameof(KeyShape.Restore),
+                e =>
+                {
+                    var bySlot = new Dictionary<int, string>();
+                    foreach (var p in e.GetProperty("numbers").EnumerateObject()) bySlot[int.Parse(p.Name)] = p.Value.GetString()!;
+                    return KeyShape.Restore(Str(e, "text"), bySlot);
+                }),
+            new Operation("key_shape", "unbrace", typeof(KeyShape), nameof(KeyShape.Unbrace),
+                e => KeyShape.Unbrace(Str(e, "key")!)),
+            new Operation("key_shape", "rebrace", typeof(KeyShape), nameof(KeyShape.Rebrace),
+                e => KeyShape.Rebrace(Str(e, "translation")!, Str(e, "braced_key")!)),
+            new Operation("key_chars", "is_digit", typeof(KeyChars), nameof(KeyChars.IsDigit),
+                e => KeyChars.IsDigit((char)Int(e, "code_unit"))),
+            new Operation("key_chars", "is_space", typeof(KeyChars), nameof(KeyChars.IsSpace),
+                e => KeyChars.IsSpace((char)Int(e, "code_unit"))),
+            new Operation("key_chars", "trim", typeof(KeyChars), nameof(KeyChars.Trim),
+                e => KeyChars.Trim(Str(e, "text"))),
+
             // ── line_endings ──────────────────────────────────────────────────
             new Operation("line_endings", "to_lf", typeof(LineEndings), nameof(LineEndings.ToLf),
                 e => LineEndings.ToLf(Str(e, "text"))),
