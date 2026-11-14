@@ -525,17 +525,15 @@
     },
     "ai.same_answer": {
       "text": "The AI gave the same translation again. Nothing to change.",
-      "site": null,
-      "why": "the site says this fact in edit_session.retranslate_unchanged with a dash; the shared text is the site's words with a full stop for the dash",
+      "site": "edit_session.retranslate_unchanged",
       "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text",
-      "site_would_be": "edit_session.retranslate_unchanged"
+      "note": "Said by the site under edit_session.retranslate_unchanged and by the mod: the same words."
     },
     "ai.nothing_usable": {
       "text": "The AI returned nothing. The line is untouched.",
-      "site": null,
-      "why": "the site says this fact in edit_session.retranslate_failed with a dash; the shared text is the site's words with a full stop for the dash",
+      "site": "edit_session.retranslate_failed",
       "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text",
-      "site_would_be": "edit_session.retranslate_failed"
+      "note": "Said by the site under edit_session.retranslate_failed and by the mod: the same words."
     },
     "ai.door_refused": {
       "text": "Could not ask the AI. Check the translation backend in Mod Options.",
