@@ -26,6 +26,72 @@ namespace UnityGameTranslator.Common.Checks
 
         private static readonly string[] Fillers = { "une", "le", "et", "de la", "voici", "ici", "—", "2", "(x)" };
 
+        /// <summary>
+        /// Several terms cited by one source: <see cref="LinkFinding.WrittenAmong"/> for each of them is held against <see cref="LinkFinding.Find"/> over
+        /// the index of them all — where it gives a term ONE place, Find links that very place (form, case, words); where none or several, Find links
+        /// that term nothing. The two have different machinery (a trie over every term; a search per writing) and ONE order of arbitration.
+        /// </summary>
+        private static void Among(Action<bool, string, string> check)
+        {
+            var random = new Random(20261115);
+            int cases = 0, one = 0, contested = 0, differ = 0;
+            string first = "";
+            string[] vocabulary = { "pièce", "pièce stellaire", "stellaire", "Pièce", "coin", "Coin", "star coin", "Star", "gemme", "gemme rare", "jeton" };
+
+            for (int n = 0; n < 1500 && differ < 5; n++)
+            {
+                int terms = 2 + random.Next(3);
+                var lines = new List<KeyValuePair<string, TranslationLine>>();
+                for (int t = 0; t < terms; t++)
+                {
+                    var forms = new List<KeyValuePair<string, string>>();
+                    int formCount = random.Next(3);
+                    for (int f = 1; f <= formCount; f++) forms.Add(new KeyValuePair<string, string>("f" + f, vocabulary[random.Next(vocabulary.Length)]));
+                    lines.Add(new KeyValuePair<string, TranslationLine>("Key" + (char)('A' + t),
+                        new TranslationLine { Value = vocabulary[random.Next(vocabulary.Length)], Tag = "V", Term = true, Forms = forms.Count == 0 ? null : forms }));
+                }
+
+                var pieces = new List<string>();
+                int tokens = 1 + random.Next(6);
+                for (int i = 0; i < tokens; i++)
+                {
+                    var line = lines[random.Next(lines.Count)].Value;
+                    var writings = LinkFinding.WritingsOf(line);
+                    string words = writings[random.Next(writings.Count)].Words;
+                    int variant = random.Next(3);
+                    pieces.Add(variant == 1 ? Casing.UpperFirst(words)! : variant == 2 ? Casing.LowerFirst(words)! : words);
+                }
+                string text = string.Join(" ", pieces);
+                string source = "Use " + string.Join(" and ", lines.Select(l => l.Key)) + " now";
+
+                var found = LinkFinding.Find(TermIndex.Build(lines), text, source, null);
+                foreach (var term in lines)
+                {
+                    var others = lines.Where(l => l.Key != term.Key)
+                        .Select(l => new LinkFinding.OtherTerm { Key = l.Key, Writings = LinkFinding.WritingsOf(l.Value) }).ToList();
+                    var writings = LinkFinding.WritingsOf(term.Value);
+                    var places = LinkFinding.WrittenAmong(text, term.Key, writings, others, null);
+                    var links = found.Links.Where(l => l.To == term.Key).ToList();
+                    cases++;
+                    if (places.Count == 1) one++;
+                    if (places.Count != LinkFinding.WrittenIn(text, writings, null).Count) contested++;
+
+                    bool agrees = places.Count == 1
+                        ? links.Count == 1 && links[0].Form == writings[places[0].Writing].Form && links[0].Case == places[0].Case
+                          && links[0].Was == text.Substring(places[0].Start, places[0].End - places[0].Start)
+                        : links.Count == 0;
+                    if (!agrees)
+                    {
+                        differ++;
+                        if (first.Length == 0) first = "« " + text + " », " + term.Key + ": " + places.Count + " place(s), Find " + links.Count + " link(s) among [" + string.Join(" | ", lines.Select(l => l.Key + "=" + l.Value.Value)) + "]";
+                    }
+                }
+            }
+
+            check(one > 300 && contested > 50, "the random files exercise it (" + cases + " terms, " + one + " with one place, " + contested + " where another term takes a place)", "a property over one answer proves nothing");
+            check(differ == 0, "among several terms a source cites, Find links a term where WrittenAmong gives it one place, and nowhere else", differ + " disagreement(s); " + first);
+        }
+
         public static void Run(Action<bool, string, string> check)
         {
             var random = new Random(20261114);
@@ -129,6 +195,8 @@ namespace UnityGameTranslator.Common.Checks
             check(findDiffers == 0, "where one place is found Find links it, where none or several Find links nothing", findDiffers + " disagreement(s); " + firstFind);
             check(linkToProblems == 0, "linking each place found, one LinkTo each, is never refused (a line that already holds a link included)", linkToProblems + " refused; " + firstLink);
             check(linkToDiffers == 0, "and the links LinkTo writes have the form and the case the places announced", linkToDiffers + " differ; " + firstLink);
+
+            Among(check);
 
             // cost: a few hundred lines, ten writings, asked again at each change of the translation
             var many = new List<LinkFinding.LinkWriting>();

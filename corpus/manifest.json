@@ -35,7 +35,7 @@
       "term_edit": ["open", "open_new", "rebase", "set_key", "set_word", "set_form", "add_form", "remove_form", "blockers", "changes", "count", "problem", "after", "effect", "write"],
       "term_changes": ["impact"],
       "text_diff": ["hunk"],
-      "link_finding": ["cites", "written_in"],
+      "link_finding": ["cites", "written_in", "written_among", "writings_of"],
       "word_glue": ["is_glued", "edge_before", "edge_after"],
       "line_endings": ["to_lf", "of_line"],
       "casing": ["upper_first", "lower_first"],

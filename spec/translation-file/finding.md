@@ -143,9 +143,7 @@ The second half of `Find`, for ONE term, every place kept — what the term wind
 **It agrees with `Find` — one rule, two doors.** `WrittenInChecks` (1 500 random texts, fixed seed) holds it: where `written_in` gives one place,
 `Find` over the same term links THAT place with the same form, the same case and the same words; where it gives none or several, `Find`
 links nothing. (The tie above is the one place the two disagreed — a capital of « coin » landing on the form « Coin »; `Find` now takes
-the writing found as it is, like `LinkTo`.) Two things `Find` does that this does not: it looks only for the terms the source cites, jointly
-and longest-first ACROSS terms (here one term has the text to itself — the screen must not offer a place a longer word of another term has),
-and it keeps only the single place.
+the writing found as it is, like `LinkTo`.) Two things `Find` does that this does not, and that §10 adds: it looks only for the terms the source cites, jointly and longest-first ACROSS terms (here one term has the text to itself), and it keeps only the single place.
 
 **The line is written by `LinkEditing.LinkTo`, with no new case.** To link the places the person kept: `Show` the line, then one
 `LinkTo(state, start, end - start, term, null, …)` per place, in any order, with the places of THIS answer (the text does not change when no
@@ -162,3 +160,22 @@ the lines `cites` (§8) returned for the term — never the whole file; ask agai
 changed, a candidate selected) — an event, never on a timer; compute it for the rows the window shows and keep the answer per line until
 the writings or the line change; and not build an index (a few writings do not need one). A few hundred lines at each change is a few
 milliseconds.
+
+## 10. For a port: one term among the others the source cites (`LinkFinding.WrittenAmong`)
+
+`written_in` gives a term the whole text to itself. In a line that cites « Star Coin » and « Coin », « Coin » alone would find « pièce »
+inside « pièce stellaire » — a place the longer term takes. `written_among(text, term_key, writings, others, claimed)` is `written_in`
+with the arbitration `Find` makes across terms, and answers the places THIS term wins. Held by `corpus/rules/link_finding.json`
+(`written_among`, `writings_of`, under `sides.editor`).
+
+- `others` are the other terms the same source cites: `[{key, writings}]` — from `cites` (§8), the term itself left out. Each one's
+  writings are in the order `writings_of` gives: the word first, then the forms in the **ordinal order of their ids** (`f1`, `f10`, `f2`:
+  as text, never as numbers).
+- Every term's places (`written_in`, the same `claimed` for all) are taken together: **the longest first; then a writing found as it is
+  before another's capital — whatever the terms; then the ordinal order of the keys; then the order of the writings; then the place**;
+  never overlapping. The term keeps only the places it takes. With no other term it is `written_in`.
+- **One rule, two doors.** `Find` takes the same decisions over the trie of ALL the terms (one pass for a whole file); `written_among` takes
+  them with one search per writing (a window asks it for a handful of terms). `WrittenInChecks` holds them together — 4 474 terms of
+  random files, 1 657 of them contested by another term: where `written_among` gives a term one place, `Find` links that place with
+  the same form, the same case and the same words; where it gives none or several, `Find` links that term nothing. (The order above is
+  the one they disagreed on: `Find` used to put the key before « as written ».)

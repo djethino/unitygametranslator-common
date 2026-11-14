@@ -214,11 +214,12 @@ namespace UnityGameTranslator.Common
                 {
                     int c = (b.End - b.Start).CompareTo(a.End - a.Start);
                     if (c != 0) return c;
-                    c = a.Term.CompareTo(b.Term);                       // terms are numbered in the ordinal order of their keys
-                    if (c != 0) return c;
-                    // A writing found AS IT IS beats the case of another one landing on the same words: what a person wrote as a
-                    // form is the form (LinkEditing.Known reads exact first, WrittenIn too).
+                    // A writing found AS IT IS beats the case of another one landing on the same words — of the same term or of
+                    // another: what a person wrote is what is read (LinkEditing.Known reads exact first, WrittenIn and
+                    // WrittenAmong too). Then the terms, numbered in the ordinal order of their keys.
                     c = (a.Case == null ? 0 : 1).CompareTo(b.Case == null ? 0 : 1);
+                    if (c != 0) return c;
+                    c = a.Term.CompareTo(b.Term);
                     if (c != 0) return c;
                     c = string.CompareOrdinal(a.Form ?? string.Empty, b.Form ?? string.Empty);
                     return c != 0 ? c : a.Start.CompareTo(b.Start);
@@ -406,6 +407,71 @@ namespace UnityGameTranslator.Common
             }
             result.Sort((a, b) => a.Start.CompareTo(b.Start));
             return result;
+        }
+
+        /// <summary>Another term the same source cites: its key, and its writings in the order <see cref="WritingsOf"/> gives.</summary>
+        public struct OtherTerm
+        {
+            public string Key;
+            public IReadOnlyList<LinkWriting> Writings;
+        }
+
+        /// <summary>The writings of a term line, in the order <see cref="WrittenIn"/> wants: its own word first, then its forms in the ordinal order of their ids.</summary>
+        public static IReadOnlyList<LinkWriting> WritingsOf(TranslationLine term)
+        {
+            var writings = new List<LinkWriting> { new LinkWriting { Words = term.Value ?? string.Empty, Form = null } };
+            if (term.Forms != null)
+            {
+                var forms = new List<KeyValuePair<string, string>>(term.Forms);
+                forms.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
+                foreach (var form in forms) writings.Add(new LinkWriting { Words = form.Value, Form = form.Key });
+            }
+            return writings;
+        }
+
+        /// <summary>
+        /// Where ONE term is written in a text when the source cites OTHER terms too — <see cref="WrittenIn"/> with the arbitration
+        /// <see cref="Find"/> makes ACROSS terms: « Star Coin » and « Coin » in one line, and the shorter has no place inside the longer. The
+        /// places of every term are taken together, <b>the longest first, then a writing found as it is before a capital, then the
+        /// ordinal order of the keys, then the order of the writings, then the place</b>, never overlapping; the term keeps only what it wins.
+        /// With no other term it is <see cref="WrittenIn"/>. Held against <see cref="Find"/> by WrittenInChecks.
+        /// </summary>
+        /// <param name="others">The other terms the same source cites (<see cref="Cites"/>); their own passages are not claimed.</param>
+        public static IReadOnlyList<WrittenPlace> WrittenAmong(string text, string termKey, IReadOnlyList<LinkWriting> writings,
+                                                               IReadOnlyList<OtherTerm> others, IReadOnlyList<KeyValuePair<int, int>>? claimed)
+        {
+            if (termKey == null) throw new ArgumentNullException(nameof(termKey));
+            var mine = WrittenIn(text, writings, claimed);
+            if (mine.Count == 0 || others == null || others.Count == 0) return mine;
+
+            var all = new List<KeyValuePair<string, WrittenPlace>>();
+            foreach (var place in mine) all.Add(new KeyValuePair<string, WrittenPlace>(termKey, place));
+            foreach (var other in others)
+                foreach (var place in WrittenIn(text, other.Writings, claimed))
+                    all.Add(new KeyValuePair<string, WrittenPlace>(other.Key, place));
+
+            all.Sort((a, b) =>
+            {
+                int c = (b.Value.End - b.Value.Start).CompareTo(a.Value.End - a.Value.Start);
+                if (c != 0) return c;
+                c = (a.Value.Case == null ? 0 : 1).CompareTo(b.Value.Case == null ? 0 : 1);
+                if (c != 0) return c;
+                c = string.CompareOrdinal(a.Key, b.Key);
+                if (c != 0) return c;
+                c = a.Value.Writing.CompareTo(b.Value.Writing);
+                return c != 0 ? c : a.Value.Start.CompareTo(b.Value.Start);
+            });
+
+            var taken = new List<int[]>();
+            var won = new List<WrittenPlace>();
+            foreach (var entry in all)
+            {
+                if (Overlaps(taken, entry.Value.Start, entry.Value.End)) continue;
+                taken.Add(new[] { entry.Value.Start, entry.Value.End });
+                if (string.Equals(entry.Key, termKey, StringComparison.Ordinal)) won.Add(entry.Value);
+            }
+            won.Sort((a, b) => a.Start.CompareTo(b.Start));
+            return won;
         }
 
         private static void Look(string text, string variant, string? casing, int writing, List<WrittenPlace> into)

@@ -285,6 +285,30 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         places.Add(new Dictionary<string, object?> { ["writing"] = p.Writing, ["start"] = p.Start, ["end"] = p.End, ["case"] = p.Case });
                     return places;
                 }),
+            new Operation("link_finding", "writings_of", typeof(LinkFinding), nameof(LinkFinding.WritingsOf),
+                e =>
+                {
+                    var list = new List<Dictionary<string, object?>>();
+                    foreach (var x in LinkFinding.WritingsOf(LineRequired(e, "line"))) list.Add(new Dictionary<string, object?> { ["words"] = x.Words, ["form"] = x.Form });
+                    return list;
+                }),
+            new Operation("link_finding", "written_among", typeof(LinkFinding), nameof(LinkFinding.WrittenAmong),
+                e =>
+                {
+                    var others = new List<LinkFinding.OtherTerm>();
+                    foreach (var o in e.GetProperty("others").EnumerateArray())
+                        others.Add(new LinkFinding.OtherTerm { Key = o.GetProperty("key").GetString()!, Writings = WritingsOf(o.GetProperty("writings")) });
+                    List<KeyValuePair<int, int>>? claimed = null;
+                    if (e.TryGetProperty("claimed", out var c) && c.ValueKind == JsonValueKind.Array)
+                    {
+                        claimed = new List<KeyValuePair<int, int>>();
+                        foreach (var span in c.EnumerateArray()) claimed.Add(new KeyValuePair<int, int>(span[0].GetInt32(), span[1].GetInt32()));
+                    }
+                    var places = new List<Dictionary<string, object?>>();
+                    foreach (var p in LinkFinding.WrittenAmong(Str(e, "text") ?? "", Str(e, "term_key") ?? "", WritingsOf(e.GetProperty("writings")), others, claimed))
+                        places.Add(new Dictionary<string, object?> { ["writing"] = p.Writing, ["start"] = p.Start, ["end"] = p.End, ["case"] = p.Case });
+                    return places;
+                }),
             new Operation("link_finding", "cites", typeof(LinkFinding), nameof(LinkFinding.Cites),
                 e =>
                 {
@@ -593,6 +617,14 @@ namespace UnityGameTranslator.Common.Checks.Corpus
         }
 
         /// <summary>A gate's verdict as the corpus writes it: the answer and the lines it would send.</summary>
+        private static List<LinkFinding.LinkWriting> WritingsOf(JsonElement array)
+        {
+            var writings = new List<LinkFinding.LinkWriting>();
+            foreach (var item in array.EnumerateArray())
+                writings.Add(new LinkFinding.LinkWriting { Words = item.GetProperty("words").GetString()!, Form = item.TryGetProperty("form", out var f) && f.ValueKind == JsonValueKind.String ? f.GetString() : null });
+            return writings;
+        }
+
         private static List<string?>? TokenArray(JsonElement e)
         {
             if (!e.TryGetProperty("tokens", out var array) || array.ValueKind != JsonValueKind.Array) return null;
