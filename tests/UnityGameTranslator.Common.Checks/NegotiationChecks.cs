@@ -19,6 +19,15 @@ namespace UnityGameTranslator.Common.Checks
             check(reason != null && reason.IndexOf("max_completion_tokens", StringComparison.Ordinal) >= 0,
                 "it says what it gave up", "a silent concession is one nobody can explain later");
 
+            // The count of attempts is the count of concessions that exist, walked here rather than trusted: a body that names every
+            // field, refused again and again, until nothing is left to give up
+            var all = New();
+            int made = 0;
+            while (all.Concede("max_completion_tokens stream_options seed temperature reasoning", false, out _) == Concession.Made && made < 100) made++;
+            check(made > 0 && made < 100 && Negotiation.MaxAttempts == made + 1,
+                $"the attempts are the concessions that exist, and the one that works ({made} + 1)",
+                "a literal here is a count somebody forgets to move when one more thing can be given up");
+
             var shape = New();
             var said = shape.Concede("Unsupported parameter: response_format", true, out string told);
             check(said == Concession.ResponseFormat && told != null && told.IndexOf("response format", StringComparison.Ordinal) >= 0,

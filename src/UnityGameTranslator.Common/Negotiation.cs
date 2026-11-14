@@ -37,11 +37,6 @@ namespace UnityGameTranslator.Common
     public sealed class Negotiation
     {
         /// <summary>
-        /// One request per thing that can still be given up on, plus the one that works.
-        /// </summary>
-        public const int MaxAttempts = 6;
-
-        /// <summary>
         /// What to ask for reasoning, from best to last resort.
         ///
         /// Accepted values differ per provider: "none" works on Ollama, vLLM, LM Studio and recent
@@ -50,6 +45,16 @@ namespace UnityGameTranslator.Common
         /// small. null means send no such field, for the ones that reject it outright.
         /// </summary>
         private static readonly string[] EffortLadder = { "none", "low", null };
+
+        /// <summary>The things given up ONCE, each by a flag: the cap's field, the option for the token count of a stream, the seed, the temperature.</summary>
+        private const int FlagsToGiveUp = 4;
+
+        /// <summary>
+        /// One request per thing that can still be given up on, plus the one that works: the flags, each step down the reasoning ladder, and
+        /// the request that goes through. Derived, never written by hand: a thing added to <see cref="Concede(string, bool, out string)"/> and
+        /// to <see cref="FlagsToGiveUp"/> moves it, and a check walks every concession to hold the count.
+        /// </summary>
+        public static readonly int MaxAttempts = FlagsToGiveUp + (EffortLadder.Length - 1) + 1;
 
         private int _rung;
         private bool _useMaxCompletionTokens;
