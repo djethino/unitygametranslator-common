@@ -375,10 +375,7 @@ namespace UnityGameTranslator.Common
         /// </summary>
         private static bool Keeps(PreparedText prepared, string answer, List<string> frozen, out List<string> errors)
         {
-            Placeholders.Accepts(prepared.ToSend, answer, frozen, out errors);
-            errors.AddRange(Markup.OutOfOrder(answer, prepared.Tags));
-            errors.AddRange(Markup.Emptied(prepared.ToSend, answer, prepared.Tags));
-            errors.AddRange(Markup.Invented(answer));
+            errors = AnswerFaults.ModelSentences(AnswerFaults.Of(prepared, answer, frozen));
             return errors.Count == 0;
         }
 

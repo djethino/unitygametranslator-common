@@ -215,7 +215,20 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static bool Accepts(string source, string translation, List<string> frozen, out List<string> errors)
         {
-            KeepsEveryPlaceholder(source, translation, frozen, out errors);
+            errors = AnswerFaults.ModelSentences(ModelFaults(source, translation, frozen));
+            return errors.Count == 0;
+        }
+
+        /// <summary>
+        /// What <see cref="Accepts"/> finds, as facts and in its order: the placeholders, the counts of brackets, the labels, the
+        /// letters added, the values run together. The sentences of <see cref="Accepts"/> are <see cref="AnswerFaults.ModelSentence"/>
+        /// of each.
+        /// </summary>
+        internal static List<AnswerFault> ModelFaults(string source, string translation, List<string> frozen)
+        {
+            var faults = new List<AnswerFault>();
+            foreach (var fault in Faults(source, translation, frozen))
+                faults.Add(new AnswerFault { Kind = AnswerFaultKind.Placeholder, Placeholder = fault });
 
             // ⚠ The one check a PERSON is not held to — see AcceptsEdit. It exists for a model that
             // wraps a placeholder in a pair of its own, which the frozen sequences catch for the
@@ -228,7 +241,7 @@ namespace UnityGameTranslator.Common
                 int found = translation.Count(c => c == bracket);
                 if (expected != found)
                 {
-                    errors.Add($"character '{bracket}' appears {found} time(s) instead of {expected}");
+                    faults.Add(new AnswerFault { Kind = AnswerFaultKind.Brackets, Bracket = bracket, Found = found, Expected = expected });
                     bracketsMoved = true;
                 }
             }
@@ -239,14 +252,13 @@ namespace UnityGameTranslator.Common
             // same way three times. Naming the label is what a second attempt can act on.
             List<string> labels = Labels(source);
             if (bracketsMoved && labels.Count > 0)
-                errors.Add("keep the brackets of " + string.Join(", ", labels.Select(label => $"\"{label}\""))
-                           + " and translate the words inside them");
+                faults.Add(new AnswerFault { Kind = AnswerFaultKind.Labels, Labels = labels });
 
             // ⚠ Also a model-only check, for the same reason: a person who adds a letter meant it.
-            foreach (string error in LettersAddedBetween(source, translation)) errors.Add(error);
-            foreach (string error in ValuesRunTogether(source, translation)) errors.Add(error);
+            faults.AddRange(LettersAddedBetween(source, translation));
+            faults.AddRange(ValuesRunTogether(source, translation));
 
-            return errors.Count == 0;
+            return faults;
         }
 
         /// <summary>
@@ -263,9 +275,9 @@ namespace UnityGameTranslator.Common
         /// sign of the answer's own ("[!v*0]x[!v*1]" → "[!v*0]×[!v*1]", a "/" or a ":") still tells the values apart
         /// and is the language's choice.
         /// </summary>
-        private static List<string> ValuesRunTogether(string source, string translation)
+        private static List<AnswerFault> ValuesRunTogether(string source, string translation)
         {
-            var errors = new List<string>();
+            var errors = new List<AnswerFault>();
             if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(translation)) return errors;
 
             List<Match> inSource = TokenPattern.Matches(source).Cast<Match>().ToList();
@@ -292,7 +304,7 @@ namespace UnityGameTranslator.Common
                 // what the answer added there, beyond white space and the signs the source already had around its word
                 // ("[!v*0]年{[!v*1]}" → "[!v*0] {[!v*1]}": the brace is the source's, the word is gone)
                 if (answered.All(c => KeyChars.IsSpace(c) || (!UnicodeCategories.IsLetterOrDigit(c) && joint.IndexOf(c) >= 0)))
-                    errors.Add($"between {first} and {second} the source has the word \"{joint.TrimSpaces()}\": \"{answered}\" leaves the two values side by side — keep a word between them");
+                    errors.Add(new AnswerFault { Kind = AnswerFaultKind.ValuesRunTogether, First = first, Second = second, Joint = joint.TrimSpaces(), Answered = answered });
             }
 
             return errors;
@@ -319,9 +331,9 @@ namespace UnityGameTranslator.Common
         /// · only when both placeholders appear once on each side and follow each other in the
         ///   answer too. Reordered, the answer says something the rule has no opinion about.
         /// </summary>
-        private static List<string> LettersAddedBetween(string source, string translation)
+        private static List<AnswerFault> LettersAddedBetween(string source, string translation)
         {
-            var errors = new List<string>();
+            var errors = new List<AnswerFault>();
             if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(translation)) return errors;
 
             List<Match> inSource = TokenPattern.Matches(source).Cast<Match>().ToList();
@@ -344,7 +356,7 @@ namespace UnityGameTranslator.Common
 
                 string answered = Between(translation, inAnswer[at], inAnswer[at + 1]);
                 if (HasLetter(answered))
-                    errors.Add($"between {first} and {second} the source has \"{joint}\" and no letter: \"{answered}\" adds some");
+                    errors.Add(new AnswerFault { Kind = AnswerFaultKind.LettersAdded, First = first, Second = second, Joint = joint, Answered = answered });
             }
 
             return errors;

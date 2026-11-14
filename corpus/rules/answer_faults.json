@@ -1,0 +1,189 @@
+{
+  "rule": "answer_faults",
+  "classes": ["AnswerFaults"],
+  "note": "Why an answer of the AI is refused, as FACTS, for a text with its markup as the line keeps it. `of` is the judge, in the order the model has always been told: the placeholders (sequence, count, invented), the counts of brackets, the labels, letters added, values run together, then the markup (out of order, emptied, invented). `model_sentence` is what the model is told of one fact: the sentences the checks used to build inline, word for word, since the prompts were measured on the AI. A person reads the product's wording of the same facts (spec/wording.json). Expected values are derived by hand from the written checks, never from the code.",
+  "operations": {
+    "of": { "in": { "source": "string", "answer": "string" }, "out": "list of facts: {kind: sequence|count|invented|brackets|labels|letters_added|values_run_together|tag_out_of_order|tag_emptied|tag_invented, ...}" },
+    "model_sentence": { "in": { "fault": "{kind, ...} as above" }, "out": "string" }
+  },
+  "cases": [
+    {
+      "id": "answer_faults/of/a-kept-answer-has-none",
+      "op": "of",
+      "in": { "source": "Hello [!v*0]", "answer": "Bonjour [!v*0]" },
+      "out": [],
+      "why": "same token, same brackets, nothing to say"
+    },
+    {
+      "id": "answer_faults/of/placeholders-in-the-order-of-the-judge",
+      "op": "of",
+      "in": { "source": "A [!v*0]", "answer": "A [!v*7]" },
+      "out": [
+        { "kind": "sequence", "sequence": "[!v*0]" },
+        { "kind": "count", "token": "[!v*0]", "found": 0, "expected": 1 },
+        { "kind": "invented", "token": "[!v*7]" }
+      ],
+      "why": "the sequence first, then each count, then what the source never had; the bracket counts agree (one pair each side)"
+    },
+    {
+      "id": "answer_faults/of/a-bracket-a-model-added",
+      "op": "of",
+      "in": { "source": "Save", "answer": "Save [F5]" },
+      "out": [
+        { "kind": "brackets", "bracket": "[", "found": 1, "expected": 0 },
+        { "kind": "brackets", "bracket": "]", "found": 1, "expected": 0 }
+      ],
+      "why": "a model is held to the count over the whole text, a person is not; no label in the source, so no labels fact"
+    },
+    {
+      "id": "answer_faults/of/a-label-without-its-brackets",
+      "op": "of",
+      "in": { "source": "[Att] Strike", "answer": "Att Strike" },
+      "out": [
+        { "kind": "brackets", "bracket": "[", "found": 0, "expected": 1 },
+        { "kind": "brackets", "bracket": "]", "found": 0, "expected": 1 },
+        { "kind": "labels", "labels": ["[Att]"] }
+      ],
+      "why": "a count says THAT a bracket is gone and never which: the label is named once, after the counts"
+    },
+    {
+      "id": "answer_faults/of/letters-added-between-two-values",
+      "op": "of",
+      "in": { "source": "v[!v*0].[!v*1]f[!v*2]", "answer": "v[!v*0].v[!v*1]f[!v*2]" },
+      "out": [
+        { "kind": "letters_added", "first": "[!v*0]", "second": "[!v*1]", "joint": ".", "answered": ".v" }
+      ],
+      "why": "a version number with no word: every token is there once, and a letter appeared between two of them; the pair that has a letter in the source is not judged"
+    },
+    {
+      "id": "answer_faults/of/values-run-together",
+      "op": "of",
+      "in": { "source": "[!v*0]年[!v*1]月[!v*2]日", "answer": "[!v*2] [!v*1] [!v*0]" },
+      "out": [
+        { "kind": "values_run_together", "first": "[!v*0]", "second": "[!v*1]", "joint": "年", "answered": " " },
+        { "kind": "values_run_together", "first": "[!v*1]", "second": "[!v*2]", "joint": "月", "answered": " " }
+      ],
+      "why": "a date came back as three values side by side with nothing but spaces: one fact for each pair the source separates with a word"
+    },
+    {
+      "id": "answer_faults/of/a-closing-tag-before-its-opening",
+      "op": "of",
+      "in": { "source": "Say <color=red>Hi</color> now", "answer": "Dis [!t*1]Salut[!t*0] maintenant" },
+      "out": [
+        { "kind": "tag_out_of_order", "opening": "[!t*0]", "closing": "[!t*1]", "opening_tag": "<color=red>", "closing_tag": "</color>" }
+      ],
+      "why": "each token is there once, which a count cannot see; the fact keeps the game's own tags beside the tokens, because a person never sees the tokens; reversed, the pair is not also called emptied"
+    },
+    {
+      "id": "answer_faults/of/a-pair-that-styles-nothing-any-more",
+      "op": "of",
+      "in": { "source": "Bob<color=red>Chief</color>", "answer": "Bob [!t*0][!t*1]" },
+      "out": [
+        { "kind": "tag_emptied", "opening": "[!t*0]", "closing": "[!t*1]", "opening_tag": "<color=red>", "closing_tag": "</color>" }
+      ],
+      "why": "the words the pair styled are gone, and the game would get an empty colour"
+    },
+    {
+      "id": "answer_faults/of/a-tag-the-model-wrote",
+      "op": "of",
+      "in": { "source": "Chief", "answer": "<b>Chef</b>" },
+      "out": [
+        { "kind": "tag_invented", "tag": "<b>" },
+        { "kind": "tag_invented", "tag": "</b>" }
+      ],
+      "why": "every tag was lifted before the text left, so a tag in the answer is the model's own"
+    },
+    {
+      "id": "answer_faults/of/every-kind-in-the-order-of-the-judge",
+      "op": "of",
+      "in": { "source": "[Att] <b>Go</b> [!v*0]", "answer": "[!t*1]Allez[!t*0]" },
+      "out": [
+        { "kind": "sequence", "sequence": "[!v*0]" },
+        { "kind": "count", "token": "[!v*0]", "found": 0, "expected": 1 },
+        { "kind": "brackets", "bracket": "[", "found": 2, "expected": 4 },
+        { "kind": "brackets", "bracket": "]", "found": 2, "expected": 4 },
+        { "kind": "labels", "labels": ["[Att]"] },
+        { "kind": "tag_out_of_order", "opening": "[!t*0]", "closing": "[!t*1]", "opening_tag": "<b>", "closing_tag": "</b>" }
+      ],
+      "why": "the order is a property: the sentences are sent back in it, and a model reads them in it. The four tokens of the text each hold a pair of brackets, which is why four are expected"
+    },
+    {
+      "id": "answer_faults/of/the-order-of-a-pair-is-said-before-an-emptied-one",
+      "op": "of",
+      "in": { "source": "A <b>x</b> B <i>y</i> C", "answer": "A [!t*0][!t*1] B [!t*3]y[!t*2] C" },
+      "out": [
+        { "kind": "tag_out_of_order", "opening": "[!t*2]", "closing": "[!t*3]", "opening_tag": "<i>", "closing_tag": "</i>" },
+        { "kind": "tag_emptied", "opening": "[!t*0]", "closing": "[!t*1]", "opening_tag": "<b>", "closing_tag": "</b>" }
+      ],
+      "why": "two pairs, two faults of two kinds: the order is the one the model has always been told, whichever pair comes first in the text"
+    },
+    {
+      "id": "answer_faults/of/an-empty-answer-is-every-fault-to-this-judge",
+      "op": "of",
+      "in": { "source": "Hi [!v*0]", "answer": "" },
+      "out": [
+        { "kind": "sequence", "sequence": "[!v*0]" },
+        { "kind": "count", "token": "[!v*0]", "found": 0, "expected": 1 },
+        { "kind": "brackets", "bracket": "[", "found": 0, "expected": 1 },
+        { "kind": "brackets", "bracket": "]", "found": 0, "expected": 1 }
+      ],
+      "why": "the judge of a model sees nothing where there should be a line; a screen that shows an answer must not word these for a person (an empty answer is a capture, or a server that refused)"
+    },
+    {
+      "id": "answer_faults/model_sentence/sequence",
+      "op": "model_sentence",
+      "in": { "fault": { "kind": "sequence", "sequence": "[!v*1]" } },
+      "out": "the exact sequence \"[!v*1]\" is missing or altered",
+      "why": "the sentence of a placeholder fault is the one it has always been"
+    },
+    {
+      "id": "answer_faults/model_sentence/brackets",
+      "op": "model_sentence",
+      "in": { "fault": { "kind": "brackets", "bracket": "[", "found": 3, "expected": 4 } },
+      "out": "character '[' appears 3 time(s) instead of 4",
+      "why": "a count of a character of the whole text"
+    },
+    {
+      "id": "answer_faults/model_sentence/labels",
+      "op": "model_sentence",
+      "in": { "fault": { "kind": "labels", "labels": ["[Att]", "{Hard}"] } },
+      "out": "keep the brackets of \"[Att]\", \"{Hard}\" and translate the words inside them",
+      "why": "the labels named once each, quoted, joined by a comma and a space"
+    },
+    {
+      "id": "answer_faults/model_sentence/letters-added",
+      "op": "model_sentence",
+      "in": { "fault": { "kind": "letters_added", "first": "[!v*0]", "second": "[!v*1]", "joint": ".", "answered": ".v" } },
+      "out": "between [!v*0] and [!v*1] the source has \".\" and no letter: \".v\" adds some",
+      "why": "names the two values, what the source had and what the answer has"
+    },
+    {
+      "id": "answer_faults/model_sentence/values-run-together",
+      "op": "model_sentence",
+      "in": { "fault": { "kind": "values_run_together", "first": "[!v*0]", "second": "[!v*1]", "joint": "年", "answered": " " } },
+      "out": "between [!v*0] and [!v*1] the source has the word \"年\": \" \" leaves the two values side by side — keep a word between them",
+      "why": "the long dash is the sentence's own"
+    },
+    {
+      "id": "answer_faults/model_sentence/tag-out-of-order",
+      "op": "model_sentence",
+      "in": { "fault": { "kind": "tag_out_of_order", "opening": "[!t*0]", "closing": "[!t*1]", "opening_tag": "<b>", "closing_tag": "</b>" } },
+      "out": "[!t*1] closes [!t*0], so it must come after it",
+      "why": "the model speaks of the tokens it was given, never of the game's tags (they stay beside the fact for a person)"
+    },
+    {
+      "id": "answer_faults/model_sentence/tag-emptied",
+      "op": "model_sentence",
+      "in": { "fault": { "kind": "tag_emptied", "opening": "[!t*0]", "closing": "[!t*1]", "opening_tag": "<b>", "closing_tag": "</b>" } },
+      "out": "[!t*0] and [!t*1] surround words in the source: put the translation of those words between them",
+      "why": "the words themselves are not quoted back: small models copied them into the answer"
+    },
+    {
+      "id": "answer_faults/model_sentence/tag-invented",
+      "op": "model_sentence",
+      "in": { "fault": { "kind": "tag_invented", "tag": "<b>" } },
+      "out": "<b> is not in the source: write no tag of your own, only the placeholders",
+      "why": "the tag as the answer wrote it"
+    }
+  ]
+}

@@ -670,6 +670,11 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         Expected = f.TryGetProperty("expected", out var expected) ? expected.GetInt32() : 0,
                     });
                 }),
+            // ── answer_faults ─────────────────────────────────────────────────
+            new Operation("answer_faults", "of", typeof(AnswerFaults), nameof(AnswerFaults.Of),
+                e => AnswerFaults.Of(Str(e, "source") ?? "", Str(e, "answer") ?? "").Select(f => (object?)FactOf(f)).ToList()),
+            new Operation("answer_faults", "model_sentence", typeof(AnswerFaults), nameof(AnswerFaults.ModelSentence),
+                e => AnswerFaults.ModelSentence(FaultOf(e.GetProperty("fault")))),
             new Operation("placeholders", "repair_trailing_breaks", typeof(Placeholders), nameof(Placeholders.RepairTrailingBreaks),
                 e => Placeholders.RepairTrailingBreaks(Str(e, "source") ?? "", Str(e, "translation") ?? "")),
             new Operation("placeholders", "correction", typeof(Placeholders), nameof(Placeholders.Correction),
@@ -744,6 +749,83 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             foreach (var item in array.EnumerateArray())
                 writings.Add(new LinkFinding.LinkWriting { Words = item.GetProperty("words").GetString()!, Form = item.TryGetProperty("form", out var f) && f.ValueKind == JsonValueKind.String ? f.GetString() : null });
             return writings;
+        }
+
+        /// <summary>A fault of an answer as the corpus writes it: placeholder faults by their own kind, the others by theirs in snake case.</summary>
+        private static Dictionary<string, object?> FactOf(AnswerFault f)
+        {
+            var fact = new Dictionary<string, object?>();
+            switch (f.Kind)
+            {
+                case AnswerFaultKind.Placeholder:
+                    fact["kind"] = f.Placeholder.Kind.ToString().ToLowerInvariant();
+                    if (f.Placeholder.Kind == PlaceholderFaultKind.Sequence) fact["sequence"] = f.Placeholder.Sequence;
+                    else
+                    {
+                        fact["token"] = f.Placeholder.Token;
+                        if (f.Placeholder.Kind == PlaceholderFaultKind.Count) { fact["found"] = f.Placeholder.Found; fact["expected"] = f.Placeholder.Expected; }
+                    }
+                    break;
+                case AnswerFaultKind.Brackets:
+                    fact["kind"] = "brackets"; fact["bracket"] = f.Bracket.ToString(); fact["found"] = f.Found; fact["expected"] = f.Expected;
+                    break;
+                case AnswerFaultKind.Labels:
+                    fact["kind"] = "labels"; fact["labels"] = f.Labels;
+                    break;
+                case AnswerFaultKind.LettersAdded:
+                case AnswerFaultKind.ValuesRunTogether:
+                    fact["kind"] = f.Kind == AnswerFaultKind.LettersAdded ? "letters_added" : "values_run_together";
+                    fact["first"] = f.First; fact["second"] = f.Second; fact["joint"] = f.Joint; fact["answered"] = f.Answered;
+                    break;
+                case AnswerFaultKind.TagOutOfOrder:
+                case AnswerFaultKind.TagEmptied:
+                    fact["kind"] = f.Kind == AnswerFaultKind.TagOutOfOrder ? "tag_out_of_order" : "tag_emptied";
+                    fact["opening"] = f.Opening; fact["closing"] = f.Closing; fact["opening_tag"] = f.OpeningTag; fact["closing_tag"] = f.ClosingTag;
+                    break;
+                default:
+                    fact["kind"] = "tag_invented"; fact["tag"] = f.Tag;
+                    break;
+            }
+            return fact;
+        }
+
+        /// <summary>The inverse of <see cref="FactOf"/>, for the sentence a fact is worded as.</summary>
+        private static AnswerFault FaultOf(JsonElement f)
+        {
+            string kind = Str(f, "kind")!;
+            int Int(string name) => f.TryGetProperty(name, out var v) ? v.GetInt32() : 0;
+            switch (kind)
+            {
+                case "sequence":
+                case "count":
+                case "invented":
+                    return new AnswerFault
+                    {
+                        Kind = AnswerFaultKind.Placeholder,
+                        Placeholder = new PlaceholderFault
+                        {
+                            Kind = kind == "sequence" ? PlaceholderFaultKind.Sequence : kind == "count" ? PlaceholderFaultKind.Count : PlaceholderFaultKind.Invented,
+                            Sequence = Str(f, "sequence"), Token = Str(f, "token"), Found = Int("found"), Expected = Int("expected"),
+                        },
+                    };
+                case "brackets": return new AnswerFault { Kind = AnswerFaultKind.Brackets, Bracket = Str(f, "bracket")![0], Found = Int("found"), Expected = Int("expected") };
+                case "labels": return new AnswerFault { Kind = AnswerFaultKind.Labels, Labels = Strings(f, "labels") };
+                case "letters_added":
+                case "values_run_together":
+                    return new AnswerFault
+                    {
+                        Kind = kind == "letters_added" ? AnswerFaultKind.LettersAdded : AnswerFaultKind.ValuesRunTogether,
+                        First = Str(f, "first")!, Second = Str(f, "second")!, Joint = Str(f, "joint")!, Answered = Str(f, "answered")!,
+                    };
+                case "tag_out_of_order":
+                case "tag_emptied":
+                    return new AnswerFault
+                    {
+                        Kind = kind == "tag_out_of_order" ? AnswerFaultKind.TagOutOfOrder : AnswerFaultKind.TagEmptied,
+                        Opening = Str(f, "opening")!, Closing = Str(f, "closing")!, OpeningTag = Str(f, "opening_tag") ?? "", ClosingTag = Str(f, "closing_tag") ?? "",
+                    };
+                default: return new AnswerFault { Kind = AnswerFaultKind.TagInvented, Tag = Str(f, "tag")! };
+            }
         }
 
         private static List<string?> EntryArray(JsonElement e)

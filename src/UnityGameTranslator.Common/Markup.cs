@@ -218,9 +218,13 @@ namespace UnityGameTranslator.Common
         /// ⚠ Only ORDER within a pair is judged. Where a styled span goes in the sentence, and
         /// which of two spans comes first, is the language's business.
         /// </summary>
-        public static List<string> OutOfOrder(string answer, IList<string>? tags)
+        public static List<string> OutOfOrder(string answer, IList<string>? tags) =>
+            AnswerFaults.ModelSentences(OutOfOrderFaults(answer, tags));
+
+        /// <summary>The facts <see cref="OutOfOrder"/> says in sentences.</summary>
+        internal static List<AnswerFault> OutOfOrderFaults(string answer, IList<string>? tags)
         {
-            var errors = new List<string>();
+            var errors = new List<AnswerFault>();
             if (string.IsNullOrEmpty(answer) || tags == null || tags.Count == 0) return errors;
 
             int[] pairs = Pairs(tags);
@@ -235,7 +239,7 @@ namespace UnityGameTranslator.Common
                 int end = answer.IndexOf(closing, System.StringComparison.Ordinal);
 
                 if (at >= 0 && end >= 0 && end < at)
-                    errors.Add($"{closing} closes {opening}, so it must come after it");
+                    errors.Add(new AnswerFault { Kind = AnswerFaultKind.TagOutOfOrder, Opening = opening, Closing = closing, OpeningTag = tags[open], ClosingTag = tags[close] });
             }
 
             return errors;
@@ -255,9 +259,13 @@ namespace UnityGameTranslator.Common
         /// correction, they were copied into the answer by small models — "…&lt;color&gt;掌门&lt;/color&gt;"
         /// in a French line.
         /// </summary>
-        public static List<string> Emptied(string source, string answer, IList<string>? tags)
+        public static List<string> Emptied(string source, string answer, IList<string>? tags) =>
+            AnswerFaults.ModelSentences(EmptiedFaults(source, answer, tags));
+
+        /// <summary>The facts <see cref="Emptied"/> says in sentences.</summary>
+        internal static List<AnswerFault> EmptiedFaults(string source, string answer, IList<string>? tags)
         {
-            var errors = new List<string>();
+            var errors = new List<AnswerFault>();
             if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(answer) || tags == null || tags.Count == 0) return errors;
 
             int[] pairs = Pairs(tags);
@@ -270,7 +278,7 @@ namespace UnityGameTranslator.Common
                 string closing = PlaceholderPrefix + close + PlaceholderSuffix;
                 if (string.IsNullOrEmpty(Between(source, opening, closing))) continue;
                 if (Between(answer, opening, closing) == "")
-                    errors.Add($"{opening} and {closing} surround words in the source: put the translation of those words between them");
+                    errors.Add(new AnswerFault { Kind = AnswerFaultKind.TagEmptied, Opening = opening, Closing = closing, OpeningTag = tags[open], ClosingTag = tags[close] });
             }
 
             return errors;
@@ -284,12 +292,15 @@ namespace UnityGameTranslator.Common
         /// placeholders — would put tags nobody wrote into the game. Read with the very pattern
         /// that lifts tags, so what counts as a tag here is what counted as one on the way out.
         /// </summary>
-        public static List<string> Invented(string answer)
+        public static List<string> Invented(string answer) => AnswerFaults.ModelSentences(InventedFaults(answer));
+
+        /// <summary>The facts <see cref="Invented"/> says in sentences.</summary>
+        internal static List<AnswerFault> InventedFaults(string answer)
         {
-            var errors = new List<string>();
+            var errors = new List<AnswerFault>();
             if (string.IsNullOrEmpty(answer)) return errors;
             foreach (Match match in TagPattern.Matches(answer))
-                errors.Add($"{match.Value} is not in the source: write no tag of your own, only the placeholders");
+                errors.Add(new AnswerFault { Kind = AnswerFaultKind.TagInvented, Tag = match.Value });
             return errors;
         }
 
