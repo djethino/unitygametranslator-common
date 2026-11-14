@@ -173,9 +173,11 @@ namespace UnityGameTranslator.Common
     ///  · each line becomes {"v":…,"t":…}, in that order — and, only when the line holds them, the
     ///    fields of the format 2 AFTER those two, in the fixed order <see cref="WriteFormat2"/> lists
     ///    (a file that holds none of them keeps exactly the hash it always had);
-    ///  · keys sorted ORDINALLY — byte order, which is what PHP's ksort does and what
-    ///    StringComparer.Ordinal does. Culture-aware sorting puts "a" before "A" and would produce
-    ///    a different document on a machine and the server;
+    ///  · keys sorted ORDINALLY, as TEXT, by UTF-16 CODE UNIT — what StringComparer.Ordinal does and
+    ///    what every published hash holds. Culture-aware sorting puts "a" before "A"; a numeric sort
+    ///    reads "10" before "9" wrongly (PHP's ksort without SORT_STRING); and the order of UTF-8
+    ///    bytes differs from this one when a key starts beyond the Basic Multilingual Plane and
+    ///    another in U+E000-U+FFFF (schema.json, x-hash-key-order; sync.json vectors);
     ///  · no whitespace anywhere;
     ///  · non-ASCII stays literal (PHP: JSON_UNESCAPED_UNICODE) and "/" stays literal
     ///    (JSON_UNESCAPED_SLASHES). Escaping either is valid JSON and the wrong bytes;
@@ -394,7 +396,7 @@ namespace UnityGameTranslator.Common
             json.Append('}');
         }
 
-        /// <summary>A copy in byte order of the keys — the order PHP's ksort (SORT_STRING) gives, not a culture's.</summary>
+        /// <summary>A copy sorted by UTF-16 code unit (<see cref="string.CompareOrdinal(string, string)"/>), not by culture and not by UTF-8 byte.</summary>
         private static List<KeyValuePair<string, T>> Sorted<T>(IReadOnlyList<KeyValuePair<string, T>> map)
         {
             var copy = new List<KeyValuePair<string, T>>(map);

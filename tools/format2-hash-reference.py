@@ -3,7 +3,7 @@
 
 Why: the vectors `sync/content_hash/v2-*` of corpus/rules/sync.json freeze the hash of the fields of the
 format 2. They must not come from the C# they check, so they were produced here, with Python's own JSON
-writer (separators (',', ':'), ensure_ascii=False, keys sorted by UTF-8 bytes). The order of the fields
+writer (separators (',', ':'), ensure_ascii=False, keys sorted in UTF-16 code-unit order, see order()). The order of the fields
 is the one Sync.cs (ContentHash.WriteFormat2) documents; the website's Translation::computeHash must
 produce the same bytes. `python format2-hash-reference.py` checks itself against two format 1 vectors.
 
@@ -11,6 +11,13 @@ Usage as a module: content_hash(lines, uuid) -> (hex digest, canonical text).
 """
 # (schema.json / Sync.cs comment), NOT from the C#. Python's json module does the escaping.
 import json, hashlib, sys
+
+def order(key):
+    """UTF-16 CODE-UNIT order: what the C# writer does (StringComparer.Ordinal, string.CompareOrdinal) and so what
+    every hash a game has ever computed holds. NOT the order of UTF-8 bytes or of code points: they differ as soon as
+    a key starts with a character beyond the Basic Multilingual Plane (a surrogate, D800-DFFF) and another with one
+    of U+E000-U+FFFF (full-width forms, private use) — the surrogate comes first here, last in bytes."""
+    return key.encode('utf-16-be', 'surrogatepass')
 
 def dumps(x):
     return json.dumps(x, separators=(',', ':'), ensure_ascii=False)
@@ -25,29 +32,29 @@ def line_doc(line):
     if line.get('term') is True:
         out['term'] = True
     if line.get('forms'):
-        out['forms'] = {k: line['forms'][k] for k in sorted(line['forms'], key=lambda k: k.encode('utf-8'))}
+        out['forms'] = {k: line['forms'][k] for k in sorted(line['forms'], key=order)}
     if line.get('use'):
         u = {}
-        for k in sorted(line['use'], key=lambda k: k.encode('utf-8')):
+        for k in sorted(line['use'], key=order):
             val = line['use'][k]
             if isinstance(val, dict):
-                val = {c: val[c] for c in sorted(val, key=lambda c: c.encode('utf-8'))}
+                val = {c: val[c] for c in sorted(val, key=order)}
             u[k] = val
         out['use'] = u
     if line.get('class'):
-        out['class'] = {k: line['class'][k] for k in sorted(line['class'], key=lambda k: k.encode('utf-8'))}
+        out['class'] = {k: line['class'][k] for k in sorted(line['class'], key=order)}
     if line.get('oracle'):
         out['oracle'] = line['oracle']
     if line.get('links'):
         out['links'] = [{f: l[f] for f in ('to', 'form', 'case', 'by', 'was', 'own') if f in l} for l in line['links']]
     if line.get('unlinked'):
-        out['unlinked'] = [{'to': x['to']} for x in sorted(line['unlinked'], key=lambda x: x['to'].encode('utf-8'))]
+        out['unlinked'] = [{'to': x['to']} for x in sorted(line['unlinked'], key=lambda x: order(x['to']))]
     return out
 
 def content_hash(lines, uuid):
     doc = {k: line_doc(v) for k, v in lines.items()}
     doc['_uuid'] = uuid
-    items = sorted(doc.items(), key=lambda kv: kv[0].encode('utf-8'))
+    items = sorted(doc.items(), key=lambda kv: order(kv[0]))
     text = '{' + ','.join(dumps(k) + ':' + dumps(v) for k, v in items) + '}'
     return hashlib.sha256(text.encode('utf-8')).hexdigest(), text
 

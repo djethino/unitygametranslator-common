@@ -88,6 +88,9 @@
       "required": ["lists"]
     }
   },
+  "x-hash-key-order": {
+    "description": "Every object key of the canonical document the content hash is taken of (the lines, and inside a line `forms`, `use`, `class`, `unlinked`) is sorted by UTF-16 CODE UNIT, as text — never as a number, never by culture, never by UTF-8 byte or code point: the order of C# StringComparer.Ordinal, which every published hash was computed with. It differs from the byte order as soon as a key starts beyond the Basic Multilingual Plane (units D800-DFFF) and another in U+E000-U+FFFF (full-width forms, private use): the first sorts BEFORE in code units, AFTER in bytes. Vectors: corpus/rules/sync.json, `keys-of-digits-sort-as-text`, `keys-that-look-like-numbers-stay-text`, `keys-sort-by-utf16-unit`."
+  },
   "x-markers": {
     "description": "The three markers the format 2 adds to the text of a line. Grammar only: what they mean is `x-writer-guarantees` and the reading rules. N is a canonical decimal of at most nine digits (no sign, no leading zero). A list name holds none of ] [ : = *. The C# (LineMarkers) is held to these patterns by the checks; the site and the editors port them as written.",
     "link": "\\[!g\\*(0|[1-9][0-9]{0,8})\\]",
