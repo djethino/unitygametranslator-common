@@ -11,6 +11,7 @@ The decision reads the refusal's text for a word. **Those words are observed, no
 | word in the body | what is given up | source |
 |---|---|---|
 | `max_completion_tokens` | the cap's field becomes `max_completion_tokens` (the other is taken off) | the wording OpenAI's reasoning models refuse `max_tokens` with, quoted by the first checks of this rule; not re-measured since |
+| `stream_options`, `include_usage` | no `stream_options` (`SendStreamUsage` false): a stream then ends with no token count, and the caller estimates as it did before | asked by the Manager, which streams its Smart pass and wants `usage.prompt_tokens` to calibrate a prompt; **not yet measured against a real server's refusal**, the two words are the option's own names. Before the seed and the temperature: it costs the answer nothing |
 | `seed` | no seed (before the temperature: dropping the seed costs only reproducibility) | « Unrecognized request argument supplied: seed », same origin |
 | `temperature` | no temperature, the provider's own applies | « temperature does not support 0.0 with this model », same origin |
 | (nothing known named) | the reasoning ladder: `none`, `low`, no `reasoning_effort` field | the default when a 400/422 says nothing we know |
@@ -32,6 +33,6 @@ A request with no response format never gets `ResponseFormat`: it sent none, so 
 
 ## What the class keeps, and what resets it
 
-It keeps four things: the cap's field, a dropped temperature, a dropped seed, the reasoning rung. **`ForgetIfChanged(provider|model)` forgets all four** when the provider or the model changes — what one server accepts
+It keeps five things: the cap's field, a dropped temperature, a dropped seed, a dropped `stream_options`, the reasoning rung. **`ForgetIfChanged(provider|model)` forgets all five** when the provider or the model changes — what one server accepts
 says nothing about the next. **It keeps nothing about a refusal of the response format**, on purpose: no later question is spared the request by it, so no event has to reopen it (another model, another server, an
 update of the server: the next structured question simply asks, and is refused again, in one request).

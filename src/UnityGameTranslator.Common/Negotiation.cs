@@ -39,7 +39,7 @@ namespace UnityGameTranslator.Common
         /// <summary>
         /// One request per thing that can still be given up on, plus the one that works.
         /// </summary>
-        public const int MaxAttempts = 5;
+        public const int MaxAttempts = 6;
 
         /// <summary>
         /// What to ask for reasoning, from best to last resort.
@@ -55,6 +55,7 @@ namespace UnityGameTranslator.Common
         private bool _useMaxCompletionTokens;
         private bool _omitTemperature;
         private bool _omitSeed;
+        private bool _omitStreamUsage;
         private string _learnedFor;
 
         /// <summary>
@@ -74,6 +75,7 @@ namespace UnityGameTranslator.Common
             _useMaxCompletionTokens = false;
             _omitTemperature = false;
             _omitSeed = false;
+            _omitStreamUsage = false;
         }
 
         /// <summary>
@@ -106,6 +108,13 @@ namespace UnityGameTranslator.Common
         /// it comes from the temperature, and the seed only makes it reproducible where supported.
         /// </summary>
         public bool SendSeed => !_omitSeed;
+
+        /// <summary>
+        /// False once a provider has refused <c>stream_options</c> (<c>include_usage</c>), the option that makes a streamed answer end with the
+        /// count of tokens it used. Without it a stream carries no <c>usage</c>: what the caller wanted it for (calibrating a prompt) falls back
+        /// to its own estimate, and the question is asked as before. Only a caller that streams sends it.
+        /// </summary>
+        public bool SendStreamUsage => !_omitStreamUsage;
 
         /// <summary>What to ask for reasoning, or null to send no such field at all.</summary>
         public string ReasoningEffort => EffortLadder[_rung];
@@ -166,6 +175,16 @@ namespace UnityGameTranslator.Common
             {
                 _useMaxCompletionTokens = true;
                 reason = "provider wants max_completion_tokens instead of max_tokens";
+                return Concession.Made;
+            }
+
+            // A field the server named, and the one that costs nothing of the answer itself: before the seed and the temperature, like
+            // the cap's field. Said by either of its two names (`stream_options`, or `include_usage` inside it).
+            if (!_omitStreamUsage
+                && (Ascii.IndexOfIgnoreCase(body, "stream_options") >= 0 || Ascii.IndexOfIgnoreCase(body, "include_usage") >= 0))
+            {
+                _omitStreamUsage = true;
+                reason = "provider rejects stream_options — dropping it, a stream then carries no token count";
                 return Concession.Made;
             }
 

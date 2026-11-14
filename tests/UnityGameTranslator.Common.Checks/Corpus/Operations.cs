@@ -389,6 +389,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         map["token_field"] = negotiation.TokenField;
                         map["send_temperature"] = negotiation.SendTemperature;
                         map["send_seed"] = negotiation.SendSeed;
+                        map["send_stream_usage"] = negotiation.SendStreamUsage;
                         map["reasoning_effort"] = negotiation.ReasoningEffort;
                         states.Add(map);
                     }

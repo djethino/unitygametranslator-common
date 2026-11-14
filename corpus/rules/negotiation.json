@@ -9,7 +9,7 @@
    "in": {
     "steps": "[{refusal, structured?} | {forget} | {look}]"
    },
-   "out": "[state after each step: {token_field, send_temperature, send_seed, reasoning_effort}, plus `concession` for a refusal]"
+   "out": "[state after each step: {token_field, send_temperature, send_seed, send_stream_usage, reasoning_effort}, plus `concession` for a refusal]"
   },
   "is_about_our_request": {
    "in": {
@@ -33,7 +33,7 @@
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none"
     }
    ],
@@ -54,7 +54,7 @@
     {
      "token_field": "max_completion_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "Made"
     }
@@ -76,7 +76,7 @@
     {
      "token_field": "max_tokens",
      "send_temperature": false,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "Made"
     }
@@ -98,7 +98,7 @@
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": false,
+     "send_seed": false, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "Made"
     }
@@ -128,21 +128,21 @@
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "low",
      "concession": "Made"
     },
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": null,
      "concession": "Made"
     },
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": null,
      "concession": "NothingLeft"
     }
@@ -172,27 +172,60 @@
     {
      "token_field": "max_completion_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "Made"
     },
     {
      "token_field": "max_completion_tokens",
      "send_temperature": false,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "Made"
     },
     {
      "token_field": "max_completion_tokens",
      "send_temperature": false,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "low",
      "concession": "Made"
     }
    ],
    "why": "each concession costs something, none of them costs the answer"
   },
+  { "id": "negotiation/run/the-server-names-stream-options", "op": "run",
+    "in": { "steps": [ { "refusal": "Unrecognized request argument supplied: stream_options", "structured": false } ] },
+    "out": [ { "token_field": "max_tokens", "send_temperature": true, "send_seed": true, "send_stream_usage": false, "reasoning_effort": "none", "concession": "Made" } ],
+    "why": "a server that does not know the option for a token count at the end of a stream gets the question without it: one variable, the reasoning rung is not touched" },
+  { "id": "negotiation/run/the-server-names-include-usage-only", "op": "run",
+    "in": { "steps": [ { "refusal": "include_usage is not supported", "structured": false } ] },
+    "out": [ { "token_field": "max_tokens", "send_temperature": true, "send_seed": true, "send_stream_usage": false, "reasoning_effort": "none", "concession": "Made" } ],
+    "why": "either of its two names says it: a server may quote the field inside the option" },
+  { "id": "negotiation/run/stream-options-before-the-seed-and-the-temperature", "op": "run",
+    "in": { "steps": [ { "refusal": "stream_options, seed and temperature are not supported", "structured": false }, { "refusal": "stream_options, seed and temperature are not supported", "structured": false }, { "refusal": "stream_options, seed and temperature are not supported", "structured": false } ] },
+    "out": [
+      { "token_field": "max_tokens", "send_temperature": true, "send_seed": true, "send_stream_usage": false, "reasoning_effort": "none", "concession": "Made" },
+      { "token_field": "max_tokens", "send_temperature": true, "send_seed": false, "send_stream_usage": false, "reasoning_effort": "none", "concession": "Made" },
+      { "token_field": "max_tokens", "send_temperature": false, "send_seed": false, "send_stream_usage": false, "reasoning_effort": "none", "concession": "Made" } ],
+    "why": "a body naming several fields costs the answer nothing for the first, and its variation only for the last: the option for the token count goes first, then the seed, then the temperature" },
+  { "id": "negotiation/run/the-cap-comes-before-stream-options", "op": "run",
+    "in": { "steps": [ { "refusal": "use max_completion_tokens; stream_options is rejected", "structured": false }, { "refusal": "use max_completion_tokens; stream_options is rejected", "structured": false } ] },
+    "out": [
+      { "token_field": "max_completion_tokens", "send_temperature": true, "send_seed": true, "send_stream_usage": true, "reasoning_effort": "none", "concession": "Made" },
+      { "token_field": "max_completion_tokens", "send_temperature": true, "send_seed": true, "send_stream_usage": false, "reasoning_effort": "none", "concession": "Made" } ],
+    "why": "the cap's field keeps its place: one change per attempt, in the order the rule has always had" },
+  { "id": "negotiation/run/stream-options-is-given-up-once", "op": "run",
+    "in": { "steps": [ { "refusal": "stream_options rejected", "structured": false }, { "refusal": "stream_options rejected", "structured": false } ] },
+    "out": [
+      { "token_field": "max_tokens", "send_temperature": true, "send_seed": true, "send_stream_usage": false, "reasoning_effort": "none", "concession": "Made" },
+      { "token_field": "max_tokens", "send_temperature": true, "send_seed": true, "send_stream_usage": false, "reasoning_effort": "low", "concession": "Made" } ],
+    "why": "once dropped it is no more to give up: a second refusal that names nothing else is the reasoning's, as for any body that names nothing we know" },
+  { "id": "negotiation/run/a-change-of-provider-brings-stream-options-back", "op": "run",
+    "in": { "steps": [ { "refusal": "stream_options rejected", "structured": false }, { "forget": "http://elsewhere|other-model" } ] },
+    "out": [
+      { "token_field": "max_tokens", "send_temperature": true, "send_seed": true, "send_stream_usage": false, "reasoning_effort": "none", "concession": "Made" },
+      { "token_field": "max_tokens", "send_temperature": true, "send_seed": true, "send_stream_usage": true, "reasoning_effort": "none" } ],
+    "why": "what one server refuses says nothing about the next" },
   {
    "id": "negotiation/run/a-change-of-provider-forgets-everything",
    "op": "run",
@@ -211,14 +244,14 @@
     {
      "token_field": "max_tokens",
      "send_temperature": false,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "Made"
     },
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none"
     }
    ],
@@ -242,14 +275,14 @@
     {
      "token_field": "max_tokens",
      "send_temperature": false,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "Made"
     },
     {
      "token_field": "max_tokens",
      "send_temperature": false,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none"
     }
    ],
@@ -270,7 +303,7 @@
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "ResponseFormat"
     }
@@ -300,21 +333,21 @@
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "ResponseFormat"
     },
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "ResponseFormat"
     },
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "ResponseFormat"
     }
@@ -339,14 +372,14 @@
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "ResponseFormat"
     },
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none"
     }
    ],
@@ -367,7 +400,7 @@
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "ResponseFormat"
     }
@@ -389,7 +422,7 @@
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "low",
      "concession": "Made"
     }
@@ -411,7 +444,7 @@
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "low",
      "concession": "Made"
     }
@@ -433,7 +466,7 @@
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "low",
      "concession": "Made"
     }
@@ -459,14 +492,14 @@
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "low",
      "concession": "Made"
     },
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "low",
      "concession": "ResponseFormat"
     }
@@ -496,21 +529,21 @@
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "low",
      "concession": "Made"
     },
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": null,
      "concession": "Made"
     },
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": null,
      "concession": "ResponseFormat"
     }
@@ -536,14 +569,14 @@
     {
      "token_field": "max_completion_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "Made"
     },
     {
      "token_field": "max_completion_tokens",
      "send_temperature": true,
-     "send_seed": true,
+     "send_seed": true, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "ResponseFormat"
     }
@@ -569,14 +602,14 @@
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": false,
+     "send_seed": false, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "Made"
     },
     {
      "token_field": "max_tokens",
      "send_temperature": true,
-     "send_seed": false,
+     "send_seed": false, "send_stream_usage": true,
      "reasoning_effort": "none",
      "concession": "ResponseFormat"
     }
