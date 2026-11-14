@@ -43,5 +43,12 @@ namespace UnityGameTranslator.Common
 
         /// <summary>Whether the code point is a number (Nd Nl No).</summary>
         public static bool IsNumber(int codePoint) => Of(codePoint)[0] == 'N';
+
+        /// <summary>Whether the code point is a letter or a decimal digit (L*, Nd) — what <c>char.IsLetterOrDigit</c> asks, with this table's answer.</summary>
+        public static bool IsLetterOrDigit(int codePoint)
+        {
+            string category = Of(codePoint);
+            return category[0] == 'L' || category == "Nd";
+        }
     }
 }

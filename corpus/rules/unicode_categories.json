@@ -35,6 +35,12 @@
     "code_point": "int"
    },
    "out": "bool: N*"
+  },
+  "is_letter_or_digit": {
+   "in": {
+    "code_point": "int"
+   },
+   "out": "bool: L* or Nd"
   }
  },
  "cases": [
@@ -481,6 +487,78 @@
    },
    "out": false,
    "why": "U+0041: N is Nd, Nl and No"
+  },
+  {
+   "id": "unicode_categories/is_letter_or_digit/letter",
+   "op": "is_letter_or_digit",
+   "in": {
+    "code_point": 65
+   },
+   "out": true,
+   "why": "U+0041"
+  },
+  {
+   "id": "unicode_categories/is_letter_or_digit/ascii-digit",
+   "op": "is_letter_or_digit",
+   "in": {
+    "code_point": 53
+   },
+   "out": true,
+   "why": "U+0035"
+  },
+  {
+   "id": "unicode_categories/is_letter_or_digit/arabic-indic-digit",
+   "op": "is_letter_or_digit",
+   "in": {
+    "code_point": 1635
+   },
+   "out": true,
+   "why": "U+0663"
+  },
+  {
+   "id": "unicode_categories/is_letter_or_digit/roman-numeral-is-no-digit",
+   "op": "is_letter_or_digit",
+   "in": {
+    "code_point": 8551
+   },
+   "out": false,
+   "why": "U+2167"
+  },
+  {
+   "id": "unicode_categories/is_letter_or_digit/superscript-is-no-digit",
+   "op": "is_letter_or_digit",
+   "in": {
+    "code_point": 178
+   },
+   "out": false,
+   "why": "U+00B2"
+  },
+  {
+   "id": "unicode_categories/is_letter_or_digit/hyphen",
+   "op": "is_letter_or_digit",
+   "in": {
+    "code_point": 45
+   },
+   "out": false,
+   "why": "U+002D"
+  },
+  {
+   "id": "unicode_categories/is_letter_or_digit/astral-hieroglyph",
+   "op": "is_letter_or_digit",
+   "in": {
+    "code_point": 78944
+   },
+   "out": true,
+   "why": "U+13460"
+  },
+  {
+   "id": "unicode_categories/is_letter_or_digit/a-mark-is-neither",
+   "op": "is_letter_or_digit",
+   "in": {
+    "code_point": 769
+   },
+   "out": false,
+   "why": "U+0301"
   }
  ]
 }

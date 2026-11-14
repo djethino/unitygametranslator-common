@@ -281,6 +281,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => UnicodeCategories.IsLetter(Int(e, "code_point"))),
             new Operation("unicode_categories", "is_mark", typeof(UnicodeCategories), nameof(UnicodeCategories.IsMark),
                 e => UnicodeCategories.IsMark(Int(e, "code_point"))),
+            new Operation("unicode_categories", "is_letter_or_digit", typeof(UnicodeCategories), nameof(UnicodeCategories.IsLetterOrDigit),
+                e => UnicodeCategories.IsLetterOrDigit(Int(e, "code_point"))),
             new Operation("unicode_categories", "is_number", typeof(UnicodeCategories), nameof(UnicodeCategories.IsNumber),
                 e => UnicodeCategories.IsNumber(Int(e, "code_point"))),
 

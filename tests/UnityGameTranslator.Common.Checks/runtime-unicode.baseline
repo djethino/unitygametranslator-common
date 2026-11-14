@@ -14,9 +14,7 @@ Languages.cs	OrdinalIgnoreCase	10
 Languages.cs	ToUpper/ToLower	1
 Markup.cs	OrdinalIgnoreCase	1
 Markup.cs	ToUpper/ToLower	1
-Markup.cs	char.Is*	1
 People.cs	OrdinalIgnoreCase	1
-Placeholders.cs	char.Is*	1
 TranslationFiles.cs	OrdinalIgnoreCase	1
 UnityFiles/GameFonts.cs	OrdinalIgnoreCase	1
 UnityFiles/GameFonts.cs	char.Is*	1

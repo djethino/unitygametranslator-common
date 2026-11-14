@@ -106,7 +106,7 @@ namespace UnityGameTranslator.Common
             if (from < tag.Length && tag[from] == '#') return "color";
 
             int end = from;
-            while (end < tag.Length && (char.IsLetterOrDigit(tag[end]) || tag[end] == '-')) end++;
+            while (end < tag.Length && (UnicodeCategories.IsLetterOrDigit(tag[end]) || tag[end] == '-')) end++;
             return tag.Substring(from, end - from).ToLowerInvariant();
         }
 
