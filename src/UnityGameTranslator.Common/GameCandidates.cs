@@ -69,10 +69,10 @@ namespace UnityGameTranslator.Common
 
                 // The same name outranks any source or id bonus: it is the one fact the person
                 // and the machine both read.
-                if (string.Equals(detected, name, System.StringComparison.OrdinalIgnoreCase))
+                if (Names.Equals(detected, name))
                     score += 30;
-                else if (name.IndexOf(detected, System.StringComparison.OrdinalIgnoreCase) >= 0
-                         || detected.IndexOf(name, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                else if (Names.IndexOf(name, detected) >= 0
+                         || Names.IndexOf(detected, name) >= 0)
                     score += 5;
             }
 

@@ -61,8 +61,7 @@ namespace UnityGameTranslator.Common
             if (Spaces.IsBlank(name) || Spaces.IsBlank(signedInAs))
                 return false;
 
-            return string.Equals(name.TrimSpaces(), signedInAs.TrimSpaces(),
-                                 System.StringComparison.OrdinalIgnoreCase);
+            return Names.Equals(name.TrimSpaces(), signedInAs.TrimSpaces());
         }
 
         /// <summary>

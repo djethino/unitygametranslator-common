@@ -92,22 +92,22 @@ namespace UnityGameTranslator.Common
         public static bool IsClosing(string tag) => tag != null && tag.Length > 2 && tag[0] == '<' && tag[1] == '/';
 
         /// <summary>
-        /// The name that pairs an opening tag with its closing one, lowercase: "color" for both
+        /// The name that pairs an opening tag with its closing one, in capitals (<see cref="Names"/>): "COLOR" for both
         /// &lt;color=red&gt; and &lt;/COLOR&gt;.
         ///
         /// ⚠ TextMesh Pro's short colour form &lt;#RRGGBB&gt; has no name and is closed by
-        /// &lt;/color&gt;, so it is named "color" here. Left unnamed it was never paired, and a
+        /// &lt;/color&gt;, so it is named "COLOR" here. Left unnamed it was never paired, and a
         /// right-to-left line coloured one letter instead of its span.
         /// </summary>
         public static string NameOf(string tag)
         {
             if (string.IsNullOrEmpty(tag) || tag[0] != '<') return "";
             int from = IsClosing(tag) ? 2 : 1;
-            if (from < tag.Length && tag[from] == '#') return "color";
+            if (from < tag.Length && tag[from] == '#') return "COLOR";
 
             int end = from;
             while (end < tag.Length && (UnicodeCategories.IsLetterOrDigit(tag[end]) || tag[end] == '-')) end++;
-            return tag.Substring(from, end - from).ToLowerInvariant();
+            return Names.Fold(tag.Substring(from, end - from));
         }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace UnityGameTranslator.Common
                 lifted.Append(edited, last, match.Index - last);
                 int index = -1;
                 for (int i = 0; i < tags.Count && index < 0; i++)
-                    if (!used[i] && string.Equals(tags[i], match.Value, System.StringComparison.OrdinalIgnoreCase)) index = i;
+                    if (!used[i] && Names.Equals(tags[i], match.Value)) index = i;
                 if (index < 0) lifted.Append(match.Value);
                 else
                 {

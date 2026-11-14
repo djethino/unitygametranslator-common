@@ -75,7 +75,7 @@ namespace UnityGameTranslator.Common
                     var name = candidates[i];
                     if (name == null) continue;
 
-                    if (string.Equals(name.TrimSpaces(), wanted, StringComparison.OrdinalIgnoreCase))
+                    if (Names.Equals(name.TrimSpaces(), wanted))
                         exact.Add(i);
                 }
 

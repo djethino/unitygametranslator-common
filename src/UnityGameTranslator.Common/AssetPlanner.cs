@@ -83,7 +83,7 @@ namespace UnityGameTranslator.Common
         public bool SameAs(ImageDefinition other) =>
             TranslationFiles.SpriteNames.Equals(Sprite, other.Sprite)
             && string.Equals(Path, other.Path, StringComparison.Ordinal)
-            && string.Equals(File, other.File, StringComparison.OrdinalIgnoreCase)
+            && Names.Equals(File, other.File)
             && Numbers.SequenceEqual(other.Numbers);
 
         internal ImageDefinition WithFile(string file) => new ImageDefinition(Sprite, Path, Numbers, file);
@@ -330,9 +330,9 @@ namespace UnityGameTranslator.Common
             foreach (var font in Files.Where(f => f.Asset.Kind == AssetKind.Font))
                 offers.Add(new AssetOffer(AssetKind.Font, font.Asset.Name, font.Change, font.Asset.From, new[] { font }, new PlannedDefinition[0]));
 
-            var images = new Dictionary<string, PlannedAsset>(StringComparer.OrdinalIgnoreCase);
+            var images = new Dictionary<string, PlannedAsset>(Names.Comparer);
             foreach (var image in Files.Where(f => f.Asset.Kind == AssetKind.Image)) images[image.Asset.Name] = image;
-            var paired = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var paired = new HashSet<string>(Names.Comparer);
 
             foreach (var definition in Definitions)
             {
@@ -469,10 +469,10 @@ namespace UnityGameTranslator.Common
             foreach (var definition in game.Definitions) existing[definition.Sprite] = definition;   // the last wins, as in the mod
 
             // Files the translation already names — what a picture given on its own may fill in.
-            var named = new HashSet<string>(existing.Values.Select(d => d.File).OfType<string>(), StringComparer.OrdinalIgnoreCase);
+            var named = new HashSet<string>(existing.Values.Select(d => d.File).OfType<string>(), Names.Comparer);
 
             // ⚠ Case ignored on both keys: a file name as Windows compares it, a sprite as the mod does.
-            var files = new Dictionary<string, IncomingAsset>(StringComparer.OrdinalIgnoreCase);
+            var files = new Dictionary<string, IncomingAsset>(Names.Comparer);
             var definitions = new Dictionary<string, PlannedDefinition>(TranslationFiles.SpriteNames);
             var refused = new List<RefusedAsset>();
             var madeFor = new List<string>();
@@ -550,11 +550,11 @@ namespace UnityGameTranslator.Common
 
             var plannedFiles = files.Values
                 .Select(asset => new PlannedAsset(asset, ChangeOf(game, asset)))
-                .OrderBy(p => p.Asset.Kind).ThenBy(p => p.Asset.Name, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(p => p.Asset.Kind).ThenBy(p => p.Asset.Name, Names.Comparer)
                 .ToList();
 
             var plannedDefinitions = definitions.Values
-                .OrderBy(d => d.SpriteName, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(d => d.SpriteName, Names.Comparer)
                 .ToList();
 
             return new AssetPlan(plannedFiles, plannedDefinitions, refused, madeFor.Distinct().ToList(), otherLanguages);
@@ -675,7 +675,7 @@ namespace UnityGameTranslator.Common
 
             // Into the pack's own lists first: they reach the plan only if the whole pack is honest.
             var fonts = new List<IncomingAsset>();
-            var carried = new Dictionary<string, IncomingAsset>(StringComparer.OrdinalIgnoreCase);
+            var carried = new Dictionary<string, IncomingAsset>(Names.Comparer);
             var packRefused = new List<RefusedAsset>();
             var ignored = entries.Count(e => e.Name != AssetPacks.ManifestName && !e.IsFolder && !AssetPacks.TryEntry(e.Name, out _, out _));
 
@@ -715,7 +715,7 @@ namespace UnityGameTranslator.Common
 
             // The settings, each tied to a picture the pack carries.
             var packDefinitions = new Dictionary<string, PlannedDefinition>(TranslationFiles.SpriteNames);
-            var defined = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var defined = new HashSet<string>(Names.Comparer);
             var settingsRefusal = ImageSettingsRefusal(game);
 
             foreach (var definition in manifest.Images)
@@ -776,8 +776,8 @@ namespace UnityGameTranslator.Common
             var name = manifest.GameName?.TrimSpaces();
             if (string.IsNullOrEmpty(name)) return null;
 
-            var matches = string.Equals(name, game.GameName.TrimSpaces(), StringComparison.OrdinalIgnoreCase)
-                          || string.Equals(name, game.ProductName?.TrimSpaces(), StringComparison.OrdinalIgnoreCase);
+            var matches = Names.Equals(name, game.GameName.TrimSpaces())
+                          || Names.Equals(name, game.ProductName?.TrimSpaces());
             return matches ? null : name;
         }
 

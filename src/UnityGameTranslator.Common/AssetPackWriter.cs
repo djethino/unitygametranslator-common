@@ -130,7 +130,7 @@ namespace UnityGameTranslator.Common
             var stems = fontReferences
                 .Where(r => FontReferences.Order(r)[0] == FontSource.System)
                 .Distinct(StringComparer.Ordinal)
-                .OrderBy(r => r, StringComparer.OrdinalIgnoreCase);
+                .OrderBy(r => r, Names.Comparer);
 
             foreach (var stem in stems)
             {
@@ -175,11 +175,11 @@ namespace UnityGameTranslator.Common
                 images.Add(definition);
             }
 
-            var packed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var packed = new HashSet<string>(Names.Comparer);
             var fontsFolder = Path.Combine(dataFolder, AssetPacks.FontsFolder);
             if (Directory.Exists(fontsFolder))
             {
-                foreach (var path in Directory.GetFiles(fontsFolder).OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
+                foreach (var path in Directory.GetFiles(fontsFolder).OrderBy(p => p, Names.Comparer))
                 {
                     var name = Path.GetFileName(path);
                     if (!AssetPacks.IsFontFile(name) || !AssetPacks.IsSafeFileName(name)) continue;

@@ -1,4 +1,6 @@
 using System;
+// Languages has a method called Names(): inside this class the name rule has to be reached by an alias.
+using NameRule = UnityGameTranslator.Common.Names;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -57,7 +59,7 @@ namespace UnityGameTranslator.Common
 
         private static Dictionary<string, string> BuildTable()
         {
-            var table = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var table = new Dictionary<string, string>(NameRule.Comparer);
 
             foreach (string[] row in CatalogueCodes)
             {
@@ -92,7 +94,7 @@ namespace UnityGameTranslator.Common
 
         private static Dictionary<string, string> BuildReverse()
         {
-            var reverse = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var reverse = new Dictionary<string, string>(NameRule.Comparer);
 
             foreach (var entry in Table)
             {
@@ -132,7 +134,7 @@ namespace UnityGameTranslator.Common
             string? code;
             if (Reverse.TryGetValue(trimmed, out code)) return code;
 
-            return Table.ContainsKey(trimmed) ? trimmed.ToLowerInvariant() : null;
+            return Table.ContainsKey(trimmed) ? Ascii.Lower(trimmed) : null;   // a code in the table: ASCII
         }
 
         /// <summary>
@@ -168,9 +170,9 @@ namespace UnityGameTranslator.Common
 
             string? code = CodeOf(languageName);
             if (code != null)
-                return string.Equals(Canonical(code), Canonical(isoCode), StringComparison.OrdinalIgnoreCase);
+                return NameRule.Equals(Canonical(code), Canonical(isoCode));
 
-            return string.Equals(languageName.TrimSpaces(), NameOf(isoCode), StringComparison.OrdinalIgnoreCase);
+            return NameRule.Equals(languageName.TrimSpaces(), NameOf(isoCode));
         }
 
         /// <summary>
@@ -196,7 +198,7 @@ namespace UnityGameTranslator.Common
         public static bool IsSettled(string? language) =>
             language != null
             && language.TrimSpaces().Length > 0
-            && !string.Equals(language.TrimSpaces(), Undecided, StringComparison.OrdinalIgnoreCase);
+            && !NameRule.Equals(language.TrimSpaces(), Undecided);
 
         /// <summary>
         /// True when two stored values name DIFFERENT languages — the only case anything may act on.
@@ -215,7 +217,7 @@ namespace UnityGameTranslator.Common
             if (!IsSettled(a) || !IsSettled(b)) return false;
 
             return !Matches(a, b) && !Matches(b, a)
-                   && !string.Equals(a!.TrimSpaces(), b!.TrimSpaces(), StringComparison.OrdinalIgnoreCase);
+                   && !NameRule.Equals(a!.TrimSpaces(), b!.TrimSpaces());
         }
 
         /// <summary>
@@ -295,13 +297,13 @@ namespace UnityGameTranslator.Common
         public static IEnumerable<(string Code, string Name)> All()
         {
             return Table
-                .GroupBy(entry => entry.Value, StringComparer.OrdinalIgnoreCase)
+                .GroupBy(entry => entry.Value, NameRule.Comparer)
                 .Select(group => (
                     Code: group.OrderBy(entry => entry.Key.Length)
                                .ThenBy(entry => entry.Key, StringComparer.Ordinal)
                                .First().Key,
                     Name: group.Key))
-                .OrderBy(entry => entry.Name, StringComparer.OrdinalIgnoreCase);
+                .OrderBy(entry => entry.Name, NameRule.Comparer);
         }
 
         /// <summary>
@@ -318,7 +320,7 @@ namespace UnityGameTranslator.Common
 
             foreach (string[] row in CatalogueProviders)
             {
-                if (string.Equals(row[0], languageName, StringComparison.OrdinalIgnoreCase))
+                if (NameRule.Equals(row[0], languageName))
                     return row[column];
             }
 
@@ -342,7 +344,7 @@ namespace UnityGameTranslator.Common
             if (languageName == null) return null;
             foreach (string[] row in CatalogueScripts)
             {
-                if (string.Equals(row[0], languageName, StringComparison.OrdinalIgnoreCase))
+                if (NameRule.Equals(row[0], languageName))
                     return row;
             }
             return null;

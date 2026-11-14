@@ -105,7 +105,7 @@ namespace UnityGameTranslator.Common
         /// new entry, and the mod would read the two as one sprite with whichever came last — so an
         /// image added from UGT Manager could lose to a stale one without anything saying so.
         /// </summary>
-        public static readonly StringComparer SpriteNames = StringComparer.OrdinalIgnoreCase;
+        public static readonly StringComparer SpriteNames = Names.Comparer;
 
         /// <summary>Field of an image entry holding where the sprite was seen in the scene. Text.</summary>
         public const string ImagePathField = "path";

@@ -108,7 +108,7 @@ namespace UnityGameTranslator.Common
             // The same file names in the folders below — a system keeps its fonts in subfolders
             // (Linux's /usr/share/fonts/truetype/<family>/): a name a translation gives as a file is
             // found there too, before any name table is read.
-            var named = new HashSet<string>(candidates, StringComparer.OrdinalIgnoreCase);
+            var named = new HashSet<string>(candidates, Names.Comparer);
 
             string? bestFile = null;
             int bestFace = -1, bestRank = int.MaxValue;
@@ -177,7 +177,7 @@ namespace UnityGameTranslator.Common
         }
 
         private static bool Has(byte[] table, int id, string name) =>
-            NamesOf(table, id).Exists(n => string.Equals(n, name, StringComparison.OrdinalIgnoreCase));
+            NamesOf(table, id).Exists(n => Names.Equals(n, name));
 
         /// <summary>Its subfamily (id 2) is the plain style, in the words fonts use for it.</summary>
         private static bool IsRegular(byte[] table) =>

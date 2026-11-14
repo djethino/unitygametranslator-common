@@ -1,18 +1,6 @@
 # Runtime Unicode calls still in common/src: one line per file and kind — file TAB kind TAB count.
 # A RATCHET (NoRuntimeUnicode.cs): the count may only go down, and this file follows it. Regenerate: dotnet run -- unicode-list runtime-unicode.baseline
-AssetPackWriter.cs	OrdinalIgnoreCase	3
-AssetPlanner.cs	OrdinalIgnoreCase	11
-Backups.cs	OrdinalIgnoreCase	1
-FontFileNames.cs	OrdinalIgnoreCase	2
-GameCandidates.cs	OrdinalIgnoreCase	3
-GameNames.cs	OrdinalIgnoreCase	1
 GameNames.cs	ToUpper/ToLower	1
 GameNames.cs	char.Is*	1
-Languages.cs	OrdinalIgnoreCase	10
-Languages.cs	ToUpper/ToLower	1
-Markup.cs	OrdinalIgnoreCase	1
-Markup.cs	ToUpper/ToLower	1
-People.cs	OrdinalIgnoreCase	1
-TranslationFiles.cs	OrdinalIgnoreCase	1
 UnityFiles/GameFonts.cs	OrdinalIgnoreCase	1
 UnityFiles/GameFonts.cs	char.Is*	1

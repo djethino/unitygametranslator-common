@@ -231,7 +231,7 @@ namespace UnityGameTranslator.Common
                                                 IEnumerable<string?>? fontFiles)
         {
             var chosen = new List<string>();
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var seen = new HashSet<string>(Names.Comparer);
 
             void Take(IEnumerable<string?>? names, string folder)
             {
