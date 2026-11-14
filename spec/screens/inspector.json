@@ -76,6 +76,15 @@
       { "kind": "label", "name": "LiveValues", "text": { "bind": "liveValues" }, "policy": "Excluded", "role": "Caption", "tone": "Accent", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false },
       { "kind": "field", "name": "TranslationInput", "gameText": "target", "placeholder": "Enter translation...", "input": "Multiline", "scroll": true, "minHeight": 40, "fill": "Stretch", "richText": false },
       { "kind": "label", "name": "Preview", "gameText": "target", "text": { "bind": "preview" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "fill": "Stretch", "minHeight": "RowHeightSmall" },
+      { "kind": "stack", "name": "QuestionRow", "spacing": 3, "fill": "Stretch", "visible": false, "children": [
+        { "kind": "label", "name": "QuestionText", "text": { "bind": "question" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "richText": false, "fill": "Stretch", "autoHeight": true, "minHeight": "RowHeightSmall" },
+        { "kind": "row", "name": "AnswerRow", "spacing": 4, "minHeight": "RowHeightNormal", "fill": "Stretch", "children": [
+          { "kind": "button", "name": "AllTextsBtn", "text": "All texts", "tone": "Primary", "size": "Compact", "minWidth": 90, "policy": "Excluded", "act": "answerAll",
+            "help": "Add the words to the term as a new form, for every text that cites it." },
+          { "kind": "button", "name": "OnlyThisBtn", "text": "Only this text", "size": "Compact", "minWidth": 110, "policy": "Excluded", "act": "answerOnly",
+            "help": "Keep the words in this text alone. The term keeps its forms." }
+        ] }
+      ] },
       { "kind": "row", "name": "BtnRow", "spacing": 4, "minHeight": "RowHeightNormal", "fill": "Stretch", "children": [
         { "kind": "button", "name": "SaveBtn", "text": "Save (H)", "tone": "Success", "size": "Compact", "minWidth": 80, "policy": "Excluded", "act": "save" },
         { "kind": "button", "name": "RetranslateBtn", "text": "Retranslate (AI)", "tone": "Primary", "size": "Compact", "minWidth": 110, "policy": "Excluded", "act": "retranslate" },

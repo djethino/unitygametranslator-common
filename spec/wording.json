@@ -1,0 +1,34 @@
+{
+  "$comment": "The words two products say the SAME fact with — written once (spec/README.md « One fact, one wording »). An entry is a shared sentence: its English text (parameters as {name}), the key the SITE writes it under in website/lang/en.json (null when only the mod says it, and why), and the screen nodes of the mod that carry it. check-spec.py holds them: the site's English value is this text (`:name` read as `{name}`), each node of each screen says exactly this, and no other text of a screen document repeats an entry without being named here. The site's 19 other languages and the mod's own wording are not touched: this is the English source both read. Not in spec/screens/: that folder is the mod's screens, every .json in it is embedded and parsed as one.",
+  "entries": {
+    "edit.question": {
+      "text": "“{words}” is a new form of “{term}”. Apply to:",
+      "params": ["words", "term"],
+      "site": "editor.question",
+      "screens": [ { "screen": "inspector", "node": "QuestionText", "field": "bind", "value": "question" } ],
+      "note": "The question a correction asks when changed words are no known writing of a term (LineEditing.Question). The mod's bind `question` is this text with the two names written in."
+    },
+    "edit.all_texts": {
+      "text": "All texts",
+      "site": "editor.all_texts",
+      "screens": [ { "screen": "inspector", "node": "AllTextsBtn", "field": "text" } ]
+    },
+    "edit.only_this_text": {
+      "text": "Only this text",
+      "site": "editor.only_this_text",
+      "screens": [ { "screen": "inspector", "node": "OnlyThisBtn", "field": "text" } ]
+    },
+    "edit.all_texts_help": {
+      "text": "Add the words to the term as a new form, for every text that cites it.",
+      "site": null,
+      "why": "the mod has a help bar, the site no tooltip on these buttons yet: it may take this sentence as theirs, not write another",
+      "screens": [ { "screen": "inspector", "node": "AllTextsBtn", "field": "help" } ]
+    },
+    "edit.only_this_text_help": {
+      "text": "Keep the words in this text alone. The term keeps its forms.",
+      "site": null,
+      "why": "same",
+      "screens": [ { "screen": "inspector", "node": "OnlyThisBtn", "field": "help" } ]
+    }
+  }
+}

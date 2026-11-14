@@ -165,3 +165,12 @@ binary search. Until then, a vector shared with a port uses characters every eng
 
 Names are compared and ordered by `Names` (the simple capital of each code point; no bridge between ASCII and the rest), a text
 declared ASCII (a header, an extension, a digest, a code) by `Ascii` — never by the engine's case-insensitive comparison.
+
+## One fact, one wording — `wording.json`
+
+A sentence the site and the mod both say (« “words” is a new form of “term”. Apply to: », « All texts », « Only this text ») is written ONCE in
+`spec/wording.json`: its English text with its parameters as `{name}`, the key the site writes it under in `website/lang/en.json` (`null` when only
+the mod says it, with the reason), and the screen nodes of `screens/` that carry it. `check-spec.py` holds it: the site's English value is that text
+(`:name` read as `{name}`), each named node says exactly it, and a text of a screen that repeats an entry without being named is a duplicate that
+will diverge — reported. It is the English SOURCE both products read; the site's 19 other languages and the mod's own interface wording stay what they
+are. The file lives HERE and not in `screens/`: every `.json` of that folder is embedded in the mod and parsed as a screen.
