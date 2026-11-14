@@ -1,0 +1,323 @@
+{
+ "rule": "game_tokens",
+ "classes": [
+  "GameTokenList"
+ ],
+ "note": "The game's own tokens (`#PlayerName#`, `{p3}`), as `_lists.tokens` (spec/translation-file/tokens.md): literal texts the game's code replaces before showing a text. A writer owes each one valid (not empty, no carriage return, no marker) and the list in the strictly ascending ordinal order of UTF-16 code units; a reader is tolerant. No port: the site and the editors do not read them.",
+ "operations": {
+  "is_valid": {
+   "in": {
+    "token": "string or null"
+   },
+   "out": "bool"
+  },
+  "read": {
+   "in": {
+    "tokens": "[string] | null"
+   },
+   "out": "[string]: the tokens that may be one, each once, in the order given"
+  },
+  "canonical": {
+   "in": {
+    "tokens": "[string]"
+   },
+   "out": "[string]: each once, in the ordinal order"
+  },
+  "refusal": {
+   "in": {
+    "token": "string or null"
+   },
+   "out": "{code} | null"
+  },
+  "refusal_of_list": {
+   "in": {
+    "tokens": "[string]"
+   },
+   "out": "{code} | null \u2014 the codes are LineWrites'"
+  }
+ },
+ "cases": [
+  {
+   "id": "game_tokens/is_valid/a-token",
+   "op": "is_valid",
+   "in": {
+    "token": "#PlayerName#"
+   },
+   "out": true,
+   "why": "a literal of the game"
+  },
+  {
+   "id": "game_tokens/is_valid/a-braced-token",
+   "op": "is_valid",
+   "in": {
+    "token": "{p3}"
+   },
+   "out": true,
+   "why": "a numbered one"
+  },
+  {
+   "id": "game_tokens/is_valid/a-token-with-spaces",
+   "op": "is_valid",
+   "in": {
+    "token": "{Wrap} x"
+   },
+   "out": true,
+   "why": "any text is a token but empty, with a carriage return or a marker"
+  },
+  {
+   "id": "game_tokens/is_valid/empty",
+   "op": "is_valid",
+   "in": {
+    "token": ""
+   },
+   "out": false,
+   "why": "found in every text"
+  },
+  {
+   "id": "game_tokens/is_valid/null",
+   "op": "is_valid",
+   "in": {
+    "token": null
+   },
+   "out": false,
+   "why": ""
+  },
+  {
+   "id": "game_tokens/is_valid/a-carriage-return",
+   "op": "is_valid",
+   "in": {
+    "token": "a\r\nb"
+   },
+   "out": false,
+   "why": "the texts of the format 2 are LF alone"
+  },
+  {
+   "id": "game_tokens/is_valid/a-line-feed-is-fine",
+   "op": "is_valid",
+   "in": {
+    "token": "a\nb"
+   },
+   "out": true,
+   "why": "LF is allowed"
+  },
+  {
+   "id": "game_tokens/is_valid/a-link-marker",
+   "op": "is_valid",
+   "in": {
+    "token": "[!g*0]"
+   },
+   "out": false,
+   "why": "a token is the game's text, never a link"
+  },
+  {
+   "id": "game_tokens/is_valid/a-slot-marker",
+   "op": "is_valid",
+   "in": {
+    "token": "x[!STR*0]"
+   },
+   "out": false,
+   "why": "nor a slot"
+  },
+  {
+   "id": "game_tokens/is_valid/a-bracket-alone-is-fine",
+   "op": "is_valid",
+   "in": {
+    "token": "[x]"
+   },
+   "out": true,
+   "why": "only `[!` is a marker"
+  },
+  {
+   "id": "game_tokens/read/keeps-what-may-be-a-token-once",
+   "op": "read",
+   "in": {
+    "tokens": [
+     "b",
+     "",
+     "a",
+     "b",
+     "[!v*0]",
+     null,
+     "a\r"
+    ]
+   },
+   "out": [
+    "b",
+    "a"
+   ],
+   "why": "a reader is tolerant and silent: the valid ones, each once, in the order given"
+  },
+  {
+   "id": "game_tokens/read/nothing",
+   "op": "read",
+   "in": {
+    "tokens": null
+   },
+   "out": [],
+   "why": "an absent list is no token"
+  },
+  {
+   "id": "game_tokens/canonical/sorted-and-once",
+   "op": "canonical",
+   "in": {
+    "tokens": [
+     "{p3}",
+     "#PlayerName#",
+     "{p1}",
+     "{p3}"
+    ]
+   },
+   "out": [
+    "#PlayerName#",
+    "{p1}",
+    "{p3}"
+   ],
+   "why": "the ordinal order of the UTF-16 code units, each once: two extractions of one game write the same bytes"
+  },
+  {
+   "id": "game_tokens/canonical/by-code-unit-not-by-culture",
+   "op": "canonical",
+   "in": {
+    "tokens": [
+     "a",
+     "B",
+     "_",
+     "\u00e9",
+     "e"
+    ]
+   },
+   "out": [
+    "B",
+    "_",
+    "a",
+    "e",
+    "\u00e9"
+   ],
+   "why": "capitals before \u00ab _ \u00bb before small letters, an accent after: ordinal, not a culture's"
+  },
+  {
+   "id": "game_tokens/canonical/beyond-the-plane-before-the-last-of-the-plane",
+   "op": "canonical",
+   "in": {
+    "tokens": [
+     "\uff01",
+     "\ud83d\ude00"
+    ]
+   },
+   "out": [
+    "\ud83d\ude00",
+    "\uff01"
+   ],
+   "why": "UTF-16 code units, like the hash's keys: the emoji (D83D) sorts before the full-width mark (FF01)"
+  },
+  {
+   "id": "game_tokens/canonical/an-invalid-one-stays",
+   "op": "canonical",
+   "in": {
+    "tokens": [
+     "b",
+     ""
+    ]
+   },
+   "out": [
+    "",
+    "b"
+   ],
+   "why": "nothing is dropped: it is refused, not hidden"
+  },
+  {
+   "id": "game_tokens/refusal/none",
+   "op": "refusal",
+   "in": {
+    "token": "#PlayerName#"
+   },
+   "out": null,
+   "why": ""
+  },
+  {
+   "id": "game_tokens/refusal/empty",
+   "op": "refusal",
+   "in": {
+    "token": ""
+   },
+   "out": {
+    "code": "token-invalid"
+   },
+   "why": ""
+  },
+  {
+   "id": "game_tokens/refusal/marker",
+   "op": "refusal",
+   "in": {
+    "token": "a[!nl]"
+   },
+   "out": {
+    "code": "token-invalid"
+   },
+   "why": ""
+  },
+  {
+   "id": "game_tokens/refusal_of_list/a-good-list",
+   "op": "refusal_of_list",
+   "in": {
+    "tokens": [
+     "#PlayerName#",
+     "{p1}"
+    ]
+   },
+   "out": null,
+   "why": ""
+  },
+  {
+   "id": "game_tokens/refusal_of_list/an-empty-list",
+   "op": "refusal_of_list",
+   "in": {
+    "tokens": []
+   },
+   "out": null,
+   "why": "a file may know no token"
+  },
+  {
+   "id": "game_tokens/refusal_of_list/not-in-order",
+   "op": "refusal_of_list",
+   "in": {
+    "tokens": [
+     "{p1}",
+     "#PlayerName#"
+    ]
+   },
+   "out": {
+    "code": "tokens-not-in-order"
+   },
+   "why": ""
+  },
+  {
+   "id": "game_tokens/refusal_of_list/twice",
+   "op": "refusal_of_list",
+   "in": {
+    "tokens": [
+     "a",
+     "a"
+    ]
+   },
+   "out": {
+    "code": "tokens-not-in-order"
+   },
+   "why": "strictly ascending: a repeat is refused"
+  },
+  {
+   "id": "game_tokens/refusal_of_list/an-invalid-token-first",
+   "op": "refusal_of_list",
+   "in": {
+    "tokens": [
+     "",
+     "a"
+    ]
+   },
+   "out": {
+    "code": "token-invalid"
+   },
+   "why": "the first fault in the list's order"
+  }
+ ]
+}

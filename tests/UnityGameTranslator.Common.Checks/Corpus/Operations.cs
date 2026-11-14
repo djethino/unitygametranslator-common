@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text.Json;
 using static UnityGameTranslator.Common.Checks.Corpus.JsonValues;
@@ -309,6 +310,18 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("link_finding", "find", typeof(LinkFinding), nameof(LinkFinding.Find),
                 e => LinkFinding.Find(TermIndex.Build(Lines(e, "terms")), Str(e, "text") ?? "", Str(e, "source") ?? "", Line(e, "before"))),
 
+            // ── game_tokens ────────────────────────────────────────────────────────
+            new Operation("game_tokens", "is_valid", typeof(GameTokenList), nameof(GameTokenList.IsValid),
+                e => GameTokenList.IsValid(Str(e, "token"))),
+            new Operation("game_tokens", "read", typeof(GameTokenList), nameof(GameTokenList.Read),
+                e => GameTokenList.Read(TokenArray(e))),
+            new Operation("game_tokens", "canonical", typeof(GameTokenList), nameof(GameTokenList.Canonical),
+                e => GameTokenList.Canonical(TokenArray(e)!.Select(t => t ?? "").ToList())),
+            new Operation("game_tokens", "refusal", typeof(GameTokenList), nameof(GameTokenList.Refusal),
+                e => Refusal(GameTokenList.Refusal(Str(e, "token")))),
+            new Operation("game_tokens", "refusal_of_list", typeof(GameTokenList), nameof(GameTokenList.Refusal),
+                e => Refusal(GameTokenList.Refusal(TokenArray(e)!.Select(t => t ?? "").ToList()))),
+
             // ── game_names ────────────────────────────────────────────────────────
             new Operation("game_names", "same", typeof(GameNames), nameof(GameNames.Flat),
                 e => { var x = GameNames.Flat(Str(e, "a")); return x.Length > 0 && x == GameNames.Flat(Str(e, "b")); }),
@@ -537,6 +550,17 @@ namespace UnityGameTranslator.Common.Checks.Corpus
         }
 
         /// <summary>A gate's verdict as the corpus writes it: the answer and the lines it would send.</summary>
+        private static List<string?>? TokenArray(JsonElement e)
+        {
+            if (!e.TryGetProperty("tokens", out var array) || array.ValueKind != JsonValueKind.Array) return null;
+            var list = new List<string?>();
+            foreach (var item in array.EnumerateArray()) list.Add(item.ValueKind == JsonValueKind.String ? item.GetString() : null);
+            return list;
+        }
+
+        private static Dictionary<string, object?>? Refusal(LineRefusal? refusal) =>
+            refusal.HasValue ? new Dictionary<string, object?> { ["code"] = refusal.Value.Code } : null;
+
         private static Dictionary<string, object?> Gate(bool accepted, List<string> errors) =>
             new Dictionary<string, object?> { ["accepted"] = accepted, ["errors"] = errors };
 

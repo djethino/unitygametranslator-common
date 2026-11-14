@@ -74,7 +74,7 @@
       "properties": {
         "lists": {
           "type": "object",
-          "description": "The lists, by name. A name holds none of ] [ : = * (see x-markers).",
+          "description": "The lists, by name. A name holds none of ] [ : = * (see x-markers). A slot of a template is read on the text the game SHOWS: each slot takes the entry of its list that stands there, and nothing pairs the rows of two lists — a `row`, a `field` or any other key the extraction keeps beside `values` is provenance, tolerated and read by nobody.",
           "additionalProperties": {
             "type": "object",
             "properties": {
@@ -83,6 +83,11 @@
             },
             "required": ["values"]
           }
+        },
+        "tokens": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "pattern": "^[^\\r]*$", "not": { "pattern": "\\[!" } },
+          "description": "The game's own tokens (`#PlayerName#`, `{p3}`): literal texts its code replaces by a computed one before showing a text. Written by the extraction, each once, in the ordinal order of their texts (UTF-16 code units); read by the mod and by the Manager; with no translation; not `_variables`. Absent = none known. Never a pattern. See spec/translation-file/tokens.md."
         }
       },
       "required": ["lists"]
@@ -106,6 +111,8 @@
       "link-without-marker": "the line holds `links[N]` and its text has no `[!g*N]`",
       "link-entry-missing": "a link's `to` is not the key of a line of this file",
       "link-form-missing": "a link names a form its entry's `forms` does not hold (`0` is always the entry's own `v`)",
+      "token-invalid": "a game token (`_lists.tokens`) is empty, holds a carriage return, or holds a marker `[!`",
+      "tokens-not-in-order": "the game tokens are not in the strictly ascending ordinal order (UTF-16 code units): unsorted, or one twice",
       "slot-list-missing": "a slot of the key or of `v` names a list `_lists` does not hold, or agrees with something that is neither such a list nor an open slot of the key",
       "slot-open-missing": "`v` shows `[!T*N]` and the key has no `[!T*N]`",
       "use-form-missing": "a `use` of the line names a form the line does not hold",

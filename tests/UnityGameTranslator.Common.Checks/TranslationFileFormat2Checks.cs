@@ -56,6 +56,14 @@ namespace UnityGameTranslator.Common.Checks
                     if (found.HasValue) { code = found.Value.Code; words = found.Value.Words; break; }
                 }
 
+                // the game's tokens (`_lists.tokens`): a file-level guarantee, asked once the lines have had theirs
+                if (code == null && document.TryGetProperty("_lists", out var tokenSection) && tokenSection.ValueKind == JsonValueKind.Object
+                    && tokenSection.TryGetProperty("tokens", out var tokenArray) && tokenArray.ValueKind == JsonValueKind.Array)
+                {
+                    var refusal = GameTokenList.Refusal(tokenArray.EnumerateArray().Select(t => t.GetString() ?? "").ToList());
+                    if (refusal.HasValue) { code = refusal.Value.Code; words = refusal.Value.Words; }
+                }
+
                 if (c.TryGetProperty("guarantee", out var guarantee))
                 {
                     guaranteed++;

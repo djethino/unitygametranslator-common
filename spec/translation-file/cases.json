@@ -1842,6 +1842,245 @@
         }
       },
       "why": "a person may say a word is not a term even where no line holds that term yet: nothing is checked against `unlinked`"
+    },
+    {
+      "id": "translation-file/format2/tokens-of-the-game",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_lists": {
+          "lists": {},
+          "tokens": [
+            "#PlayerName#",
+            "{p1}",
+            "{p3}"
+          ]
+        },
+        "Hello #PlayerName#!": {
+          "v": "Bonjour [!STR*0] !",
+          "t": "H"
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 1,
+        "tag_counts": {
+          "human": 1,
+          "validated": 0,
+          "ai": 0,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "read2": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 2,
+        "lines": {
+          "Hello #PlayerName#!": {
+            "v": "Bonjour [!STR*0] !",
+            "t": "H"
+          }
+        }
+      },
+      "why": "the game's own tokens ride in `_lists`, in the ordinal order: the site counts the lines as before, a reader derives the same lines, and the content hash is the one it always was (`_lists` is not in it)"
+    },
+    {
+      "id": "translation-file/format2/tokens-without-any-list",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_lists": {
+          "lists": {},
+          "tokens": []
+        },
+        "Hello #PlayerName#!": {
+          "v": "Bonjour [!STR*0] !",
+          "t": "H"
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 1,
+        "tag_counts": {
+          "human": 1,
+          "validated": 0,
+          "ai": 0,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "read2": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 2,
+        "lines": {
+          "Hello #PlayerName#!": {
+            "v": "Bonjour [!STR*0] !",
+            "t": "H"
+          }
+        }
+      },
+      "why": "a file may know no token (an empty list is written as it is): `lists` stays required and may be empty"
+    },
+    {
+      "id": "translation-file/format2/tokens-not-in-order",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_lists": {
+          "lists": {},
+          "tokens": [
+            "{p1}",
+            "#PlayerName#"
+          ]
+        },
+        "Hello #PlayerName#!": {
+          "v": "Bonjour [!STR*0] !",
+          "t": "H"
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 1,
+        "tag_counts": {
+          "human": 1,
+          "validated": 0,
+          "ai": 0,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "guarantee": "tokens-not-in-order",
+      "why": "two extractions of one game must write the same bytes: an unsorted list is refused by a writer. The site's door does not read `_lists`, so it accepts it: a tolerance, listed on purpose"
+    },
+    {
+      "id": "translation-file/format2/tokens-twice",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_lists": {
+          "lists": {},
+          "tokens": [
+            "#PlayerName#",
+            "#PlayerName#"
+          ]
+        },
+        "Hello #PlayerName#!": {
+          "v": "Bonjour [!STR*0] !",
+          "t": "H"
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 1,
+        "tag_counts": {
+          "human": 1,
+          "validated": 0,
+          "ai": 0,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "guarantee": "tokens-not-in-order",
+      "why": "each token once: a repeat is not in strictly ascending order"
+    },
+    {
+      "id": "translation-file/format2/token-empty",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_lists": {
+          "lists": {},
+          "tokens": [
+            "",
+            "#PlayerName#"
+          ]
+        },
+        "Hello #PlayerName#!": {
+          "v": "Bonjour [!STR*0] !",
+          "t": "H"
+        }
+      },
+      "written": false,
+      "upload": "accepted",
+      "site": {
+        "line_count": 1,
+        "tag_counts": {
+          "human": 1,
+          "validated": 0,
+          "ai": 0,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "guarantee": "token-invalid",
+      "why": "an empty token would be found in every text"
+    },
+    {
+      "id": "translation-file/format2/token-with-a-marker",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_lists": {
+          "lists": {},
+          "tokens": [
+            "#PlayerName#",
+            "[!v*0]"
+          ]
+        },
+        "Hello #PlayerName#!": {
+          "v": "Bonjour [!STR*0] !",
+          "t": "H"
+        }
+      },
+      "written": false,
+      "upload": "accepted",
+      "site": {
+        "line_count": 1,
+        "tag_counts": {
+          "human": 1,
+          "validated": 0,
+          "ai": 0,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "guarantee": "token-invalid",
+      "why": "a token is the game's text, never a slot or a link: a marker in it is refused"
+    },
+    {
+      "id": "translation-file/format2/token-with-a-carriage-return",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_lists": {
+          "lists": {},
+          "tokens": [
+            "a\r\nb"
+          ]
+        },
+        "Hello #PlayerName#!": {
+          "v": "Bonjour [!STR*0] !",
+          "t": "H"
+        }
+      },
+      "written": false,
+      "upload": "accepted",
+      "site": {
+        "line_count": 1,
+        "tag_counts": {
+          "human": 1,
+          "validated": 0,
+          "ai": 0,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "guarantee": "token-invalid",
+      "why": "the texts of the format 2 are LF alone"
     }
   ]
 }

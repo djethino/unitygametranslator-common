@@ -52,6 +52,8 @@ namespace UnityGameTranslator.Common
         public const string LinkFormMissing = "link-form-missing";
         public const string EntryHasLinkMarker = "entry-has-link-marker";
         public const string TemplateIdCollision = "template-id-collision";
+        public const string TokenInvalid = "token-invalid";
+        public const string TokensNotInOrder = "tokens-not-in-order";
         public const string SlotListMissing = "slot-list-missing";
         public const string SlotOpenMissing = "slot-open-missing";
         public const string UseFormMissing = "use-form-missing";
