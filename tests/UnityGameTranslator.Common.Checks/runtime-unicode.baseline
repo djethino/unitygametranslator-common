@@ -1,2 +1,2 @@
 # Runtime Unicode calls still in common/src: one line per file and kind — file TAB kind TAB count.
-# A RATCHET (NoRuntimeUnicode.cs): the count may only go down, and this file follows it. Regenerate: dotnet run -- unicode-list runtime-unicode.baseline
+# A RATCHET (tests/Shared/RuntimeUnicode.cs): the count may only go down, and this file follows it. Regenerate: dotnet run -- unicode-list runtime-unicode.baseline

@@ -34,7 +34,8 @@ namespace UnityGameTranslator.Common.Checks
                 string? root = CommonRoot();
                 if (root == null) return 2;
                 // Written to a file when one is named: a build's warnings share the console's output.
-                string listing = NoRuntimeUnicode.Format(NoRuntimeUnicode.Inventory(System.IO.Path.Combine(root, "src", "UnityGameTranslator.Common")));
+                string listing = UnityGameTranslator.Checks.Shared.RuntimeUnicode.Format(UnityGameTranslator.Checks.Shared.RuntimeUnicode.Inventory(System.IO.Path.Combine(root, "src", "UnityGameTranslator.Common")),
+                    "common/src", NoRuntimeUnicode.Regenerate, NoRuntimeUnicode.Exceptions);
                 if (args.Length >= 2) System.IO.File.WriteAllText(args[1], listing, new System.Text.UTF8Encoding(false));
                 else Console.Out.Write(listing);
                 return 0;
