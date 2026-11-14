@@ -21,7 +21,9 @@ import os
 import sys
 import urllib.request
 
-VERSION = "18.0.0"
+# The project's one Unicode version, written ONCE in common/UNICODE_VERSION (read by every generator of common; the
+# mod's own generators are to read it too). Never "latest": moved to here, then every table regenerated.
+VERSION = io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "UNICODE_VERSION"), encoding="utf-8").read().strip()
 UCD = "https://www.unicode.org/Public/%s/ucd/" % VERSION
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "src", "UnityGameTranslator.Common", "KeyChars.Tables.g.cs")

@@ -85,6 +85,7 @@ namespace UnityGameTranslator.Common.Checks
             Section("First-letter case tables", check => CasingChecks.Run(check, CommonRoot()));
             Section("Finding links in a text", LinkFindingChecks.Run);
             Section("The shape of a key", check => KeyShapeChecks.Run(check, CommonRoot()));
+            Section("One Unicode version", check => UnicodeVersionChecks.Run(check, CommonRoot()));
             Section("Editing a text with links", LinkEditingChecks.Run);
         }
 
