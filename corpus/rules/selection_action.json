@@ -1,0 +1,603 @@
+{
+ "rule": "selection_action",
+ "classes": [
+  "SelectionAction"
+ ],
+ "note": "What a selection in a KEY (the game's text) can do: open the term the words are (or are the citation of), make one of them, or nothing \u2014 never a path that ends in a refusal. `terms` are the keys of the file's terms; `file` the lines, by key. The words are taken as a whole: a plural is not looked up as its singular.",
+ "operations": {
+  "for": {
+   "in": {
+    "words": "string",
+    "file": "{key: line}",
+    "file_format": "int",
+    "terms": "[key]"
+   },
+   "out": "{action: open-term | new-term, key, existing?} | null"
+  }
+ },
+ "cases": [
+  {
+   "id": "selection_action/for/words-that-are-a-term-open-that-term",
+   "op": "for",
+   "in": {
+    "words": "Star Coin",
+    "file": {
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true
+     },
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Found [!g*0]": {
+      "v": "x",
+      "t": "A"
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    },
+    "file_format": 2,
+    "terms": [
+     "Star Coin"
+    ]
+   },
+   "out": {
+    "action": "open-term",
+    "key": "Star Coin"
+   },
+   "why": "the window to open is the term's"
+  },
+  {
+   "id": "selection_action/for/words-of-a-plain-text-become-one",
+   "op": "for",
+   "in": {
+    "words": "  Play ",
+    "file": {
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true
+     },
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Found [!g*0]": {
+      "v": "x",
+      "t": "A"
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    },
+    "file_format": 2,
+    "terms": [
+     "Star Coin"
+    ]
+   },
+   "out": {
+    "action": "new-term",
+    "key": "Play",
+    "existing": {
+     "v": "Jouer",
+     "t": "A"
+    }
+   },
+   "why": "trimmed; the line the file holds will BECOME a term"
+  },
+  {
+   "id": "selection_action/for/new-words-make-one",
+   "op": "for",
+   "in": {
+    "words": "Star Gate",
+    "file": {
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true
+     },
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Found [!g*0]": {
+      "v": "x",
+      "t": "A"
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    },
+    "file_format": 2,
+    "terms": [
+     "Star Coin"
+    ]
+   },
+   "out": {
+    "action": "new-term",
+    "key": "Star Gate"
+   },
+   "why": "no line of that key: one is created"
+  },
+  {
+   "id": "selection_action/for/the-citation-of-a-term-opens-it",
+   "op": "for",
+   "in": {
+    "words": "star Coin",
+    "file": {
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true
+     },
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Found [!g*0]": {
+      "v": "x",
+      "t": "A"
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    },
+    "file_format": 2,
+    "terms": [
+     "Star Coin"
+    ]
+   },
+   "out": {
+    "action": "open-term",
+    "key": "Star Coin"
+   },
+   "why": "the key with its FIRST letter in the other case (the first letter only) is that term, not a new one"
+  },
+  {
+   "id": "selection_action/for/a-plural-is-looked-up-whole",
+   "op": "for",
+   "in": {
+    "words": "Star Coins",
+    "file": {
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true
+     },
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Found [!g*0]": {
+      "v": "x",
+      "t": "A"
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    },
+    "file_format": 2,
+    "terms": [
+     "Star Coin"
+    ]
+   },
+   "out": {
+    "action": "new-term",
+    "key": "Star Coins"
+   },
+   "why": "a plural is not looked up as its singular"
+  },
+  {
+   "id": "selection_action/for/a-file-of-the-format-1-offers-nothing",
+   "op": "for",
+   "in": {
+    "words": "Star Coin",
+    "file": {
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true
+     },
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Found [!g*0]": {
+      "v": "x",
+      "t": "A"
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    },
+    "file_format": 1,
+    "terms": [
+     "Star Coin"
+    ]
+   },
+   "out": null,
+   "why": "no term window below the format 2"
+  },
+  {
+   "id": "selection_action/for/blank-words",
+   "op": "for",
+   "in": {
+    "words": "   ",
+    "file": {
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true
+     },
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Found [!g*0]": {
+      "v": "x",
+      "t": "A"
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    },
+    "file_format": 2,
+    "terms": [
+     "Star Coin"
+    ]
+   },
+   "out": null,
+   "why": ""
+  },
+  {
+   "id": "selection_action/for/a-name-of-the-file",
+   "op": "for",
+   "in": {
+    "words": "_uuid",
+    "file": {
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true
+     },
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Found [!g*0]": {
+      "v": "x",
+      "t": "A"
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    },
+    "file_format": 2,
+    "terms": [
+     "Star Coin"
+    ]
+   },
+   "out": null,
+   "why": "not a text of the game"
+  },
+  {
+   "id": "selection_action/for/a-template",
+   "op": "for",
+   "in": {
+    "words": "[!L*quality] coin",
+    "file": {
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true
+     },
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Found [!g*0]": {
+      "v": "x",
+      "t": "A"
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    },
+    "file_format": 2,
+    "terms": [
+     "Star Coin"
+    ]
+   },
+   "out": null,
+   "why": ""
+  },
+  {
+   "id": "selection_action/for/a-marker",
+   "op": "for",
+   "in": {
+    "words": "Gate [!g*0]",
+    "file": {
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true
+     },
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Found [!g*0]": {
+      "v": "x",
+      "t": "A"
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    },
+    "file_format": 2,
+    "terms": [
+     "Star Coin"
+    ]
+   },
+   "out": null,
+   "why": ""
+  },
+  {
+   "id": "selection_action/for/a-text-that-cites-terms",
+   "op": "for",
+   "in": {
+    "words": "Not enough Star Coins!",
+    "file": {
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true
+     },
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Found [!g*0]": {
+      "v": "x",
+      "t": "A"
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    },
+    "file_format": 2,
+    "terms": [
+     "Star Coin"
+    ]
+   },
+   "out": null,
+   "why": "a term does not cite another term: a path known to end in a refusal is not offered"
+  },
+  {
+   "id": "selection_action/for/a-text-that-shows-a-marker",
+   "op": "for",
+   "in": {
+    "words": "Marked",
+    "file": {
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true
+     },
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Found [!g*0]": {
+      "v": "x",
+      "t": "A"
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    },
+    "file_format": 2,
+    "terms": [
+     "Star Coin"
+    ]
+   },
+   "out": null,
+   "why": ""
+  },
+  {
+   "id": "selection_action/for/no-terms-in-the-file",
+   "op": "for",
+   "in": {
+    "words": "Play",
+    "file": {
+     "Star Coin": {
+      "v": "Pi\u00e8ce d'\u00e9toile",
+      "t": "V",
+      "term": true
+     },
+     "Play": {
+      "v": "Jouer",
+      "t": "A"
+     },
+     "Found [!g*0]": {
+      "v": "x",
+      "t": "A"
+     },
+     "Not enough Star Coins!": {
+      "v": "Pas assez de [!g*0] !",
+      "t": "A",
+      "links": [
+       {
+        "to": "Star Coin",
+        "by": "A",
+        "was": "x"
+       }
+      ]
+     },
+     "Marked": {
+      "v": "Marqu\u00e9 [!g*0]",
+      "t": "A"
+     }
+    },
+    "file_format": 2,
+    "terms": []
+   },
+   "out": {
+    "action": "new-term",
+    "key": "Play",
+    "existing": {
+     "v": "Jouer",
+     "t": "A"
+    }
+   },
+   "why": "the file has no term yet: nothing to be the citation of"
+  }
+ ]
+}

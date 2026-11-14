@@ -68,6 +68,39 @@ namespace UnityGameTranslator.Common.Checks
             check(sentencesCompared > 1000 && changedSeen > 100 && reviewSeen > 100,
                 "the random files exercise it (" + sentencesCompared + " sentences, " + changedSeen + " changed, " + reviewSeen + " to read)", "a property over nothing proves nothing");
             check(disagreements == 0, "what the term window announces is what reading every sentence before and after finds", disagreements + " disagreement(s); " + first);
+
+            Cost(check);
+        }
+
+        /// <summary>
+        /// What the window costs at the size of a big game: a file of 20 000 lines, 7 000 of them citing the term, asked for the impact of a
+        /// new word at each keystroke (<see cref="TermEdit.Effect"/> reads the whole file once). Printed, and held to a generous ceiling:
+        /// the site measures about 150 ms a keystroke at this size in JavaScript; the socle must not do worse.
+        /// </summary>
+        private static void Cost(Action<bool, string, string> check)
+        {
+            var lines = new List<KeyValuePair<string, TranslationLine>>();
+            var term = new TranslationLine { Value = "pièce", Tag = "V", Term = true, Forms = new[] { new KeyValuePair<string, string>("f1", "pièces") } };
+            lines.Add(new KeyValuePair<string, TranslationLine>("Coin", term));
+            for (int i = 0; i < 20000; i++)
+            {
+                bool cites = i % 3 == 0;
+                lines.Add(new KeyValuePair<string, TranslationLine>("S" + i, cites
+                    ? new TranslationLine { Value = "Voici [!g*0] " + i, Tag = "A", Links = new[] { new LineLink { To = "Coin", Form = i % 2 == 0 ? "f1" : null, By = "A", Case = i % 5 == 0 ? LinkReading.UpperFirst : null, Was = i % 2 == 0 ? "pièces" : "pièce" } } }
+                    : new TranslationLine { Value = "Texte " + i, Tag = "A" }));
+            }
+            var lists = new List<KeyValuePair<string, IReadOnlyList<string>>>();
+            var draft = TermEdit.Open("Coin", term, 2)!.Value;
+            draft = TermEdit.SetWord(draft, "gemme");
+            TermEdit.Effect(draft, term, lines, lists);   // warm up
+
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            const int times = 20;
+            int texts = 0;
+            for (int i = 0; i < times; i++) texts = TermEdit.Effect(TermEdit.SetWord(draft, "gemme" + i), term, lines, lists).Texts;
+            double ms = clock.Elapsed.TotalMilliseconds / times;
+            Console.WriteLine($"    cost: Effect over {lines.Count} lines, {lines.Count / 3} citing the term: {ms:F1} ms a keystroke ({texts} texts change)");
+            check(texts > 1000 && ms < 150, $"the impact of a keystroke over 20 000 lines costs {ms:F1} ms, less than the site's 150 ms", "the socle must not do worse than the page it replaces");
         }
 
         /// <summary>The line of an entry: the term as it is or as it would be, any other entry as it stands.</summary>

@@ -332,6 +332,20 @@ namespace UnityGameTranslator.Common
             return none;
         }
 
+        /// <summary>
+        /// The term the words ARE the citation of: <see cref="Cites"/> over the words as a source finds ONE place, and that place covers all of
+        /// them — « coin » for the key « Coin » (its first letter in the other case); a plural, or words that hold more than the key, are not.
+        /// The words that are exactly a key are not a citation of it (they are the term: the caller opens it first). Null when there is none.
+        /// </summary>
+        /// <param name="refused">The terms the line of those words refuses (<c>unlinked</c>).</param>
+        public static string? CitedWhole(TermIndex index, string words, IReadOnlyList<string>? refused)
+        {
+            if (index == null) throw new ArgumentNullException(nameof(index));
+            if (string.IsNullOrEmpty(words)) return null;
+            var places = Cites(index, words, refused);
+            return places.Count == 1 && places[0].Start == 0 && places[0].End == words.Length ? places[0].Key : null;
+        }
+
         /// <summary>One writing of a term: the words, and the form they are written by (<c>null</c> = the term's own word).</summary>
         public struct LinkWriting
         {

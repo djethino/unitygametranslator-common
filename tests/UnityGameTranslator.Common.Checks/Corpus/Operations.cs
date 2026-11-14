@@ -309,6 +309,19 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         places.Add(new Dictionary<string, object?> { ["writing"] = p.Writing, ["start"] = p.Start, ["end"] = p.End, ["case"] = p.Case });
                     return places;
                 }),
+            new Operation("link_finding", "cited_whole", typeof(LinkFinding), nameof(LinkFinding.CitedWhole),
+                e =>
+                {
+                    var keys = new List<string>();
+                    foreach (var k in e.GetProperty("terms").EnumerateArray()) keys.Add(k.GetString()!);
+                    List<string>? refused = null;
+                    if (e.TryGetProperty("unlinked", out var u) && u.ValueKind == JsonValueKind.Array)
+                    {
+                        refused = new List<string>();
+                        foreach (var k in u.EnumerateArray()) refused.Add(k.GetString()!);
+                    }
+                    return LinkFinding.CitedWhole(TermIndex.OfKeys(keys), Str(e, "words") ?? "", refused);
+                }),
             new Operation("link_finding", "cites", typeof(LinkFinding), nameof(LinkFinding.Cites),
                 e =>
                 {
@@ -420,6 +433,19 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => LineEndings.ToLf(Str(e, "text"))),
             new Operation("line_endings", "of_line", typeof(LineEndings), nameof(LineEndings.Of),
                 e => FullLine(LineEndings.Of(LineRequired(e, "line")))),
+
+            // ── selection_action ────────────────────────────────────────────────────────
+            new Operation("selection_action", "for", typeof(SelectionAction), nameof(SelectionAction.For),
+                e =>
+                {
+                    var keys = new List<string>();
+                    foreach (var k in e.GetProperty("terms").EnumerateArray()) keys.Add(k.GetString()!);
+                    var choice = SelectionAction.For(Str(e, "words"), LineLookup(e, "file"), Int(e, "file_format", 2), keys.Count == 0 ? null : TermIndex.OfKeys(keys));
+                    if (!choice.HasValue) return null;
+                    var result = new Dictionary<string, object?> { ["action"] = choice.Value.Action, ["key"] = choice.Value.Key };
+                    if (choice.Value.Existing.HasValue) result["existing"] = TermEditJson.Present(choice.Value.Existing.Value);
+                    return result;
+                }),
 
             // ── term_edit ─────────────────────────────────────────────────────
             new Operation("term_edit", "open", typeof(TermEdit), nameof(TermEdit.Open),
