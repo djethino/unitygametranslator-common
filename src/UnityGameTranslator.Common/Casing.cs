@@ -25,6 +25,64 @@ namespace UnityGameTranslator.Common
         /// <summary>The text with its first letter written as a small letter; the very same string when nothing changes.</summary>
         public static string? LowerFirst(string? text) => MapFirst(text, SmallKeys, SmallValues);
 
+        /// <summary>
+        /// The WHOLE text written in small letters: every code point replaced by its SIMPLE lower case (UnicodeData's, one code point to
+        /// one, the project's Unicode version), never the runtime's and with no rule of any language; the very same string when nothing
+        /// changes. Its length in UTF-16 units is the text's (no small letter lies in another plane than its capital).
+        ///
+        /// 🔴 What « simple » means, written out — the same reading as <see cref="Names"/>, which folds to capitals:
+        /// · a capital with no small letter of its own, or one that crosses ASCII, stays as it is: « İ » (U+0130) stays « İ » (its small
+        ///   letter is an ASCII « i », and the Turkish pair is not an ASCII one), the Kelvin sign « K » (U+212A) stays itself — so that
+        ///   two texts that <see cref="Names"/> keeps apart because of such a pair stay apart here too;
+        /// · « Σ » is always « σ »: no final-sigma rule (that one depends on the neighbours — a language's rule), « ΟΔΟΣ » gives « οδοσ »;
+        /// · « ẞ » (U+1E9E) gives « ß »; a titlecase digraph « ǅ » gives « ǆ »; « ß » stays « ß » (it is already small);
+        /// · a letter the runtime has not heard of yet (the Garay capitals of Unicode 16) is lowered all the same.
+        ///
+        /// The capital form of a whole text is <see cref="Names.Fold(string)"/>: the same table the names are compared by, so there is no
+        /// <c>Casing.Upper</c> — a second door to the same rule.
+        /// </summary>
+        public static string? Lower(string? text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+            char[]? lowered = null;
+            for (int i = 0; i < text!.Length; i++)
+            {
+                char c = text[i];
+                int cp = c;
+                bool pair = char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]);
+                if (pair) cp = char.ConvertToUtf32(c, text[i + 1]);
+                int small = SimpleLower(cp);
+                if (small != cp)
+                {
+                    lowered ??= text.ToCharArray();
+                    if (small > 0xFFFF)
+                    {
+                        string two = char.ConvertFromUtf32(small);
+                        lowered[i] = two[0];
+                        lowered[i + 1] = two[1];
+                    }
+                    else lowered[i] = (char)small;
+                }
+                if (pair) i++;
+            }
+            return lowered == null ? text : new string(lowered);
+        }
+
+        private static int SimpleLower(int codePoint)
+        {
+            if (codePoint < 0x80) return codePoint >= 'A' && codePoint <= 'Z' ? codePoint + 32 : codePoint;
+            int lo = 0, hi = SimpleLowerFrom.Length - 1;
+            while (lo <= hi)
+            {
+                int mid = (lo + hi) >> 1;
+                int at = SimpleLowerFrom[mid];
+                if (codePoint < at) hi = mid - 1;
+                else if (codePoint > at) lo = mid + 1;
+                else return SimpleLowerTo[mid];
+            }
+            return codePoint;
+        }
+
         /// <summary>Every entry of a table, in order: what the checks hold equal to corpus/data/first-letter.json.</summary>
         internal static System.Collections.Generic.IReadOnlyList<System.Collections.Generic.KeyValuePair<int, string>> Entries(bool capital)
         {

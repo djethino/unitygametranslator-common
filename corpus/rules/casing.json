@@ -4,7 +4,8 @@
   "note": "The case of the FIRST letter of a text, language-independent (spec/translation-file/casing.md): the first code point only; Unicode's simple mapping with SpecialCasing's unconditional ones laid over it; a capital is the titlecase, else the uppercase; a first character with no case leaves the text as it is. Unicode version: Casing.UnicodeVersion, equal to the mod's. The tables a port reads are corpus/data/first-letter.json.",
   "operations": {
     "upper_first": {"in": {"text": "string or null"}, "out": "the text with its first letter as a capital"},
-    "lower_first": {"in": {"text": "string or null"}, "out": "the text with its first letter as a small letter"}
+    "lower_first": {"in": {"text": "string or null"}, "out": "the text with its first letter as a small letter"},
+    "lower": {"in": {"text": "string or null"}, "out": "the WHOLE text in small letters: each code point its SIMPLE lower case (UnicodeData field 13), none crossing ASCII"}
   },
   "cases": [
     { "id": "casing/upper_first/plain-latin", "op": "upper_first",
@@ -150,6 +151,21 @@
     { "id": "casing/lower_first/null", "op": "lower_first",
       "in": {"text": null},
       "out": null,
-      "why": "no text stays no text" }
+      "why": "no text stays no text" },
+    {"id": "casing/lower/ascii", "op": "lower", "in": {"text": "Hello World_12"}, "out": "hello world_12", "why": "every letter, the rest as it is"},
+    {"id": "casing/lower/accents", "op": "lower", "in": {"text": "ÉTÉ À Paris"}, "out": "été à paris", "why": "a letter with a diacritic has its own small letter"},
+    {"id": "casing/lower/no-final-sigma", "op": "lower", "in": {"text": "ΟΔΟΣ"}, "out": "οδοσ", "why": "the simple mapping has no final sigma (it depends on the neighbours — a language's rule): « Σ » is always « σ »; a JavaScript toLowerCase writes « οδος »"},
+    {"id": "casing/lower/dotted-capital-i-stays", "op": "lower", "in": {"text": "İSTANBUL"}, "out": "İstanbul", "why": "the small letter of « İ » is an ASCII « i »: nothing crosses ASCII, so it stays (like Names); the plain capital « I » gives « i »"},
+    {"id": "casing/lower/plain-i-has-no-turkish-rule", "op": "lower", "in": {"text": "ISTANBUL"}, "out": "istanbul", "why": "no language rule: « I » is « i », never « ı »"},
+    {"id": "casing/lower/kelvin-sign-stays", "op": "lower", "in": {"text": "Kelvin"}, "out": "Kelvin", "why": "the Kelvin sign's small letter is an ASCII « k »: it stays itself, as Names keeps it apart from « k » (the engine's ToLowerInvariant gives « k »)"},
+    {"id": "casing/lower/angstrom-sign", "op": "lower", "in": {"text": "Å"}, "out": "å", "why": "a compatibility capital whose small letter is not ASCII is lowered"},
+    {"id": "casing/lower/capital-sharp-s", "op": "lower", "in": {"text": "STRAẞE"}, "out": "straße", "why": "« ẞ » (U+1E9E) gives « ß »; a lone « ß » is already small and stays"},
+    {"id": "casing/lower/titlecase-digraph", "op": "lower", "in": {"text": "ǅ"}, "out": "ǆ", "why": "a digraph in title case gives the small digraph"},
+    {"id": "casing/lower/beyond-the-plane", "op": "lower", "in": {"text": "𐐀x"}, "out": "𐐨x", "why": "one code point, both halves of the pair moved together: the Deseret capital long I"},
+    {"id": "casing/lower/a-letter-the-runtime-may-not-know", "op": "lower", "in": {"text": "𐵐"}, "out": "𐵰", "why": "a Garay capital (Unicode 16): the table is the project's version, never the runtime's of whoever runs it"},
+    {"id": "casing/lower/no-case-at-all", "op": "lower", "in": {"text": "日本語 123"}, "out": "日本語 123", "why": "the very same text"},
+    {"id": "casing/lower/already-small", "op": "lower", "in": {"text": "déjà vu"}, "out": "déjà vu", "why": "the very same text"},
+    {"id": "casing/lower/empty", "op": "lower", "in": {"text": ""}, "out": "", "why": "nothing"},
+    {"id": "casing/lower/null", "op": "lower", "in": {"text": null}, "out": null, "why": "no text stays no text"}
   ]
 }

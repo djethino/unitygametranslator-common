@@ -262,6 +262,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => Casing.UpperFirst(Str(e, "text"))),
             new Operation("casing", "lower_first", typeof(Casing), nameof(Casing.LowerFirst),
                 e => Casing.LowerFirst(Str(e, "text"))),
+            new Operation("casing", "lower", typeof(Casing), nameof(Casing.Lower),
+                e => Casing.Lower(Str(e, "text"))),
 
             // ── word_glue / link_finding ──────────────────────────────────────
             new Operation("link_finding", "written_in", typeof(LinkFinding), nameof(LinkFinding.WrittenIn),

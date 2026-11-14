@@ -17,8 +17,40 @@ namespace UnityGameTranslator.Common.Checks
     /// </summary>
     internal static class CasingChecks
     {
+        /// <summary>
+        /// <see cref="Casing.Lower"/> over every code point of Unicode: one code point to one (the length in UTF-16 units is kept, a position
+        /// in the text is a position in its small form), never across ASCII, idempotent. And where the runtime differs, said — the Kelvin
+        /// sign (the engine writes « k »), which is by rule; the count of letters it does not know yet is printed, never asserted (a newer
+        /// .NET will know more, and that is not a failure of ours).
+        /// </summary>
+        private static void Whole(Action<bool, string, string> check)
+        {
+            int changed = 0, lengthMoved = 0, crossed = 0, notIdempotent = 0, engineDiffers = 0;
+            for (int cp = 0; cp <= 0x10FFFF; cp++)
+            {
+                if (cp >= 0xD800 && cp <= 0xDFFF) continue;
+                string text = char.ConvertFromUtf32(cp);
+                string small = Casing.Lower(text)!;
+                if (small == text) { if (!string.Equals(text.ToLowerInvariant(), text, StringComparison.Ordinal)) engineDiffers++; continue; }
+                changed++;
+                if (small.Length != text.Length) lengthMoved++;
+                if ((cp < 0x80) != (char.ConvertToUtf32(small, 0) < 0x80)) crossed++;
+                if (!string.Equals(Casing.Lower(small), small, StringComparison.Ordinal)) notIdempotent++;
+                if (!string.Equals(text.ToLowerInvariant(), small, StringComparison.Ordinal)) engineDiffers++;
+            }
+            Console.WriteLine($"    Casing.Lower: {changed} code points change; the runtime ({System.Environment.Version}) answers otherwise for {engineDiffers}");
+            check(changed > 1400, $"Lower changes {changed} code points", "a table of what changes");
+            check(lengthMoved == 0, "one code point to one: no length moves", lengthMoved + " moved");
+            check(crossed == 0, "no letter crosses ASCII, in either direction", crossed + " crossed");
+            check(notIdempotent == 0, "a text already in small letters is left as it is", notIdempotent + " changed twice");
+            check(string.Equals("K".ToLowerInvariant(), "k", StringComparison.Ordinal) && Casing.Lower("K") == "K",
+                "the Kelvin sign stays itself where the runtime writes « k »", "by rule: Names keeps it apart from « k » too");
+        }
+
         public static void Run(Action<bool, string, string> check, string? commonRoot)
         {
+            Whole(check);
+
             check(commonRoot != null, "the library's folder is found", "the data is read from it");
             if (commonRoot == null) return;
 
