@@ -186,7 +186,7 @@ namespace UnityGameTranslator.Common.UnityFiles
                 text.Append(Relative(dataFolder, file)).Append('|').Append(info.Length).Append('|').Append(info.LastWriteTimeUtc.Ticks).Append('\n');
             }
             using (var sha = SHA256.Create())
-                return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(text.ToString()))).Replace("-", "").ToLowerInvariant();
+                return Ascii.Lower(BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(text.ToString()))).Replace("-", ""));
         }
 
         /// <summary>The version written in globalgamemanagers, mainData or data.unity3d — the game's own.</summary>
@@ -333,7 +333,7 @@ namespace UnityGameTranslator.Common.UnityFiles
                 switch (parts[0])
                 {
                     case "stamp" when parts.Length == 2: index.Stamp = parts[1]; break;
-                    case "font" when parts.Length >= 6 && long.TryParse(parts[3], out var pathId) && int.TryParse(parts[4], out var length):
+                    case "font" when parts.Length >= 6 && long.TryParse(parts[3], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var pathId) && int.TryParse(parts[4], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var length):
                         var names = new List<string>();
                         for (int k = 6; k < parts.Length; k++) names.Add(Unescape(parts[k]));
                         string inner = Unescape(parts[2]);

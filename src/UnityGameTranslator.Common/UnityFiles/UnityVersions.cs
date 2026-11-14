@@ -20,13 +20,13 @@ namespace UnityGameTranslator.Common.UnityFiles
             if (string.IsNullOrEmpty(text)) return 0;
             var parts = text!.TrimSpaces().Split('.');
             if (parts.Length < 3) return 0;
-            if (!ushort.TryParse(parts[0], out var major) || !ushort.TryParse(parts[1], out var minor)) return 0;
+            if (!ushort.TryParse(parts[0], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var major) || !ushort.TryParse(parts[1], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var minor)) return 0;
 
             // "27f1" (or "27f1c1" on Unity's China builds): the patch, the kind letter, its number.
             string tail = parts[2];
             int i = 0;
-            while (i < tail.Length && char.IsDigit(tail[i])) i++;
-            if (i == 0 || !ushort.TryParse(tail.Substring(0, i), out var patch)) return 0;
+            while (i < tail.Length && tail[i] >= '0' && tail[i] <= '9') i++;
+            if (i == 0 || !ushort.TryParse(tail.Substring(0, i), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var patch)) return 0;
             ulong kind = 3, number = 0;   // no letter: a final release
             if (i < tail.Length)
             {
@@ -34,8 +34,8 @@ namespace UnityGameTranslator.Common.UnityFiles
                 if (k < 0) return 0;
                 kind = (ulong)k;
                 int j = i + 1;
-                while (j < tail.Length && char.IsDigit(tail[j])) j++;
-                if (j > i + 1 && byte.TryParse(tail.Substring(i + 1, j - i - 1), out var n)) number = n;
+                while (j < tail.Length && tail[j] >= '0' && tail[j] <= '9') j++;
+                if (j > i + 1 && byte.TryParse(tail.Substring(i + 1, j - i - 1), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var n)) number = n;
             }
             if (major == 0 && minor == 0 && patch == 0) return 0;
             return ((ulong)major << 48) | ((ulong)minor << 32) | ((ulong)patch << 16) | (kind << 8) | number;

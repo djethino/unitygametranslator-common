@@ -20,8 +20,4 @@ Placeholders.cs	CharUnicodeInfo	9
 Placeholders.cs	char.Is*	1
 TranslationFiles.cs	OrdinalIgnoreCase	1
 UnityFiles/GameFonts.cs	OrdinalIgnoreCase	1
-UnityFiles/GameFonts.cs	ToUpper/ToLower	1
 UnityFiles/GameFonts.cs	char.Is*	1
-UnityFiles/GameFonts.cs	parse without a culture	2
-UnityFiles/UnityVersions.cs	char.Is*	2
-UnityFiles/UnityVersions.cs	parse without a culture	1
