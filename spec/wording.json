@@ -462,6 +462,86 @@
       "text": "Not available: this term is not a text of the file.",
       "site": "editor.translate_ai_no_line",
       "carried_by": "TermZone (TranslateReason): one of the reasons the button is greyed; the label is bound and the code chooses the sentence"
+    },
+    "ai.refusal_off": {
+      "text": "Translations are off. Turn them on in Mod Options.",
+      "site": null,
+      "why": "only the mod says it: the site has no such button to grey",
+      "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text"
+    },
+    "ai.refusal_offline": {
+      "text": "This translation backend needs Online Mode. Turn it on in Mod Options.",
+      "site": null,
+      "why": "only the mod says it: the site has no such button to grey",
+      "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text"
+    },
+    "ai.refusal_presentation_forms": {
+      "text": "This text is already shaped for display.",
+      "site": null,
+      "why": "only the mod says it: the site has no such button to grey",
+      "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text"
+    },
+    "ai.refusal_numeric_or_symbol": {
+      "text": "Nothing to translate. This text has only numbers and symbols.",
+      "site": null,
+      "why": "only the mod says it: the site has no such button to grey",
+      "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text"
+    },
+    "ai.refusal_template": {
+      "text": "The game builds this text itself.",
+      "site": null,
+      "why": "only the mod says it: the site has no such button to grey",
+      "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text"
+    },
+    "ai.refusal_too_long": {
+      "text": "This text is too long to translate.",
+      "site": null,
+      "why": "only the mod says it: the site has no such button to grey",
+      "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text"
+    },
+    "ai.refusal_already_target": {
+      "text": "This text is already in the target language.",
+      "site": null,
+      "why": "only the mod says it: the site has no such button to grey",
+      "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text"
+    },
+    "ai.ask_hover": {
+      "text": "Ask the AI for another translation. Nothing is written until you save.",
+      "site": null,
+      "why": "the site's wand says what it is (edit_session.retranslate), not that the answer waits: here it waits for Save (H)",
+      "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text"
+    },
+    "ai.ask_hover_term": {
+      "text": "Ask the AI for another translation. Nothing is written until you apply.",
+      "site": null,
+      "why": "the same fact for the term zone, whose act is Apply",
+      "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text"
+    },
+    "ai.asking": {
+      "text": "Asking the AI for another translation...",
+      "site": null,
+      "why": "the site says the same fact in edit_session.retranslating (« Re-translating… »); the mod's register writes three dots as its other fields do",
+      "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text"
+    },
+    "ai.same_answer": {
+      "text": "The AI gave the same translation again. Nothing to change.",
+      "site": null,
+      "why": "the site says this fact in edit_session.retranslate_unchanged with a dash; the shared text is the site's words with a full stop for the dash",
+      "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text",
+      "site_would_be": "edit_session.retranslate_unchanged"
+    },
+    "ai.nothing_usable": {
+      "text": "The AI returned nothing. The line is untouched.",
+      "site": null,
+      "why": "the site says this fact in edit_session.retranslate_failed with a dash; the shared text is the site's words with a full stop for the dash",
+      "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text",
+      "site_would_be": "edit_session.retranslate_failed"
+    },
+    "ai.door_refused": {
+      "text": "Could not ask the AI. Check the translation backend in Mod Options.",
+      "site": null,
+      "why": "only the mod says it: the site has no such button to grey",
+      "carried_by": "Engine/AiRefusal.cs (AiAsk): said by code, in the mod's own bound labels and its status line — the mod's checks hold the constants to this text"
     }
   }
 }
