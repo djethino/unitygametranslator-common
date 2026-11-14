@@ -566,7 +566,7 @@ namespace UnityGameTranslator.Common
         {
             var here = game.ExistingSha256(asset.Kind, asset.Name);
             return here == null ? AssetChange.Add
-                : string.Equals(here, asset.Sha256, StringComparison.OrdinalIgnoreCase) ? AssetChange.Same
+                : Ascii.EqualsIgnoreCase(here, asset.Sha256) ? AssetChange.Same
                 : AssetChange.Replace;
         }
 

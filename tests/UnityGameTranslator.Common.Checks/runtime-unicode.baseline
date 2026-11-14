@@ -3,7 +3,7 @@
 Answers.cs	RegexOptions.IgnoreCase	3
 Answers.cs	regex class (d s w b)	4
 AssetPackWriter.cs	OrdinalIgnoreCase	3
-AssetPlanner.cs	OrdinalIgnoreCase	12
+AssetPlanner.cs	OrdinalIgnoreCase	11
 Backups.cs	OrdinalIgnoreCase	1
 FontFileNames.cs	OrdinalIgnoreCase	2
 GameCandidates.cs	OrdinalIgnoreCase	3
