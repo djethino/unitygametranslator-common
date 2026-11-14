@@ -1,0 +1,641 @@
+{
+ "rule": "negotiation",
+ "classes": [
+  "Negotiation"
+ ],
+ "note": "Finding out what a provider accepts, by being refused (spec/translation-file is not concerned: this is the request's shape). `run` plays a script on ONE negotiation (new, for the provider `http://server|model`): a step is a refusal `{refusal, structured}` (the body of a 400/422; `structured` = the request carried a response format), a `{forget: providerAndModel}`, or a `{look}`; each answers the state after it (and, for a refusal, `concession`: Made | ResponseFormat | NothingLeft). Words observed, not designed: the cap, the seed and the temperature are the ones the original refusals named (OpenAI-style wording quoted in the first checks); the response format's (`response_format`, `json_schema`) come from the Manager's stand-in server only — no real server's refusal has been captured yet. What is kept (the cap's field, a dropped temperature, a dropped seed, the reasoning rung) is forgotten when the provider or the model changes; a refusal of the response format is never kept.",
+ "operations": {
+  "run": {
+   "in": {
+    "steps": "[{refusal, structured?} | {forget} | {look}]"
+   },
+   "out": "[state after each step: {token_field, send_temperature, send_seed, reasoning_effort}, plus `concession` for a refusal]"
+  },
+  "is_about_our_request": {
+   "in": {
+    "status": "int"
+   },
+   "out": "bool"
+  }
+ },
+ "cases": [
+  {
+   "id": "negotiation/run/the-first-request",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "look": true
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "none"
+    }
+   ],
+   "why": "the cap goes in max_tokens (every compatible server understands it; the newer name is accepted and IGNORED by some), temperature is sent, a seed may be sent (only a retranslation asks for one), reasoning is asked to stand down: the best rung"
+  },
+  {
+   "id": "negotiation/run/the-server-names-the-cap",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "Unsupported parameter: use max_completion_tokens",
+      "structured": false
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_completion_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "Made"
+    }
+   ],
+   "why": "the field the server NAMED is what changes, and the reasoning rung is not touched: one variable per attempt or we learn nothing"
+  },
+  {
+   "id": "negotiation/run/the-server-names-the-temperature",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "temperature does not support 0.0 with this model",
+      "structured": false
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": false,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "Made"
+    }
+   ],
+   "why": "a refused temperature is dropped, its own default applies, and the line still gets translated; the seed is kept — it was not named"
+  },
+  {
+   "id": "negotiation/run/the-server-names-the-seed",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "Unrecognized request argument supplied: seed",
+      "structured": false
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": false,
+     "reasoning_effort": "none",
+     "concession": "Made"
+    }
+   ],
+   "why": "a refused seed is dropped and the temperature kept: the variation comes from the temperature, the seed only makes it reproducible where honoured"
+  },
+  {
+   "id": "negotiation/run/nothing-named-walks-the-ladder",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "bad request",
+      "structured": false
+     },
+     {
+      "refusal": "bad request",
+      "structured": false
+     },
+     {
+      "refusal": "bad request",
+      "structured": false
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "low",
+     "concession": "Made"
+    },
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": null,
+     "concession": "Made"
+    },
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": null,
+     "concession": "NothingLeft"
+    }
+   ],
+   "why": "with nothing named reasoning steps down (none, low), then the field goes away entirely (some models reject the parameter outright), then there is nothing left: the failure was never about our parameters"
+  },
+  {
+   "id": "negotiation/run/three-concessions-on-one-unhappy-model",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "max_completion_tokens is required",
+      "structured": false
+     },
+     {
+      "refusal": "temperature is not supported",
+      "structured": false
+     },
+     {
+      "refusal": "reasoning_effort invalid",
+      "structured": false
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_completion_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "Made"
+    },
+    {
+     "token_field": "max_completion_tokens",
+     "send_temperature": false,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "Made"
+    },
+    {
+     "token_field": "max_completion_tokens",
+     "send_temperature": false,
+     "send_seed": true,
+     "reasoning_effort": "low",
+     "concession": "Made"
+    }
+   ],
+   "why": "each concession costs something, none of them costs the answer"
+  },
+  {
+   "id": "negotiation/run/a-change-of-provider-forgets-everything",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "temperature is not supported",
+      "structured": false
+     },
+     {
+      "forget": "http://elsewhere|other-model"
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": false,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "Made"
+    },
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "none"
+    }
+   ],
+   "why": "what one server accepts says nothing about the next, and carrying it over degrades a model that never needed it"
+  },
+  {
+   "id": "negotiation/run/the-same-pair-keeps-what-it-learned",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "temperature is not supported",
+      "structured": false
+     },
+     {
+      "forget": "http://server|model"
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": false,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "Made"
+    },
+    {
+     "token_field": "max_tokens",
+     "send_temperature": false,
+     "send_seed": true,
+     "reasoning_effort": "none"
+    }
+   ],
+   "why": "otherwise every line would pay for the same discovery"
+  },
+  {
+   "id": "negotiation/run/a-schema-refusal-alone-is-said-not-conceded",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "Unsupported parameter: response_format",
+      "structured": true
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "ResponseFormat"
+    }
+   ],
+   "why": "🔴 a refusal of the SHAPE of the answer is not a reasoning refusal: nothing is given up and nothing changes — the caller says it"
+  },
+  {
+   "id": "negotiation/run/a-schema-refusal-is-never-remembered",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "Unsupported parameter: response_format",
+      "structured": true
+     },
+     {
+      "refusal": "Unsupported parameter: response_format",
+      "structured": true
+     },
+     {
+      "refusal": "Unsupported parameter: response_format",
+      "structured": true
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "ResponseFormat"
+    },
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "ResponseFormat"
+    },
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "ResponseFormat"
+    }
+   ],
+   "why": "asked again, the same answer and the same state: the class keeps nothing about it, so no later question is spared a request by it and none has to reopen it"
+  },
+  {
+   "id": "negotiation/run/a-schema-refusal-leaves-an-ordinary-question-alone",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "Unsupported parameter: response_format",
+      "structured": true
+     },
+     {
+      "look": true
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "ResponseFormat"
+    },
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "none"
+    }
+   ],
+   "why": "the next question, without a format, goes out as the first one did"
+  },
+  {
+   "id": "negotiation/run/the-other-spelling-and-any-case",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "Invalid JSON_SCHEMA",
+      "structured": true
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "ResponseFormat"
+    }
+   ],
+   "why": "`json_schema` as well as `response_format`, whatever the case"
+  },
+  {
+   "id": "negotiation/run/a-schema-refusal-of-a-request-with-none-walks-the-ladder",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "Unsupported parameter: response_format",
+      "structured": false
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "low",
+     "concession": "Made"
+    }
+   ],
+   "why": "we sent no format: a body naming one says nothing we can give up but the reasoning, as before"
+  },
+  {
+   "id": "negotiation/run/reasoning-named-in-a-structured-request",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "reasoning_effort is not supported",
+      "structured": true
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "low",
+     "concession": "Made"
+    }
+   ],
+   "why": "the reasoning is named: it is conceded, structured or not"
+  },
+  {
+   "id": "negotiation/run/nothing-named-in-a-structured-request",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "bad request",
+      "structured": true
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "low",
+     "concession": "Made"
+    }
+   ],
+   "why": "the descent of today"
+  },
+  {
+   "id": "negotiation/run/the-schema-and-the-reasoning-named-together",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "response_format is not supported together with reasoning_effort",
+      "structured": true
+     },
+     {
+      "refusal": "Unsupported parameter: response_format",
+      "structured": true
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "low",
+     "concession": "Made"
+    },
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "low",
+     "concession": "ResponseFormat"
+    }
+   ],
+   "why": "the named reasoning goes first (one change per attempt); the next refusal, naming only the format, is said"
+  },
+  {
+   "id": "negotiation/run/the-schema-and-the-reasoning-with-no-rung-left",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "bad request",
+      "structured": false
+     },
+     {
+      "refusal": "bad request",
+      "structured": false
+     },
+     {
+      "refusal": "response_format is not supported together with reasoning_effort",
+      "structured": true
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "low",
+     "concession": "Made"
+    },
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": null,
+     "concession": "Made"
+    },
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": null,
+     "concession": "ResponseFormat"
+    }
+   ],
+   "why": "no reasoning left to give up: the format is what is left to say"
+  },
+  {
+   "id": "negotiation/run/the-schema-and-the-cap-named-together",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "response_format is not supported; use max_completion_tokens",
+      "structured": true
+     },
+     {
+      "refusal": "Unsupported parameter: response_format",
+      "structured": true
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_completion_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "Made"
+    },
+    {
+     "token_field": "max_completion_tokens",
+     "send_temperature": true,
+     "send_seed": true,
+     "reasoning_effort": "none",
+     "concession": "ResponseFormat"
+    }
+   ],
+   "why": "a field we may still give up and the server named comes first; then the format alone is said"
+  },
+  {
+   "id": "negotiation/run/the-schema-and-the-seed-named-together",
+   "op": "run",
+   "in": {
+    "steps": [
+     {
+      "refusal": "response_format and seed are not supported together",
+      "structured": true
+     },
+     {
+      "refusal": "response_format and seed are not supported together",
+      "structured": true
+     }
+    ]
+   },
+   "out": [
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": false,
+     "reasoning_effort": "none",
+     "concession": "Made"
+    },
+    {
+     "token_field": "max_tokens",
+     "send_temperature": true,
+     "send_seed": false,
+     "reasoning_effort": "none",
+     "concession": "ResponseFormat"
+    }
+   ],
+   "why": "the seed is already gone: what is named again is the format"
+  },
+  {
+   "id": "negotiation/is_about_our_request/400",
+   "op": "is_about_our_request",
+   "in": {
+    "status": 400
+   },
+   "out": true,
+   "why": "the server read it and would not have it"
+  },
+  {
+   "id": "negotiation/is_about_our_request/422",
+   "op": "is_about_our_request",
+   "in": {
+    "status": 422
+   },
+   "out": true,
+   "why": "the same"
+  },
+  {
+   "id": "negotiation/is_about_our_request/401",
+   "op": "is_about_our_request",
+   "in": {
+    "status": 401
+   },
+   "out": false,
+   "why": "a wrong key says nothing about our parameters: giving up temperature because a server was down would degrade every later line"
+  },
+  {
+   "id": "negotiation/is_about_our_request/404",
+   "op": "is_about_our_request",
+   "in": {
+    "status": 404
+   },
+   "out": false,
+   "why": "a wrong address says nothing about our parameters: giving up temperature because a server was down would degrade every later line"
+  },
+  {
+   "id": "negotiation/is_about_our_request/429",
+   "op": "is_about_our_request",
+   "in": {
+    "status": 429
+   },
+   "out": false,
+   "why": "a rate limit says nothing about our parameters: giving up temperature because a server was down would degrade every later line"
+  },
+  {
+   "id": "negotiation/is_about_our_request/500",
+   "op": "is_about_our_request",
+   "in": {
+    "status": 500
+   },
+   "out": false,
+   "why": "an outage says nothing about our parameters: giving up temperature because a server was down would degrade every later line"
+  }
+ ]
+}

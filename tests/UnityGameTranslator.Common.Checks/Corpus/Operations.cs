@@ -365,6 +365,31 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("line_edit", "tag_after_person", typeof(LineEditing), nameof(LineEditing.TagAfterPerson),
                 e => LineEditing.TagAfterPerson(Str(e, "stored"))),
 
+            // ── negotiation ────────────────────────────────────────────────────────
+            new Operation("negotiation", "run", typeof(Negotiation), new[] { nameof(Negotiation.ForgetIfChanged), nameof(Negotiation.Concede) },
+                e =>
+                {
+                    var negotiation = new Negotiation();
+                    negotiation.ForgetIfChanged("http://server|model");
+                    var states = new List<object?>();
+                    foreach (var step in e.GetProperty("steps").EnumerateArray())
+                    {
+                        var map = new Dictionary<string, object?>();
+                        if (step.TryGetProperty("refusal", out var refusal))
+                            map["concession"] = negotiation.Concede(refusal.GetString(), Bool(step, "structured"), out _).ToString();
+                        else if (step.TryGetProperty("forget", out var forget))
+                            negotiation.ForgetIfChanged(forget.GetString()!);
+                        map["token_field"] = negotiation.TokenField;
+                        map["send_temperature"] = negotiation.SendTemperature;
+                        map["send_seed"] = negotiation.SendSeed;
+                        map["reasoning_effort"] = negotiation.ReasoningEffort;
+                        states.Add(map);
+                    }
+                    return states;
+                }),
+            new Operation("negotiation", "is_about_our_request", typeof(Negotiation), nameof(Negotiation.IsAboutOurRequest),
+                e => Negotiation.IsAboutOurRequest(Int(e, "status"))),
+
             // ── template_uses ──────────────────────────────────────────────────────
             new Operation("template_uses", "key", typeof(TemplateUses), nameof(TemplateUses.Key),
                 e => TemplateUses.Key(Str(e, "template_id")!, Str(e, "list")!)),

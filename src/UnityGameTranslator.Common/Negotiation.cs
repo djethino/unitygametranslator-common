@@ -2,6 +2,22 @@ using System;
 
 namespace UnityGameTranslator.Common
 {
+    /// <summary>What <see cref="Negotiation.Concede(string, bool, out string)"/> did with a refusal.</summary>
+    public enum Concession
+    {
+        /// <summary>One thing was given up: send the request again, changed by exactly that.</summary>
+        Made,
+
+        /// <summary>
+        /// The refusal is about the SHAPE of the answer asked for (a response format, a schema), not about a parameter we may give up.
+        /// Nothing was conceded and nothing is remembered: the caller says it, and the next question asks again.
+        /// </summary>
+        ResponseFormat,
+
+        /// <summary>Nothing left to give up: the failure was never about our parameters.</summary>
+        NothingLeft,
+    }
+
     /// <summary>
     /// Finding out what a provider will actually accept, by being refused.
     ///
@@ -115,6 +131,33 @@ namespace UnityGameTranslator.Common
         /// </summary>
         /// <param name="reason">What was given up and why, for whoever keeps a log.</param>
         public bool Concede(string errorBody, out string reason)
+            => Concede(errorBody, false, out reason) == Concession.Made;
+
+        /// <summary>
+        /// Words of a refusal that name the SHAPE of the answer asked for. ⚠ Observed, not designed: the only text that has said them is the
+        /// Manager's stand-in server (« Unsupported parameter: response_format »); no real server's refusal has been captured yet. A new
+        /// spelling is added here when one is — with the server that said it.
+        /// </summary>
+        private static readonly string[] ResponseFormatWords = { "response_format", "json_schema" };
+
+        /// <summary>Words that name the reasoning (`reasoning_effort`, and the word a server may use for it).</summary>
+        private const string ReasoningWord = "reasoning";
+
+        /// <summary>
+        /// <see cref="Concede(string, out string)"/> for a request that carries a response format (<paramref name="structured"/>).
+        ///
+        /// 🔴 Order: a field the server NAMED and we may still give up (the cap's name, the seed, the temperature) first; then the shape of the
+        /// answer — a refusal that names the response format and not the reasoning (or names it when no reasoning rung is left) is
+        /// <see cref="Concession.ResponseFormat"/>: nothing is given up, because walking down the reasoning ladder over a question about the
+        /// shape of the answer costs requests and quality for nothing; then the ladder, as before.
+        ///
+        /// ⚠ A refusal of the response format is NEVER remembered: this class keeps nothing about it, so no later question is spared the
+        /// request by it, and nothing needs to reopen it. What it keeps (the cap's field, a dropped temperature, a dropped seed, the rung) is
+        /// forgotten when the provider or the model changes (<see cref="ForgetIfChanged"/>).
+        ///
+        /// A request with no response format (<paramref name="structured"/> false) never gets <see cref="Concession.ResponseFormat"/>: we sent none.
+        /// </summary>
+        public Concession Concede(string errorBody, bool structured, out string reason)
         {
             string body = errorBody ?? string.Empty;
 
@@ -123,7 +166,7 @@ namespace UnityGameTranslator.Common
             {
                 _useMaxCompletionTokens = true;
                 reason = "provider wants max_completion_tokens instead of max_tokens";
-                return true;
+                return Concession.Made;
             }
 
             // Before the temperature, deliberately: a body naming both costs us the variation itself
@@ -132,26 +175,41 @@ namespace UnityGameTranslator.Common
             {
                 _omitSeed = true;
                 reason = "provider rejects a seed — dropping it, the temperature still varies the answer";
-                return true;
+                return Concession.Made;
             }
 
             if (!_omitTemperature && Ascii.IndexOfIgnoreCase(body, "temperature") >= 0)
             {
                 _omitTemperature = true;
                 reason = "provider rejects our temperature — dropping it, its own default applies";
-                return true;
+                return Concession.Made;
             }
 
-            if (_rung + 1 < EffortLadder.Length)
+            bool rungLeft = _rung + 1 < EffortLadder.Length;
+            if (structured && NamesResponseFormat(body)
+                && !(rungLeft && Ascii.IndexOfIgnoreCase(body, ReasoningWord) >= 0))
+            {
+                reason = "the server refuses the response format asked for — nothing to give up, and nothing remembered";
+                return Concession.ResponseFormat;
+            }
+
+            if (rungLeft)
             {
                 _rung++;
                 reason = EffortLadder[_rung] == null
                     ? "reasoning_effort rejected, sending no reasoning parameter at all"
                     : "reasoning_effort rejected, falling back to " + EffortLadder[_rung];
-                return true;
+                return Concession.Made;
             }
 
             reason = null;
+            return Concession.NothingLeft;
+        }
+
+        private static bool NamesResponseFormat(string body)
+        {
+            foreach (string word in ResponseFormatWords)
+                if (Ascii.IndexOfIgnoreCase(body, word) >= 0) return true;
             return false;
         }
     }
