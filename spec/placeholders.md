@@ -60,6 +60,11 @@ of a person's edit, the sentence is that one.
 | `tag_emptied` | `opening`, `closing` | a pair that styled words in the source styles none | `answer.tag_emptied` |
 | `tag_invented` | `tag` | a tag the answer wrote | `placeholder.invented`, the tag as the token |
 
+`Markup.KeptByEdit` (what a person's edit lost of the source's markup, in the mod's editor) says the SAME facts with the SAME words: a tag the edit
+lacks is a count of that tag (`placeholder.count`, the tag as the source wrote it, one fact however many times it lacks), a closing tag before
+its opening one is `answer.tag_order`, a pair that styles nothing any more `answer.tag_emptied`. Its fields hold the game's own tags (the
+person typed them), never tokens, so no `GameWords` is needed.
+
 ⚠ The list of the model is not the list of a person's edit (`EditFaults`): a person is not held to the count of brackets, nor to the letters
 between two values. The facts are shared; the lists are not.
 

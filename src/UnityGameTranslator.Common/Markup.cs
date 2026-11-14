@@ -305,9 +305,15 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
-        /// What a PERSON's edit lost of the source's markup, as lines read on a screen — the rules a
+        /// What a PERSON's edit lost of the source's markup, as FACTS a screen words — the rules a
         /// model's answer is held to (<see cref="OutOfOrder"/>, <see cref="Emptied"/>, every tag kept),
         /// on a line typed with its tags as they are written. Empty when it keeps them all.
+        ///
+        /// ⚠ One fact, one word: a tag the edit lacks is a COUNT of that tag (<see cref="PlaceholderFaultKind.Count"/>, the tag
+        /// as the source wrote it as the token — one fact for the tag however many times it is lacking), a closing tag before its
+        /// opening one is <see cref="AnswerFaultKind.TagOutOfOrder"/>, a pair that styles nothing any more
+        /// <see cref="AnswerFaultKind.TagEmptied"/>. Unlike an answer's, the fields hold the game's own tags (the person typed
+        /// them), never tokens.
         ///
         /// 🔴 **The developer's markup is the developer's intent** (user, 2026-10-04: "ne pas trahir ce
         /// que voulait le dev"). A model losing a tag was refused; a person retouching a line in the
@@ -317,9 +323,9 @@ namespace UnityGameTranslator.Common
         /// for. Each tag of the edit is matched to the same tag of the source (case aside, as rich
         /// text reads them), in order of appearance.
         /// </summary>
-        public static List<string> KeptByEdit(string source, string edited)
+        public static List<AnswerFault> KeptByEdit(string source, string edited)
         {
-            var errors = new List<string>();
+            var errors = new List<AnswerFault>();
             if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(edited)) return errors;
             Extract(source, out List<string> tags);
             if (tags.Count == 0) return errors;
@@ -346,7 +352,24 @@ namespace UnityGameTranslator.Common
             string edit = lifted.ToString();
 
             for (int i = 0; i < tags.Count; i++)
-                if (!used[i]) errors.Add($"{tags[i]} is missing: the source has it");
+            {
+                if (used[i]) continue;
+                // one fact for a tag however many times it is lacking, said at its first lacking occurrence
+                int expected = 0, found = 0;
+                bool first = true;
+                for (int j = 0; j < tags.Count; j++)
+                {
+                    if (!Names.Equals(tags[j], tags[i])) continue;
+                    expected++;
+                    if (used[j]) found++;
+                    else if (j < i) first = false;
+                }
+                if (first) errors.Add(new AnswerFault
+                {
+                    Kind = AnswerFaultKind.Placeholder,
+                    Placeholder = new PlaceholderFault { Kind = PlaceholderFaultKind.Count, Token = tags[i], Found = found, Expected = expected },
+                });
+            }
 
             string liftedSource = Extract(source, out _);
             int[] pairs = Pairs(tags);
@@ -357,9 +380,9 @@ namespace UnityGameTranslator.Common
                 string opening = PlaceholderPrefix + open + PlaceholderSuffix;
                 string closing = PlaceholderPrefix + close + PlaceholderSuffix;
                 if (edit.IndexOf(closing, System.StringComparison.Ordinal) < edit.IndexOf(opening, System.StringComparison.Ordinal))
-                    errors.Add($"{tags[close]} must come after {tags[open]}");
+                    errors.Add(new AnswerFault { Kind = AnswerFaultKind.TagOutOfOrder, Opening = tags[open], Closing = tags[close] });
                 else if (!string.IsNullOrEmpty(Between(liftedSource, opening, closing)) && Between(edit, opening, closing) == "")
-                    errors.Add($"Nothing between {tags[open]} and {tags[close]}: the source puts words there");
+                    errors.Add(new AnswerFault { Kind = AnswerFaultKind.TagEmptied, Opening = tags[open], Closing = tags[close] });
             }
             return errors;
         }

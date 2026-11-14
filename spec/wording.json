@@ -408,7 +408,7 @@
         "found",
         "expected"
       ],
-      "carried_by": "the mod's FailureWords (Failures tab), for a placeholder AND for a bracket of the whole text (AnswerFaultKind.Brackets, the bracket in quotes as the token): one fact, one sentence; through AnswerFaults.GameWords. The mod's EditChecks, if it says a placeholder fault as the site does",
+      "carried_by": "the mod's FailureWords (Failures tab), for a placeholder AND for a bracket of the whole text (AnswerFaultKind.Brackets, the bracket in quotes as the token): one fact, one sentence; through AnswerFaults.GameWords. The mod's EditChecks (ValidateEditedPlaceholders), for a placeholder AND for a tag a person's edit lacks (Markup.KeptByEdit: the tag as the source wrote it as the token, found and expected)",
       "fault": "count"
     },
     "placeholder.invented": {
@@ -462,7 +462,7 @@
         "closing",
         "opening"
       ],
-      "carried_by": "the mod's FailureWords (Failures tab): AnswerFaultKind.TagOutOfOrder, through AnswerFaults.GameWords (the game's own tags in place of the tokens). Markup.KeptByEdit says the same fact in other words: to move here in the next batch",
+      "carried_by": "the mod's FailureWords (Failures tab): AnswerFaultKind.TagOutOfOrder, through AnswerFaults.GameWords (the game's own tags in place of the tokens); and the mod's EditChecks (ValidateEditedPlaceholders) for Markup.KeptByEdit, whose facts hold the game's own tags",
       "fault": "tag_out_of_order"
     },
     "answer.tag_emptied": {
@@ -473,7 +473,7 @@
         "opening",
         "closing"
       ],
-      "carried_by": "the mod's FailureWords (Failures tab): AnswerFaultKind.TagEmptied, through AnswerFaults.GameWords. Markup.KeptByEdit says the same fact in other words: to move here in the next batch",
+      "carried_by": "the mod's FailureWords (Failures tab): AnswerFaultKind.TagEmptied, through AnswerFaults.GameWords; and the mod's EditChecks (ValidateEditedPlaceholders) for Markup.KeptByEdit, whose facts hold the game's own tags",
       "fault": "tag_emptied"
     },
     "edit.changes_waiting": {
