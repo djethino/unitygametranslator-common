@@ -152,7 +152,7 @@ namespace UnityGameTranslator.Common
 
             // Long enough to overflow is not a number we can rank; treating it as a word is safer
             // than wrapping around into a small one.
-            return int.TryParse(field, out value);
+            return int.TryParse(field, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out value);
         }
     }
 }

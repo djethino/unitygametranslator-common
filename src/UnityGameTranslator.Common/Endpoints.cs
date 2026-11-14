@@ -271,7 +271,7 @@ namespace UnityGameTranslator.Common
             {
                 string[] parts = host.Split('.');
                 int second;
-                if (parts.Length > 1 && int.TryParse(parts[1], out second)
+                if (parts.Length > 1 && int.TryParse(parts[1], System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out second)
                     && second >= 16 && second <= 31)
                 {
                     return Locality.YourNetwork;
