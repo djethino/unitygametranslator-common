@@ -29,7 +29,7 @@ Held by `corpus/rules/placeholders.json` (`Placeholders`). This file says what t
 SENTENCES (English, written for a model). A person is not a model, and two products said the same fact in two ways. The question now has one
 answer made of facts, and the sentences are derived from it:
 
-| kind | fields | meaning | the sentence a MODEL gets (`Placeholders.Say`) | what a PERSON reads (`spec/wording.json`) |
+| kind | fields | meaning | the sentence a MODEL gets (`Placeholders.ModelSentence`) | what a PERSON reads (`spec/wording.json`) |
 |---|---|---|---|---|
 | `sequence` | `sequence` | a placeholder with the delimiters the game wrapped round it (`({[!v*0]})`) comes back fewer times | the exact sequence "…" is missing or altered | `placeholder.sequence_missing` (site: `merge.placeholder_sequence_missing`) |
 | `count` | `token`, `found`, `expected` | a placeholder appears a number of times other than the source's | token … appears N time(s) instead of M | `placeholder.count` (`merge.placeholder_count`) |

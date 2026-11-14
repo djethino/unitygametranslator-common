@@ -36,7 +36,7 @@ namespace UnityGameTranslator.Common
 
     /// <summary>
     /// One thing wrong with a text against its source, as a FACT a screen words in its own language: what a person is told is the product's
-    /// wording (spec/wording.json, <c>placeholder.*</c>), what a model is told is <see cref="Placeholders.Say"/>.
+    /// wording (spec/wording.json, <c>placeholder.*</c>), what a model is told is <see cref="Placeholders.ModelSentence"/>.
     /// </summary>
     public struct PlaceholderFault
     {
@@ -442,7 +442,7 @@ namespace UnityGameTranslator.Common
                                                   List<string> frozen, out List<string> errors)
         {
             errors = new List<string>();
-            foreach (var fault in Faults(source, translation, frozen)) errors.Add(Say(fault));
+            foreach (var fault in Faults(source, translation, frozen)) errors.Add(ModelSentence(fault));
         }
 
         /// <summary>
@@ -480,9 +480,10 @@ namespace UnityGameTranslator.Common
 
         /// <summary>
         /// A fault in the words the model is sent on its next attempt: these lines go to the model, which is why they name the token and the
-        /// counts. Not what a person reads — a person reads the product's own wording (spec/wording.json).
+        /// counts. Not what a person reads — a person reads the product's own wording (spec/wording.json). Public so that a screen showing a stored
+        /// error (a failed attempt keeps the sentences it was refused with) can tell which of them are THESE and say them in its own words.
         /// </summary>
-        internal static string Say(PlaceholderFault fault)
+        public static string ModelSentence(PlaceholderFault fault)
         {
             switch (fault.Kind)
             {

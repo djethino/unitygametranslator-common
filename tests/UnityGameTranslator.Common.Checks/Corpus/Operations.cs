@@ -652,6 +652,20 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                     }
                     return (object?)fact;
                 }).ToList()),
+            new Operation("placeholders", "model_sentence", typeof(Placeholders), nameof(Placeholders.ModelSentence),
+                e =>
+                {
+                    var f = e.GetProperty("fault");
+                    string kind = Str(f, "kind")!;
+                    return Placeholders.ModelSentence(new PlaceholderFault
+                    {
+                        Kind = kind == "sequence" ? PlaceholderFaultKind.Sequence : kind == "count" ? PlaceholderFaultKind.Count : PlaceholderFaultKind.Invented,
+                        Sequence = Str(f, "sequence"),
+                        Token = Str(f, "token"),
+                        Found = f.TryGetProperty("found", out var found) ? found.GetInt32() : 0,
+                        Expected = f.TryGetProperty("expected", out var expected) ? expected.GetInt32() : 0,
+                    });
+                }),
             new Operation("placeholders", "repair_trailing_breaks", typeof(Placeholders), nameof(Placeholders.RepairTrailingBreaks),
                 e => Placeholders.RepairTrailingBreaks(Str(e, "source") ?? "", Str(e, "translation") ?? "")),
             new Operation("placeholders", "correction", typeof(Placeholders), nameof(Placeholders.Correction),
