@@ -37,9 +37,9 @@ namespace UnityGameTranslator.Common
         /// </param>
         public static string Mention(string? name, bool isYou = false)
         {
-            if (string.IsNullOrWhiteSpace(name)) return Unknown;
+            if (Spaces.IsBlank(name)) return Unknown;
 
-            return isYou ? "@" + name.Trim() + " (you)" : "@" + name.Trim();
+            return isYou ? "@" + name.TrimSpaces() + " (you)" : "@" + name.TrimSpaces();
         }
 
         /// <summary>
@@ -58,10 +58,10 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static bool IsYou(string? name, string? signedInAs)
         {
-            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(signedInAs))
+            if (Spaces.IsBlank(name) || Spaces.IsBlank(signedInAs))
                 return false;
 
-            return string.Equals(name.Trim(), signedInAs.Trim(),
+            return string.Equals(name.TrimSpaces(), signedInAs.TrimSpaces(),
                                  System.StringComparison.OrdinalIgnoreCase);
         }
 

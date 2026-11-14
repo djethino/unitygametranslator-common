@@ -107,7 +107,7 @@ namespace UnityGameTranslator.Common
         /// <param name="owner">Who leads the lineage, when known. Named when it can be — "somebody" leaves nowhere to look.</param>
         public static WallText WorksAlone(string? owner) => new WallText
         {
-            Fact = (string.IsNullOrWhiteSpace(owner) ? "The author" : People.Mention(owner))
+            Fact = (Spaces.IsBlank(owner) ? "The author" : People.Mention(owner))
                  + " works alone on this one and does not take contributions.",
             WayOut = "Fork keeps your lines as your own version.",
         };

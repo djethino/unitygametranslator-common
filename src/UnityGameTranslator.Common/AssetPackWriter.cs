@@ -215,7 +215,7 @@ namespace UnityGameTranslator.Common
 
             json.Append("  ").Append(Quote(PackManifest.GameField)).Append(": { ")
                 .Append(Quote(PackManifest.GameNameField)).Append(": ").Append(Quote(gameName));
-            if (!string.IsNullOrWhiteSpace(steamId))
+            if (!Spaces.IsBlank(steamId))
                 json.Append(", ").Append(Quote(PackManifest.SteamIdField)).Append(": ").Append(Quote(steamId!));
             json.Append(" },\n");
 
@@ -266,7 +266,7 @@ namespace UnityGameTranslator.Common
                 clean.Append(kept);
             }
 
-            var game = clean.ToString().Trim().TrimEnd('.');
+            var game = clean.ToString().TrimSpaces().TrimEnd('.');
             if (game.Length == 0) game = "Game";
 
             var name = game + " assets " + when.ToString("yyyy-MM-dd HH-mm", CultureInfo.InvariantCulture) + AssetPacks.Extension;

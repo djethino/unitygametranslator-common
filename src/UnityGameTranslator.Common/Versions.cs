@@ -59,7 +59,7 @@ namespace UnityGameTranslator.Common
         /// <summary>Surrounding blanks, a leading v, and build metadata are all noise here.</summary>
         private static string Clean(string? version)
         {
-            string cleaned = (version ?? string.Empty).Trim().TrimStart('v', 'V');
+            string cleaned = (version ?? string.Empty).TrimSpaces().TrimStart('v', 'V');
             int metadata = cleaned.IndexOf('+');
             return metadata >= 0 ? cleaned.Substring(0, metadata) : cleaned;
         }

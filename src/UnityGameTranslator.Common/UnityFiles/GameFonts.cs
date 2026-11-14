@@ -77,7 +77,7 @@ namespace UnityGameTranslator.Common.UnityFiles
             var invalid = new HashSet<char>(Path.GetInvalidFileNameChars()) { '/', '\\', ':', '*', '?', '"', '<', '>', '|' };
             var chars = (string.IsNullOrEmpty(fontName) ? "Game font" : fontName).ToCharArray();
             for (int i = 0; i < chars.Length; i++)
-                if (invalid.Contains(chars[i]) || char.IsControl(chars[i]) || char.IsWhiteSpace(chars[i])) chars[i] = '_';
+                if (invalid.Contains(chars[i]) || char.IsControl(chars[i]) || KeyChars.IsSpace(chars[i])) chars[i] = '_';
             return new string(chars).Trim('.') + extension;
         }
 

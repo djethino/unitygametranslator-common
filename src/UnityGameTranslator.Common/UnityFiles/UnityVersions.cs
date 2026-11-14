@@ -18,7 +18,7 @@ namespace UnityGameTranslator.Common.UnityFiles
         public static ulong Key(string? text)
         {
             if (string.IsNullOrEmpty(text)) return 0;
-            var parts = text!.Trim().Split('.');
+            var parts = text!.TrimSpaces().Split('.');
             if (parts.Length < 3) return 0;
             if (!ushort.TryParse(parts[0], out var major) || !ushort.TryParse(parts[1], out var minor)) return 0;
 

@@ -31,7 +31,7 @@ namespace UnityGameTranslator.Common
             if (names == null) return kept;
             foreach (var name in names)
             {
-                if (!string.IsNullOrWhiteSpace(name)) kept.Add(name.Trim());
+                if (!Spaces.IsBlank(name)) kept.Add(name.TrimSpaces());
             }
             return kept;
         }
@@ -148,8 +148,8 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static string? Namesakes(GameChoice? confirmed, string? detectedName, bool ambiguous)
         {
-            if (confirmed != null || !ambiguous || string.IsNullOrWhiteSpace(detectedName)) return null;
-            return "Several games are named " + detectedName!.Trim() + ". Confirm which one with Change.";
+            if (confirmed != null || !ambiguous || Spaces.IsBlank(detectedName)) return null;
+            return "Several games are named " + detectedName!.TrimSpaces() + ". Confirm which one with Change.";
         }
 
         /// <summary>

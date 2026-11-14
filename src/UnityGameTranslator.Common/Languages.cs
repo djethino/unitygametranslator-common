@@ -127,7 +127,7 @@ namespace UnityGameTranslator.Common
         {
             if (nameOrCode == null || nameOrCode.Length == 0) return null;
 
-            string trimmed = nameOrCode.Trim();
+            string trimmed = nameOrCode.TrimSpaces();
 
             string? code;
             if (Reverse.TryGetValue(trimmed, out code)) return code;
@@ -164,13 +164,13 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static bool Matches(string? languageName, string? isoCode)
         {
-            if (languageName == null || languageName.Trim().Length == 0) return false;
+            if (languageName == null || languageName.TrimSpaces().Length == 0) return false;
 
             string? code = CodeOf(languageName);
             if (code != null)
                 return string.Equals(Canonical(code), Canonical(isoCode), StringComparison.OrdinalIgnoreCase);
 
-            return string.Equals(languageName.Trim(), NameOf(isoCode), StringComparison.OrdinalIgnoreCase);
+            return string.Equals(languageName.TrimSpaces(), NameOf(isoCode), StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -195,8 +195,8 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static bool IsSettled(string? language) =>
             language != null
-            && language.Trim().Length > 0
-            && !string.Equals(language.Trim(), Undecided, StringComparison.OrdinalIgnoreCase);
+            && language.TrimSpaces().Length > 0
+            && !string.Equals(language.TrimSpaces(), Undecided, StringComparison.OrdinalIgnoreCase);
 
         /// <summary>
         /// True when two stored values name DIFFERENT languages — the only case anything may act on.
@@ -215,7 +215,7 @@ namespace UnityGameTranslator.Common
             if (!IsSettled(a) || !IsSettled(b)) return false;
 
             return !Matches(a, b) && !Matches(b, a)
-                   && !string.Equals(a!.Trim(), b!.Trim(), StringComparison.OrdinalIgnoreCase);
+                   && !string.Equals(a!.TrimSpaces(), b!.TrimSpaces(), StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -240,14 +240,14 @@ namespace UnityGameTranslator.Common
             if (locale == null) return null;
 
             // Linux writes fr_FR.UTF-8 and can list several; a browser sends fr-FR;q=0.9.
-            string tag = Ascii.Lower(locale.Trim());
+            string tag = Ascii.Lower(locale.TrimSpaces());
             foreach (char cut in new[] { '.', ':', '@', ';', ',' })
             {
                 int at = tag.IndexOf(cut);
                 if (at >= 0) tag = tag.Substring(0, at);
             }
 
-            tag = tag.Replace('_', '-').Trim();
+            tag = tag.Replace('_', '-').TrimSpaces();
             if (tag.Length == 0) return null;
 
             while (true)

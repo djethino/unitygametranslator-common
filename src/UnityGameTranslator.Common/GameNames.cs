@@ -65,9 +65,9 @@ namespace UnityGameTranslator.Common
 
             if (candidates.Count <= 1) return new Match(all, false);
 
-            if (!string.IsNullOrWhiteSpace(asked))
+            if (!Spaces.IsBlank(asked))
             {
-                var wanted = asked.Trim();
+                var wanted = asked.TrimSpaces();
                 var exact = new List<int>();
 
                 for (var i = 0; i < candidates.Count; i++)
@@ -75,7 +75,7 @@ namespace UnityGameTranslator.Common
                     var name = candidates[i];
                     if (name == null) continue;
 
-                    if (string.Equals(name.Trim(), wanted, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(name.TrimSpaces(), wanted, StringComparison.OrdinalIgnoreCase))
                         exact.Add(i);
                 }
 

@@ -379,7 +379,7 @@ namespace UnityGameTranslator.Common
             int from = at + opening.Length;
             int end = text.IndexOf(closing, from, System.StringComparison.Ordinal);
             if (end < 0) return null;
-            return TagToken.Replace(text.Substring(from, end - from), "").Trim();
+            return TagToken.Replace(text.Substring(from, end - from), "").TrimSpaces();
         }
 
         /// <summary>Put each placeholder back as the tag it stood for.</summary>

@@ -53,7 +53,7 @@ namespace UnityGameTranslator.Common
             return (ctrl ? Ctrl : "")
                  + (alt ? Alt : "")
                  + (shift ? Shift : "")
-                 + key.Trim();
+                 + key.TrimSpaces();
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace UnityGameTranslator.Common
 
             if (hotkey == null) return false;
 
-            string rest = hotkey.Trim();
+            string rest = hotkey.TrimSpaces();
             if (rest.Length == 0) return false;
 
             // Repeated rather than one pass: the three modifiers are conventionally written in one
@@ -84,7 +84,7 @@ namespace UnityGameTranslator.Common
                 if (StripPrefix(ref rest, Shift)) { shift = true; found = true; }
             }
 
-            key = rest.Trim();
+            key = rest.TrimSpaces();
             return key.Length > 0;
         }
 
@@ -99,7 +99,7 @@ namespace UnityGameTranslator.Common
         {
             if (!Ascii.StartsWithIgnoreCase(text, prefix)) return false;
 
-            text = text.Substring(prefix.Length).TrimStart();
+            text = text.Substring(prefix.Length).TrimSpacesStart();
             return true;
         }
     }

@@ -58,7 +58,7 @@ namespace UnityGameTranslator.Common
             string? file = null;
             foreach (var name in new[] { TranslationFiles.ImageFileField }.Concat(TranslationFiles.ImageFileLegacyFields))
             {
-                if (field(name) is string text && text.Trim().Length > 0) { file = text; break; }
+                if (field(name) is string text && text.TrimSpaces().Length > 0) { file = text; break; }
             }
 
             return new ImageDefinition(sprite, field(TranslationFiles.ImagePathField) as string, numbers, file);
@@ -770,14 +770,14 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static string? OtherGame(GameAssetSide game, PackManifest manifest)
         {
-            if (!string.IsNullOrWhiteSpace(manifest.SteamId) && !string.IsNullOrWhiteSpace(game.SteamId))
+            if (!Spaces.IsBlank(manifest.SteamId) && !Spaces.IsBlank(game.SteamId))
                 return string.Equals(manifest.SteamId, game.SteamId, StringComparison.Ordinal) ? null : manifest.GameName ?? manifest.SteamId;
 
-            var name = manifest.GameName?.Trim();
+            var name = manifest.GameName?.TrimSpaces();
             if (string.IsNullOrEmpty(name)) return null;
 
-            var matches = string.Equals(name, game.GameName.Trim(), StringComparison.OrdinalIgnoreCase)
-                          || string.Equals(name, game.ProductName?.Trim(), StringComparison.OrdinalIgnoreCase);
+            var matches = string.Equals(name, game.GameName.TrimSpaces(), StringComparison.OrdinalIgnoreCase)
+                          || string.Equals(name, game.ProductName?.TrimSpaces(), StringComparison.OrdinalIgnoreCase);
             return matches ? null : name;
         }
 

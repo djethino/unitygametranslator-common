@@ -75,7 +75,7 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static string RegisteredName(string valueName)
         {
-            var name = valueName.Trim();
+            var name = valueName.TrimSpaces();
             var open = name.LastIndexOf(" (", StringComparison.Ordinal);
             if (open > 0 && name.EndsWith(")", StringComparison.Ordinal)) name = name.Substring(0, open);
             return name;

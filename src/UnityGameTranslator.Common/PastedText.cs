@@ -28,7 +28,7 @@ namespace UnityGameTranslator.Common
             var kept = new List<string>();
             foreach (var line in pasted.Split(Breaks))
             {
-                var words = line.Trim();
+                var words = line.TrimSpaces();
                 if (words.Length > 0) kept.Add(words);
             }
 

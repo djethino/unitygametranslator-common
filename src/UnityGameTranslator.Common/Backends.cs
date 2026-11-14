@@ -89,13 +89,13 @@ namespace UnityGameTranslator.Common
 
             // 3. Visual padding held back. A model asked to translate "  Play  " answers about the
             //    spaces as often as not, and the game laid them out for a reason.
-            string trimmed = work.TrimStart();
+            string trimmed = work.TrimSpacesStart();
             if (trimmed.Length < work.Length)
             {
                 prepared.Leading = work.Substring(0, work.Length - trimmed.Length);
                 work = trimmed;
             }
-            trimmed = work.TrimEnd();
+            trimmed = work.TrimSpacesEnd();
             if (trimmed.Length < work.Length)
             {
                 prepared.Trailing = work.Substring(trimmed.Length);
@@ -115,7 +115,7 @@ namespace UnityGameTranslator.Common
             prepared.Closing = closing;
 
             prepared.ToSend = work;
-            prepared.NothingToSend = string.IsNullOrWhiteSpace(work);
+            prepared.NothingToSend = Spaces.IsBlank(work);
             return prepared;
         }
 
@@ -187,11 +187,11 @@ namespace UnityGameTranslator.Common
                 if (lastStart < firstLength || last >= pairs.Length || pairs[last] != first) break;
 
                 string inner = work.Substring(firstLength, lastStart - firstLength);
-                string innerTrimmed = inner.Trim();
+                string innerTrimmed = inner.TrimSpaces();
                 if (innerTrimmed.Length == 0) break;
 
-                int lead = inner.Length - inner.TrimStart().Length;
-                int trail = inner.Length - inner.TrimEnd().Length;
+                int lead = inner.Length - inner.TrimSpacesStart().Length;
+                int trail = inner.Length - inner.TrimSpacesEnd().Length;
                 opening += work.Substring(0, firstLength) + inner.Substring(0, lead);
                 closing = inner.Substring(inner.Length - trail) + work.Substring(lastStart) + closing;
                 work = innerTrimmed;

@@ -117,7 +117,7 @@ namespace UnityGameTranslator.Common
         {
             if (answer == null) return AnswerKind.Unusable;
 
-            string trimmed = answer.Trim();
+            string trimmed = answer.TrimSpaces();
             if (trimmed.Length == 0) return AnswerKind.Unusable;
 
             if (string.Equals(trimmed, SkipMarker, StringComparison.Ordinal)) return AnswerKind.Skip;
@@ -260,8 +260,8 @@ namespace UnityGameTranslator.Common
                 if (explanation.Success) text = text.Substring(0, explanation.Index);
             }
 
-            text = text.Trim();
-            string trimmedSource = StripDirection(from.Trim(), out _, out _);
+            text = text.TrimSpaces();
+            string trimmedSource = StripDirection(from.TrimSpaces(), out _, out _);
 
             // ⚠ A model writing right to left may put an invisible direction mark before or after
             // everything, outside the fences or the quotes it added. The wrappers are judged
@@ -277,7 +277,7 @@ namespace UnityGameTranslator.Common
                 if (IsWrappedIn(inner, quote)) { inner = inner.Substring(1, inner.Length - 2); break; }
             }
 
-            return (leading + inner.Trim() + trailing).Trim();
+            return (leading + inner.TrimSpaces() + trailing).TrimSpaces();
         }
 
         /// <summary>
@@ -288,11 +288,11 @@ namespace UnityGameTranslator.Common
         private static string StripDirection(string text, out string leading, out string trailing)
         {
             int start = 0, end = text.Length;
-            while (start < end && (IsDirectionMark(text[start]) || char.IsWhiteSpace(text[start]))) start++;
-            while (end > start && (IsDirectionMark(text[end - 1]) || char.IsWhiteSpace(text[end - 1]))) end--;
+            while (start < end && (IsDirectionMark(text[start]) || KeyChars.IsSpace(text[start]))) start++;
+            while (end > start && (IsDirectionMark(text[end - 1]) || KeyChars.IsSpace(text[end - 1]))) end--;
 
-            leading = text.Substring(0, start).Trim();
-            trailing = text.Substring(end).Trim();
+            leading = text.Substring(0, start).TrimSpaces();
+            trailing = text.Substring(end).TrimSpaces();
             return text.Substring(start, end - start);
         }
 
@@ -344,18 +344,18 @@ namespace UnityGameTranslator.Common
             if (inner.IndexOf(Fence, StringComparison.Ordinal) >= 0) return text;
 
             int firstBreak = inner.IndexOf('\n');
-            if (firstBreak < 0) return inner.Trim();
+            if (firstBreak < 0) return inner.TrimSpaces();
 
             int lastBreak = inner.LastIndexOf('\n');
-            if (inner.Substring(lastBreak + 1).Trim().Length > 0) return text;
+            if (inner.Substring(lastBreak + 1).TrimSpaces().Length > 0) return text;
 
             // CommonMark: the opening line holds an "info string", whose first word names the
             // language and which may not contain a backtick. Only that word, alone, is taken as
             // one — a line of several words is text somebody wrote.
-            string opening = inner.Substring(0, firstBreak).Trim();
+            string opening = inner.Substring(0, firstBreak).TrimSpaces();
             if (!Regex.IsMatch(opening, @"^[^\s`]*$")) return text;
 
-            return inner.Substring(firstBreak + 1).Trim();
+            return inner.Substring(firstBreak + 1).TrimSpaces();
         }
     }
 }

@@ -104,7 +104,7 @@ namespace UnityGameTranslator.Common
                     return "This translation is on the site. Publishing again updates it.";
 
                 case Publication.NotYours:
-                    string who = string.IsNullOrWhiteSpace(owner)
+                    string who = Spaces.IsBlank(owner)
                         ? "Somebody else leads this translation."
                         : People.Mention(owner) + " leads this translation.";
 

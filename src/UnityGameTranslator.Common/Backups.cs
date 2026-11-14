@@ -239,12 +239,12 @@ namespace UnityGameTranslator.Common
 
                 foreach (var name in names)
                 {
-                    if (string.IsNullOrWhiteSpace(name)) continue;
+                    if (Spaces.IsBlank(name)) continue;
 
                     // ⚠ A bare file name, never a path. These come out of a translation file that
                     // anybody may edit, and a name walking up with ".." would have the copy reach
                     // outside the folder it is copying.
-                    var bare = name!.Trim().Replace('\\', '/');
+                    var bare = name!.TrimSpaces().Replace('\\', '/');
                     var slash = bare.LastIndexOf('/');
                     if (slash >= 0) bare = bare.Substring(slash + 1);
 
@@ -436,7 +436,7 @@ namespace UnityGameTranslator.Common
         /// <param name="by">Whose translation the act involved, already written as a mention.</param>
         public static string Describe(BackupReason reason, string? by = null)
         {
-            var who = string.IsNullOrWhiteSpace(by) ? null : by!.Trim();
+            var who = Spaces.IsBlank(by) ? null : by!.TrimSpaces();
 
             switch (reason)
             {
@@ -489,7 +489,7 @@ namespace UnityGameTranslator.Common
         /// language" answered twice is answered differently the day one of them grows a case.
         /// </summary>
         public static bool IsSettledLanguage(string? language) =>
-            !string.IsNullOrWhiteSpace(language)
+            !Spaces.IsBlank(language)
             && !Ascii.EqualsIgnoreCase(language, "auto");
 
         /// <summary>What the source side of a backup's row shows.</summary>
@@ -516,7 +516,7 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static SourceSide SourceOf(string? source, string? target) =>
             IsSettledLanguage(source) ? SourceSide.Language
-            : Ascii.EqualsIgnoreCase(source?.Trim(), "auto") || IsSettledLanguage(target)
+            : Ascii.EqualsIgnoreCase(source?.TrimSpaces(), "auto") || IsSettledLanguage(target)
                 ? SourceSide.Auto
                 : SourceSide.None;
 
@@ -553,10 +553,10 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static bool IsAnotherLineage(string? backupUuid, string? currentUuid)
         {
-            if (string.IsNullOrWhiteSpace(backupUuid) || string.IsNullOrWhiteSpace(currentUuid))
+            if (Spaces.IsBlank(backupUuid) || Spaces.IsBlank(currentUuid))
                 return false;
 
-            return !Ascii.EqualsIgnoreCase(backupUuid!.Trim(), currentUuid!.Trim());
+            return !Ascii.EqualsIgnoreCase(backupUuid!.TrimSpaces(), currentUuid!.TrimSpaces());
         }
 
         /// <summary>Said on such a row, and it names what it is rather than shouting.</summary>

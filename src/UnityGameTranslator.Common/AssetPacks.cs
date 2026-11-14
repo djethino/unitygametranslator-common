@@ -108,7 +108,7 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static string? FontFileStem(string? reference)
         {
-            if (string.IsNullOrWhiteSpace(reference)) return null;
+            if (Spaces.IsBlank(reference)) return null;
 
             var name = reference!;
             if (name.StartsWith(GameFontPrefix, StringComparison.Ordinal)) return null;

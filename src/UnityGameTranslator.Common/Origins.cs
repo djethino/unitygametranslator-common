@@ -95,7 +95,7 @@ namespace UnityGameTranslator.Common
             // until it had been published, which is exactly when it stopped mattering.
             if (!origin.AuthorAsked) return "Forked";
 
-            if (string.IsNullOrWhiteSpace(origin.Author))
+            if (Spaces.IsBlank(origin.Author))
                 return "Forked from a removed account";
 
             return "Forked from " + People.Mention(origin.Author);
@@ -127,7 +127,7 @@ namespace UnityGameTranslator.Common
                      + " The name is not recorded in this file.";
             }
 
-            if (string.IsNullOrWhiteSpace(origin.Author))
+            if (Spaces.IsBlank(origin.Author))
                 return "Started from work whose account is no longer on the site." + separate;
 
             string who = "Started from " + People.Mention(origin.Author) + "'s work";

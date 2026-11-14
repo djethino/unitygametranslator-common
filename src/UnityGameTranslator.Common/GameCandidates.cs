@@ -64,8 +64,8 @@ namespace UnityGameTranslator.Common
 
             if (!string.IsNullOrEmpty(detectedName) && !string.IsNullOrEmpty(candidateName))
             {
-                string detected = detectedName!.Trim();
-                string name = candidateName!.Trim();
+                string detected = detectedName!.TrimSpaces();
+                string name = candidateName!.TrimSpaces();
 
                 // The same name outranks any source or id bonus: it is the one fact the person
                 // and the machine both read.
@@ -110,7 +110,7 @@ namespace UnityGameTranslator.Common
             {
                 foreach (var other in otherNames)
                 {
-                    if (!string.IsNullOrWhiteSpace(other)) others.Add(other.Trim());
+                    if (!Spaces.IsBlank(other)) others.Add(other.TrimSpaces());
                 }
             }
             return others.Count == 0 ? title : title + " (" + string.Join(" / ", others) + ")";
@@ -238,10 +238,10 @@ namespace UnityGameTranslator.Common
         {
             if (string.IsNullOrEmpty(source)) return null;
 
-            var kind = Ascii.Lower(source!.Trim());
+            var kind = Ascii.Lower(source!.TrimSpaces());
 
             if (kind == "steam")
-                return IsDigits(steamId) ? new Pick(kind, steamId!.Trim()) : null;
+                return IsDigits(steamId) ? new Pick(kind, steamId!.TrimSpaces()) : null;
 
             if (kind == CatalogueSource || kind == "igdb" || kind == "rawg")
                 return id > 0 ? new Pick(kind, id.ToString(System.Globalization.CultureInfo.InvariantCulture)) : null;
@@ -278,10 +278,10 @@ namespace UnityGameTranslator.Common
         {
             if (IsDigits(readSteamId) && IsDigits(pickedSteamId))
             {
-                return string.Equals(readSteamId!.Trim(), pickedSteamId!.Trim(), System.StringComparison.Ordinal)
+                return string.Equals(readSteamId!.TrimSpaces(), pickedSteamId!.TrimSpaces(), System.StringComparison.Ordinal)
                     ? null
-                    : "Different game? The installed game is Steam app " + readSteamId.Trim()
-                      + ". The picked one is Steam app " + pickedSteamId.Trim() + ".";
+                    : "Different game? The installed game is Steam app " + readSteamId.TrimSpaces()
+                      + ". The picked one is Steam app " + pickedSteamId.TrimSpaces() + ".";
             }
 
             var read = GameNames.Flat(readName);
@@ -290,14 +290,14 @@ namespace UnityGameTranslator.Common
 
             if (read == picked || picked.Contains(read) || read.Contains(picked)) return null;
 
-            return "Different game? The installed game is named \"" + readName!.Trim()
-                   + "\". The picked one is \"" + pickedName!.Trim() + "\".";
+            return "Different game? The installed game is named \"" + readName!.TrimSpaces()
+                   + "\". The picked one is \"" + pickedName!.TrimSpaces() + "\".";
         }
 
         private static bool IsDigits(string? value)
         {
-            if (string.IsNullOrWhiteSpace(value)) return false;
-            foreach (var c in value!.Trim())
+            if (Spaces.IsBlank(value)) return false;
+            foreach (var c in value!.TrimSpaces())
             {
                 if (c < '0' || c > '9') return false;
             }

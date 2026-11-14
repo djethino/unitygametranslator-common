@@ -35,8 +35,8 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static int Announced(string? value)
         {
-            if (string.IsNullOrWhiteSpace(value)) return Unannounced;
-            return int.TryParse(value!.Trim(), System.Globalization.NumberStyles.None,
+            if (Spaces.IsBlank(value)) return Unannounced;
+            return int.TryParse(value!.TrimSpaces(), System.Globalization.NumberStyles.None,
                                 System.Globalization.CultureInfo.InvariantCulture, out int n) && n >= 1
                 ? n
                 : Unannounced;

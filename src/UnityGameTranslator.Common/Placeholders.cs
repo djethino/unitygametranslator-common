@@ -227,8 +227,8 @@ namespace UnityGameTranslator.Common
                 string answered = a < b ? Between(translation, inAnswer[a], inAnswer[b]) : Between(translation, inAnswer[b], inAnswer[a]);
                 // what the answer added there, beyond white space and the signs the source already had around its word
                 // ("[!v*0]年{[!v*1]}" → "[!v*0] {[!v*1]}": the brace is the source's, the word is gone)
-                if (answered.All(c => char.IsWhiteSpace(c) || (!char.IsLetterOrDigit(c) && joint.IndexOf(c) >= 0)))
-                    errors.Add($"between {first} and {second} the source has the word \"{joint.Trim()}\": \"{answered}\" leaves the two values side by side — keep a word between them");
+                if (answered.All(c => KeyChars.IsSpace(c) || (!char.IsLetterOrDigit(c) && joint.IndexOf(c) >= 0)))
+                    errors.Add($"between {first} and {second} the source has the word \"{joint.TrimSpaces()}\": \"{answered}\" leaves the two values side by side — keep a word between them");
             }
 
             return errors;
@@ -432,7 +432,7 @@ namespace UnityGameTranslator.Common
 
             if (Trailing(source, token) - Trailing(translation, token) != deficit) return null;
 
-            var repaired = new StringBuilder(translation.TrimEnd());
+            var repaired = new StringBuilder(translation.TrimSpacesEnd());
             for (int i = 0; i < deficit; i++) repaired.Append(token);
             return repaired.ToString();
         }
@@ -563,12 +563,12 @@ namespace UnityGameTranslator.Common
         private static int Trailing(string text, string token)
         {
             int count = 0;
-            string trimmed = text.TrimEnd();
+            string trimmed = text.TrimSpacesEnd();
 
             while (trimmed.EndsWith(token, StringComparison.Ordinal))
             {
                 count++;
-                trimmed = trimmed.Substring(0, trimmed.Length - token.Length).TrimEnd();
+                trimmed = trimmed.Substring(0, trimmed.Length - token.Length).TrimSpacesEnd();
             }
 
             return count;

@@ -326,7 +326,7 @@ namespace UnityGameTranslator.Common
 
                 string answer = Answers.Clean(said, toSend);
                 result.Said = answer;
-                result.NeededCleaning |= !string.Equals(answer, said.Trim(), StringComparison.Ordinal);
+                result.NeededCleaning |= !string.Equals(answer, said.TrimSpaces(), StringComparison.Ordinal);
 
                 // Refusal, translation, or neither — see Answers.Read.
                 switch (Answers.Read(answer))
