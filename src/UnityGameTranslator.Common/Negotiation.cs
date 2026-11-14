@@ -119,7 +119,7 @@ namespace UnityGameTranslator.Common
             string body = errorBody ?? string.Empty;
 
             if (!_useMaxCompletionTokens
-                && body.IndexOf("max_completion_tokens", StringComparison.OrdinalIgnoreCase) >= 0)
+                && Ascii.IndexOfIgnoreCase(body, "max_completion_tokens") >= 0)
             {
                 _useMaxCompletionTokens = true;
                 reason = "provider wants max_completion_tokens instead of max_tokens";
@@ -128,14 +128,14 @@ namespace UnityGameTranslator.Common
 
             // Before the temperature, deliberately: a body naming both costs us the variation itself
             // if we give up the temperature, and only its reproducibility if we give up the seed.
-            if (!_omitSeed && body.IndexOf("seed", StringComparison.OrdinalIgnoreCase) >= 0)
+            if (!_omitSeed && Ascii.IndexOfIgnoreCase(body, "seed") >= 0)
             {
                 _omitSeed = true;
                 reason = "provider rejects a seed — dropping it, the temperature still varies the answer";
                 return true;
             }
 
-            if (!_omitTemperature && body.IndexOf("temperature", StringComparison.OrdinalIgnoreCase) >= 0)
+            if (!_omitTemperature && Ascii.IndexOfIgnoreCase(body, "temperature") >= 0)
             {
                 _omitTemperature = true;
                 reason = "provider rejects our temperature — dropping it, its own default applies";

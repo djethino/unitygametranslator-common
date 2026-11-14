@@ -36,7 +36,7 @@ namespace UnityGameTranslator.Common
             var style = "";
             foreach (var suffix in StyleSuffixes)
             {
-                if (displayName.EndsWith(" " + suffix, StringComparison.OrdinalIgnoreCase))
+                if (Ascii.EndsWithIgnoreCase(displayName, " " + suffix))
                 {
                     family = displayName.Substring(0, displayName.Length - suffix.Length - 1);
                     style = suffix;

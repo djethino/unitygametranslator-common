@@ -183,7 +183,7 @@ namespace UnityGameTranslator.Common
 
         /// <summary>Whether this file name is a pack.</summary>
         public static bool IsPack(string? name) =>
-            name != null && name.EndsWith(Extension, StringComparison.OrdinalIgnoreCase);
+            Ascii.EndsWithIgnoreCase(name, Extension);
 
         /// <summary>
         /// Reads the name of an entry inside a pack: true only for `fonts/&lt;font&gt;` or
@@ -247,7 +247,7 @@ namespace UnityGameTranslator.Common
 
             foreach (var reserved in ReservedNames)
             {
-                if (string.Equals(stem, reserved, StringComparison.OrdinalIgnoreCase)) return false;
+                if (Ascii.EqualsIgnoreCase(stem, reserved)) return false;
             }
 
             return true;
@@ -267,7 +267,7 @@ namespace UnityGameTranslator.Common
 
             foreach (var extension in extensions)
             {
-                if (name!.EndsWith(extension, StringComparison.OrdinalIgnoreCase)) return true;
+                if (Ascii.EndsWithIgnoreCase(name, extension)) return true;
             }
 
             return false;

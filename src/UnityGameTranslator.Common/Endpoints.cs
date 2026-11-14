@@ -99,8 +99,7 @@ namespace UnityGameTranslator.Common
             int colon = url.IndexOf(':', hostStart, end - hostStart);
             int hostEnd = colon >= 0 ? colon : end;
 
-            if (!string.Equals(url.Substring(hostStart, hostEnd - hostStart), "localhost",
-                               StringComparison.OrdinalIgnoreCase))
+            if (!Ascii.EqualsIgnoreCase(url.Substring(hostStart, hostEnd - hostStart), "localhost"))
             {
                 return url;
             }
@@ -248,7 +247,7 @@ namespace UnityGameTranslator.Common
                 return Locality.Elsewhere;
             }
 
-            string host = uri.Host.Trim('[', ']').ToLowerInvariant();
+            string host = Ascii.Lower(uri.Host.Trim('[', ']'));
 
             if (host == "localhost" || host == "::1"
                 || host.StartsWith("127.", StringComparison.Ordinal))

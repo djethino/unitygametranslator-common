@@ -240,7 +240,7 @@ namespace UnityGameTranslator.Common
             if (locale == null) return null;
 
             // Linux writes fr_FR.UTF-8 and can list several; a browser sends fr-FR;q=0.9.
-            string tag = locale.Trim().ToLowerInvariant();
+            string tag = Ascii.Lower(locale.Trim());
             foreach (char cut in new[] { '.', ':', '@', ';', ',' })
             {
                 int at = tag.IndexOf(cut);

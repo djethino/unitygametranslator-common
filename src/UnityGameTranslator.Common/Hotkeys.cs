@@ -97,7 +97,7 @@ namespace UnityGameTranslator.Common
 
         private static bool StripPrefix(ref string text, string prefix)
         {
-            if (!text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return false;
+            if (!Ascii.StartsWithIgnoreCase(text, prefix)) return false;
 
             text = text.Substring(prefix.Length).TrimStart();
             return true;

@@ -490,7 +490,7 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static bool IsSettledLanguage(string? language) =>
             !string.IsNullOrWhiteSpace(language)
-            && !string.Equals(language, "auto", StringComparison.OrdinalIgnoreCase);
+            && !Ascii.EqualsIgnoreCase(language, "auto");
 
         /// <summary>What the source side of a backup's row shows.</summary>
         public enum SourceSide
@@ -516,7 +516,7 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static SourceSide SourceOf(string? source, string? target) =>
             IsSettledLanguage(source) ? SourceSide.Language
-            : string.Equals(source?.Trim(), "auto", StringComparison.OrdinalIgnoreCase) || IsSettledLanguage(target)
+            : Ascii.EqualsIgnoreCase(source?.Trim(), "auto") || IsSettledLanguage(target)
                 ? SourceSide.Auto
                 : SourceSide.None;
 
@@ -556,8 +556,7 @@ namespace UnityGameTranslator.Common
             if (string.IsNullOrWhiteSpace(backupUuid) || string.IsNullOrWhiteSpace(currentUuid))
                 return false;
 
-            return !string.Equals(backupUuid!.Trim(), currentUuid!.Trim(),
-                                  StringComparison.OrdinalIgnoreCase);
+            return !Ascii.EqualsIgnoreCase(backupUuid!.Trim(), currentUuid!.Trim());
         }
 
         /// <summary>Said on such a row, and it names what it is rather than shouting.</summary>

@@ -218,7 +218,7 @@ namespace UnityGameTranslator.Common
 
                 sha.TransformFinalBlock(new byte[0], 0, 0);
 
-                if (copied != length || !string.Equals(Hex(sha.Hash!), sha256, StringComparison.OrdinalIgnoreCase))
+                if (copied != length || !Ascii.EqualsIgnoreCase(Hex(sha.Hash!), sha256))
                     throw new InvalidDataException(name + " changed since it was read. Add it again.");
             }
         }

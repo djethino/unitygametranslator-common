@@ -117,9 +117,9 @@ namespace UnityGameTranslator.Common
                 foreach (var file in FilesUnder(dir))
                 {
                     string extension = Path.GetExtension(file);
-                    bool single = Array.Exists(SingleExtensions, x => string.Equals(x, extension, StringComparison.OrdinalIgnoreCase));
+                    bool single = Array.Exists(SingleExtensions, x => Ascii.EqualsIgnoreCase(x, extension));
                     if (single && named.Contains(Path.GetFileNameWithoutExtension(file))) { face = 0; return file; }
-                    if (!single && !(collections && string.Equals(extension, ".ttc", StringComparison.OrdinalIgnoreCase))) continue;
+                    if (!single && !(collections && Ascii.EqualsIgnoreCase(extension, ".ttc"))) continue;
                     try
                     {
                         using (var stream = File.OpenRead(file))
@@ -181,10 +181,10 @@ namespace UnityGameTranslator.Common
 
         /// <summary>Its subfamily (id 2) is the plain style, in the words fonts use for it.</summary>
         private static bool IsRegular(byte[] table) =>
-            NamesOf(table, 2).Exists(n => n.Equals("Regular", StringComparison.OrdinalIgnoreCase)
-                                       || n.Equals("Normal", StringComparison.OrdinalIgnoreCase)
-                                       || n.Equals("Book", StringComparison.OrdinalIgnoreCase)
-                                       || n.Equals("Roman", StringComparison.OrdinalIgnoreCase));
+            NamesOf(table, 2).Exists(n => Ascii.EqualsIgnoreCase(n, "Regular")
+                                       || Ascii.EqualsIgnoreCase(n, "Normal")
+                                       || Ascii.EqualsIgnoreCase(n, "Book")
+                                       || Ascii.EqualsIgnoreCase(n, "Roman"));
 
         private static byte[]? NameTable(Stream file, long dir)
         {

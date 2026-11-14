@@ -48,7 +48,7 @@ namespace UnityGameTranslator.Common
 
             foreach (string[] row in CombinedScripts)
             {
-                if (string.Equals(row[0], isoCode, StringComparison.OrdinalIgnoreCase))
+                if (Ascii.EqualsIgnoreCase(row[0], isoCode))
                 {
                     var parts = new string[row.Length - 1];
                     Array.Copy(row, 1, parts, 0, parts.Length);
@@ -58,7 +58,7 @@ namespace UnityGameTranslator.Common
 
             foreach (string code in ScriptCodes)
             {
-                if (string.Equals(code, isoCode, StringComparison.OrdinalIgnoreCase))
+                if (Ascii.EqualsIgnoreCase(code, isoCode))
                     return new[] { code };
             }
             return Array.Empty<string>();

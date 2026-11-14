@@ -241,8 +241,7 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static EditSessionHolder ParseHolder(string? written)
         {
-            return string.Equals(written, "manager",
-                                 System.StringComparison.OrdinalIgnoreCase)
+            return Ascii.EqualsIgnoreCase(written, "manager")
                 ? EditSessionHolder.Manager
                 : EditSessionHolder.Game;
         }

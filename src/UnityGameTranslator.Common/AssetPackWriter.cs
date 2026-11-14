@@ -194,7 +194,7 @@ namespace UnityGameTranslator.Common
             // own fonts before looking at the system.
             foreach (var system in systemFonts)
             {
-                var name = system.Key + Path.GetExtension(system.Value).ToLowerInvariant();
+                var name = system.Key + Ascii.Lower(Path.GetExtension(system.Value));
                 if (!AssetPacks.IsSafeFileName(name) || !AssetPacks.IsFontFile(name) || !packed.Add(name)) continue;
                 if (!File.Exists(system.Value)) continue;
 

@@ -75,11 +75,11 @@ namespace UnityGameTranslator.Common
 
             // Ordinal, not culture-aware: a file name is bytes, and the Turkish "I" has already
             // cost this project a comparison elsewhere.
-            if (string.Equals(fileName, FileName, System.StringComparison.OrdinalIgnoreCase))
+            if (Ascii.EqualsIgnoreCase(fileName, FileName))
                 return true;
 
-            return fileName!.StartsWith(Prefix, System.StringComparison.OrdinalIgnoreCase)
-                   && fileName.EndsWith(Suffix, System.StringComparison.OrdinalIgnoreCase)
+            return Ascii.StartsWithIgnoreCase(fileName, Prefix)
+                   && Ascii.EndsWithIgnoreCase(fileName, Suffix)
                    && fileName.Length > Prefix.Length + Suffix.Length;
         }
 

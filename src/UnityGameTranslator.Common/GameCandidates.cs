@@ -50,7 +50,7 @@ namespace UnityGameTranslator.Common
             }
 
             // A game the site already holds translations for outranks one it only heard of.
-            if (string.Equals(candidateSource, CatalogueSource, System.StringComparison.OrdinalIgnoreCase))
+            if (Ascii.EqualsIgnoreCase(candidateSource, CatalogueSource))
                 score += 30;
 
             // 🔴 **A Steam id, whichever source carries it — never the source itself** (user,
@@ -91,9 +91,9 @@ namespace UnityGameTranslator.Common
         {
             if (string.IsNullOrEmpty(source)) return "";
 
-            return string.Equals(source, CatalogueSource, System.StringComparison.OrdinalIgnoreCase)
+            return Ascii.EqualsIgnoreCase(source, CatalogueSource)
                 ? "catalog"
-                : source!.ToLowerInvariant();
+                : Ascii.Lower(source!);
         }
 
         /// <summary>
@@ -238,7 +238,7 @@ namespace UnityGameTranslator.Common
         {
             if (string.IsNullOrEmpty(source)) return null;
 
-            var kind = source!.Trim().ToLowerInvariant();
+            var kind = Ascii.Lower(source!.Trim());
 
             if (kind == "steam")
                 return IsDigits(steamId) ? new Pick(kind, steamId!.Trim()) : null;

@@ -308,7 +308,7 @@ namespace UnityGameTranslator.Common
                 BranchFrozen = server.BranchFrozen == true,
                 Finished = server.Status == null
                     ? (bool?)null
-                    : string.Equals(server.Status, "complete", System.StringComparison.OrdinalIgnoreCase),
+                    : Ascii.EqualsIgnoreCase(server.Status, "complete"),
 
                 // Somebody else leads it: named when the server named them, the uploader otherwise.
                 MainOwner = server.Exists && !server.IsOwner

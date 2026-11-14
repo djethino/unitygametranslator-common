@@ -583,7 +583,7 @@ namespace UnityGameTranslator.Common
             // ⚠ Asked FIRST, and it settles the ordinary case on its own: identical content is in
             // sync whatever the counters say. Without it, a file that had been edited back to what
             // the server holds would be offered for upload forever.
-            if (string.Equals(localContent, serverContent, StringComparison.OrdinalIgnoreCase))
+            if (Ascii.EqualsIgnoreCase(localContent, serverContent))
                 return SyncDirection.InSync;
 
             // Did the server move since we last agreed with it?
@@ -594,7 +594,7 @@ namespace UnityGameTranslator.Common
             // overwrite it. So an unknown ancestor plus local work is read as a conflict.
             bool serverMoved = string.IsNullOrEmpty(lastSynced)
                 ? hasLocalChanges
-                : !string.Equals(serverContent, lastSynced, StringComparison.OrdinalIgnoreCase);
+                : !Ascii.EqualsIgnoreCase(serverContent, lastSynced);
 
             if (hasLocalChanges && serverMoved) return SyncDirection.Merge;
             if (hasLocalChanges) return SyncDirection.Upload;
