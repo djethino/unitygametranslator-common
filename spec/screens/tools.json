@@ -154,7 +154,7 @@
                 "help": "Excludes every element with this name, at any depth. Listed in Exclusions, applied on Apply." }
             ] }
           ] },
-          { "kind": "stack", "name": "TermHost", "pad": 0, "minWidth": 260, "fill": "Content", "visible": false }
+          { "kind": "stack", "name": "TermHost", "pad": 0, "minWidth": 300, "fill": "Content", "visible": false }
           ] },
           { "kind": "label", "name": "FailStatus", "text": { "bind": "failStatus" }, "role": "Small" },
           { "kind": "stack", "name": "HeldSection", "spacing": 4, "visible": false, "children": [

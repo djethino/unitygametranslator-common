@@ -212,11 +212,6 @@
       "site": "editor.close",
       "screens": [
         {
-          "screen": "parts/term-zone",
-          "node": "CloseBtn",
-          "field": "text"
-        },
-        {
           "screen": "backups",
           "node": "CloseBtn",
           "field": "text"
@@ -227,6 +222,200 @@
           "field": "text"
         }
       ]
+    },
+    "edit.add_form": {
+      "text": "Add form",
+      "site": "editor.add_form",
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "AddFormBtn",
+          "field": "text"
+        }
+      ]
+    },
+    "edit.remove": {
+      "text": "Remove",
+      "site": "editor.remove",
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "RemoveBtn",
+          "field": "text"
+        }
+      ]
+    },
+    "edit.apply": {
+      "text": "Apply",
+      "site": "editor.apply",
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "ApplyBtn",
+          "field": "text"
+        },
+        {
+          "screen": "options",
+          "node": "ApplyBtn",
+          "field": "text"
+        },
+        {
+          "screen": "settings-choice",
+          "node": "ApplyBtn",
+          "field": "text"
+        },
+        {
+          "screen": "tools",
+          "node": "ApplyBtn",
+          "field": "text"
+        }
+      ],
+      "note": "The document says « Apply »; the code writes « Apply (N) », N being TermEdit.Count — the norm of every Apply of the mod."
+    },
+    "common.cancel": {
+      "text": "Cancel",
+      "site": "common.cancel",
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "CancelBtn",
+          "field": "text"
+        },
+        {
+          "screen": "backups",
+          "node": "Cancel",
+          "field": "text"
+        },
+        {
+          "screen": "confirm",
+          "node": "CancelBtn",
+          "field": "text"
+        },
+        {
+          "screen": "login",
+          "node": "CancelBtn",
+          "field": "text"
+        },
+        {
+          "screen": "merge",
+          "node": "CancelBtn",
+          "field": "text"
+        },
+        {
+          "screen": "options",
+          "node": "CancelBtn",
+          "field": "text"
+        },
+        {
+          "screen": "tools",
+          "node": "CancelBtn",
+          "field": "text"
+        },
+        {
+          "screen": "upload-setup",
+          "node": "CancelBtn",
+          "field": "text"
+        },
+        {
+          "screen": "upload",
+          "node": "CancelBtn",
+          "field": "text"
+        }
+      ]
+    },
+    "edit.texts_will_change": {
+      "text": "Texts that change: {count}",
+      "site": "editor.texts_will_change",
+      "params": [
+        "count"
+      ],
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "TextsLine",
+          "field": "bind",
+          "value": "textsLine"
+        }
+      ]
+    },
+    "edit.to_review": {
+      "text": "To review: {count}",
+      "site": "editor.to_review",
+      "params": [
+        "count"
+      ],
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "ReviewLine",
+          "field": "bind",
+          "value": "reviewLine"
+        }
+      ]
+    },
+    "edit.form_cited": {
+      "text": "Used in texts: {count}. Cannot be removed.",
+      "site": "editor.form_cited",
+      "params": [
+        "count"
+      ],
+      "carried_by": "TermZone: said by code in a bound label whose text and tone it chooses (FormNote)"
+    },
+    "edit.form_in_template": {
+      "text": "Used in a template. Cannot be removed.",
+      "site": "editor.form_in_template",
+      "carried_by": "TermZone: said by code in a bound label whose text and tone it chooses (FormNote)"
+    },
+    "edit.form_to_redo": {
+      "text": "Based on the previous translation. Check it.",
+      "site": "editor.form_to_redo",
+      "carried_by": "TermZone: said by code in a bound label whose text and tone it chooses (FormNote)"
+    },
+    "edit.problem_empty_word": {
+      "text": "Enter a translation.",
+      "site": "editor.problem_empty_word",
+      "carried_by": "TermZone: said by code in a bound label whose text and tone it chooses (WordProblems)"
+    },
+    "edit.problem_empty_form": {
+      "text": "Fill in each form, or remove it.",
+      "site": "editor.problem_empty_form",
+      "carried_by": "TermZone: said by code in a bound label whose text and tone it chooses (FormNote)"
+    },
+    "edit.problem_marker": {
+      "text": "Remove the term marker from the text.",
+      "site": "editor.problem_marker",
+      "carried_by": "TermZone: said by code in a bound label whose text and tone it chooses (WordProblems, FormNote): TermEdit.Problem `word-has-marker` / `form-has-marker` when the marker is a link `[!g*N]`"
+    },
+    "edit.problem_slot_marker": {
+      "text": "Remove the placeholder that is not in the source text.",
+      "site": "editor.problem_slot_marker",
+      "carried_by": "TermZone: said by code in a bound label whose text and tone it chooses (WordProblems, FormNote): `word-has-marker` / `form-has-marker` when the marker is a slot `[!L*…]` / `[!T*N]`, and `form-placeholders`"
+    },
+    "placeholder.sequence_missing": {
+      "text": "{sequence} is missing or changed. Keep it exactly as in the source text.",
+      "site": "merge.placeholder_sequence_missing",
+      "params": [
+        "sequence"
+      ],
+      "carried_by": "the mod's EditChecks, if it chooses to say a placeholder fault to a person as the site does (it shows Placeholders.Accepts' English errors, written for a model)"
+    },
+    "placeholder.count": {
+      "text": "{token}: found {found}, expected {expected}",
+      "site": "merge.placeholder_count",
+      "params": [
+        "token",
+        "found",
+        "expected"
+      ],
+      "carried_by": "the mod's EditChecks, if it says a placeholder fault as the site does"
+    },
+    "placeholder.invented": {
+      "text": "{token} is not in the source text",
+      "site": "merge.placeholder_invented",
+      "params": [
+        "token"
+      ],
+      "carried_by": "the mod's EditChecks, if it says a placeholder fault as the site does"
     }
   }
 }

@@ -49,7 +49,7 @@
         { "kind": "label", "name": "TextEditCount", "text": { "bind": "textEditCount" }, "role": "Small", "tone": "Secondary", "minHeight": "RowHeightSmall" },
         { "kind": "row", "name": "EditSplit", "spacing": 6, "pad": 0, "fillHeight": true, "children": [
           { "kind": "list", "name": "TextEditScroll", "minHeight": 120, "preferredHeight": 260 },
-          { "kind": "stack", "name": "TermHost", "pad": 0, "minWidth": 260, "fill": "Content", "visible": false }
+          { "kind": "stack", "name": "TermHost", "pad": 0, "minWidth": 300, "fill": "Content", "visible": false }
         ] },
         { "kind": "label", "name": "TextFontNotice", "text": { "bind": "textFontNotice" }, "role": "Small", "tone": "Warning", "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false }
       ] },
