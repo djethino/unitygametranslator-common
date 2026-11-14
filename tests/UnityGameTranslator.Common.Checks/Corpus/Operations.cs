@@ -365,6 +365,29 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("line_edit", "tag_after_person", typeof(LineEditing), nameof(LineEditing.TagAfterPerson),
                 e => LineEditing.TagAfterPerson(Str(e, "stored"))),
 
+            // ── template_uses ──────────────────────────────────────────────────────
+            new Operation("template_uses", "key", typeof(TemplateUses), nameof(TemplateUses.Key),
+                e => TemplateUses.Key(Str(e, "template_id")!, Str(e, "list")!)),
+            new Operation("template_uses", "template_of", typeof(TemplateUses), nameof(TemplateUses.TemplateOf),
+                e =>
+                {
+                    string template = TemplateUses.TemplateOf(Str(e, "key")!, out string? list);
+                    return new Dictionary<string, object?> { ["template"] = template, ["list"] = list };
+                }),
+            new Operation("template_uses", "for", typeof(TemplateUses), nameof(TemplateUses.For),
+                e =>
+                {
+                    var use = TemplateUses.For(LineRequired(e, "line").Use, Str(e, "template_id")!, Str(e, "list")!);
+                    if (!use.HasValue) return null;
+                    if (use.Value.ByClass != null && use.Value.ByClass.Count > 0)
+                    {
+                        var map = new Dictionary<string, object?>();
+                        foreach (var p in use.Value.ByClass) map[p.Key] = p.Value;
+                        return map;
+                    }
+                    return use.Value.Form;
+                }),
+
             // ── list_join ──────────────────────────────────────────────────────────
             new Operation("list_join", "join", typeof(ListJoin), nameof(ListJoin.Join),
                 e => ListJoin.Join(EntryArray(e), Str(e, "between"), Str(e, "join_case"))),

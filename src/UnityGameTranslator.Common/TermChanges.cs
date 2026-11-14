@@ -98,8 +98,9 @@ namespace UnityGameTranslator.Common
 
                 if (LineMarkers.ClosedSlots(entry.Key).Count > 0)
                 {
-                    if (!ReadsATermList(entry.Key, entryKey, lists)) continue;
-                    bool changes = TemplateChanges(TemplateIds.Of(entry.Key), was, after);
+                    var held = ListsHolding(entry.Key, entryKey, lists);
+                    if (held.Count == 0) continue;
+                    bool changes = TemplateChanges(TemplateIds.Of(entry.Key), held, was, after);
                     bool person = entry.Value.Tag == "H" || entry.Value.Tag == "V";
                     uses.Add(new TermUse { Key = entry.Key, Kind = TermUseKind.Template, TextChanges = changes, NeedsReviewAfter = changes && person });
                     continue;
@@ -133,30 +134,42 @@ namespace UnityGameTranslator.Common
             return new TermImpact { Uses = uses, FormsToRedo = redo };
         }
 
-        private static bool ReadsATermList(string templateKey, string entryKey, IReadOnlyList<KeyValuePair<string, IReadOnlyList<string>>> lists)
+        /// <summary>The lists the template's slots read that hold the term, each once, in the slots' order; empty when it reads none.</summary>
+        private static List<string> ListsHolding(string templateKey, string entryKey, IReadOnlyList<KeyValuePair<string, IReadOnlyList<string>>> lists)
         {
+            var found = new List<string>();
             foreach (var slot in LineMarkers.ClosedSlots(templateKey))
+            {
+                if (found.Contains(slot.List)) continue;
                 foreach (var list in lists)
                     if (string.Equals(list.Key, slot.List, StringComparison.Ordinal))
+                    {
                         foreach (var value in list.Value)
-                            if (string.Equals(value, entryKey, StringComparison.Ordinal)) return true;
-            return false;
+                            if (string.Equals(value, entryKey, StringComparison.Ordinal)) { found.Add(slot.List); break; }
+                        break;
+                    }
+            }
+            return found;
         }
 
         /// <summary>Does what the template takes from the term (its forms, its class) differ?</summary>
-        private static bool TemplateChanges(string templateId, TranslationLine before, TranslationLine? after)
+        private static bool TemplateChanges(string templateId, IReadOnlyList<string> heldBy, TranslationLine before, TranslationLine? after)
         {
             if (!after.HasValue) return true;
             TranslationLine now = after.Value;
 
             if (!string.Equals(ClassOf(before, templateId), ClassOf(now, templateId), StringComparison.Ordinal)) return true;
 
+            // What the template takes from the term in the slots of each list that holds it (spec lists.md: `use` by template AND list)
             var taken = new List<string>();
-            LineUse? use = UseOf(before, templateId);
-            if (use.HasValue && use.Value.ByClass != null && use.Value.ByClass.Count > 0)
-                foreach (var byClass in use.Value.ByClass) taken.Add(byClass.Value);
-            else
-                taken.Add(use.HasValue ? use.Value.Form ?? LinkReading.OwnForm : LinkReading.OwnForm);
+            foreach (string list in heldBy)
+            {
+                LineUse? use = TemplateUses.For(before.Use, templateId, list);
+                if (use.HasValue && use.Value.ByClass != null && use.Value.ByClass.Count > 0)
+                    foreach (var byClass in use.Value.ByClass) taken.Add(byClass.Value);
+                else
+                    taken.Add(use.HasValue ? use.Value.Form ?? LinkReading.OwnForm : LinkReading.OwnForm);
+            }
 
             foreach (string formId in taken)
                 if (!string.Equals(FormText(before, formId, true), FormText(now, formId, true), StringComparison.Ordinal)) return true;
@@ -180,12 +193,5 @@ namespace UnityGameTranslator.Common
             return null;
         }
 
-        private static LineUse? UseOf(TranslationLine entry, string templateId)
-        {
-            if (entry.Use != null)
-                foreach (var u in entry.Use)
-                    if (string.Equals(u.Key, templateId, StringComparison.Ordinal)) return u.Value;
-            return null;
-        }
     }
 }

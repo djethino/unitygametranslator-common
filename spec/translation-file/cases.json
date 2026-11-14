@@ -2081,6 +2081,119 @@
       },
       "guarantee": "token-invalid",
       "why": "the texts of the format 2 are LF alone"
+    },
+    {
+      "id": "translation-file/format2/use-by-list",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_lists": {
+          "lists": {
+            "familyName": {
+              "values": [
+                "柏"
+              ]
+            },
+            "GenerateRandomHeroGivenName": {
+              "values": [
+                "柏"
+              ]
+            }
+          }
+        },
+        "柏": {
+          "v": "Bo",
+          "t": "A",
+          "forms": {
+            "f1": "Bai"
+          },
+          "use": {
+            "tc701839d3afe": "0",
+            "tc701839d3afe:GenerateRandomHeroGivenName": "f1"
+          }
+        },
+        "[!L*familyName][!L*GenerateRandomHeroGivenName*]": {
+          "v": "[!L*familyName][!L*GenerateRandomHeroGivenName*]",
+          "t": "A",
+          "oracle": "repeated-name"
+        }
+      },
+      "written": true,
+      "upload": "accepted",
+      "site": {
+        "line_count": 2,
+        "tag_counts": {
+          "human": 0,
+          "validated": 0,
+          "ai": 2,
+          "capture": 0,
+          "skipped": 0
+        }
+      },
+      "read2": {
+        "uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "engine_version": 2,
+        "lines": {
+          "柏": {
+            "v": "Bo",
+            "t": "A",
+            "forms": {
+              "f1": "Bai"
+            },
+            "use": {
+              "tc701839d3afe": "0",
+              "tc701839d3afe:GenerateRandomHeroGivenName": "f1"
+            }
+          },
+          "[!L*familyName][!L*GenerateRandomHeroGivenName*]": {
+            "v": "[!L*familyName][!L*GenerateRandomHeroGivenName*]",
+            "t": "A",
+            "oracle": "repeated-name"
+          }
+        }
+      },
+      "why": "the same character is « Bo » in the family slot and « Bai » in the given-name slot of one template: `use` says what the template takes in the slots of each list (`ID:LIST`), the key of the whole template being the form every other slot takes"
+    },
+    {
+      "id": "translation-file/format2/use-by-a-list-the-file-lacks",
+      "document": {
+        "_engine_version": 2,
+        "_uuid": "a6e615b8-1df1-4847-8ba6-97a8cf6445df",
+        "_lists": {
+          "lists": {
+            "familyName": {
+              "values": [
+                "柏"
+              ]
+            },
+            "GenerateRandomHeroGivenName": {
+              "values": [
+                "柏"
+              ]
+            }
+          }
+        },
+        "柏": {
+          "v": "Bo",
+          "t": "A",
+          "forms": {
+            "f1": "Bai"
+          },
+          "use": {
+            "tc701839d3afe": "0",
+            "tc701839d3afe:ghost": "f1"
+          }
+        },
+        "[!L*familyName][!L*GenerateRandomHeroGivenName*]": {
+          "v": "[!L*familyName][!L*GenerateRandomHeroGivenName*]",
+          "t": "A",
+          "oracle": "repeated-name"
+        }
+      },
+      "written": true,
+      "upload": "refused",
+      "guarantee": "slot-list-missing",
+      "why": "a key of `use` for a list `_lists` does not hold (« ghost ») has no slot to be read in: the template's own lists are all there"
     }
   ]
 }

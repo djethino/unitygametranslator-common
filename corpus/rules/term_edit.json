@@ -4069,6 +4069,7 @@
     }
    },
    "why": "the mod's own words keep M for the same reason"
-  }
+  },
+    {"id": "term_edit/blockers/a-template-uses-the-form-in-the-slots-of-a-list", "op": "blockers", "in": {"state": {"key": "柏", "word": "Bo", "word_touched": false, "forms": [{"id": "f1", "text": "Bai", "added": false}], "selected": null, "is_new": false, "becomes": false, "original": {"v": "Bo", "forms": [{"id": "f1", "text": "Bai"}]}}, "id": "f1", "file": {"柏": {"v": "Bo", "t": "A", "forms": {"f1": "Bai"}, "use": {"tc701839d3afe": "0", "tc701839d3afe:GenerateRandomHeroGivenName": "f1"}}}}, "out": {"sentences": [], "template": true}, "why": "a form a `T:LIST` key names is a form a template takes: it cannot go"}
  ]
 }

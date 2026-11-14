@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace UnityGameTranslator.Common.Checks
 {
@@ -70,6 +71,7 @@ namespace UnityGameTranslator.Common.Checks
             check(disagreements == 0, "what the term window announces is what reading every sentence before and after finds", disagreements + " disagreement(s); " + first);
 
             Cost(check);
+            Templates(check);
         }
 
         /// <summary>
@@ -101,6 +103,100 @@ namespace UnityGameTranslator.Common.Checks
             double ms = clock.Elapsed.TotalMilliseconds / times;
             Console.WriteLine($"    cost: Effect over {lines.Count} lines, {lines.Count / 3} citing the term: {ms:F1} ms a keystroke ({texts} texts change)");
             check(texts > 1000 && ms < 150, $"the impact of a keystroke over 20 000 lines costs {ms:F1} ms, less than the site's 150 ms", "the socle must not do worse than the page it replaces");
+        }
+
+        /// <summary>
+        /// What a template takes from the term, per slot's list (<see cref="TemplateUses"/>): held against a reading written here from the
+        /// rule, key by key, with no helper of the library. In files with NO key that has a list, the answers are also those of the rule as
+        /// it was before `T:LIST` existed (one key per template, read by every slot) — the promise that a file written before reads as before.
+        /// </summary>
+        private static void Templates(Action<bool, string, string> check)
+        {
+            var random = new Random(20261115);
+            int compared = 0, byListSeen = 0, oldDisagree = 0, newDisagree = 0;
+            string first = "";
+            string[] listNames = { "a", "b" };
+            string[] templateKeys = { "[!L*a][!L*b]", "[!L*a][!L*a*]", "[!L*b] de [!L*a]", "Only [!L*a]" };
+
+            for (int n = 0; n < 600 && newDisagree + oldDisagree < 5; n++)
+            {
+                bool withLists = n % 2 == 1;
+                var lines = new List<KeyValuePair<string, TranslationLine>>();
+                string term = "term";
+                var forms = new List<KeyValuePair<string, string>>();
+                for (int f = 1; f <= 3; f++) forms.Add(new KeyValuePair<string, string>("f" + f, Word(random) + f));
+
+                var use = new List<KeyValuePair<string, LineUse>>();
+                var used = new List<string>();
+                foreach (string templateKey in templateKeys)
+                {
+                    string id = TemplateIds.Of(templateKey);
+                    if (random.Next(3) != 0) use.Add(new KeyValuePair<string, LineUse>(id, new LineUse { Form = "f" + (1 + random.Next(3)) }));
+                    if (withLists)
+                        foreach (string list in listNames)
+                            if (random.Next(2) == 0) use.Add(new KeyValuePair<string, LineUse>(id + ":" + list, new LineUse { Form = random.Next(4) == 0 ? "0" : "f" + (1 + random.Next(3)) }));
+                }
+                var before = new TranslationLine { Value = Word(random), Tag = "V", Forms = forms, Use = use.Count == 0 ? null : use };
+                lines.Add(new KeyValuePair<string, TranslationLine>(term, before));
+                foreach (string templateKey in templateKeys)
+                    lines.Add(new KeyValuePair<string, TranslationLine>(templateKey, new TranslationLine { Value = templateKey, Tag = random.Next(2) == 0 ? "A" : "H", Oracle = "accepted" }));
+
+                var lists = new List<KeyValuePair<string, IReadOnlyList<string>>>();
+                foreach (string list in listNames)
+                    lists.Add(new KeyValuePair<string, IReadOnlyList<string>>(list, random.Next(3) == 0 ? new[] { "other" } : new[] { term, "other" }));
+                var holding = lists.Where(l => l.Value.Contains(term)).Select(l => l.Key).ToList();
+
+                TranslationLine? after = Change(random, before);
+                var impact = TermChanges.Impact(term, lines, lists, after);
+
+                foreach (string templateKey in templateKeys)
+                {
+                    var slotLists = Regex.Matches(templateKey, @"\[!L\*([^\]\[:=*]+)").Cast<Match>().Select(m => m.Groups[1].Value).Distinct().Where(holding.Contains).ToList();
+                    var announced = impact.Uses.Where(u => u.Key == templateKey).ToList();
+                    if (slotLists.Count == 0) { if (announced.Count != 0) newDisagree++; continue; }
+
+                    string id = TemplateIds.Of(templateKey);
+                    // the reading, from the rule: each slot of a list that holds the term takes `ID:LIST`, else `ID`, else its own words
+                    bool expected = false, old = false;
+                    if (!after.HasValue) expected = old = true;
+                    else
+                    {
+                        foreach (string list in slotLists)
+                        {
+                            string? form = FormOf(use, id + ":" + list) ?? FormOf(use, id);
+                            if (form != null && use.Any(u => u.Key == id + ":" + list)) byListSeen++;
+                            if (FormText(before, form ?? "0") != FormText(after.Value, form ?? "0")) expected = true;
+                        }
+                        // what the rule said before: one key per template, whatever the slot
+                        string? whole = FormOf(use, id);
+                        if (FormText(before, whole ?? "0") != FormText(after.Value, whole ?? "0")) old = true;
+                    }
+                    compared++;
+                    if (announced.Count != 1 || announced[0].TextChanges != expected)
+                    {
+                        newDisagree++;
+                        if (first.Length == 0) first = "file " + n + ", « " + templateKey + " » announced " + (announced.Count == 0 ? "nothing" : announced[0].TextChanges.ToString()) + ", the reading says " + expected;
+                    }
+                    if (!withLists && announced.Count == 1 && announced[0].TextChanges != old) oldDisagree++;
+                }
+            }
+
+            check(compared > 800 && byListSeen > 200, "the random templates exercise it (" + compared + " templates read, " + byListSeen + " slots by a key of their list)", "a property over nothing proves nothing");
+            check(newDisagree == 0, "what a template takes from the term is what each slot of each list that holds it reads", newDisagree + " disagreement(s); " + first);
+            check(oldDisagree == 0, "a file with no key that has a list gives the answers it gave before", oldDisagree + " disagreement(s)");
+        }
+
+        private static string? FormOf(List<KeyValuePair<string, LineUse>> use, string key)
+        {
+            foreach (var u in use) if (u.Key == key) return u.Value.Form;
+            return null;
+        }
+
+        private static string? FormText(TranslationLine line, string form)
+        {
+            if (form == "0") return line.Value;
+            if (line.Forms != null) foreach (var f in line.Forms) if (f.Key == form) return f.Value;
+            return line.Value;   // a form that is gone reads as the entry's own words, as a template does
         }
 
         /// <summary>The line of an entry: the term as it is or as it would be, any other entry as it stands.</summary>

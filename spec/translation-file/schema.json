@@ -114,7 +114,7 @@
       "link-form-missing": "a link names a form its entry's `forms` does not hold (`0` is always the entry's own `v`)",
       "token-invalid": "a game token (`_lists.tokens`) is empty, holds a carriage return, or holds a marker `[!`",
       "tokens-not-in-order": "the game tokens are not in the strictly ascending ordinal order (UTF-16 code units): unsorted, or one twice",
-      "slot-list-missing": "a slot of the key or of `v` names a list `_lists` does not hold, or agrees with something that is neither such a list nor an open slot of the key",
+      "slot-list-missing": "a slot of the key or of `v` names a list `_lists` does not hold, or agrees with something that is neither such a list nor an open slot of the key, or a key of `use` (`T:LIST`) names a list `_lists` does not hold",
       "slot-open-missing": "`v` shows `[!T*N]` and the key has no `[!T*N]`",
       "use-form-missing": "a `use` of the line names a form the line does not hold",
       "entry-has-link-marker": "a term, or the entry a link points at, shows a `[!g*N]` in its own text or in one of its forms: a term does not cite another term",
@@ -210,8 +210,8 @@
         },
         "use": {
           "type": "object",
-          "description": "What each template takes from this entry, by template id: one form id, or one per agreement class (`[!L*a=b]`). An entry with no `use` for a template gives its own `v`.",
-          "propertyNames": { "$ref": "#/$defs/templateId" },
+          "description": "What each template takes from this entry, by template id: one form id, or one per agreement class (`[!L*a=b]`). An entry with no `use` for a template gives its own `v`. A key may add `:` and a LIST (`tab12cd34ef56:familyName`): what the template takes in the slots that read THAT list — the same character is a family name in one slot and a given name in the next. A slot of list L reads `T:L`, else `T`, else the entry's own `v` (TemplateUses.For). The list must be one `_lists` holds (`slot-list-missing`); a file with no such key reads as it always did. spec/translation-file/lists.md.",
+          "propertyNames": { "$ref": "#/$defs/useKey" },
           "additionalProperties": {
             "oneOf": [
               { "$ref": "#/$defs/formRef" },
@@ -280,6 +280,11 @@
       "type": "string",
       "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,31}$",
       "description": "An agreement class name: starts with a letter on purpose (see formId)."
+    },
+    "useKey": {
+      "type": "string",
+      "pattern": "^t[0-9a-f]{12}(:[^\\]\\[:=*]+)?$",
+      "description": "A key of `use`: a template's id, or the id and `:` and the name of a list. `:` is in no id (the pattern of templateId) and in no list name (the grammar of a slot, x-markers.closedSlot): the first one splits."
     },
     "templateId": {
       "type": "string",

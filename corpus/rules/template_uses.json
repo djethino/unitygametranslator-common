@@ -1,0 +1,262 @@
+{
+ "rule": "template_uses",
+ "classes": [
+  "TemplateUses"
+ ],
+ "note": "What a template takes from an entry, per slot's list (spec/translation-file/lists.md, « One entry, two lists »): a key of `use` is a template's id, or the id, `:` and a list's name; a slot of list L reads `T:L`, else `T`, else the entry's own words. `:` is in no id and no list name: the first one splits. Out of `for`: null, a form id, or {class: form id}.",
+ "operations": {
+  "key": {
+   "in": {
+    "template_id": "string",
+    "list": "string"
+   },
+   "out": "string: the key of `use`"
+  },
+  "template_of": {
+   "in": {
+    "key": "string"
+   },
+   "out": "{template, list|null}"
+  },
+  "for": {
+   "in": {
+    "line": "a line holding `use`",
+    "template_id": "string",
+    "list": "string"
+   },
+   "out": "null | form id | {class: form id}"
+  }
+ },
+ "cases": [
+  {
+   "id": "template_uses/key/a-template-and-a-list",
+   "op": "key",
+   "in": {
+    "template_id": "tc701839d3afe",
+    "list": "GenerateRandomHeroGivenName"
+   },
+   "out": "tc701839d3afe:GenerateRandomHeroGivenName",
+   "why": "what the template takes in the slots of that list"
+  },
+  {
+   "id": "template_uses/template_of/a-whole-template-key",
+   "op": "template_of",
+   "in": {
+    "key": "tc701839d3afe"
+   },
+   "out": {
+    "template": "tc701839d3afe",
+    "list": null
+   },
+   "why": "no `:`, no list: what the template takes in every slot"
+  },
+  {
+   "id": "template_uses/template_of/a-key-with-a-list",
+   "op": "template_of",
+   "in": {
+    "key": "tc701839d3afe:GenerateRandomHeroGivenName"
+   },
+   "out": {
+    "template": "tc701839d3afe",
+    "list": "GenerateRandomHeroGivenName"
+   },
+   "why": "the id before the `:`, the list after it"
+  },
+  {
+   "id": "template_uses/template_of/the-first-colon-splits",
+   "op": "template_of",
+   "in": {
+    "key": "tc701839d3afe:a:b"
+   },
+   "out": {
+    "template": "tc701839d3afe",
+    "list": "a:b"
+   },
+   "why": "an id holds no `:`: the first one is the separator, whatever follows (a list's name cannot hold one either, so this is never written)"
+  },
+  {
+   "id": "template_uses/for/the-key-of-the-list-first",
+   "op": "for",
+   "in": {
+    "line": {
+     "v": "Bo",
+     "t": "A",
+     "forms": {
+      "f1": "Bai"
+     },
+     "use": {
+      "tc701839d3afe": "0",
+      "tc701839d3afe:GenerateRandomHeroGivenName": "f1"
+     }
+    },
+    "template_id": "tc701839d3afe",
+    "list": "GenerateRandomHeroGivenName"
+   },
+   "out": "f1",
+   "why": "a slot of the list reads the key of that list"
+  },
+  {
+   "id": "template_uses/for/the-whole-template-for-another-list",
+   "op": "for",
+   "in": {
+    "line": {
+     "v": "Bo",
+     "t": "A",
+     "forms": {
+      "f1": "Bai"
+     },
+     "use": {
+      "tc701839d3afe": "0",
+      "tc701839d3afe:GenerateRandomHeroGivenName": "f1"
+     }
+    },
+    "template_id": "tc701839d3afe",
+    "list": "familyName"
+   },
+   "out": "0",
+   "why": "a slot of another list reads the key of the template"
+  },
+  {
+   "id": "template_uses/for/only-the-whole-template",
+   "op": "for",
+   "in": {
+    "line": {
+     "v": "Bo",
+     "t": "A",
+     "forms": {
+      "f1": "Bai"
+     },
+     "use": {
+      "tc701839d3afe": "f1"
+     }
+    },
+    "template_id": "tc701839d3afe",
+    "list": "GenerateRandomHeroGivenName"
+   },
+   "out": "f1",
+   "why": "a file with no key that has a list answers as it always did"
+  },
+  {
+   "id": "template_uses/for/only-the-key-of-the-list",
+   "op": "for",
+   "in": {
+    "line": {
+     "v": "Bo",
+     "t": "A",
+     "forms": {
+      "f1": "Bai"
+     },
+     "use": {
+      "tc701839d3afe:GenerateRandomHeroGivenName": "f1"
+     }
+    },
+    "template_id": "tc701839d3afe",
+    "list": "familyName"
+   },
+   "out": null,
+   "why": "neither: the entry's own words"
+  },
+  {
+   "id": "template_uses/for/the-order-of-the-keys-does-not-matter",
+   "op": "for",
+   "in": {
+    "line": {
+     "v": "Bo",
+     "t": "A",
+     "forms": {
+      "f1": "Bai"
+     },
+     "use": {
+      "tc701839d3afe:GenerateRandomHeroGivenName": "f1",
+      "tc701839d3afe": "0"
+     }
+    },
+    "template_id": "tc701839d3afe",
+    "list": "GenerateRandomHeroGivenName"
+   },
+   "out": "f1",
+   "why": "the key of the list wins whichever is written first"
+  },
+  {
+   "id": "template_uses/for/another-template-is-not-read",
+   "op": "for",
+   "in": {
+    "line": {
+     "v": "Bo",
+     "t": "A",
+     "forms": {
+      "f1": "Bai"
+     },
+     "use": {
+      "t0123456789ab:GenerateRandomHeroGivenName": "f1",
+      "t0123456789ab": "f1"
+     }
+    },
+    "template_id": "tc701839d3afe",
+    "list": "GenerateRandomHeroGivenName"
+   },
+   "out": null,
+   "why": "the id must be the template's"
+  },
+  {
+   "id": "template_uses/for/a-prefix-of-the-id-is-not-the-id",
+   "op": "for",
+   "in": {
+    "line": {
+     "v": "Bo",
+     "t": "A",
+     "forms": {
+      "f1": "Bai"
+     },
+     "use": {
+      "tc701839d3af:GenerateRandomHeroGivenName": "f1"
+     }
+    },
+    "template_id": "tc701839d3afe",
+    "list": "GenerateRandomHeroGivenName"
+   },
+   "out": null,
+   "why": "the id is compared whole"
+  },
+  {
+   "id": "template_uses/for/one-form-per-class",
+   "op": "for",
+   "in": {
+    "line": {
+     "v": "Bo",
+     "t": "A",
+     "forms": {
+      "f1": "Bai"
+     },
+     "use": {
+      "tc701839d3afe:GenerateRandomHeroGivenName": {
+       "c0": "0",
+       "c1": "f1"
+      }
+     }
+    },
+    "template_id": "tc701839d3afe",
+    "list": "GenerateRandomHeroGivenName"
+   },
+   "out": {
+    "c0": "0",
+    "c1": "f1"
+   },
+   "why": "a key of a list gives a form per class like a key of a template"
+  },
+  {
+   "id": "template_uses/for/no-use-at-all",
+   "op": "for",
+   "in": {
+    "line": {
+     "v": "Bo",
+     "t": "A"
+    },
+    "template_id": "tc701839d3afe",
+    "list": "GenerateRandomHeroGivenName"
+   },
+   "out": null,
+   "why": "an entry that takes nothing gives its own words"
+  }
+ ]
+}

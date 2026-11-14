@@ -218,6 +218,7 @@
       "why": "work that exists in exactly one place" },
     { "id": "sync/explain/diverged", "op": "explain", "in": { "direction": "Merge" },
       "out": "Both this file and the published one have moved. Settling that is done line by line.",
-      "why": "says the ACT it leads to, because it is not the same act as taking an update" }
+      "why": "says the ACT it leads to, because it is not the same act as taking an update" },
+    {"id": "sync/content_hash/v2-use-by-list", "op": "content_hash", "in": {"lines": {"柏": {"v": "Bo", "t": "A", "forms": {"f1": "Bai"}, "use": {"tc701839d3afe:GenerateRandomHeroGivenName": "f1", "tc701839d3afe": "0"}}}, "uuid": "u"}, "out": "ba92b77eb4a2bc28ab6b530f047a1bdc4140844c806516778f8dce189f227cb7", "why": "what a template takes from an entry in the slots of one list is a key of `use`, `ID:LIST`, sorted by byte with the others: the key of the whole template comes first, being a prefix of it (produced by tools/format2-hash-reference.py)"}
   ]
 }

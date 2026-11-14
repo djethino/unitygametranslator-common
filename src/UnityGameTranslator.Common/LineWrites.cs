@@ -157,6 +157,12 @@ namespace UnityGameTranslator.Common
             if (line.Use != null)
                 foreach (var use in line.Use)
                 {
+                    // `T:LIST` says what the template takes in the slots of that list: a list the file does not hold has no slot to read it
+                    TemplateUses.TemplateOf(use.Key, out string? useList);
+                    if (useList != null && !hasList(useList))
+                        return Say(SlotListMissing,
+                            $"The line \"{key}\" says what template {use.Key} takes from it in the slots of the list \"{useList}\", which `_lists` does not hold.");
+
                     if (use.Value.Form != null && !FormExists(line, use.Value.Form))
                         return Say(UseFormMissing,
                             $"The line \"{key}\" says template {use.Key} takes form {use.Value.Form}, which this line does not hold.");
