@@ -50,7 +50,7 @@
         { "kind": "list", "name": "TextEditScroll", "minHeight": 120, "preferredHeight": 260 },
         { "kind": "label", "name": "TextFontNotice", "text": { "bind": "textFontNotice" }, "role": "Small", "tone": "Warning", "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false }
       ] },
-      { "kind": "label", "name": "Status", "text": { "bind": "status" }, "role": "Small", "tone": "Plain", "minHeight": "RowHeightSmall" }
+      { "kind": "label", "name": "Status", "text": { "bind": "status" }, "role": "Small", "tone": "Plain", "minHeight": "RowHeightSmall", "autoHeight": true }
     ] }
   ],
   "footer": [
