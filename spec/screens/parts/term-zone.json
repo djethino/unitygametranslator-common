@@ -1,0 +1,148 @@
+{
+  "$comment": "The term zone: what a term IS, beside the sentence that cites it — to the RIGHT of it, never over it. A part: one template, 'Zone', that TermZone instantiates into the host an editing screen leaves for it (TermHost), and one, 'FormRow', for each written form. Read only here (T1d); what it writes comes with T2. Its words are the site's (spec/wording.json).",
+  "name": "TermZone",
+  "part": true,
+  "templates": [
+    {
+      "kind": "stack",
+      "name": "Zone",
+      "spacing": "ElementSpacing",
+      "pad": "SectionPadding",
+      "surface": "Card",
+      "children": [
+        {
+          "kind": "row",
+          "name": "ZoneHead",
+          "spacing": "SmallSpacing",
+          "pad": 0,
+          "minHeight": "RowHeightMedium",
+          "children": [
+            {
+              "kind": "label",
+              "name": "ZoneTitle",
+              "text": "Term",
+              "role": "SectionTitle",
+              "fill": "Stretch"
+            },
+            {
+              "kind": "button",
+              "name": "CloseBtn",
+              "text": "Close",
+              "size": "Compact",
+              "minWidth": 70,
+              "act": "closeTerm"
+            }
+          ]
+        },
+        {
+          "kind": "label",
+          "name": "KeyCaption",
+          "text": "Source term",
+          "role": "Caption",
+          "tone": "Secondary"
+        },
+        {
+          "kind": "label",
+          "name": "ZoneKey",
+          "gameText": "source",
+          "text": {
+            "bind": "zoneKey"
+          },
+          "policy": "Excluded",
+          "fill": "Stretch",
+          "autoHeight": true
+        },
+        {
+          "kind": "label",
+          "name": "WordCaption",
+          "text": "Translation",
+          "role": "Caption",
+          "tone": "Secondary"
+        },
+        {
+          "kind": "label",
+          "name": "ZoneWord",
+          "gameText": "target",
+          "text": {
+            "bind": "zoneWord"
+          },
+          "policy": "Excluded",
+          "bold": true,
+          "fill": "Stretch",
+          "autoHeight": true
+        },
+        {
+          "kind": "label",
+          "name": "FormsCaption",
+          "text": "Forms",
+          "role": "Caption",
+          "tone": "Secondary",
+          "visible": false
+        },
+        {
+          "kind": "stack",
+          "name": "FormsHost",
+          "spacing": 2,
+          "visible": false
+        },
+        {
+          "kind": "label",
+          "name": "UsedCaption",
+          "text": "Used in",
+          "role": "Caption",
+          "tone": "Secondary"
+        },
+        {
+          "kind": "label",
+          "name": "ZoneUsed",
+          "text": {
+            "bind": "zoneUsed"
+          },
+          "policy": "Excluded",
+          "role": "Small",
+          "fill": "Stretch",
+          "autoHeight": true
+        },
+        {
+          "kind": "label",
+          "name": "ZoneGone",
+          "text": "This term no longer exists.",
+          "role": "Small",
+          "tone": "Warning",
+          "visible": false
+        }
+      ]
+    },
+    {
+      "kind": "row",
+      "name": "FormRow",
+      "spacing": 6,
+      "pad": 0,
+      "minHeight": "RowHeightSmall",
+      "children": [
+        {
+          "kind": "label",
+          "name": "FormId",
+          "text": {
+            "bind": "formId"
+          },
+          "policy": "Excluded",
+          "role": "Caption",
+          "tone": "Muted",
+          "minWidth": 30
+        },
+        {
+          "kind": "label",
+          "name": "FormText",
+          "gameText": "target",
+          "text": {
+            "bind": "formText"
+          },
+          "policy": "Excluded",
+          "fill": "Stretch",
+          "autoHeight": true
+        }
+      ]
+    }
+  ]
+}

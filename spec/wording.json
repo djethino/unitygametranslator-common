@@ -3,32 +3,230 @@
   "entries": {
     "edit.question": {
       "text": "“{words}” is a new form of “{term}”. Apply to:",
-      "params": ["words", "term"],
+      "params": [
+        "words",
+        "term"
+      ],
       "site": "editor.question",
-      "screens": [ { "screen": "inspector", "node": "QuestionText", "field": "bind", "value": "question" } ],
+      "screens": [
+        {
+          "screen": "inspector",
+          "node": "QuestionText",
+          "field": "bind",
+          "value": "question"
+        }
+      ],
       "note": "The question a correction asks when changed words are no known writing of a term (LineEditing.Question). The mod's bind `question` is this text with the two names written in."
     },
     "edit.all_texts": {
       "text": "All texts",
       "site": "editor.all_texts",
-      "screens": [ { "screen": "inspector", "node": "AllTextsBtn", "field": "text" } ]
+      "screens": [
+        {
+          "screen": "inspector",
+          "node": "AllTextsBtn",
+          "field": "text"
+        }
+      ]
     },
     "edit.only_this_text": {
       "text": "Only this text",
       "site": "editor.only_this_text",
-      "screens": [ { "screen": "inspector", "node": "OnlyThisBtn", "field": "text" } ]
+      "screens": [
+        {
+          "screen": "inspector",
+          "node": "OnlyThisBtn",
+          "field": "text"
+        }
+      ]
     },
     "edit.all_texts_help": {
       "text": "Add the words to the term as a new form, for every text that cites it.",
       "site": null,
       "why": "the mod has a help bar, the site no tooltip on these buttons yet: it may take this sentence as theirs, not write another",
-      "screens": [ { "screen": "inspector", "node": "AllTextsBtn", "field": "help" } ]
+      "screens": [
+        {
+          "screen": "inspector",
+          "node": "AllTextsBtn",
+          "field": "help"
+        }
+      ]
     },
     "edit.only_this_text_help": {
       "text": "Keep the words in this text alone. The term keeps its forms.",
       "site": null,
       "why": "same",
-      "screens": [ { "screen": "inspector", "node": "OnlyThisBtn", "field": "help" } ]
+      "screens": [
+        {
+          "screen": "inspector",
+          "node": "OnlyThisBtn",
+          "field": "help"
+        }
+      ]
+    },
+    "edit.preview": {
+      "text": "Preview",
+      "site": "editor.preview",
+      "screens": [
+        {
+          "screen": "inspector",
+          "node": "LinksPreviewCaption",
+          "field": "text"
+        }
+      ]
+    },
+    "edit.link_to_term": {
+      "text": "Link to term",
+      "site": "editor.link_to_term",
+      "screens": [
+        {
+          "screen": "inspector",
+          "node": "LinkBtn",
+          "field": "text"
+        }
+      ]
+    },
+    "edit.unlink": {
+      "text": "Unlink",
+      "site": "editor.unlink",
+      "screens": [
+        {
+          "screen": "inspector",
+          "node": "UnlinkBtn",
+          "field": "text"
+        }
+      ]
+    },
+    "edit.new_term": {
+      "text": "New term",
+      "site": "editor.new_term",
+      "screens": [
+        {
+          "screen": "inspector",
+          "node": "NewTermBtn",
+          "field": "text"
+        }
+      ]
+    },
+    "edit.line_linked": {
+      "text": "Linked",
+      "site": "editor.line_linked",
+      "carried_by": "PassagePills (UI/Components): the tooltip of a place, written by code — the mod's own checks hold it to this text"
+    },
+    "edit.line_found": {
+      "text": "Found",
+      "site": "editor.line_found",
+      "carried_by": "PassagePills (UI/Components): the tooltip of a place, written by code — the mod's own checks hold it to this text"
+    },
+    "edit.line_several": {
+      "text": "Found several times",
+      "site": "editor.line_several",
+      "carried_by": "PassagePills (UI/Components): the tooltip of a place, written by code — the mod's own checks hold it to this text"
+    },
+    "edit.line_not_found": {
+      "text": "Not found",
+      "site": "editor.line_not_found",
+      "carried_by": "PassagePills (UI/Components): the tooltip of a place, written by code — the mod's own checks hold it to this text"
+    },
+    "edit.line_refused": {
+      "text": "Not this term",
+      "site": "editor.line_refused",
+      "carried_by": "PassagePills (UI/Components): the tooltip of a place, written by code — the mod's own checks hold it to this text"
+    },
+    "term.title": {
+      "text": "Term",
+      "site": "editor.term",
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "ZoneTitle",
+          "field": "text"
+        }
+      ]
+    },
+    "term.key": {
+      "text": "Source term",
+      "site": "editor.term_key",
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "KeyCaption",
+          "field": "text"
+        }
+      ]
+    },
+    "term.word": {
+      "text": "Translation",
+      "site": "editor.term_word",
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "WordCaption",
+          "field": "text"
+        }
+      ],
+      "not_the_same": [
+        {
+          "screen": "options",
+          "node": "TranslationTab",
+          "field": "text",
+          "why": "a tab of the mod's settings, not the field that holds the term's translation"
+        }
+      ]
+    },
+    "term.forms": {
+      "text": "Forms",
+      "site": "editor.term_forms",
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "FormsCaption",
+          "field": "text"
+        }
+      ]
+    },
+    "term.used_in": {
+      "text": "Used in",
+      "site": "editor.term_used_in",
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "UsedCaption",
+          "field": "text"
+        }
+      ]
+    },
+    "term.gone": {
+      "text": "This term no longer exists.",
+      "site": "editor.term_gone",
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "ZoneGone",
+          "field": "text"
+        }
+      ]
+    },
+    "common.close": {
+      "text": "Close",
+      "site": "editor.close",
+      "screens": [
+        {
+          "screen": "parts/term-zone",
+          "node": "CloseBtn",
+          "field": "text"
+        },
+        {
+          "screen": "backups",
+          "node": "CloseBtn",
+          "field": "text"
+        },
+        {
+          "screen": "main",
+          "node": "CloseBtn",
+          "field": "text"
+        }
+      ]
     }
   }
 }

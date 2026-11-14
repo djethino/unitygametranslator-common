@@ -47,7 +47,10 @@
       ] },
       { "kind": "stack", "name": "TextEditRow", "spacing": 4, "fillHeight": true, "visible": false, "children": [
         { "kind": "label", "name": "TextEditCount", "text": { "bind": "textEditCount" }, "role": "Small", "tone": "Secondary", "minHeight": "RowHeightSmall" },
-        { "kind": "list", "name": "TextEditScroll", "minHeight": 120, "preferredHeight": 260 },
+        { "kind": "row", "name": "EditSplit", "spacing": 6, "pad": 0, "fillHeight": true, "children": [
+          { "kind": "list", "name": "TextEditScroll", "minHeight": 120, "preferredHeight": 260 },
+          { "kind": "stack", "name": "TermHost", "pad": 0, "minWidth": 260, "fill": "Content", "visible": false }
+        ] },
         { "kind": "label", "name": "TextFontNotice", "text": { "bind": "textFontNotice" }, "role": "Small", "tone": "Warning", "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false }
       ] },
       { "kind": "label", "name": "Status", "text": { "bind": "status" }, "role": "Small", "tone": "Plain", "minHeight": "RowHeightSmall", "autoHeight": true }
@@ -76,6 +79,16 @@
       { "kind": "label", "name": "LiveValues", "text": { "bind": "liveValues" }, "policy": "Excluded", "role": "Caption", "tone": "Accent", "richText": false, "fill": "Stretch", "minHeight": "RowHeightSmall", "visible": false },
       { "kind": "field", "name": "TranslationInput", "gameText": "target", "placeholder": "Enter translation...", "input": "Multiline", "scroll": true, "minHeight": 40, "fill": "Stretch", "richText": false },
       { "kind": "label", "name": "Preview", "gameText": "target", "text": { "bind": "preview" }, "policy": "Excluded", "role": "Small", "tone": "Secondary", "fill": "Stretch", "minHeight": "RowHeightSmall" },
+      { "kind": "row", "name": "LinksPreviewRow", "spacing": 6, "placement": "TopLeft", "fill": "Stretch", "visible": false, "children": [
+        { "kind": "label", "name": "LinksPreviewCaption", "text": "Preview", "role": "Caption", "tone": "Secondary", "minWidth": 50 },
+        { "kind": "label", "name": "LinksPreview", "gameText": "target", "text": { "bind": "linksPreview" }, "policy": "Excluded", "role": "Small", "tone": "Plain", "fill": "Stretch", "autoHeight": true, "minHeight": "RowHeightSmall" }
+      ] },
+      { "kind": "stack", "name": "PillsHost", "spacing": 3, "fill": "Stretch", "visible": false },
+      { "kind": "row", "name": "LinkActionsRow", "spacing": 4, "minHeight": "RowHeightNormal", "fill": "Stretch", "visible": false, "children": [
+        { "kind": "button", "name": "LinkBtn", "text": "Link to term", "size": "Compact", "minWidth": 100, "policy": "Excluded", "act": "linkToTerm" },
+        { "kind": "button", "name": "UnlinkBtn", "text": "Unlink", "size": "Compact", "minWidth": 70, "policy": "Excluded", "act": "unlink" },
+        { "kind": "button", "name": "NewTermBtn", "text": "New term", "size": "Compact", "minWidth": 90, "policy": "Excluded", "act": "newTerm" }
+      ] },
       { "kind": "stack", "name": "QuestionRow", "spacing": 3, "fill": "Stretch", "visible": false, "children": [
         { "kind": "label", "name": "QuestionText", "text": { "bind": "question" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "richText": false, "fill": "Stretch", "autoHeight": true, "minHeight": "RowHeightSmall" },
         { "kind": "row", "name": "AnswerRow", "spacing": 4, "minHeight": "RowHeightNormal", "fill": "Stretch", "children": [

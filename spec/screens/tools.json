@@ -109,7 +109,8 @@
           { "kind": "label", "name": "FailuresLabel", "text": "AI failures", "role": "SectionTitle" },
           { "kind": "label", "name": "FailuresHint", "text": "The AI gave no usable translation, so the line was left untranslated. Fix one of the proposals, write your own, skip the line, or exclude the element that shows it.", "role": "Hint" },
           { "kind": "list", "name": "FailuresScroll", "minHeight": 0, "preferredHeight": 60, "fill": false, "empty": "No failed lines this session" },
-          { "kind": "stack", "name": "FailureEditor", "spacing": 4, "visible": false, "children": [
+          { "kind": "row", "name": "FailureSplit", "spacing": 6, "pad": 0, "visible": false, "children": [
+          { "kind": "stack", "name": "FailureEditor", "spacing": 4, "fill": "Stretch", "children": [
             { "kind": "splitter", "name": "ListSplit", "help": "Drag to give the list above or the text below more room. Back to automatic when the window closes." },
             { "kind": "collapsible", "name": "GameText", "title": "Game text", "expanded": true,
               "help": "The line as the game shows it, tags and placeholders included. Fold it to give the field the room.",
@@ -152,6 +153,8 @@
               { "kind": "button", "name": "FailExcludePatternBtn", "text": "Exclude pattern", "size": "Compact", "minWidth": 110, "act": "failExcludePattern",
                 "help": "Excludes every element with this name, at any depth. Listed in Exclusions, applied on Apply." }
             ] }
+          ] },
+          { "kind": "stack", "name": "TermHost", "pad": 0, "minWidth": 260, "fill": "Content", "visible": false }
           ] },
           { "kind": "label", "name": "FailStatus", "text": { "bind": "failStatus" }, "role": "Small" },
           { "kind": "stack", "name": "HeldSection", "spacing": 4, "visible": false, "children": [
