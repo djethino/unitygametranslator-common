@@ -34,6 +34,8 @@ spec/
   config/cases.json        files as written today and by older builds: written / read (mod) / manager verdicts
   translation-file/moments.md  WHEN each `_` key and the ancestors move — download, upload, merge, fork, restore — and what holds each moment
   translation-file/moments.json  the same moments as sequences of acts, replayed by the mod's TranslationStoreChecks and the Manager's MomentsContractChecks
+  translation-file/failures.md  the failures file beside a translation: its name, its shape, how it is read and written, that nothing uploads it
+  translation-file/failures.json  its cases (a document, what is read, what is written back), replayed by the mod's FailureStoreChecks
   screens/schema.json      the closed vocabulary a screen of the mod is described in (card, stack, row, spacer, label, button — slots and acts)
   screens/<screen>.json    one document per screen described in data, embedded in the mod and built by its ScreenBuilder; a second Core draws the same file with its own
   texts-seen/schema.json   the text systems a game SHOWED while the mod ran (texts-seen.json, beside config.json) — vocabulary in src/TextSystems.cs

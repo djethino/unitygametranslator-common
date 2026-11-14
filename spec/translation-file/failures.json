@@ -1,0 +1,110 @@
+{
+  "$comment": "The failures file (failures.md is the prose). Each case: a document as the file holds it (or the raw text of one), an optional translation it is reconciled against, what is READ from it (the ledger, in order) and what is WRITTEN back from that ledger (a document, or \"absent\" when the file is deleted). Replayed by the mod's FailureStoreChecks on a real folder.",
+  "cases": [
+    {
+      "id": "failures/round-trip",
+      "document": { "lines": [
+        { "key": "Play", "source": "Play", "elements": ["Canvas/Menu/Play"], "attempts": [ { "value": "Jouer [x]", "errors": ["a refusal"] }, { "value": "", "errors": ["a server said no"] } ] },
+        { "key": "Quit", "source": "Quit", "elements": [], "attempts": [] }
+      ] },
+      "read": [
+        { "key": "Play", "source": "Play", "elements": ["Canvas/Menu/Play"], "attempts": [ { "value": "Jouer [x]", "errors": ["a refusal"] }, { "value": "", "errors": ["a server said no"] } ] },
+        { "key": "Quit", "source": "Quit", "elements": [], "attempts": [] }
+      ],
+      "written": { "lines": [
+        { "key": "Play", "source": "Play", "elements": ["Canvas/Menu/Play"], "attempts": [ { "value": "Jouer [x]", "errors": ["a refusal"] }, { "value": "", "errors": ["a server said no"] } ] },
+        { "key": "Quit", "source": "Quit", "elements": [], "attempts": [] }
+      ] },
+      "why": "what is written reads back the same, in the same order"
+    },
+    {
+      "id": "failures/empty-ledger-deletes-the-file",
+      "document": { "lines": [] },
+      "read": [],
+      "written": "absent",
+      "why": "nothing to keep is no file, so the Failures tab has nothing to say and a game folder holds nothing stale"
+    },
+    {
+      "id": "failures/entry-without-a-key-is-ignored",
+      "document": { "lines": [
+        { "source": "orphan" },
+        { "key": "", "source": "empty" },
+        { "key": 5, "source": "number" },
+        "text",
+        null,
+        { "key": "Kept", "source": "Kept" }
+      ] },
+      "read": [ { "key": "Kept", "source": "Kept", "elements": [], "attempts": [] } ],
+      "written": { "lines": [ { "key": "Kept", "source": "Kept", "elements": [], "attempts": [] } ] },
+      "why": "a line is found by its key: an entry without a usable one can never be settled, so it is not kept"
+    },
+    {
+      "id": "failures/lines-that-is-not-a-list",
+      "document": { "lines": 5 },
+      "read": [],
+      "written": "absent",
+      "why": "a file that is not what this writes holds no line, and is not an error"
+    },
+    {
+      "id": "failures/source-defaults-to-the-key",
+      "document": { "lines": [ { "key": "Play" } ] },
+      "read": [ { "key": "Play", "source": "Play", "elements": [], "attempts": [] } ],
+      "written": { "lines": [ { "key": "Play", "source": "Play", "elements": [], "attempts": [] } ] },
+      "why": "the text that was asked is the key unless the line says otherwise"
+    },
+    {
+      "id": "failures/elements-keep-only-non-empty-strings",
+      "document": { "lines": [ { "key": "Play", "elements": ["A/B", "", 5, null, "C"] } ] },
+      "read": [ { "key": "Play", "source": "Play", "elements": ["A/B", "C"], "attempts": [] } ],
+      "why": "an element is a path; anything else names nothing"
+    },
+    {
+      "id": "failures/attempt-defaults-and-non-text-errors",
+      "document": { "lines": [ { "key": "Play", "attempts": [ {}, { "value": "x" }, { "errors": ["e", 3, null, "f"] } ] } ] },
+      "read": [ { "key": "Play", "source": "Play", "elements": [], "attempts": [ { "value": "", "errors": [] }, { "value": "x", "errors": [] }, { "value": "", "errors": ["e", "f"] } ] } ],
+      "why": "a missing answer is empty text, and only sentences are errors"
+    },
+    {
+      "id": "failures/a-sentence-of-an-older-version-is-read-as-it-is",
+      "document": { "lines": [ { "key": "Play", "attempts": [ { "value": "Jouer", "errors": ["character '[' appears 3 time(s) instead of 4"] } ] } ] },
+      "read": [ { "key": "Play", "source": "Play", "elements": [], "attempts": [ { "value": "Jouer", "errors": ["character '[' appears 3 time(s) instead of 4"] } ] } ],
+      "why": "a stored sentence is shown, never looked up: the file never goes out of date"
+    },
+    {
+      "id": "failures/unknown-names-are-ignored-and-not-kept",
+      "document": { "version": 2, "lines": [ { "key": "Play", "note": "x", "attempts": [ { "value": "v", "errors": ["e"], "model": "m" } ] } ] },
+      "read": [ { "key": "Play", "source": "Play", "elements": [], "attempts": [ { "value": "v", "errors": ["e"] } ] } ],
+      "written": { "lines": [ { "key": "Play", "source": "Play", "elements": [], "attempts": [ { "value": "v", "errors": ["e"] } ] } ] },
+      "why": "what the file does today, written down so that nobody relies on the opposite"
+    },
+    {
+      "id": "failures/a-line-noted-twice-is-one-line",
+      "document": { "lines": [
+        { "key": "A", "elements": ["E1"], "attempts": [ { "value": "first", "errors": [] } ] },
+        { "key": "B" },
+        { "key": "A", "attempts": [ { "value": "second", "errors": [] } ] }
+      ] },
+      "read": [
+        { "key": "A", "source": "A", "elements": ["E1"], "attempts": [ { "value": "second", "errors": [] } ] },
+        { "key": "B", "source": "B", "elements": [], "attempts": [] }
+      ],
+      "why": "the later answer replaces the earlier, in the earlier's place, and the elements that showed the line are not lost"
+    },
+    {
+      "id": "failures/a-translated-key-is-settled",
+      "document": { "lines": [ { "key": "A" }, { "key": "B" }, { "key": "C" } ] },
+      "translation": { "A": { "v": "Bonjour", "t": "H" }, "B": { "v": "", "t": "A" } },
+      "read": [
+        { "key": "B", "source": "B", "elements": [], "attempts": [] },
+        { "key": "C", "source": "C", "elements": [], "attempts": [] }
+      ],
+      "why": "a line the file now translates was settled by something else; an empty line is no translation"
+    },
+    {
+      "id": "failures/not-json-is-not-read",
+      "text": "this is not json",
+      "read": "unreadable",
+      "why": "the load throws and the caller goes on without the file, which is left as it is"
+    }
+  ]
+}
