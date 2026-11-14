@@ -28,6 +28,18 @@ namespace UnityGameTranslator.Common.Checks
 
         private static int Main(string[] args)
         {
+            // `dotnet run -- unicode-list`: the runtime-Unicode calls still in the library, in the baseline's own format.
+            if (args.Length >= 1 && args[0] == "unicode-list")
+            {
+                string? root = CommonRoot();
+                if (root == null) return 2;
+                // Written to a file when one is named: a build's warnings share the console's output.
+                string listing = NoRuntimeUnicode.Format(NoRuntimeUnicode.Inventory(System.IO.Path.Combine(root, "src", "UnityGameTranslator.Common")));
+                if (args.Length >= 2) System.IO.File.WriteAllText(args[1], listing, new System.Text.UTF8Encoding(false));
+                else Console.Out.Write(listing);
+                return 0;
+            }
+
             // The child of AnswersCultureChecks: the culture is set before the library is touched.
             if (args.Length == 2 && args[0] == AnswersCultureChecks.Verb)
                 return AnswersCultureChecks.RunUnder(args[1]);
@@ -66,6 +78,7 @@ namespace UnityGameTranslator.Common.Checks
             ProviderNegotiation();
             ProductColours();
             NothingSwallowed();
+            Section("No runtime Unicode (a ratchet to zero)", check => NoRuntimeUnicode.Run(check, CommonRoot()));
 
             Console.WriteLine();
             if (_failures == 0)
