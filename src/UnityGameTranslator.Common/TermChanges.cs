@@ -113,8 +113,11 @@ namespace UnityGameTranslator.Common
                 {
                     if (!string.Equals(link.To, entryKey, StringComparison.Ordinal)) continue;
 
-                    LinkRead readBefore = LinkReading.Read(link, k => k == entryKey ? was : (TranslationLine?)null, null, null);
-                    LinkRead readAfter = LinkReading.Read(link, k => k == entryKey ? after : null, null, null);
+                    // The same reader the screens use, WITH the case of the socle: a link that asks for a capital reads « Pièce »
+                    // where the term says « pièce », and what it confirmed (was) is the capitalised text — read without the case,
+                    // every such sentence looked changed and to read again, and the announcement was no longer what the screen shows.
+                    LinkRead readBefore = LinkReading.Read(link, k => k == entryKey ? was : (TranslationLine?)null, Casing.UpperFirst!, Casing.LowerFirst!);
+                    LinkRead readAfter = LinkReading.Read(link, k => k == entryKey ? after : null, Casing.UpperFirst!, Casing.LowerFirst!);
 
                     if (!string.Equals(readBefore.Text, readAfter.Text, StringComparison.Ordinal)) textChanges = true;
                     bool needs = LinkReading.NeedsReview(link, readAfter);
