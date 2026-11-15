@@ -145,6 +145,13 @@ namespace UnityGameTranslator.Common
         /// null when none was yet. See <see cref="GameChoices"/>.
         /// </summary>
         public GameChoice? ConfirmedGame;
+
+        /// <summary>
+        /// The format the file will be sent in: that of what it CONTAINS (<see cref="TranslationFormat.OfContent"/>). Zero, or less, is the
+        /// format 1 — a caller that does not say, and a file with nothing of the format 2 in it. Read with
+        /// <see cref="ServerFacts.KeepsFormat"/> by <see cref="Uploads.FormatWall"/>.
+        /// </summary>
+        public int FileFormat;
     }
 
     /// <summary>
@@ -188,6 +195,13 @@ namespace UnityGameTranslator.Common
 
         /// <summary>How many distinct lines those contributions hold. Null when not counted.</summary>
         public int? LinesAvailable;
+
+        /// <summary>
+        /// The highest format of translation file this server keeps, as it said it (<see cref="TranslationFormat.ServerKeeps"/>). Null when
+        /// its answer carried none — and then it is the format 1, never "unknown": only a server not ASKED (<see cref="Checked"/> false)
+        /// is unknown, and says nothing about a file's format.
+        /// </summary>
+        public int? KeepsFormat;
 
         /// <summary>Whether the Main takes contributions. Null when unknown.</summary>
         public bool? AcceptsBranches;

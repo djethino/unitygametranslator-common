@@ -30,6 +30,13 @@ namespace UnityGameTranslator.Common.Checks
             check(commonRoot != null, "the library's folder is found", "the spec is read from it; without it this proves nothing");
             if (commonRoot == null) return;
 
+            // 🔴 A socle that can STAMP a file with the format 2 (OfContent) must be able to READ one: Current is at least the highest format
+            // it writes. It was 1 while the writers already stamped 2 — a file this socle made, refused by this socle's own readers.
+            int highestStamped = TranslationFormat.OfContent(true, new List<TranslationLine>());
+            check(TranslationFormat.Current >= highestStamped && TranslationFormat.Current >= TranslationFormat.Unannounced,
+                $"Current ({TranslationFormat.Current}) reads what OfContent stamps ({highestStamped})",
+                "a client that announces less than it writes refuses its own files, and a server never sends it the ones it could read");
+
             string folder = Path.Combine(commonRoot, "spec", "translation-file");
             using var cases = JsonDocument.Parse(File.ReadAllText(Path.Combine(folder, "cases.json")));
             using var schema = JsonDocument.Parse(File.ReadAllText(Path.Combine(folder, "schema.json")));

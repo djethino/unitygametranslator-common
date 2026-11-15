@@ -17,8 +17,16 @@ namespace UnityGameTranslator.Common
     /// </summary>
     public static class TranslationFormat
     {
-        /// <summary>The format this socle reads and writes — the mod's files, the Manager's reading.</summary>
-        public const int Current = 1;
+        /// <summary>
+        /// The highest format this socle reads and writes — the mod's files, the Manager's reading, what the site keeps.
+        ///
+        /// 🔴 **2 since 2026-11-15** (user: « le mod reste compatible v1 mais passe à la v2 »). What it governs: what a client ANNOUNCES
+        /// (<see cref="Header"/>) and what it refuses to load beyond it; never the format of a file — that is what the file CONTAINS
+        /// (<see cref="OfContent"/>), so a file of the format 1 stays one until a field of the format 2 is written in it. Nowhere is it
+        /// the format of a dictionary that declares none, nor what a game with no mod yet will read (<see cref="Unannounced"/>): the mod
+        /// it will have is the one already published.
+        /// </summary>
+        public const int Current = 2;
 
         /// <summary>What a client that says nothing reads: every mod and Manager released before this rule.</summary>
         public const int Unannounced = 1;
@@ -77,6 +85,23 @@ namespace UnityGameTranslator.Common
 
         /// <summary>Whether a client reading up to <paramref name="readsUpTo"/> can use a file of <paramref name="fileFormat"/>.</summary>
         public static bool Reads(int readsUpTo, int fileFormat) => fileFormat <= readsUpTo;
+
+        /// <summary>
+        /// The highest format a SERVER keeps — the other direction of <see cref="Announced"/>: what it said (the field <c>format</c> of the
+        /// answer that precedes every upload), or the format 1 when it said nothing or something unreadable.
+        ///
+        /// 🔴 **A silent server keeps the format 1**, as a silent client reads it: it is the answer of every site released before the field,
+        /// and a file of the format 2 sent to one of those would be stored by code that does not know its fields. Never a guess from the
+        /// address the mod talks to.
+        /// </summary>
+        public static int ServerKeeps(int? said) => said.HasValue && said.Value >= 1 ? said.Value : 1;
+
+        /// <summary>
+        /// Whether a file of <paramref name="fileFormat"/> may be SENT to a server that said <paramref name="serverKeeps"/> (null: nothing).
+        /// A file of the format 1 always may; one of the format 2 only to a server that says it keeps it. Asked BEFORE the click, so that
+        /// no send is attempted that the server could only get wrong.
+        /// </summary>
+        public static bool CanSend(int fileFormat, int? serverKeeps) => Reads(ServerKeeps(serverKeeps), fileFormat);
 
         /// <summary>
         /// Said where a translation cannot be used by the client looking at it — the chip's tip, the

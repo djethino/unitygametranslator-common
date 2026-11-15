@@ -104,6 +104,18 @@ namespace UnityGameTranslator.Common
             WayOut = "Switch game to keep contributing.",
         };
 
+        /// <summary>
+        /// The server keeps a lower format of file than this translation is in (<see cref="TranslationFormat.CanSend"/>): said BEFORE the
+        /// click, because a send the server could only get wrong is not attempted. The way out is the real one: nothing is lost, it is
+        /// not publishable THERE, and it works in the game.
+        /// </summary>
+        public static WallText FormatNotKept(int serverKeeps, int fileFormat) => new WallText
+        {
+            Fact = "This server keeps format " + serverKeeps.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                 + " only. This translation is format " + fileFormat.ToString(System.Globalization.CultureInfo.InvariantCulture) + ".",
+            WayOut = "It cannot be published here. It still works in the game.",
+        };
+
         /// <param name="owner">Who leads the lineage, when known. Named when it can be — "somebody" leaves nowhere to look.</param>
         public static WallText WorksAlone(string? owner) => new WallText
         {
@@ -374,6 +386,15 @@ namespace UnityGameTranslator.Common
             // otherwise (`game_changed`), so it is said before the click. A Main's owner is never
             // held: they moved it. The line under the game's name states the fact; the button the
             // way out; a screen without that line shows the whole wall.
+            // 🔴 **A file the server cannot keep is not sent** (user, 2026-11-15: the mod passes to the format 2 and stays compatible with
+            // the format 1). The server said what it keeps (or nothing, which is the format 1); a translation in a higher format waits
+            // for a server that keeps it. No card states this fact yet, so the button says it whole — the fact, then the way out.
+            if (closed == null && FormatWall(taken, local, server) is { } formatWall)
+            {
+                closed = formatWall.Whole;
+                wholeWall = formatWall.Whole;
+            }
+
             if (closed == null && GameWall(taken, onABranch, local.ConfirmedGame, server.Game) is { } gameWall)
             {
                 closed = gameWall.WayOut;
@@ -402,6 +423,21 @@ namespace UnityGameTranslator.Common
             GameChoices.Differs(confirmed, game) && ((act == UploadAct.Update && onABranch) || act == UploadAct.Contribute)
                 ? Walls.GameChanged(game!.Name)
                 : (WallText?)null;
+
+        /// <summary>
+        /// The wall a SEND meets when the server keeps a lower format of file than this translation is in — or null. Only an act that sends
+        /// (everything but <see cref="UploadAct.Fork"/>, which is local from end to end), and only once the server was asked
+        /// (<see cref="ServerFacts.Checked"/>): a server not asked has said nothing, which is not the same as saying nothing is kept.
+        /// One rule for <see cref="Button"/> and for a tool that weighs the act itself (the Manager).
+        /// </summary>
+        public static WallText? FormatWall(UploadAct act, LocalFacts local, ServerFacts server)
+        {
+            if (act == UploadAct.Fork || !server.Checked) return null;
+            int file = TranslationFormat.OfFile(local.FileFormat);
+            return TranslationFormat.CanSend(file, server.KeepsFormat)
+                ? (WallText?)null
+                : Walls.FormatNotKept(TranslationFormat.ServerKeeps(server.KeepsFormat), file);
+        }
 
         /// <summary>Said by a tool that cannot take the act, after the wall when there is one.</summary>
         public const string OnlyInTheGame =

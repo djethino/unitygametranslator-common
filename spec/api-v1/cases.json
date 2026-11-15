@@ -262,8 +262,8 @@
       "id": "api-v1/check-uuid/new-lineage",
       "setup": "lineage",
       "request": { "method": "GET", "path": "/translations/check-uuid", "as": "alice", "query": { "uuid": "ffffffff-0000-4000-8000-000000000000" } },
-      "response": { "status": 200, "body": { "exists": false, "role": "none" } },
-      "read": { "reader": "check_uuid", "expects": { "Exists": false, "IsOwner": false, "Role": "None", "MainUsername": null, "AcceptsBranches": null, "Vote": null } },
+      "response": { "status": 200, "body": { "exists": false, "role": "none", "format": 2 } },
+      "read": { "reader": "check_uuid", "expects": { "Exists": false, "IsOwner": false, "Role": "None", "MainUsername": null, "AcceptsBranches": null, "Vote": null, "KeepsFormat": 2 } },
       "why": "nothing exists: an upload would create a new Main"
     },
     {
@@ -346,7 +346,7 @@
       "response": {
         "status": 200,
         "body": {
-          "exists": true, "role": "branch",
+          "exists": true, "role": "branch", "format": 2,
           "main_missing": false, "main_abandoned": false, "main_ignoring": false,
           "accepts_branches": true, "branch_frozen": false, "merged_lines_total": 0,
           "branches_with_work": null, "lines_available": null, "lines_waiting": null,
@@ -356,7 +356,7 @@
           "vote": { "target_id": { "$ref": "translations.main.id" }, "count": 0, "user_vote": null, "can_vote": true }
         }
       },
-      "read": { "reader": "check_uuid", "expects": { "Exists": true, "IsOwner": true, "Role": "Branch", "MainMissing": false, "MainAbandoned": false, "BranchesCount": 0, "BranchesWithWork": null, "LinesToReview": null, "LinesOffered": 1, "Vote.CanVote": true } },
+      "read": { "reader": "check_uuid", "expects": { "Exists": true, "IsOwner": true, "Role": "Branch", "MainMissing": false, "MainAbandoned": false, "BranchesCount": 0, "BranchesWithWork": null, "LinesToReview": null, "LinesOffered": 1, "Vote.CanVote": true, "KeepsFormat": 2 } },
       "why": "a contributor learns what THEIR contribution holds and whether its Main is still there; what other contributors do is none of their business"
     },
     {
@@ -366,12 +366,12 @@
       "response": {
         "status": 200,
         "body": {
-          "exists": true, "role": "none", "main_abandoned": false, "accepts_branches": true,
+          "exists": true, "role": "none", "format": 2, "main_abandoned": false, "accepts_branches": true,
           "main": { "id": { "$ref": "translations.main.id" }, "uploader": "alice", "source_language": "English", "target_language": "French", "line_count": 2, "updated_at": { "$is": "iso8601" }, "content_updated_at": { "$is": "iso8601" } },
           "vote": { "target_id": { "$ref": "translations.main.id" }, "count": 0, "user_vote": null, "can_vote": true }
         }
       },
-      "read": { "reader": "check_uuid", "expects": { "Exists": true, "IsOwner": false, "Role": "None", "MainUsername": "alice", "AcceptsBranches": true, "MainAbandoned": false, "OriginalTranslation.Uploader": "alice", "OriginalTranslation.LineCount": 2, "ExistingTranslation": null } },
+      "read": { "reader": "check_uuid", "expects": { "Exists": true, "IsOwner": false, "Role": "None", "MainUsername": "alice", "AcceptsBranches": true, "MainAbandoned": false, "KeepsFormat": 2, "OriginalTranslation.Uploader": "alice", "OriginalTranslation.LineCount": 2, "ExistingTranslation": null } },
       "why": "told BEFORE the click, to the one person it is for: an upload would become her branch, and the Main takes them"
     },
     {

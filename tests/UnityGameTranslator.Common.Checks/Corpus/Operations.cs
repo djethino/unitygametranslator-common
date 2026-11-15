@@ -146,6 +146,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("uploads", "game_wall", typeof(Uploads), nameof(Uploads.GameWall),
                 e => Uploads.GameWall(EnumRequired<UploadAct>(e, "act"), Bool(e, "on_a_branch"),
                                       GameChoiceOf(e, "confirmed_game"), LineageGameOf(e, "game"))),
+            new Operation("uploads", "format_wall", typeof(Uploads), nameof(Uploads.FormatWall),
+                e => Uploads.FormatWall(EnumRequired<UploadAct>(e, "act"), LocalFactsOf(e), ServerFactsOf(e))),
             new Operation("uploads", "decided_in_the_game", typeof(Uploads), nameof(Uploads.DecidedInTheGame),
                 e => Uploads.DecidedInTheGame(EnumRequired<UploadAct>(e, "act"))),
             new Operation("uploads", "closed_reason", typeof(Uploads), nameof(Uploads.ClosedReason),
@@ -232,6 +234,10 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => TranslationFormat.OfContent(Bool(e, "holds_game_lists"), ValuesOf(Lines(e, "lines")))),
             new Operation("translation_format", "reads", typeof(TranslationFormat), nameof(TranslationFormat.Reads),
                 e => TranslationFormat.Reads(Int(e, "reads_up_to"), Int(e, "file_format"))),
+            new Operation("translation_format", "server_keeps", typeof(TranslationFormat), nameof(TranslationFormat.ServerKeeps),
+                e => TranslationFormat.ServerKeeps(NullableInt(e, "said"))),
+            new Operation("translation_format", "can_send", typeof(TranslationFormat), nameof(TranslationFormat.CanSend),
+                e => TranslationFormat.CanSend(Int(e, "file_format"), NullableInt(e, "server_keeps"))),
 
             // ── line_markers ──────────────────────────────────────────────────
             new Operation("line_markers", "link_numbers", typeof(LineMarkers), nameof(LineMarkers.LinkNumbers),
@@ -887,6 +893,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             ContentHash = Str(e, "content_hash"),
             ForkStillTheCopy = Bool(e, "fork_still_the_copy"),
             ConfirmedGame = GameChoiceOf(e, "confirmed_game"),
+            FileFormat = Int(e, "file_format"),
         };
 
         /// <summary>`{source, id, name}` — the game confirmed on this machine — or null when absent.</summary>
@@ -925,6 +932,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             LinesChangedHere = NullableInt(e, "lines_changed_here"),
             Game = LineageGameOf(e, "game"),
             GameSwitchPending = NullableBool(e, "game_switch_pending"),
+            KeepsFormat = NullableInt(e, "keeps_format"),
         };
 
         private static AccountFacts AccountFactsOf(JsonElement e) => new AccountFacts

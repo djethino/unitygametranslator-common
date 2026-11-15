@@ -27,6 +27,14 @@
         "file_format": "int"
       },
       "out": "bool"
+    },
+    "server_keeps": {
+      "in": { "said": "int or null: the `format` a server said in its answer" },
+      "out": "int: the highest format it keeps — the format 1 when it said nothing or something unreadable"
+    },
+    "can_send": {
+      "in": { "file_format": "int", "server_keeps": "int or null: what the server said" },
+      "out": "bool: whether a file of that format may be sent to it"
     }
   },
   "cases": [
@@ -250,6 +258,20 @@
       "in": { "holds_game_lists": false, "lines": {"S": {"v": "x", "t": "A", "forms": {}, "links": [], "term": false}} },
       "out": 1,
       "why": "a field that is there and empty is not held (the hash does not write it either)"
-    }
+    },
+    { "id": "translation_format/server_keeps/said-2", "op": "server_keeps", "in": { "said": 2 }, "out": 2, "why": "what the server said" },
+    { "id": "translation_format/server_keeps/said-1", "op": "server_keeps", "in": { "said": 1 }, "out": 1, "why": "a server that keeps only the format 1 says so" },
+    { "id": "translation_format/server_keeps/a-silent-server-keeps-1", "op": "server_keeps", "in": { "said": null }, "out": 1,
+      "why": "every site released before the field answers nothing, and keeps the format 1: the same rule as a client that says nothing" },
+    { "id": "translation_format/server_keeps/zero-is-not-a-format", "op": "server_keeps", "in": { "said": 0 }, "out": 1, "why": "unreadable is silence" },
+    { "id": "translation_format/server_keeps/negative-is-not-a-format", "op": "server_keeps", "in": { "said": -3 }, "out": 1, "why": "unreadable is silence" },
+    { "id": "translation_format/can_send/format-1-to-a-silent-server", "op": "can_send", "in": { "file_format": 1, "server_keeps": null }, "out": true,
+      "why": "a file of the format 1 always may be sent: nothing about a v1 file changes the day the mod passes to the format 2" },
+    { "id": "translation_format/can_send/format-2-to-a-silent-server", "op": "can_send", "in": { "file_format": 2, "server_keeps": null }, "out": false,
+      "why": "the production site of today says nothing and keeps the format 1: a file with fields it does not know is not sent" },
+    { "id": "translation_format/can_send/format-2-to-a-server-keeping-1", "op": "can_send", "in": { "file_format": 2, "server_keeps": 1 }, "out": false, "why": "said, not guessed" },
+    { "id": "translation_format/can_send/format-2-to-a-server-keeping-2", "op": "can_send", "in": { "file_format": 2, "server_keeps": 2 }, "out": true, "why": "the server says it keeps it" },
+    { "id": "translation_format/can_send/format-2-to-a-server-keeping-3", "op": "can_send", "in": { "file_format": 2, "server_keeps": 3 }, "out": true, "why": "a later server keeps what an earlier format holds" },
+    { "id": "translation_format/can_send/format-3-to-a-server-keeping-2", "op": "can_send", "in": { "file_format": 3, "server_keeps": 2 }, "out": false, "why": "past what it keeps" }
   ]
 }

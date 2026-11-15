@@ -868,6 +868,7 @@
             "properties": {
               "exists": { "type": "boolean", "const": true },
               "role": { "type": "string", "enum": ["main", "branch"] },
+              "format": { "$ref": "#/components/schemas/ServerKeepsFormat" },
               "main_missing": { "type": ["boolean", "null"], "description": "Additive. On a branch: its Main is gone. Null on a Main." },
               "main_abandoned": { "type": ["boolean", "null"], "description": "Additive. On a branch: the Main is there, its owner's account is not. Null on a Main." },
               "main_ignoring": { "type": ["boolean", "null"], "description": "Additive. On a branch: the Main's owner came back and took nothing. Null on a Main." },
@@ -892,6 +893,7 @@
             "properties": {
               "exists": { "type": "boolean", "const": true },
               "role": { "type": "string", "const": "none" },
+              "format": { "$ref": "#/components/schemas/ServerKeepsFormat" },
               "main_abandoned": { "type": "boolean", "description": "Additive." },
               "accepts_branches": { "type": "boolean", "description": "Additive. Told to the one person it is for: somebody about to contribute." },
               "game": { "$ref": "#/components/schemas/LineageGame" },
@@ -905,11 +907,17 @@
             "required": ["exists", "role"],
             "properties": {
               "exists": { "type": "boolean", "const": false },
-              "role": { "type": "string", "const": "none" }
+              "role": { "type": "string", "const": "none" },
+              "format": { "$ref": "#/components/schemas/ServerKeepsFormat" }
             },
             "additionalProperties": false
           }
         ]
+      },
+      "ServerKeepsFormat": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Additive. The highest format of translation file this server KEEPS (common/TranslationFormat, the file's `_engine_version`): what it stores, hashes and serves back whole. A client sends nothing past it. ABSENT is not an omission to guess around: a server that says nothing keeps the format 1 (TranslationFormat.ServerKeeps), the answer of every site released before this field. Said on the route that precedes every upload; the client's own header (X-UGT-Format) is the other direction, what IT reads."
       },
       "LineageGame": {
         "type": ["object", "null"],
