@@ -62,9 +62,10 @@ namespace UnityGameTranslator.Common
     ///
     ///  · the evidence E is the validated lines (H or V, with words) whose KEY holds the term as a word (<see cref="LinkFinding.WrittenIn"/>: word
     ///    edges, first letter in either case);
-    ///  · a candidate is a stretch of 2 to 24 characters, with no white space at its ends, that at least 2 lines of E hold (the same way), and
-    ///    that is CONFINED: at least half of the validated lines of the whole file that hold it are lines of E (« de » is held everywhere, a
-    ///    term's word is not);
+    ///  · a candidate is a stretch of a line of E that begins where a word may begin and ends where a word may end (<see cref="WordGlue"/>; no
+    ///    white space at its ends; no length written in a constant — a script with no spaces has an edge at every place) that at least 2 lines of E
+    ///    hold (the same way), and that is CONFINED: more of the validated lines of the whole file that hold it are lines of E than are not
+    ///    (« de » is held everywhere, a term's word is not);
     ///  · the candidates that the very same lines hold are one writing: the longest, spelled the way most of its lines spell it;
     ///  · the writing held by the most lines wins; at the same count the one more lines of which are by hand (H); at the same again,
     ///    <see cref="TermEvidenceVerdict.Tied"/>;
@@ -76,9 +77,6 @@ namespace UnityGameTranslator.Common
     /// </summary>
     public static class TermEvidence
     {
-        public const int MinLength = 2;
-        public const int MaxLength = 24;
-
         /// <param name="term">The term as the game writes it (its source form).</param>
         /// <param name="validated">The lines of the WHOLE file, key and line. Only those a person validated and wrote words in (H or V, a value) are read.</param>
         public static TermEvidenceResult Of(string term, IReadOnlyList<KeyValuePair<string, TranslationLine>> validated)
@@ -207,14 +205,14 @@ namespace UnityGameTranslator.Common
             foreach (int i in evidence)
             {
                 string text = lines[i].Text;
+                // From a place a word may begin to a place a word may end (WordGlue): in a script that spaces its words that is the
+                // words and the phrases made of them; in one that does not, every place is an edge, and the confinement sorts it out
                 for (int start = 0; start < text.Length; start = Next(text, start))
                 {
-                    if (KeyChars.IsSpace(text[start])) continue;
-                    int end = start;
-                    for (int length = 1; length <= MaxLength && end < text.Length; length++)
+                    if (KeyChars.IsSpace(text[start]) || !WordGlue.EdgeBefore(text, start)) continue;
+                    for (int end = Next(text, start); end <= text.Length; end = end < text.Length ? Next(text, end) : text.Length + 1)
                     {
-                        end = Next(text, end);
-                        if (length < MinLength || KeyChars.IsSpace(text[end - 1])) continue;
+                        if (KeyChars.IsSpace(text[end - 1]) || !WordGlue.EdgeAfter(text, end)) continue;
                         string stretch = Casing.LowerFirst(text.Substring(start, end - start)) ?? "";
                         if (!raw.TryGetValue(stretch, out var set)) raw[stretch] = set = new HashSet<int>();
                         set.Add(i);
@@ -233,7 +231,9 @@ namespace UnityGameTranslator.Common
                 int everywhere = 0;
                 for (int i = 0; i < lines.Count; i++)
                     if (inEvidence.Contains(i) || Holds(lines[i].Text, pair.Key)) everywhere++;
-                if (2 * holding.Count < everywhere) continue;
+                // confined: a MAJORITY of the lines that hold it are lines of the term's evidence (a word the term's lines share with the rest
+                // of the file is not the term's; the measure is flat from a third to two thirds)
+                if (2 * holding.Count <= everywhere) continue;
 
                 found.Add(new Candidate { Words = pair.Key, Lines = holding });
             }
