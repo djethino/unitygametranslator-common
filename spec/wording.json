@@ -420,6 +420,15 @@
       "carried_by": "the mod's FailureWords (Failures tab), for a placeholder AND for a tag the answer wrote (AnswerFaultKind.TagInvented, the tag as the token): one fact, one sentence; through AnswerFaults.GameWords. The mod's EditChecks, if it says a placeholder fault as the site does",
       "fault": "invented"
     },
+    "format.older_mods": {
+      "text": "This translation uses format {format}. An older UGT Mod cannot read it.",
+      "site": null,
+      "why": "the site shows the chip vN with its tip (« Translation file format N. ») and « Made for a newer UGT Mod » to the client that cannot read it; this sentence is for the person who TAKES such a file, about the others",
+      "params": [
+        "format"
+      ],
+      "carried_by": "the mod, said once when a person takes a translation past the format 1 (download, merge) or writes the first term in a file of the format 1: TranslationFormat.OlderModsCannotRead. The other direction is TranslationFormat.UpdateTheMod"
+    },
     "answer.labels_lost": {
       "text": "Brackets missing around {labels}",
       "site": null,

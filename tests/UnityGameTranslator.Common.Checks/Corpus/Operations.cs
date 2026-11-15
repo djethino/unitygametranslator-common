@@ -236,6 +236,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => TranslationFormat.Reads(Int(e, "reads_up_to"), Int(e, "file_format"))),
             new Operation("translation_format", "server_keeps", typeof(TranslationFormat), nameof(TranslationFormat.ServerKeeps),
                 e => TranslationFormat.ServerKeeps(NullableInt(e, "said"))),
+            new Operation("translation_format", "older_mods_cannot_read", typeof(TranslationFormat), nameof(TranslationFormat.OlderModsCannotRead),
+                e => TranslationFormat.OlderModsCannotRead(Int(e, "file_format"))),
             new Operation("translation_format", "can_send", typeof(TranslationFormat), nameof(TranslationFormat.CanSend),
                 e => TranslationFormat.CanSend(Int(e, "file_format"), NullableInt(e, "server_keeps"))),
 

@@ -108,5 +108,14 @@ namespace UnityGameTranslator.Common
         /// greyed Download, a local file refused. No version number: the one thing to do is update.
         /// </summary>
         public const string UpdateTheMod = "Made for a newer UGT Mod. Update UGT Mod to use it.";
+
+        /// <summary>
+        /// The other direction of <see cref="UpdateTheMod"/>: said to the person who takes a file of a format beyond the format 1 (a download,
+        /// a merge, a first term in a file of the format 1), for whoever else will use it. The fact and its consequence, and no number of the
+        /// mod: a mod has its own version, and the format is the file's. See <c>spec/wording.json</c>, <c>format.older_mods</c>.
+        /// </summary>
+        public static string OlderModsCannotRead(int fileFormat) =>
+            "This translation uses format " + fileFormat.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            + ". An older UGT Mod cannot read it.";
     }
 }
