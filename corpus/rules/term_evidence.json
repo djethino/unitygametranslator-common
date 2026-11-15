@@ -156,6 +156,17 @@
           {"key": "Play", "line": {"v": "Jouer", "t": "V"}} ] },
       "out": [ {"term": "Summer", "verdict": "ambiguous", "word": "Cycle"}, {"term": "Winter", "verdict": "ambiguous", "word": "Cycle"}, {"term": "Zorb", "verdict": "none", "word": null} ],
       "why": "two terms receive the very same stretch: a block of a sentence they share, not the word of either; the question stays for both. A term with no line is not concerned" },
+    { "id": "term_evidence/of_all/two-terms-of-one-character-each", "op": "of_all",
+      "in": { "terms": ["Summer", "Winter"], "lines": [
+          {"key": "Summer Gate", "line": {"v": "夏門", "t": "V"}},
+          {"key": "Summer Tower", "line": {"v": "夏塔", "t": "V"}},
+          {"key": "Summer Key", "line": {"v": "夏鍵", "t": "V"}},
+          {"key": "Winter Gate", "line": {"v": "冬門", "t": "V"}},
+          {"key": "Winter Tower", "line": {"v": "冬塔", "t": "V"}},
+          {"key": "Winter Key", "line": {"v": "冬鍵", "t": "V"}},
+          {"key": "Play", "line": {"v": "遊", "t": "V"}} ] },
+      "out": [ {"term": "Summer", "verdict": "word", "word": "夏"}, {"term": "Winter", "verdict": "word", "word": "冬"} ],
+      "why": "a word of one ideograph is a word: found for each term, and two terms with two different ones are not ambiguous" },
     { "id": "term_evidence/of_all/distinct-words-stay-words", "op": "of_all",
       "in": { "terms": ["Wheel", "Quest"], "lines": [
           {"key": "Big Wheel", "line": {"v": "Grande roue", "t": "V"}},
