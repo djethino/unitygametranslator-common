@@ -204,6 +204,11 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 }),
             new Operation("completion", "announcement", typeof(Completion), nameof(Completion.Announcement),
                 e => Completion.Announcement(new CompletionResult { NewLines = Int(e, "new"), ValidatedKept = Int(e, "validated_kept"), Replaced = Int(e, "replaced") })),
+            new Operation("term_evidence", "of", typeof(TermEvidence), nameof(TermEvidence.Of),
+                e => TermEvidenceOut(TermEvidence.Of(Str(e, "term")!, KeyedLines(e.GetProperty("lines"))))),
+            new Operation("term_evidence", "of_all", typeof(TermEvidence), nameof(TermEvidence.OfAll),
+                e => TermEvidence.OfAll(Strings(e, "terms"), KeyedLines(e.GetProperty("lines")))
+                    .Select(r => (object?)new Dictionary<string, object?> { ["term"] = r.Term, ["verdict"] = r.Verdict.ToString().ToLowerInvariant(), ["word"] = r.Word }).ToList()),
             new Operation("merge", "same_as_ancestor", typeof(Merge), nameof(Merge.SameAsAncestor),
                 e => Merge.SameAsAncestor(LineRequired(e, "line"), Int(e, "line_format"), LineRequired(e, "ancestor"), Int(e, "ancestor_format"))),
 
@@ -858,6 +863,12 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             {
                 Key = Str(item, "key")!, Line = LineRequired(item, "line"), Rank = Int(item, "rank"),
             }).ToList();
+
+        private static Dictionary<string, object?> TermEvidenceOut(TermEvidenceResult r) => new Dictionary<string, object?>
+        {
+            ["verdict"] = r.Verdict.ToString().ToLowerInvariant(), ["word"] = r.Word, ["keys"] = r.Keys,
+            ["rivals"] = r.Rivals.Select(w => (object?)new Dictionary<string, object?> { ["words"] = w.Words, ["keys"] = w.Keys }).ToList(),
+        };
 
         private static Dictionary<string, object?> CompletionOut(CompletionResult result) => new Dictionary<string, object?>
         {

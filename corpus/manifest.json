@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "rules": ["versions", "sync", "merge", "badges", "mod_ui_migration", "settings", "answers", "placeholders", "answer_faults", "completion", "dropdown_fit", "edge_give", "list_room", "standing", "uploads", "notices", "status_card", "translation_file_keys", "translation_format", "line_markers", "link_reading", "line_writes", "template_ids", "term_changes", "line_endings", "casing", "word_glue", "link_finding", "key_shape", "key_chars", "text_diff", "passage_border", "link_editing", "unicode_categories", "names", "game_names", "game_tokens", "list_join", "template_uses", "negotiation", "term_edit", "selection_action", "line_edit"],
+  "rules": ["versions", "sync", "merge", "badges", "mod_ui_migration", "settings", "answers", "placeholders", "answer_faults", "completion", "term_evidence", "dropdown_fit", "edge_give", "list_room", "standing", "uploads", "notices", "status_card", "translation_file_keys", "translation_format", "line_markers", "link_reading", "line_writes", "template_ids", "term_changes", "line_endings", "casing", "word_glue", "link_finding", "key_shape", "key_chars", "text_diff", "passage_border", "link_editing", "unicode_categories", "names", "game_names", "game_tokens", "list_join", "template_uses", "negotiation", "term_edit", "selection_action", "line_edit"],
   "held_by": {
     "link_finding": ["mod", "manager"],
     "key_shape": ["mod", "manager"],
@@ -13,6 +13,7 @@
     "list_join": ["mod", "manager"],
     "answer_faults": ["mod", "manager"],
     "completion": ["manager"],
+    "term_evidence": ["manager"],
     "note": "Rules no port needs: finding the links of a text nobody typed is done by the mod and the Manager in C#. `sides` lists what the site and the editor replay; a rule absent from it is not an omission."
   },
   "sides": {
