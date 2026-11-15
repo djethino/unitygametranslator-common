@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Sockets;
 
 namespace UnityGameTranslator.Common
@@ -60,10 +61,25 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static ConnectionProblem Classify(Exception? error)
         {
+            var named = ConnectionProblem.Unknown;
             for (var e = error; e != null; e = e.InnerException)
             {
                 if (e is SocketException socket)
                     return FromSocket(socket.SocketErrorCode);
+
+                // 🔴 What the mod's own client throws when the server does not answer: HttpRequestException around a WebException of
+                // status Timeout (the HttpWebRequest of the runtime, whose deadline is its own and not the task's). It was Unknown, so the
+                // player was told nothing. A status that says enough ends the walk; one that only says THAT the connection failed waits
+                // for a socket error underneath, which says why, and stands as the answer when there is none.
+                if (e is WebException web)
+                {
+                    var byStatus = FromWebStatus(web.Status, out bool final);
+                    if (byStatus != ConnectionProblem.Unknown)
+                    {
+                        if (final) return byStatus;
+                        if (named == ConnectionProblem.Unknown) named = byStatus;
+                    }
+                }
 
                 // The name rather than the type: System.Security.Authentication is not somewhere a
                 // netstandard2.0 consumer is guaranteed to bind, and a TLS failure is worth naming.
@@ -77,7 +93,47 @@ namespace UnityGameTranslator.Common
                     return ConnectionProblem.NoAnswer;
             }
 
-            return error == null ? ConnectionProblem.None : ConnectionProblem.Unknown;
+            if (error == null) return ConnectionProblem.None;
+            return named;
+        }
+
+        /// <summary>
+        /// The problem a <see cref="WebExceptionStatus"/> names, and whether it is the whole answer: <paramref name="final"/> false means a
+        /// socket error underneath, if there is one, says more. The statuses that say nothing about reaching the server (it answered with an
+        /// error status, the response broke the protocol, a cache refused) stay <see cref="ConnectionProblem.Unknown"/>.
+        /// </summary>
+        private static ConnectionProblem FromWebStatus(WebExceptionStatus status, out bool final)
+        {
+            final = true;
+            switch (status)
+            {
+                case WebExceptionStatus.Timeout:
+                case WebExceptionStatus.RequestCanceled:
+                    return ConnectionProblem.NoAnswer;
+
+                case WebExceptionStatus.NameResolutionFailure:
+                case WebExceptionStatus.ProxyNameResolutionFailure:
+                    return ConnectionProblem.AddressNotFound;
+
+                case WebExceptionStatus.SecureChannelFailure:
+                case WebExceptionStatus.TrustFailure:
+                    return ConnectionProblem.SecureHandshake;
+
+                case WebExceptionStatus.ConnectFailure:
+                    final = false;
+                    return ConnectionProblem.Refused;
+
+                case WebExceptionStatus.ReceiveFailure:
+                case WebExceptionStatus.SendFailure:
+                case WebExceptionStatus.ConnectionClosed:
+                case WebExceptionStatus.KeepAliveFailure:
+                case WebExceptionStatus.PipelineFailure:
+                    final = false;
+                    return ConnectionProblem.Interrupted;
+
+                default:
+                    return ConnectionProblem.Unknown;
+            }
         }
 
         private static ConnectionProblem FromSocket(SocketError code)

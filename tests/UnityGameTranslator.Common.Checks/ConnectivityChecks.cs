@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using UnityGameTranslator.Common;
@@ -38,6 +39,33 @@ namespace UnityGameTranslator.Common.Checks
 
             Is(check, new TimeoutException("late"), ConnectionProblem.NoAnswer,
                "our own deadline says the same thing as the socket's");
+
+            // 🔴 What the mod's OWN client throws (Net/Http/WebRequestTransport): an HttpRequestException around the runtime's WebException,
+            // whose status says what happened. A server that does not answer was "Unknown": the player saw nothing.
+            Is(check, Web(WebExceptionStatus.Timeout), ConnectionProblem.NoAnswer, "the server did not answer: the request's own deadline");
+            Is(check, new AggregateException("One or more errors occurred.", Web(WebExceptionStatus.Timeout)), ConnectionProblem.NoAnswer,
+               "found under the task's wrapper");
+            Is(check, new System.Reflection.TargetInvocationException(Web(WebExceptionStatus.Timeout)), ConnectionProblem.NoAnswer,
+               "found under a call made by reflection");
+            Is(check, new AggregateException(new System.Reflection.TargetInvocationException(Web(WebExceptionStatus.Timeout))),
+               ConnectionProblem.NoAnswer, "found under both");
+            Is(check, Web(WebExceptionStatus.RequestCanceled), ConnectionProblem.NoAnswer, "a request aborted before an answer came");
+            Is(check, Web(WebExceptionStatus.NameResolutionFailure), ConnectionProblem.AddressNotFound, "the name did not resolve");
+            Is(check, Web(WebExceptionStatus.ProxyNameResolutionFailure), ConnectionProblem.AddressNotFound, "the proxy's name did not resolve");
+            Is(check, Web(WebExceptionStatus.SecureChannelFailure), ConnectionProblem.SecureHandshake, "the secure channel could not be set up");
+            Is(check, Web(WebExceptionStatus.TrustFailure), ConnectionProblem.SecureHandshake, "the certificate is not trusted");
+            Is(check, Web(WebExceptionStatus.ConnectFailure), ConnectionProblem.Refused, "could not connect, nothing underneath says why");
+            Is(check, Web(WebExceptionStatus.ConnectFailure, new SocketException((int)SocketError.AccessDenied)), ConnectionProblem.BlockedLocally,
+               "a status that only says THAT the connection failed gives way to the socket error that says why");
+            Is(check, Web(WebExceptionStatus.ConnectFailure, new SocketException((int)SocketError.HostUnreachable)), ConnectionProblem.NoNetwork,
+               "the same, for the network");
+            Is(check, Web(WebExceptionStatus.ReceiveFailure), ConnectionProblem.Interrupted, "cut while the answer was coming");
+            Is(check, Web(WebExceptionStatus.SendFailure), ConnectionProblem.Interrupted, "cut while the request was going");
+            Is(check, Web(WebExceptionStatus.ConnectionClosed), ConnectionProblem.Interrupted, "the server closed the connection");
+            Is(check, Web(WebExceptionStatus.ReceiveFailure, new SocketException((int)SocketError.TimedOut)), ConnectionProblem.NoAnswer,
+               "the socket error underneath still has the last word");
+            Is(check, Web(WebExceptionStatus.ProtocolError), ConnectionProblem.Unknown, "the server answered, with an error status: not a connection problem");
+            Is(check, Web(WebExceptionStatus.UnknownError), ConnectionProblem.Unknown, "a failure the runtime could not name stays unnamed");
 
             Is(check, null, ConnectionProblem.None, "no exception, no problem");
             Is(check, new InvalidOperationException("something else"), ConnectionProblem.Unknown,
@@ -118,6 +146,10 @@ namespace UnityGameTranslator.Common.Checks
         /// <summary>A socket error the way HttpClient hands it over: wrapped.</summary>
         private static Exception Wrapped(SocketError code) =>
             new HttpRequestException("request failed", new SocketException((int)code));
+
+        /// <summary>A WebException as the mod's client hands it over: wrapped, as the transport wraps it.</summary>
+        private static Exception Web(WebExceptionStatus status, Exception? inner = null) =>
+            new HttpRequestException("An error occurred while sending the request", new WebException("web " + status, inner, status, null));
 
         private static void Is(Action<bool, string, string> check, Exception? error,
                                ConnectionProblem expected, string why)
