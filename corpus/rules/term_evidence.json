@@ -126,6 +126,15 @@
           {"key": "Door Lock", "line": {"v": "Verrou de porte", "t": "V"}} ] },
       "out": { "verdict": "word", "word": "Porte", "keys": ["Front Door", "Door Lock"], "rivals": [] },
       "why": "the first letter is read in either case, as everywhere a writing is looked for: one line has it capitalised and the other not, and each alone would be one line. Spelled the same number of times each way, the first line decides" },
+    { "id": "term_evidence/of/a-block-half-of-whose-lines-are-not-the-terms-is-thin", "op": "of",
+      "in": { "term": "Fire", "lines": [
+          {"key": "Fire Pit", "line": {"v": "feu de camp et cuisson lente", "t": "V"}},
+          {"key": "Fire Pot", "line": {"v": "feu de camp et cuisson lente", "t": "V"}},
+          {"key": "Cold Pit", "line": {"v": "feu de camp et cuisson lente", "t": "V"}},
+          {"key": "Cold Pot", "line": {"v": "feu de camp et cuisson lente", "t": "V"}},
+          {"key": "Other Pit", "line": {"v": "Trou", "t": "V"}} ] },
+      "out": { "verdict": "thin", "word": null, "keys": [], "rivals": [] },
+      "why": "the same text on four lines, two of which name the term: 2 against 2 is not a majority, so no stretch is confined to the term. (Two terms in the SAME keys, whose lines are all the block's, are the case of ambiguity: of_all/two-terms-the-same-block)" },
     { "id": "term_evidence/of/a-plural-is-another-word", "op": "of",
       "in": { "term": "Speed", "lines": [
           {"key": "Top Speed", "line": {"v": "Vitesse max", "t": "V"}},
