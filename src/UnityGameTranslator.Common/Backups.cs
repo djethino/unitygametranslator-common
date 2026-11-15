@@ -42,6 +42,15 @@ namespace UnityGameTranslator.Common
         AssetsAdded,
 
         /// <summary>
+        /// UGT Manager's Smart completed this translation: new lines came in, its own unvalidated ones may have been replaced, what a
+        /// person validated was kept. A copy older than this word reads as <see cref="Unknown"/> (the reason is stored by name).
+        /// </summary>
+        SmartCompleted,
+
+        /// <summary>UGT Manager's Smart replaced this translation: a copy taken before a start from zero.</summary>
+        SmartReplaced,
+
+        /// <summary>
         /// Something replaced the file and did not say what. Never written on purpose: it is what
         /// a copy from an older version reads as, and what a caller that forgot to say gets.
         /// </summary>
@@ -467,6 +476,12 @@ namespace UnityGameTranslator.Common
 
                 case BackupReason.AssetsAdded:
                     return "Before adding fonts or images";
+
+                case BackupReason.SmartCompleted:
+                    return "Before Smart completed this translation";
+
+                case BackupReason.SmartReplaced:
+                    return "Before Smart replaced this translation";
 
                 default:
                     return "Before something replaced the translation";

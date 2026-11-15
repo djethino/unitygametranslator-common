@@ -194,6 +194,16 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("merge", "terms_that_differ", typeof(Merge), nameof(Merge.TermsThatDiffer),
                 e => Merge.TermsThatDiffer(KeyedLines(e.GetProperty("mine")), Int(e, "mine_format"), KeyedLines(e.GetProperty("theirs")), Int(e, "theirs_format"))
                     .Select(d => (object?)new Dictionary<string, object?> { ["key"] = d.Key, ["difference"] = d.Value.ToString().ToLowerInvariant() }).ToList()),
+            // ── completion ─────────────────────────────────────────────────────
+            new Operation("completion", "complete", typeof(Completion), nameof(Completion.Complete),
+                e =>
+                {
+                    var result = Completion.Complete(CompletionEntries(e.GetProperty("mine")), CompletionEntries(e.GetProperty("pass")),
+                                                     new HashSet<string>(Strings(e, "terms"), StringComparer.Ordinal), Bool(e, "holds_game_lists"));
+                    return CompletionOut(result);
+                }),
+            new Operation("completion", "announcement", typeof(Completion), nameof(Completion.Announcement),
+                e => Completion.Announcement(new CompletionResult { NewLines = Int(e, "new"), ValidatedKept = Int(e, "validated_kept"), Replaced = Int(e, "replaced") })),
             new Operation("merge", "same_as_ancestor", typeof(Merge), nameof(Merge.SameAsAncestor),
                 e => Merge.SameAsAncestor(LineRequired(e, "line"), Int(e, "line_format"), LineRequired(e, "ancestor"), Int(e, "ancestor_format"))),
 
@@ -841,6 +851,29 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 default: return new AnswerFault { Kind = AnswerFaultKind.TagInvented, Tag = Str(f, "tag")! };
             }
         }
+
+        /// <summary>The lines of a file with their ranks, as the corpus writes them: a list of {key, line, rank?}, in file order.</summary>
+        private static List<CompletionEntry> CompletionEntries(JsonElement array) =>
+            array.EnumerateArray().Select(item => new CompletionEntry
+            {
+                Key = Str(item, "key")!, Line = LineRequired(item, "line"), Rank = Int(item, "rank"),
+            }).ToList();
+
+        private static Dictionary<string, object?> CompletionOut(CompletionResult result) => new Dictionary<string, object?>
+        {
+            ["lines"] = result.Lines.Select(l =>
+            {
+                var line = new Dictionary<string, object?>
+                {
+                    ["key"] = l.Key, ["verdict"] = l.Verdict.ToString().ToLowerInvariant(), ["v"] = l.Line.Value, ["t"] = l.Line.Tag,
+                    ["rank"] = l.Rank, ["term"] = l.Line.Term, ["marked"] = l.Marked,
+                };
+                if (l.Line.Unlinked != null && l.Line.Unlinked.Count > 0) line["unlinked"] = l.Line.Unlinked.ToList();
+                return (object?)line;
+            }).ToList(),
+            ["new"] = result.NewLines, ["validated_kept"] = result.ValidatedKept, ["replaced"] = result.Replaced, ["marked"] = result.Marked,
+            ["local_changes"] = result.LocalChanges, ["format"] = result.Format,
+        };
 
         /// <summary>The lines of a file as the corpus writes them: a list of {key, line}, in file order.</summary>
         private static List<KeyValuePair<string, TranslationLine>> KeyedLines(JsonElement array) =>
