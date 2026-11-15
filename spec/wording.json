@@ -420,6 +420,18 @@
       "carried_by": "the mod's FailureWords (Failures tab), for a placeholder AND for a tag the answer wrote (AnswerFaultKind.TagInvented, the tag as the token): one fact, one sentence; through AnswerFaults.GameWords. The mod's EditChecks, if it says a placeholder fault as the site does",
       "fault": "invented"
     },
+    "connection.unreachable_title": {
+      "text": "Cannot reach the translation server",
+      "site": null,
+      "why": "the mod's own corner: the site does not talk to a translation server",
+      "carried_by": "the mod's corner callout UnreachableBox (overlay.json, bound as unreachableTitle), when the connection itself failed (Connectivity.Classify other than NoAnswer); the cause under it is Connectivity.Explain"
+    },
+    "connection.silent_title": {
+      "text": "No answer from the translation server",
+      "site": null,
+      "why": "same corner: a fact distinct from the unreachable one, since the server took the connection and did not answer in time",
+      "carried_by": "the mod's corner callout UnreachableBox (overlay.json, bound as unreachableTitle), when Connectivity.Classify says NoAnswer; the cause under it is Connectivity.Explain(NoAnswer)"
+    },
     "format.older_mods": {
       "text": "This translation uses format {format}. An older UGT Mod cannot read it.",
       "site": null,

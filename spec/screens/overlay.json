@@ -68,7 +68,7 @@
         ] }
       ] },
       { "kind": "callout", "name": "UnreachableBox", "tone": "Error", "direction": "Stack", "spacing": 3, "padX": 8, "padY": 5, "visible": false, "children": [
-        { "kind": "label", "name": "UnreachableLabel", "text": "Cannot reach the translation server", "bold": true },
+        { "kind": "label", "name": "UnreachableLabel", "text": { "bind": "unreachableTitle" }, "policy": "Excluded", "bold": true },
         { "kind": "label", "name": "UnreachableCause", "text": { "bind": "unreachableCause" }, "policy": "Excluded", "role": "Small", "autoHeight": true },
         { "kind": "row", "name": "UnreachableBtnRow", "spacing": 3, "children": [
           { "kind": "button", "name": "UnreachableSettingsBtn", "text": "Settings", "tone": "Primary", "size": "Compact", "minWidth": 65, "act": "unreachableSettings" },
