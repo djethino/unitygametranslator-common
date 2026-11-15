@@ -894,6 +894,27 @@
       "why": "the bare form is still READ by the mod but refused at the door: every published line is `{v, t}`"
     },
     {
+      "id": "api-v1/upload/format-past-what-the-site-keeps",
+      "setup": "lineage",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "carol",
+        "headers": { "X-UGT-Format": "2" },
+        "body": { "game_name": "Sample Game", "source_language": "English", "target_language": "French", "content": { "$json": { "_uuid": "f6a7b8c9-d0e1-4f2a-b3c4-d5e6f7a8b9c0", "_engine_version": 3, "Hello": { "v": "Bonjour", "t": "H" } } } }
+      },
+      "response": { "status": 422, "body": { "error": "This server keeps format 2 at most. This file is marked format 3.", "refused_code": "format_not_kept" } },
+      "why": "the server's own door, beside the client's wall: a file past what it can keep is refused whole, nothing stored, whatever the client announced (a client that sends it ignored the wall, or is not ours)"
+    },
+    {
+      "id": "api-v1/upload/format-content-under-its-stamp",
+      "setup": "lineage",
+      "request": {
+        "method": "POST", "path": "/translations", "as": "carol",
+        "body": { "game_name": "Sample Game", "source_language": "English", "target_language": "French", "content": { "$json": { "_uuid": "a7b8c9d0-e1f2-4a3b-8c4d-e5f6a7b8c9d1", "Hello": { "v": "Bonjour", "t": "H" }, "_lists": { "lists": { "tokens": ["a"] } } } } }
+      },
+      "response": { "status": 422, "body": { "error": "This file holds format 2 content but is marked format 1. Save it again with a current UGT Mod.", "refused_code": "format_stamp" } },
+      "why": "the stamp is what the file CONTAINS (TranslationFormat.OfContent): a game's lists in a file stamped 1 would be read as a format 1 file by every client that trusts the stamp. A line with a field of the format 2 in a file stamped 1 is refused with its own words (format-2-field-in-format-1)"
+    },
+    {
       "id": "api-v1/upload/refused-same-languages",
       "setup": "lineage",
       "request": {
