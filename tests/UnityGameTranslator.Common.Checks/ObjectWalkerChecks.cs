@@ -24,6 +24,16 @@ namespace UnityGameTranslator.Common.Checks
             public void Skipped(in FieldSite s, long length) => Lines.Add($"{s.Path} skipped {length}");
         }
 
+        private sealed class WantsBytes : IObjectVisitor, IObjectBytesVisitor
+        {
+            public readonly List<string> Lines = new List<string>();
+            public void Value(in FieldSite s, object value) => Lines.Add($"{s.Path} = {value}");
+            public void Pointer(in FieldSite s, int fileId, long pathId) => Lines.Add($"{s.Path} -> {fileId}/{pathId}");
+            public void Skipped(in FieldSite s, long length) => Lines.Add($"{s.Path} skipped {length}");
+            public bool Wants(in FieldSite s, int length) => true;
+            public void Bytes(in FieldSite s, byte[] bytes) => Lines.Add($"{s.Path} bytes {bytes.Length}");
+        }
+
         // ---- nodes
         private static IEnumerable<TypeNode> Str(int d, string name) => new[]
         {
@@ -132,6 +142,12 @@ namespace UnityGameTranslator.Common.Checks
                 }),
                 "every value comes with its path, its class and its field",
                 "a list keeps its field's name, a nested class's fields are its own: " + string.Join(" | ", seen.Lines));
+
+            // a visitor that asks for the bytes of a one-byte array gets them, and the walk goes on after them as after a skip
+            var wanting = new WantsBytes();
+            Walk(tree, ProbeBytes(), wanting);
+            check(wanting.Lines.Contains("blob.Array bytes 5") && !wanting.Lines.Any(l => l.Contains("skipped")) && wanting.Lines.Last() == "m_Target -> 1/4242",
+                "a visitor that wants a byte array's bytes receives them, and the fields after it are still read", string.Join(" | ", wanting.Lines));
 
             check(Refuses(() => Walk(tree, ProbeBytes(extra: true), new Seen()), "do(es) not account for") || Refuses(() => Walk(tree, ProbeBytes(extra: true), new Seen()), "does not account for"),
                 "bytes left once the tree is walked refuse the object", "another layout, never read in part");
