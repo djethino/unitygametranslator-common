@@ -30,6 +30,23 @@ namespace UnityGameTranslator.Common.UnityFiles
             return new Decoder(input, 5, lc, lp, pb, dictSize).Run(outputSize);
         }
 
+        /// <summary>
+        /// A stream whose size is not written (an LZMA "alone" file made by most tools writes it as unknown): decoded until its end
+        /// marker, the output growing as it fills. Refused when the stream ends without its marker.
+        /// </summary>
+        public static byte[] DecodeUntilEnd(byte[] input)
+        {
+            if (input.Length < 5) throw new UnityFileFormatException("LZMA: no properties");
+            int d = input[0];
+            if (d >= 9 * 5 * 5) throw new UnityFileFormatException($"LZMA: properties byte {d}");
+            int lc = d % 9; d /= 9;
+            int lp = d % 5;
+            int pb = d / 5;
+            uint dictSize = (uint)(input[1] | (input[2] << 8) | (input[3] << 16) | (input[4] << 24));
+            if (dictSize < 4096) dictSize = 4096;
+            return new Decoder(input, 5, lc, lp, pb, dictSize).Run(-1);
+        }
+
         private sealed class Decoder
         {
             private readonly byte[] _in;
@@ -157,7 +174,8 @@ namespace UnityGameTranslator.Common.UnityFiles
 
             public byte[] Run(int outputSize)
             {
-                _out = new byte[outputSize];
+                bool unknown = outputSize < 0;
+                _out = new byte[unknown ? Math.Max(4096, _in.Length * 4) : outputSize];
                 // The range decoder's start: a zero byte, then the code.
                 if (Next() != 0) throw new UnityFileFormatException("LZMA: the stream does not start with zero");
                 _range = 0xFFFFFFFF;
@@ -168,8 +186,10 @@ namespace UnityGameTranslator.Common.UnityFiles
                 int state = 0;
                 uint rep0 = 0, rep1 = 0, rep2 = 0, rep3 = 0;
                 int pbMask = (1 << _pb) - 1, lpMask = (1 << _lp) - 1;
-                while (_op < outputSize)
+                bool ended = false;
+                while (unknown || _op < outputSize)
                 {
+                    if (unknown && _out.Length - _op < 274) Array.Resize(ref _out, _out.Length * 2);   // room for the longest match (273) and a literal
                     int posState = _op & pbMask;
                     if (Bit(_isMatch, (state << 4) + posState) == 0)
                     {
@@ -214,14 +234,20 @@ namespace UnityGameTranslator.Common.UnityFiles
                         len = DecodeLength(_len, posState);
                         state = state < 7 ? 7 : 10;
                         rep0 = DecodeDistance(len);
-                        if (rep0 == 0xFFFFFFFF) break;   // the end marker
+                        if (rep0 == 0xFFFFFFFF) { ended = true; break; }   // the end marker
                         if (rep0 >= _dictSize || rep0 >= (uint)_op)
                             throw new UnityFileFormatException($"LZMA: distance {rep0} at {_op}");
                     }
 
                     len += MatchMinLen;
-                    if (len > outputSize - _op) throw new UnityFileFormatException("LZMA: a match goes past the output");
+                    if (!unknown && len > outputSize - _op) throw new UnityFileFormatException("LZMA: a match goes past the output");
                     for (int from = _op - (int)rep0 - 1, end = _op + len; _op < end; ) _out[_op++] = _out[from++];
+                }
+                if (unknown)
+                {
+                    if (!ended) throw new UnityFileFormatException("LZMA: a stream of unknown size ends without its end marker");
+                    Array.Resize(ref _out, _op);
+                    return _out;
                 }
                 if (_op != outputSize) throw new UnityFileFormatException($"LZMA: {_op} byte(s) out of {outputSize}");
                 return _out;
