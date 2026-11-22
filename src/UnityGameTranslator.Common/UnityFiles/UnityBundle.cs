@@ -9,8 +9,11 @@ namespace UnityGameTranslator.Common.UnityFiles
     /// Addressables bundles included): its files, each given back decompressed on demand. Only the
     /// blocks a file covers are decompressed — a game's bundle can be gigabytes of textures.
     ///
-    /// Refused, said: the older web formats (UnityWeb, UnityRaw) and anything whose tables do not
-    /// read (an encrypted bundle among them).
+    /// The older web containers of Unity 3.x to 5.2 are read too: "UnityWeb" (one LZMA stream) and
+    /// "UnityRaw" (the same data, stored). Their directory and files are decompressed whole when the
+    /// bundle is opened — they are small next to a UnityFS — and an entry is served from that copy.
+    ///
+    /// Refused, said: "UnityArchive" and anything whose tables do not read (an encrypted bundle among them).
     /// </summary>
     public sealed class UnityBundle
     {
@@ -22,6 +25,8 @@ namespace UnityGameTranslator.Common.UnityFiles
         private readonly UnityFileReader _reader;
         private readonly List<Block> _blocks = new List<Block>();
         private long _dataStart;
+        // A UnityWeb / UnityRaw bundle: the whole decompressed data, standing for its only block.
+        private byte[]? _legacyData;
 
         public sealed class Entry
         {
@@ -47,14 +52,25 @@ namespace UnityGameTranslator.Common.UnityFiles
 
         private UnityBundle(Stream stream) { _reader = new UnityFileReader(stream, bigEndian: true); }
 
-        /// <summary>Whether the stream starts like a bundle this reader opens (it is left where it was).</summary>
+        private static readonly string[] Signatures = { "UnityFS", "UnityWeb", "UnityRaw", "UnityArchive" };
+
+        /// <summary>
+        /// Whether the stream starts like a Unity bundle (it is left where it was). "UnityArchive" is
+        /// recognised too: <see cref="Open(Stream)"/> then says it is not one this reader opens.
+        /// </summary>
         public static bool LooksLikeOne(Stream stream)
         {
             long at = stream.Position;
-            var head = new byte[8];
-            int n = stream.Read(head, 0, 8);
+            var head = new byte[16];
+            int n = 0, got;
+            while (n < head.Length && (got = stream.Read(head, n, head.Length - n)) > 0) n += got;
             stream.Position = at;
-            return n == 8 && System.Text.Encoding.ASCII.GetString(head) == "UnityFS\0";
+            foreach (var signature in Signatures)
+            {
+                if (n <= signature.Length || head[signature.Length] != 0) continue;
+                if (System.Text.Encoding.ASCII.GetString(head, 0, signature.Length) == signature) return true;
+            }
+            return false;
         }
 
         public static UnityBundle Open(Stream stream)
@@ -69,8 +85,9 @@ namespace UnityGameTranslator.Common.UnityFiles
             var r = _reader;
             r.Position = 0;
             string signature = r.Zstring(16);
+            if (signature == "UnityWeb" || signature == "UnityRaw") { ReadLegacy(signature == "UnityWeb"); return; }
             if (signature != "UnityFS")
-                throw new UnityFileFormatException($"a '{signature}' bundle, not UnityFS: not read");
+                throw new UnityFileFormatException($"a '{signature}' bundle, not one of UnityFS, UnityWeb and UnityRaw: not read");
             FormatVersion = (int)r.U32();
             if (FormatVersion < 6 || FormatVersion > 8)
                 throw new UnityFileFormatException($"UnityFS format {FormatVersion}: not one this reader knows (6 to 8)");
@@ -131,12 +148,84 @@ namespace UnityGameTranslator.Common.UnityFiles
         /// </summary>
         public Stream Open(Entry entry) => new EntryStream(this, entry);
 
+        /// <summary>
+        /// UnityWeb / UnityRaw (format 2 to 5): a big-endian header, the levels' sizes, then from the
+        /// header's own size the data — one LZMA stream (a 13-byte header: properties, then the size)
+        /// or the same bytes stored. Decompressed, it is a directory (a count, then for each file a
+        /// name, an offset and a size) and the files, their offsets counted from the start of that data.
+        /// </summary>
+        private void ReadLegacy(bool compressed)
+        {
+            var r = _reader;
+            string kind = compressed ? "UnityWeb" : "UnityRaw";
+            FormatVersion = (int)r.U32();
+            if (FormatVersion < 2 || FormatVersion > 5)
+                throw new UnityFileFormatException($"{kind} format {FormatVersion}: not one this reader knows (2 to 5)");
+            r.Zstring(64);                  // the player version family ("3.x.x")
+            EngineVersion = r.Zstring(64);  // the engine revision ("3.4.2f2")
+            if (FormatVersion >= 4) r.Skip(16 + 4);   // hash and checksum
+            r.U32();                        // minimum streamed bytes
+            uint headerSize = r.U32();
+            r.U32();                        // levels to download before streaming
+            int levels = r.Count(8);
+            if (levels < 1) throw new UnityFileFormatException($"a {kind} bundle with {levels} level(s)");
+            r.Skip((levels - 1) * 8L);      // the last level is the whole data
+            uint compressedSize = r.U32(), uncompressedSize = r.U32();
+            if (headerSize > r.Length || compressedSize > r.Length - headerSize)
+                throw new UnityFileFormatException($"the bundle's data ({compressedSize} byte(s) from {headerSize}) lies outside the file ({r.Length})");
+            if (uncompressedSize > int.MaxValue)
+                throw new UnityFileFormatException($"the bundle's data is {uncompressedSize} byte(s): too large to hold");
+            r.Position = headerSize;
+            byte[] data = r.Bytes((int)compressedSize);
+
+            if (compressed)
+            {
+                // Properties (5), the uncompressed size (8, little-endian; all ones when unknown), the stream.
+                if (data.Length < 13) throw new UnityFileFormatException("UnityWeb: no LZMA header");
+                ulong said = 0;
+                for (int i = 12; i >= 5; i--) said = (said << 8) | data[i];
+                if (said != ulong.MaxValue && said != uncompressedSize)
+                    throw new UnityFileFormatException($"UnityWeb: the LZMA header says {said} byte(s), the bundle's header {uncompressedSize}");
+                var stream = new byte[data.Length - 8];
+                Buffer.BlockCopy(data, 0, stream, 0, 5);
+                Buffer.BlockCopy(data, 13, stream, 5, data.Length - 13);
+                data = LzmaDecoder.Decode(stream, (int)uncompressedSize);
+            }
+            else if (data.Length != uncompressedSize)
+                throw new UnityFileFormatException($"UnityRaw: {data.Length} byte(s) stored, {uncompressedSize} announced");
+
+            _legacyData = data;
+            _blocks.Add(new Block { Uncompressed = (uint)data.Length, Compressed = (uint)data.Length });
+
+            var t = new UnityFileReader(new MemoryStream(data), bigEndian: true);
+            int count = t.Count(9);   // a name's end, an offset and a size, at least
+            var entries = new List<Entry>(count);
+            for (int i = 0; i < count; i++)
+            {
+                string path = t.Zstring(1024);
+                long offset = t.U32(), length = t.U32();
+                if (offset + length > data.Length) throw new UnityFileFormatException($"'{path}' lies outside the bundle's data");
+                entries.Add(new Entry(path, offset, length, 0));
+            }
+            // The directory does not say which file holds objects: one that opens like a serialized file
+            // does — a header at the wrong size too, so the caller says it rather than skipping it.
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var plain = entries[i];
+                using (var inner = Open(plain))
+                    if (SerializedFile.Probe(inner, out _) != SerializedProbe.NotSerialized)
+                        entries[i] = new Entry(plain.Path, plain.Offset, plain.Size, NodeIsSerializedFile);
+            }
+            Entries = entries;
+        }
+
         private byte[]? _cachedBlock;
         private int _cachedIndex = -1;
 
         /// <summary>The decompressed block <paramref name="index"/>.</summary>
         private byte[] BlockAt(int index)
         {
+            if (_legacyData != null) return _legacyData;
             if (index == _cachedIndex && _cachedBlock != null) return _cachedBlock;
             var b = _blocks[index];
             _reader.Position = _dataStart + b.CompressedStart;

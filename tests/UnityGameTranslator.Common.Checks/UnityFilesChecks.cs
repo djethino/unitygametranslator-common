@@ -219,6 +219,7 @@ namespace UnityGameTranslator.Common.Checks
             f.Write(objBytes);
             file.Position = 0;
 
+            LegacyBundleChecks.Run(check, file.ToArray(), fontFile);
             check(SerializedFile.LooksLikeOne(file), "a format 22 file is recognised by its header", "its sizes agree with the stream");
             check(SerializedFile.Probe(file, out var wholeDetail) == SerializedProbe.Serialized && wholeDetail == null,
                 "a whole file probes as serialized, with nothing to say", "the answer for a game's own files");
