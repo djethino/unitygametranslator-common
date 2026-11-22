@@ -157,6 +157,18 @@ namespace UnityGameTranslator.Common
         public static string TagAfterPerson(string? stored) => stored == "M" || stored == "S" ? stored : "H";
 
         /// <summary>
+        /// What every editor says when a person empties a line that holds a translation: it is never saved (decided by the user for
+        /// every editor, 2026-11-22 — the site's three editors, the Main's merge and the mod's panel). A line with nothing to say is a
+        /// capture, and the tag « skip » already exists for it. Shared wording: spec/wording.json <c>edit.empty_line_refused</c>.
+        /// </summary>
+        public const string EmptyLineRefused = "Fill in the translation, or delete the line.";
+
+        /// <summary>Would saving <paramref name="written"/> empty a line that holds a translation? (<see cref="EmptyLineRefused"/>)</summary>
+        /// <param name="held">The words the line holds now, or null when there is no line.</param>
+        /// <param name="written">The words being saved.</param>
+        public static bool EmptiesALine(string? held, string? written) => string.IsNullOrEmpty(written) && !string.IsNullOrEmpty(held);
+
+        /// <summary>
         /// The tag of words a person SAVES: <c>V</c> when they are the AI's proposal, kept as it came — she saw the machine's words and
         /// accepted them, which is exactly what the A → V gesture records (decided by the user, 2026-11-22: <c>A</c> is the AI nobody
         /// read, <c>H</c> would claim she wrote them; the tag drives the quality score and what the community sees) — else

@@ -391,6 +391,11 @@
       "site": "editor.problem_slot_marker",
       "carried_by": "TermZone: said by code in a bound label whose text and tone it chooses (WordProblems, FormNote): `word-has-marker` / `form-has-marker` when the marker is a slot `[!L*…]` / `[!T*N]`, and `form-placeholders`"
     },
+    "edit.empty_line_refused": {
+      "text": "Fill in the translation, or delete the line.",
+      "site": "editor.empty_line_refused",
+      "carried_by": "LineEditing.EmptyLineRefused, said by the mod's EditChecks under the field of a row emptied of its translation (Save greyed); the site's edit window says it the same way before the click, and its servers when they refuse (TranslationService::emptiesALine)"
+    },
     "placeholder.sequence_missing": {
       "text": "{sequence} is missing or changed. Keep it exactly as in the source text.",
       "site": "merge.placeholder_sequence_missing",
