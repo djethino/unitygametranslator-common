@@ -471,12 +471,12 @@ public static MergeDecision Decide(TranslationLine? local, TranslationLine? remo
                     if (SameAsAncestor(there, remoteFormat, was, ancestorFormat))
                         return Decision(MergeVerdict.TakeLocal, MergeReason.LocalModified);
 
-                    return Conflict(MergeVerdict.TakeRemote, ConflictKind.BothModified);
+                    return Conflict(ShownWhenBothMoved(localFormat, remoteFormat), ConflictKind.BothModified);
                 }
 
                 // ⚠ Without an ancestor this is NOT "take the newer one": there is no way to tell
                 // which side moved, and picking silently would overwrite work at random.
-                return Conflict(MergeVerdict.TakeRemote, ConflictKind.NoAncestor);
+                return Conflict(ShownWhenBothMoved(localFormat, remoteFormat), ConflictKind.NoAncestor);
             }
 
             // Here and in the ancestor, gone from there.
@@ -588,6 +588,15 @@ public static MergeDecision Decide(TranslationLine? local, TranslationLine? remo
 
         private static MergeDecision Decision(MergeVerdict verdict, MergeReason reason) =>
             new MergeDecision { Verdict = verdict, Reason = reason };
+
+        /// <summary>
+        /// The side a conflict between two changed lines OFFERS first (the person still decides). The other side's, as always —
+        /// except a file of the format 2 held here against a format 1 on the other side: the format 2 replaces the format 1, so
+        /// its line is offered first (decided by the user, 2026-11-22: a format 1 line must not quietly win over the work of a
+        /// format 2 file).
+        /// </summary>
+        private static MergeVerdict ShownWhenBothMoved(int localFormat, int remoteFormat) =>
+            localFormat >= 2 && remoteFormat < 2 ? MergeVerdict.TakeLocal : MergeVerdict.TakeRemote;
 
         private static MergeDecision Conflict(MergeVerdict show, ConflictKind kind) =>
             new MergeDecision
