@@ -26,7 +26,7 @@
    },
    "out": "{items: [{key, text, forms:[{id,text}]}], total}"
   },
-  "tag_of_words": {"in": {"stored": "string or null", "written": "string", "proposal": "string or null"}, "out": "the tag the words take when a person saves them: A when they are the AI's proposal kept as it came, else H (M and S stay)"},
+  "tag_of_words": {"in": {"stored": "string or null", "written": "string", "proposal": "string or null"}, "out": "the tag the words take when a person saves them: V when they are the AI's proposal kept as it came, else H (M and S stay)"},
     "tag_after_person": {
    "in": {
     "stored": "string or null"
@@ -2259,13 +2259,13 @@
    "out": "S",
    "why": "a person's writing is H, but M and S stay what they are"
   },
-    {"id": "line_edit/tag_of_words/a-proposal-kept-as-it-came", "op": "tag_of_words", "in": {"stored": "V", "written": "Pièce stellaire", "proposal": "Pièce stellaire"}, "out": "A", "why": "the machine wrote it: filing it H would claim a review nobody performed"},
+    {"id": "line_edit/tag_of_words/a-proposal-kept-as-it-came", "op": "tag_of_words", "in": {"stored": "V", "written": "Pièce stellaire", "proposal": "Pièce stellaire"}, "out": "V", "why": "the machine wrote it and a person saw it and kept it as it came: validated, the tag of the A → V gesture (A would say nobody read it, H that she wrote it)"},
     {"id": "line_edit/tag_of_words/a-proposal-retouched", "op": "tag_of_words", "in": {"stored": "V", "written": "Pièce stellaire !", "proposal": "Pièce stellaire"}, "out": "H", "why": "what she changed is hers"},
     {"id": "line_edit/tag_of_words/no-proposal-was-made", "op": "tag_of_words", "in": {"stored": "V", "written": "Pièce stellaire", "proposal": null}, "out": "H", "why": "words equal to nothing are a person's"},
-    {"id": "line_edit/tag_of_words/a-line-that-is-no-line-yet", "op": "tag_of_words", "in": {"stored": null, "written": "Pièce stellaire", "proposal": "Pièce stellaire"}, "out": "A", "why": "a new line takes the proposal as the machine's"},
+    {"id": "line_edit/tag_of_words/a-line-that-is-no-line-yet", "op": "tag_of_words", "in": {"stored": null, "written": "Pièce stellaire", "proposal": "Pièce stellaire"}, "out": "V", "why": "a new line takes the proposal she kept as validated"},
     {"id": "line_edit/tag_of_words/a-skipped-line-stays-skipped", "op": "tag_of_words", "in": {"stored": "S", "written": "Pièce stellaire", "proposal": "Pièce stellaire"}, "out": "S", "why": "M and S stay what they are, as for any save of a person"},
     {"id": "line_edit/tag_of_words/the-mods-own-words-stay", "op": "tag_of_words", "in": {"stored": "M", "written": "Pièce stellaire", "proposal": "Pièce stellaire"}, "out": "M", "why": "the same"},
-    {"id": "line_edit/tag_of_words/a-line-a-person-wrote-takes-the-proposal-as-the-machines", "op": "tag_of_words", "in": {"stored": "H", "written": "Pièce stellaire", "proposal": "Pièce stellaire"}, "out": "A", "why": "the tag says who wrote the words now: the machine"},
+    {"id": "line_edit/tag_of_words/a-line-a-person-wrote-takes-the-proposal-as-validated", "op": "tag_of_words", "in": {"stored": "H", "written": "Pièce stellaire", "proposal": "Pièce stellaire"}, "out": "V", "why": "the tag says who wrote the words now: the machine, read and kept by a person"},
     {"id": "line_edit/tag_of_words/the-case-of-a-letter-is-a-change", "op": "tag_of_words", "in": {"stored": "V", "written": "pièce stellaire", "proposal": "Pièce stellaire"}, "out": "H", "why": "equality is to the letter"}
  ]
 }
