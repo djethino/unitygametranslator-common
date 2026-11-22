@@ -474,10 +474,10 @@
       "response": {
         "status": 200,
         "headers": { "ETag": { "$is": "string" }, "Cache-Control": "must-revalidate, private" },
-        "body": { "id": { "$ref": "translations.main.id" }, "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "uploader": "alice", "line_count": 2, "vote_count": 0, "updated_at": { "$is": "iso8601" }, "content_updated_at": { "$is": "iso8601" }, "has_update": true }
+        "body": { "id": { "$ref": "translations.main.id" }, "file_uuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b", "file_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "uploader": "alice", "line_count": 2, "vote_count": 0, "updated_at": { "$is": "iso8601" }, "content_updated_at": { "$is": "iso8601" }, "has_update": true }
       },
-      "read": { "reader": "check", "input": { "local_hash": "0000000000000000000000000000000000000000000000000000000000000000" }, "expects": { "HasUpdate": true, "Uploader": "alice", "LineCount": 2, "VoteCount": 0, "NotModified": false } },
-      "why": "the one call somebody with no account can make about the file they installed; without `uploader` the mod could only call the work 'Website'"
+      "read": { "reader": "check", "input": { "local_hash": "0000000000000000000000000000000000000000000000000000000000000000" }, "expects": { "HasUpdate": true, "Uploader": "alice", "LineCount": 2, "VoteCount": 0, "NotModified": false, "FileUuid": "9b1c2d3e-4f50-4617-8a9b-0c1d2e3f4a5b" } },
+      "why": "the one call somebody with no account can make about the file they installed; without `uploader` the mod could only call the work 'Website'; `file_uuid` lets it tell that the row is the lineage it holds — a row number means nothing on another server"
     },
     {
       "id": "api-v1/check/if-none-match-answers-304",

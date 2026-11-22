@@ -138,7 +138,7 @@
         "tags": ["catalogue"],
         "operationId": "checkTranslation",
         "summary": "Has this translation moved? The one call somebody with no account can make about the file they installed.",
-        "description": "Answers `file_hash`, `uploader`, `line_count`, `vote_count`, and `has_update` when `hash` was sent (`file_hash !== hash`). The `ETag` covers everything this answer carries — the hash, the line count, the vote count and the uploader, deliberately not `updated_at`, which a download by anyone moves — so `If-None-Match` with the last ETag answers 304 with no body when nothing the caller could see has changed. A branch answers only to its author and to its Main's owner (403 otherwise).",
+        "description": "Answers `file_uuid`, `file_hash`, `uploader`, `line_count`, `vote_count`, and `has_update` when `hash` was sent (`file_hash !== hash`). A client compares `file_uuid` with the `_uuid` of the file it holds: a different lineage means the row is not that file (it came from another server, or the row became a fork), never that it moved. The `ETag` covers everything this answer carries — the lineage, the hash, the line count, the vote count and the uploader, deliberately not `updated_at`, which a download by anyone moves — so `If-None-Match` with the last ETag answers 304 with no body when nothing the caller could see has changed. A branch answers only to its author and to its Main's owner (403 otherwise).",
         "security": [{}, { "bearer": [] }],
         "x-auth": "optional — needed to read one's own branch",
         "x-throttle": "120/min per IP",
@@ -986,6 +986,7 @@
         "required": ["id", "file_hash", "uploader", "line_count", "vote_count", "updated_at", "content_updated_at"],
         "properties": {
           "id": { "type": "integer" },
+          "file_uuid": { "type": "string", "description": "Additive (2026-11-22). The lineage this row belongs to (`_uuid` of its file). A client holding a file whose `_uuid` differs reads the row as not its translation. Absent on an older site: the client then trusts the row number, as before." },
           "file_hash": { "$ref": "#/components/schemas/FileHash" },
           "format_version": { "type": "integer", "minimum": 1, "description": "Additive. The format of the file the site holds (its `_engine_version`, common/TranslationFormat) — shown as the chip `vN`, red past what the client reads." },
           "game": { "$ref": "#/components/schemas/LineageGame" },
