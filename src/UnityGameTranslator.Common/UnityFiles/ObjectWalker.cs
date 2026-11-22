@@ -49,6 +49,20 @@ namespace UnityGameTranslator.Common.UnityFiles
     }
 
     /// <summary>
+    /// A visitor that wants the bytes of an array of one-byte values instead of having them passed over: a field of a script that
+    /// holds a serializer's data (Odin's <c>SerializedBytes</c>, a sheet of texts stored as bytes). Asked first; the others never
+    /// hold them.
+    /// </summary>
+    public interface IObjectBytesVisitor
+    {
+        /// <summary>Whether this array's bytes are wanted (no: they are skipped, as for any visitor).</summary>
+        bool Wants(in FieldSite site, int length);
+
+        /// <summary>The bytes of the array.</summary>
+        void Bytes(in FieldSite site, byte[] bytes);
+    }
+
+    /// <summary>
     /// The type tree of the class a referenced object (<c>[SerializeReference]</c>) is of, or null when
     /// the caller cannot say — which makes the registry <see cref="ObjectWalker.RegistryNotRead"/>.
     /// </summary>
@@ -227,9 +241,16 @@ namespace UnityGameTranslator.Common.UnityFiles
 
             if (leaf && size == 1)
             {
+                var site = new FieldSite(path, node, owner, field);
+                // A visitor that wants these bytes gets them (a serializer's data in a script's field)
+                if (run.V is IObjectBytesVisitor wanting && wanting.Wants(site, count))
+                {
+                    wanting.Bytes(site, r.Bytes(count));
+                    return;
+                }
                 // An array of one-byte values (a texture, a font file): passed over, said.
                 r.Skip(count);
-                run.V.Skipped(new FieldSite(path, node, owner, field), count);
+                run.V.Skipped(site, count);
                 return;
             }
 
