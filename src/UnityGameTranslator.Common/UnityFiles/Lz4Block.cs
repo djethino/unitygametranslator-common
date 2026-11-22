@@ -10,6 +10,18 @@ namespace UnityGameTranslator.Common.UnityFiles
     {
         public static byte[] Decode(byte[] input, int outputSize)
         {
+            var output = DecodeUpTo(input, outputSize, out int written);
+            if (written != outputSize) throw new UnityFileFormatException($"LZ4: {written} byte(s) out of {outputSize}");
+            return output;
+        }
+
+        /// <summary>
+        /// A block whose decoded size is only bounded (a block of an LZ4 frame: at most its declared maximum): decoded into a buffer of
+        /// <paramref name="maxOutput"/> bytes, <paramref name="written"/> saying how many it holds.
+        /// </summary>
+        public static byte[] DecodeUpTo(byte[] input, int maxOutput, out int written)
+        {
+            int outputSize = maxOutput;
             var output = new byte[outputSize];
             int ip = 0, op = 0;
             while (ip < input.Length)
@@ -37,7 +49,7 @@ namespace UnityGameTranslator.Common.UnityFiles
                 // Byte by byte: a match may overlap what it copies (offset smaller than length).
                 for (int from = op - offset, end = op + length; op < end; ) output[op++] = output[from++];
             }
-            if (op != outputSize) throw new UnityFileFormatException($"LZ4: {op} byte(s) out of {outputSize}");
+            written = op;
             return output;
         }
 
