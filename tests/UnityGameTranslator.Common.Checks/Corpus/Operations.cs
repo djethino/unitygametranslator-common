@@ -394,6 +394,8 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => LineEditing.TagOfWords(Str(e, "stored"), Str(e, "written"), Str(e, "proposal"))),
             new Operation("line_edit", "tag_after_person", typeof(LineEditing), nameof(LineEditing.TagAfterPerson),
                 e => LineEditing.TagAfterPerson(Str(e, "stored"))),
+            new Operation("line_edit", "empties_a_line", typeof(LineEditing), nameof(LineEditing.EmptiesALine),
+                e => LineEditing.EmptiesALine(Str(e, "held"), Str(e, "written"))),
 
             // ── negotiation ────────────────────────────────────────────────────────
             new Operation("negotiation", "run", typeof(Negotiation), new[] { nameof(Negotiation.ForgetIfChanged), nameof(Negotiation.Concede) },

@@ -32,7 +32,8 @@
     "stored": "string or null"
    },
    "out": "the tag a person's writing takes"
-  }
+  },
+  "empties_a_line": {"in": {"held": "string or null: the words the line holds, null when there is no line", "written": "string"}, "out": "true when saving would empty a line that holds a translation: refused in every editor, said as LineEditing.EmptyLineRefused"}
  },
  "cases": [
   {
@@ -2266,6 +2267,11 @@
     {"id": "line_edit/tag_of_words/a-skipped-line-stays-skipped", "op": "tag_of_words", "in": {"stored": "S", "written": "Pièce stellaire", "proposal": "Pièce stellaire"}, "out": "S", "why": "M and S stay what they are, as for any save of a person"},
     {"id": "line_edit/tag_of_words/the-mods-own-words-stay", "op": "tag_of_words", "in": {"stored": "M", "written": "Pièce stellaire", "proposal": "Pièce stellaire"}, "out": "M", "why": "the same"},
     {"id": "line_edit/tag_of_words/a-line-a-person-wrote-takes-the-proposal-as-validated", "op": "tag_of_words", "in": {"stored": "H", "written": "Pièce stellaire", "proposal": "Pièce stellaire"}, "out": "V", "why": "the tag says who wrote the words now: the machine, read and kept by a person"},
-    {"id": "line_edit/tag_of_words/the-case-of-a-letter-is-a-change", "op": "tag_of_words", "in": {"stored": "V", "written": "pièce stellaire", "proposal": "Pièce stellaire"}, "out": "H", "why": "equality is to the letter"}
+    {"id": "line_edit/tag_of_words/the-case-of-a-letter-is-a-change", "op": "tag_of_words", "in": {"stored": "V", "written": "pièce stellaire", "proposal": "Pièce stellaire"}, "out": "H", "why": "equality is to the letter"},
+    {"id": "line_edit/empties_a_line/a-translated-line-emptied", "op": "empties_a_line", "in": {"held": "Pièce stellaire", "written": ""}, "out": true, "why": "a line is never saved empty: decided by the user for every editor, 2026-11-22"},
+    {"id": "line_edit/empties_a_line/a-capture-left-empty", "op": "empties_a_line", "in": {"held": "", "written": ""}, "out": false, "why": "nothing is emptied: skipping a captured line stays possible"},
+    {"id": "line_edit/empties_a_line/no-line-yet", "op": "empties_a_line", "in": {"held": null, "written": ""}, "out": false, "why": "nothing is there to empty; the field simply has nothing to save"},
+    {"id": "line_edit/empties_a_line/words-written", "op": "empties_a_line", "in": {"held": "Pièce stellaire", "written": "Pièce"}, "out": false, "why": "words are not emptiness"},
+    {"id": "line_edit/empties_a_line/a-space-is-a-character", "op": "empties_a_line", "in": {"held": "Pièce stellaire", "written": " "}, "out": false, "why": "empty means no character at all, as the site's servers judge it (TranslationService::emptiesALine compares to '')"}
  ]
 }
