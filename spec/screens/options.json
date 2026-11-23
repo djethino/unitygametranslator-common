@@ -317,6 +317,7 @@
                   "help": "Choose the translation service: Google Translate or DeepL. Each needs its own API key." }
               ] },
               { "kind": "spacer", "name": "ProviderGap", "height": 5 },
+              { "kind": "label", "name": "ApiCost", "text": { "bind": "onlineCost" }, "policy": "Excluded", "role": "Small", "tone": "Warning", "align": "TopLeft", "fill": "Stretch", "autoHeight": true },
               { "kind": "stack", "name": "GoogleSection", "spacing": 3, "visible": false, "children": [
                 { "kind": "row", "name": "GoogleKeyRow", "spacing": 5, "minHeight": "InputHeight", "children": [
                   { "kind": "label", "name": "GoogleKeyLabel", "text": "API Key:", "role": "Info", "minWidth": 55, "policy": "Excluded" },
