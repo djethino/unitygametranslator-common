@@ -281,6 +281,15 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>
+        /// THE warning about the money a paid service costs — ONE sentence, said by the mod, UGT Manager and the website's documentation wherever an AI
+        /// service, or Google, or DeepL can be chosen (user, 2026-11-23: « on le met à chaque fois, on veut pas être responsable si un utilisateur perd de
+        /// l'argent en utilisant des api online payantes »). Never a price, never a provider named: we take no part in that arrangement.
+        /// </summary>
+        public const string OnlineCost =
+            "Online AI services bill every request, and the cost can be very high. It is yours: UnityGameTranslator is not responsible "
+            + "for what a paid service charges you. Check your provider's prices and limits first. A model on your own computer is free.";
+
+        /// <summary>
         /// What has to be said about sending a game's text to this address, or null when there is
         /// nothing to say.
         ///
@@ -304,8 +313,7 @@ namespace UnityGameTranslator.Common
                          + "sent to it while you play. Nothing is billed.";
 
                 default:
-                    return "This server is online. The game's text is sent to it while you play, "
-                         + "and the provider bills you for what you use.";
+                    return "This server is online. The game's text is sent to it while you play. " + OnlineCost;
             }
         }
     }

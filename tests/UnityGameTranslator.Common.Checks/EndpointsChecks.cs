@@ -134,8 +134,10 @@ namespace UnityGameTranslator.Common.Checks
                   && onNetwork.Contains("network") && !onNetwork.Contains("bills"),
                 "a server on your network raises privacy, never cost", "nobody bills you for your own box");
             check(Endpoints.CautionFor("https://api.openai.com/v1") is string remote
-                  && remote.Contains("bills") && remote.Contains("sent"),
-                "a provider raises both", "the text leaves AND the meter runs");
+                  && remote.Contains("bill") && remote.Contains("sent") && remote.EndsWith(Endpoints.OnlineCost, StringComparison.Ordinal),
+                "a provider raises both, the cost in THE one sentence every product says", "the text leaves AND the meter runs");
+            check(Endpoints.OnlineCost.Contains("not responsible") && Endpoints.OnlineCost.Contains("very high"),
+                "the cost warning says the cost can be very high and that it is not ours", Endpoints.OnlineCost);
         }
     }
 }
