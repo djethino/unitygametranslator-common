@@ -70,7 +70,7 @@
     "_settings": { "type": "object", "description": "Settings section `game_settings`: per-game switches. Internal shape: a later artefact." },
     "_lists": {
       "type": "object",
-      "description": "Format 2 only. What the game's own lists hold, for the templates whose slots (`[!L*name]`) read them: imposed by the game, read by the extraction, edited by nobody — the most recent extraction replaces it, so it is never merged line by line. A slot of a line may name only a list found here (spec/translation-file `x-writer-guarantees`). NOT part of the content hash yet (open question, analyse/smart-suivi-socle.md). Anything else the extraction keeps (`field`, `row`, `witnesses`…) is provenance and diagnosis: internal shape, a later artefact.",
+      "description": "Format 2 only. What the game's own lists hold, for the templates whose slots (`[!L*name]`) read them: imposed by the game, read by the extraction, edited by nobody — the most recent extraction replaces each list's `values`, so they are never merged line by line; a list's `seen` (entries found in the lines or while playing) is the exception, kept and merged by union (lists.md § seen). A slot of a line may name only a list found here (spec/translation-file `x-writer-guarantees`). NOT part of the content hash yet (open question, analyse/smart-suivi-socle.md). Anything else the extraction keeps (`field`, `row`, `witnesses`…) is provenance and diagnosis: internal shape, a later artefact.",
       "properties": {
         "lists": {
           "type": "object",
@@ -79,6 +79,7 @@
             "type": "object",
             "properties": {
               "values": { "type": "array", "items": { "type": "string" }, "description": "The entries, in the game's own order." },
+              "seen": { "type": "array", "items": { "type": "string" }, "description": "Entries found in the LINES (UGT Manager's optimisation) or while playing (the mod), in the order found, each once, none of them in `values`. Never removed by an extraction (it drops only what `values` now holds); merged by union. A slot reads `values` then `seen` (ListEntries.Of). A reader that ignores it reads `values` only. spec/translation-file/lists.md § seen." },
               "join": { "type": "string", "description": "How repeated entries are joined when no text holds them: the text written between two entries." },
               "join_case": { "enum": ["lower-first", "upper-first"], "description": "The case of the first letter of each entry AFTER the first, when they are joined (the vocabulary of a link's `case`, `ListJoin`). Absent = every entry keeps its own capital. Outside the content hash like the rest of `_lists`. A reader that does not know it, or meets a value it does not know, writes « TuQuan » for « Tuquan »: a wrong capital, never a file refused (spec/translation-file/lists.md)." }
             },

@@ -454,6 +454,12 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e => ListJoin.Join(EntryArray(e), Str(e, "between"), Str(e, "join_case"))),
             new Operation("list_join", "is_case", typeof(ListJoin), nameof(ListJoin.IsCase),
                 e => ListJoin.IsCase(Str(e, "join_case"))),
+            new Operation("list_entries", "of", typeof(ListEntries), nameof(ListEntries.Of),
+                e => ListEntries.Of(NamedArray(e, "values"), NamedArray(e, "seen")).Select(x => (object?)x).ToList()),
+            new Operation("list_entries", "seen", typeof(ListEntries), nameof(ListEntries.Seen),
+                e => ListEntries.Seen(NamedArray(e, "values"), NamedArray(e, "seen"), NamedArray(e, "found")).Select(x => (object?)x).ToList()),
+            new Operation("list_entries", "merged", typeof(ListEntries), nameof(ListEntries.Merged),
+                e => ListEntries.Merged(NamedArray(e, "values"), NamedArray(e, "mine"), NamedArray(e, "theirs")).Select(x => (object?)x).ToList()),
 
             // ── game_names ────────────────────────────────────────────────────────
             new Operation("game_names", "same", typeof(GameNames), nameof(GameNames.Flat),
@@ -894,6 +900,15 @@ namespace UnityGameTranslator.Common.Checks.Corpus
         /// <summary>The lines of a file as the corpus writes them: a list of {key, line}, in file order.</summary>
         private static List<KeyValuePair<string, TranslationLine>> KeyedLines(JsonElement array) =>
             array.EnumerateArray().Select(item => new KeyValuePair<string, TranslationLine>(Str(item, "key")!, LineRequired(item, "line"))).ToList();
+
+        /// <summary>A named array of strings (an item that is not a string is null); null when the key is absent.</summary>
+        private static List<string?>? NamedArray(JsonElement e, string name)
+        {
+            if (!e.TryGetProperty(name, out var array) || array.ValueKind != JsonValueKind.Array) return null;
+            var list = new List<string?>();
+            foreach (var item in array.EnumerateArray()) list.Add(item.ValueKind == JsonValueKind.String ? item.GetString() : null);
+            return list;
+        }
 
         private static List<string?> EntryArray(JsonElement e)
         {

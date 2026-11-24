@@ -56,3 +56,24 @@ that share entries has 176 of them, and the two slots want the same form for 175
   extraction) writes the whole-template key too, as the form the other slots take.
 - Not measured, so not said: an entry that stands twice in the SAME list of one template with two forms. No template of the one game that
   has lists names a list twice with a `use`.
+
+## Entries found in the lines: `seen` (2026-11-24 — proposal, not yet settled by the user)
+
+`values` is what the GAME imposes: read in its files by the extraction, replaced whole by the next extraction. Two other writers find
+entries that are not there: the **optimisation** (UGT Manager) deduces a template and its list from the LINES of a file that never read
+the game's files (`« got a broom! »`, `« got a hook! »` → `got a [!L*l3f2a]!` with `broom`, `hook`), and the **mod** meets a sentence of
+a known template with a word in a slot that no list holds (`« got a ladder! »`). Written in `values`, they would be erased by the next
+extraction, and nothing would merge them between two machines.
+
+```json
+"_lists": { "lists": { "items": { "values": ["broom", "hook"], "seen": ["ladder"] } } }
+```
+
+- **`seen`** (optional): entries found in the lines or while playing, in the order they were found, each once, none of them in `values`.
+  A list born of the lines has `values: []` and its entries in `seen`.
+- **A slot reads `values` then `seen`** (`ListEntries.Of`): one set, `values`' order first.
+- **The extraction never removes `seen`**: it replaces `values` and drops from `seen` what `values` now holds. Two files are merged by
+  UNION of `seen` (an entry has no words to arbitrate: its translation is its LINE, merged like any line).
+- An entry of `seen` is a line of the file like any entry; a slot cannot be filled with an entry nobody translated (the mod's rule).
+- **A reader that does not know it** reads `values` only: a template whose slot held a `seen` entry matches nothing there, and the text
+  goes through the ordinary path (asked whole) — never a file refused. Outside the content hash like all of `_lists`.

@@ -1,0 +1,40 @@
+{
+  "rule": "list_entries",
+  "classes": ["ListEntries"],
+  "note": "The entries of a game's list as a slot reads them, and the writes that change them (spec/translation-file/lists.md § seen). `values` is what the game imposes (replaced whole by the extraction); `seen` what was found in the lines (UGT Manager's optimisation) or while playing (the mod) — never removed by an extraction, merged by union. Every entry is invented. Expected values derived by hand from the rule.",
+  "operations": {
+    "of": {"in": {"values": "[string] or absent", "seen": "[string] or absent"}, "out": "[string]: values in order, then each seen entry not already there; empty and repeated entries are none"},
+    "seen": {"in": {"values": "[string] or absent", "seen": "[string] or absent", "found": "[string] or absent"}, "out": "[string]: the seen a writer writes — old ones, then the found ones, each once, none that values holds"},
+    "merged": {"in": {"values": "[string] or absent", "mine": "[string] or absent", "theirs": "[string] or absent"}, "out": "[string]: the union of two files' seen, mine first, none that values holds"}
+  },
+  "cases": [
+    { "id": "list_entries/of/values-then-seen", "op": "of",
+      "in": {"values": ["broom", "hook"], "seen": ["ladder"]},
+      "out": ["broom", "hook", "ladder"],
+      "why": "a slot reads what the game imposes, then what was found in the lines" },
+    { "id": "list_entries/of/seen-alone", "op": "of",
+      "in": {"values": [], "seen": ["broom", "hook"]},
+      "out": ["broom", "hook"],
+      "why": "a list born of the lines has no imposed entry" },
+    { "id": "list_entries/of/no-seen-reads-values", "op": "of",
+      "in": {"values": ["broom"]},
+      "out": ["broom"],
+      "why": "a file written before `seen` reads exactly as before" },
+    { "id": "list_entries/of/repeated-and-empty-are-none", "op": "of",
+      "in": {"values": ["broom", "", "broom"], "seen": ["broom", null, "hook"]},
+      "out": ["broom", "hook"],
+      "why": "an entry is one entry, an empty one is none" },
+    { "id": "list_entries/seen/found-entries-appended", "op": "seen",
+      "in": {"values": ["broom"], "seen": ["hook"], "found": ["ladder", "hook", "broom"]},
+      "out": ["hook", "ladder"],
+      "why": "the old seen first; a found entry the game already imposes or already seen is not written again" },
+    { "id": "list_entries/seen/extraction-takes-over", "op": "seen",
+      "in": {"values": ["broom", "ladder"], "seen": ["hook", "ladder"]},
+      "out": ["hook"],
+      "why": "an extraction that now imposes « ladder » drops it from seen; « hook » stays — an extraction never removes what was seen" },
+    { "id": "list_entries/merged/union-mine-first", "op": "merged",
+      "in": {"values": ["broom"], "mine": ["hook", "ladder"], "theirs": ["rope", "hook"]},
+      "out": ["hook", "ladder", "rope"],
+      "why": "two machines saw different entries: both are kept" }
+  ]
+}
