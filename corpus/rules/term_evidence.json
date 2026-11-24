@@ -4,9 +4,48 @@
   "note": "How a person's own lines (H or V, with words) write a term, found with no cutting of a text into words. `of`: a term (its source form) and the validated lines of the WHOLE file (key, line) → the verdict, the writing and its keys, the rivals (the contradiction). `of_all`: the same for every term, with the guard that two terms receiving the very same writing are both `ambiguous`. A candidate is a stretch of 2 to 24 characters, no white space at its ends, held (at word edges, first letter in either case) by at least 2 lines whose KEY holds the term, and CONFINED: at least half of the lines of the whole file that hold it are such lines; the lines that hold the same stretches are one writing, the longest speaks for it, spelled the way most of its lines spell it. The writing held by the most lines wins; at the same count the one with more lines by hand (H); at the same again, `tied`. The rival is the same search among the lines of the term that do not carry the winner. Every line is invented: no text of a game is in a case. Expected values are derived by hand from the rule, never from the code.",
   "operations": {
     "of": { "in": { "term": "string", "lines": "list of {key, line}" }, "out": "{verdict: none|thin|word|tied|ambiguous, word, keys, rivals: [{words, keys}]}" },
-    "of_all": { "in": { "terms": "list of string", "lines": "list of {key, line}" }, "out": "list of {term, verdict, word}: `ambiguous` for every term whose writing another term receives too" }
+    "of_all": { "in": { "terms": "list of string", "lines": "list of {key, line}" }, "out": "list of {term, verdict, word}: `ambiguous` for every term whose writing another term receives too" },
+    "of_all_machine": { "in": { "terms": "list of string", "lines": "list of {key, line}" }, "out": "list of {term, verdict, word, from_machine}: `of_all`, then for a term no person's line decides (none or thin) the same search over the MACHINE's lines (tag A or none); taken only when it gives `word` with no rival, a writing no other term receives, and every line of a person naming the term holds it — `from_machine` true. Anything less leaves the term as `of_all` gave it (user, 2026-11-24: the A lines only when they clearly agree, else the model, once per term)" }
   },
   "cases": [
+    { "id": "term_evidence/of_all_machine/machine-lines-agree", "op": "of_all_machine",
+      "in": { "terms": ["Wheel"], "lines": [
+          {"key": "Big Wheel", "line": {"v": "Grande roue", "t": "A"}},
+          {"key": "Wheel Lock", "line": {"v": "Verrou de roue", "t": "A"}},
+          {"key": "Play", "line": {"v": "Jouer", "t": "A"}} ] },
+      "out": [ {"term": "Wheel", "verdict": "word", "word": "roue", "from_machine": true} ],
+      "why": "no person wrote the term; the two machine lines that name it both hold « roue », confined to them, no rival" },
+    { "id": "term_evidence/of_all_machine/machine-lines-contradict", "op": "of_all_machine",
+      "in": { "terms": ["Wheel"], "lines": [
+          {"key": "Big Wheel", "line": {"v": "Grande roue", "t": "A"}},
+          {"key": "Wheel Lock", "line": {"v": "Verrou de roue", "t": "A"}},
+          {"key": "Wheel Rim", "line": {"v": "Jante de roue", "t": "A"}},
+          {"key": "Wheel Spin", "line": {"v": "Rotation du volant", "t": "A"}},
+          {"key": "Wheel Size", "line": {"v": "Taille du volant", "t": "A"}} ] },
+      "out": [ {"term": "Wheel", "verdict": "none", "word": null, "from_machine": false} ],
+      "why": "« roue » wins with three lines, but the two others hold « du volant »: a rival, so not clearly agreeing — the question stays" },
+    { "id": "term_evidence/of_all_machine/person-line-not-overruled", "op": "of_all_machine",
+      "in": { "terms": ["Wheel"], "lines": [
+          {"key": "Big Wheel", "line": {"v": "Grande roue", "t": "H"}},
+          {"key": "Wheel Lock", "line": {"v": "Verrou du volant", "t": "A"}},
+          {"key": "Wheel Spin", "line": {"v": "Rotation du volant", "t": "A"}} ] },
+      "out": [ {"term": "Wheel", "verdict": "thin", "word": null, "from_machine": false} ],
+      "why": "one line of a person is too thin to decide, yet it writes « roue »: the machine's « du volant » is not taken over it" },
+    { "id": "term_evidence/of_all_machine/person-line-agrees", "op": "of_all_machine",
+      "in": { "terms": ["Wheel"], "lines": [
+          {"key": "Big Wheel", "line": {"v": "Grande roue", "t": "H"}},
+          {"key": "Wheel Lock", "line": {"v": "Roue verrouillée", "t": "A"}},
+          {"key": "Wheel Rim", "line": {"v": "Roue à jante", "t": "A"}} ] },
+      "out": [ {"term": "Wheel", "verdict": "word", "word": "Roue", "from_machine": true} ],
+      "why": "the machine's two lines agree, spelled « Roue » as both of them write it; the person's « Grande roue » holds it (first letter in either case)" },
+    { "id": "term_evidence/of_all_machine/person-decides", "op": "of_all_machine",
+      "in": { "terms": ["Wheel"], "lines": [
+          {"key": "Big Wheel", "line": {"v": "Grande roue", "t": "H"}},
+          {"key": "Wheel Lock", "line": {"v": "Verrou de roue", "t": "V"}},
+          {"key": "Wheel Spin", "line": {"v": "Rotation du volant", "t": "A"}},
+          {"key": "Wheel Size", "line": {"v": "Taille du volant", "t": "A"}} ] },
+      "out": [ {"term": "Wheel", "verdict": "word", "word": "roue", "from_machine": false} ],
+      "why": "a person's lines decide; the machine's lines are not read" },
     { "id": "term_evidence/of/no-line-names-the-term", "op": "of",
       "in": { "term": "Zorb", "lines": [ {"key": "Play", "line": {"v": "Jouer", "t": "V"}} ] },
       "out": { "verdict": "none", "word": null, "keys": [], "rivals": [] },

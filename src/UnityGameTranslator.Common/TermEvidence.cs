@@ -51,6 +51,12 @@ namespace UnityGameTranslator.Common
         public List<TermWriting> Rivals = new List<TermWriting>();
 
         public bool Contradicted => Rivals.Count > 0;
+
+        /// <summary>
+        /// The word was read in the MACHINE's lines (tag A), no person's line deciding (<see cref="TermEvidence.OfAll(IReadOnlyList{string}, IReadOnlyList{KeyValuePair{string, TranslationLine}}, bool)"/>):
+        /// never said to be « written by a person ».
+        /// </summary>
+        public bool FromMachine;
     }
 
     /// <summary>
@@ -80,9 +86,11 @@ namespace UnityGameTranslator.Common
         /// <param name="term">The term as the game writes it (its source form).</param>
         /// <param name="validated">The lines of the WHOLE file, key and line. Only those a person validated and wrote words in (H or V, a value) are read.</param>
         public static TermEvidenceResult Of(string term, IReadOnlyList<KeyValuePair<string, TranslationLine>> validated)
+            => OfLines(term, ValidatedLines(validated));
+
+        private static TermEvidenceResult OfLines(string term, List<Line> lines)
         {
             var result = new TermEvidenceResult { Term = term ?? "" };
-            var lines = ValidatedLines(validated);
 
             var evidence = new List<int>();
             for (int i = 0; i < lines.Count; i++)
@@ -142,7 +150,52 @@ namespace UnityGameTranslator.Common
         /// </summary>
         public static List<TermEvidenceResult> OfAll(IReadOnlyList<string> terms, IReadOnlyList<KeyValuePair<string, TranslationLine>> validated)
         {
-            var results = terms.Select(term => Of(term, validated)).ToList();
+            var lines = ValidatedLines(validated);
+            return MarkShared(terms.Select(term => OfLines(term, lines)).ToList());
+        }
+
+        /// <summary>
+        /// <see cref="OfAll(IReadOnlyList{string}, IReadOnlyList{KeyValuePair{string, TranslationLine}})"/>, then, with <paramref name="machineLines"/>, the
+        /// MACHINE's lines (tag A, or none) for a term no person's line decides (<see cref="TermEvidenceVerdict.None"/> or <see cref="TermEvidenceVerdict.Thin"/>)
+        /// — a file translated while playing, optimised later (user, 2026-11-24: « dans les A seulement si elles sont nettement d'accord entre elles,
+        /// sinon l'IA, une fois par terme »). Clearly agreeing: the same search finds ONE writing held by at least two of those lines, with NO rival and
+        /// no other term receiving it, and every line of a person that names the term (too few to decide alone) holding it; anything less leaves the term
+        /// as it was (the question stays). A person's verdict is never changed by the machine's lines, and such a word is marked
+        /// <see cref="TermEvidenceResult.FromMachine"/>.
+        /// </summary>
+        public static List<TermEvidenceResult> OfAll(IReadOnlyList<string> terms, IReadOnlyList<KeyValuePair<string, TranslationLine>> lines, bool machineLines)
+        {
+            var results = OfAll(terms, lines);
+            if (!machineLines) return results;
+            var machine = MachineLines(lines);
+            if (machine.Count == 0) return results;
+            var person = ValidatedLines(lines);
+
+            var taken = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var r in results)
+                if (r.Word != null) taken.Add(Casing.LowerFirst(r.Word) ?? "");
+            var read = new List<TermEvidenceResult>();
+            for (int i = 0; i < results.Count; i++)
+            {
+                if (results[i].Verdict != TermEvidenceVerdict.None && results[i].Verdict != TermEvidenceVerdict.Thin) continue;
+                var fromMachine = OfLines(results[i].Term, machine);
+                if (fromMachine.Verdict != TermEvidenceVerdict.Word || fromMachine.Contradicted || taken.Contains(Casing.LowerFirst(fromMachine.Word) ?? "")) continue;
+                // too few of a person's lines to decide is still what a person wrote: a machine's word that one of them does not hold is no word
+                string term = results[i].Term;
+                if (person.Any(p =>!string.IsNullOrEmpty(term) && Holds(p.Key, term) && !Holds(p.Text, fromMachine.Word!))) continue;
+                fromMachine.FromMachine = true;
+                results[i] = fromMachine;
+                read.Add(fromMachine);
+            }
+            // two terms the machine's lines give the very same writing: a block they share, the word of neither — both stay questions
+            foreach (var r in read)
+                if (read.Count(o => string.Equals(Casing.LowerFirst(o.Word), Casing.LowerFirst(r.Word), StringComparison.Ordinal)) > 1)
+                    results[results.IndexOf(r)] = new TermEvidenceResult { Term = r.Term, Verdict = TermEvidenceVerdict.Thin };
+            return results;
+        }
+
+        private static List<TermEvidenceResult> MarkShared(List<TermEvidenceResult> results)
+        {
             var received = new Dictionary<string, int>(StringComparer.Ordinal);
             foreach (var r in results)
                 if (r.Verdict == TermEvidenceVerdict.Word)
@@ -176,6 +229,20 @@ namespace UnityGameTranslator.Common
             public HashSet<int> Lines = new HashSet<int>();
             public string Words = "";
             public int ByHand;
+        }
+
+        /// <summary>The machine's lines with words (tag A, or no tag), each key once; read like a person's, none by hand.</summary>
+        private static List<Line> MachineLines(IReadOnlyList<KeyValuePair<string, TranslationLine>> all)
+        {
+            var lines = new List<Line>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var pair in all)
+            {
+                var line = pair.Value;
+                if ((line.Tag != null && line.Tag != "A") || string.IsNullOrEmpty(line.Value) || !seen.Add(pair.Key)) continue;
+                lines.Add(new Line { Key = pair.Key, Text = line.Value, ByHand = false });
+            }
+            return lines;
         }
 
         private static List<Line> ValidatedLines(IReadOnlyList<KeyValuePair<string, TranslationLine>> validated)

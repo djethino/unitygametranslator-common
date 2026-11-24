@@ -209,6 +209,9 @@ namespace UnityGameTranslator.Common.Checks.Corpus
             new Operation("term_evidence", "of_all", typeof(TermEvidence), nameof(TermEvidence.OfAll),
                 e => TermEvidence.OfAll(Strings(e, "terms"), KeyedLines(e.GetProperty("lines")))
                     .Select(r => (object?)new Dictionary<string, object?> { ["term"] = r.Term, ["verdict"] = r.Verdict.ToString().ToLowerInvariant(), ["word"] = r.Word }).ToList()),
+            new Operation("term_evidence", "of_all_machine", typeof(TermEvidence), nameof(TermEvidence.OfAll),
+                e => TermEvidence.OfAll(Strings(e, "terms"), KeyedLines(e.GetProperty("lines")), machineLines: true)
+                    .Select(r => (object?)new Dictionary<string, object?> { ["term"] = r.Term, ["verdict"] = r.Verdict.ToString().ToLowerInvariant(), ["word"] = r.Word, ["from_machine"] = r.FromMachine }).ToList()),
             new Operation("merge", "same_as_ancestor", typeof(Merge), nameof(Merge.SameAsAncestor),
                 e => Merge.SameAsAncestor(LineRequired(e, "line"), Int(e, "line_format"), LineRequired(e, "ancestor"), Int(e, "ancestor_format"))),
 
