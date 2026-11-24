@@ -193,8 +193,13 @@ namespace UnityGameTranslator.Common
                 if (person.Any(p => !string.IsNullOrEmpty(term) && Holds(p.Key, term) && !Holds(p.Text, fromMachine.Word!))) continue;
                 // CLEARLY agreeing, measured on two files (2026-11-24, 2 to 3 wrong words of 38 with « the most lines » alone: a phrase two lines
                 // share, a compound of a language that glues its words): more than half of the machine's lines that name the term hold it…
-                int naming = machineGrams.Holding(term, keys: true).Count(m => Holds(machine[m].Key, term));
+                var namingKeys = machineGrams.Holding(term, keys: true).Where(m => Holds(machine[m].Key, term)).Select(m => machine[m].Key).ToList();
+                int naming = namingKeys.Count;
                 if (fromMachine.Keys.Count * 2 <= naming) continue;
+                // …and the lines do not all hold the term beside the same other word (first real optimisation, 2026-11-24: `FPS Counter` gave « FPS-räknare » to
+                // `Counter`, `Additional Localization Support` the whole « Ytterligare lokaliseringsstöd » to `Support`, `Error loading PlayerPrefs` « av PlayerPrefs »):
+                // what such lines share is the translation of the phrase, and nothing tells which part is the term's
+                if (SharedNeighbour(term, namingKeys)) continue;
                 // …and the machine's own line of the term alone, when the file has one, writes it (first letter in either case)
                 if (machineText.TryGetValue(term, out var own) && !string.Equals(Casing.LowerFirst(own), Casing.LowerFirst(fromMachine.Word), StringComparison.Ordinal)) continue;
                 fromMachine.FromMachine = true;
@@ -206,6 +211,57 @@ namespace UnityGameTranslator.Common
                 if (read.Count(o => string.Equals(Casing.LowerFirst(o.Word), Casing.LowerFirst(r.Word), StringComparison.Ordinal)) > 1)
                     results[results.IndexOf(r)] = new TermEvidenceResult { Term = r.Term, Verdict = TermEvidenceVerdict.Thin };
             return results;
+        }
+
+        /// <summary>How near a word must stand to the term to be its companion: within two words of it, on either side (« Additional Localization Support »).</summary>
+        private const int NeighbourReach = 2;
+
+        /// <summary>
+        /// Whether every key holds the term with the same other word within <see cref="NeighbourReach"/> words of it. A word is a run of letters, digits and marks (Unicode's
+        /// categories), compared in small letters (<see cref="Casing.Lower"/>); a key whose words do not hold the term's own words in a row (a script written without spaces)
+        /// gives no neighbour, so it never shares one.
+        /// </summary>
+        private static bool SharedNeighbour(string term, List<string> keys)
+        {
+            var termWords = WordsOf(term);
+            if (termWords.Count == 0 || keys.Count == 0) return false;
+            HashSet<string>? shared = null;
+            foreach (string key in keys)
+            {
+                var words = WordsOf(key);
+                var near = new HashSet<string>(StringComparer.Ordinal);
+                for (int at = 0; at + termWords.Count <= words.Count; at++)
+                {
+                    bool here = true;
+                    for (int k = 0; k < termWords.Count && here; k++) here = words[at + k] == termWords[k];
+                    if (!here) continue;
+                    for (int k = Math.Max(0, at - NeighbourReach); k < Math.Min(words.Count, at + termWords.Count + NeighbourReach); k++)
+                        if (k < at || k >= at + termWords.Count) near.Add(words[k]);
+                }
+                near.ExceptWith(termWords);
+                if (shared == null) shared = near; else shared.IntersectWith(near);
+                if (shared.Count == 0) return false;
+            }
+            return shared!.Count > 0;
+        }
+
+        /// <summary>The words of a text in small letters: each run of letters, digits and combining marks.</summary>
+        private static List<string> WordsOf(string text)
+        {
+            var words = new List<string>();
+            int start = -1;
+            for (int i = 0; i <= text.Length; i = i < text.Length ? Next(text, i) : i + 1)
+            {
+                bool inWord = false;
+                if (i < text.Length)
+                {
+                    string category = UnicodeCategories.Of(text, i);
+                    inWord = category[0] == 'L' || category[0] == 'N' || category[0] == 'M';
+                }
+                if (inWord && start < 0) start = i;
+                else if (!inWord && start >= 0) { words.Add(Casing.Lower(text.Substring(start, i - start))!); start = -1; }
+            }
+            return words;
         }
 
         private static List<TermEvidenceResult> MarkShared(List<TermEvidenceResult> results)
