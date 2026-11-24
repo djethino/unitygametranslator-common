@@ -193,13 +193,12 @@ namespace UnityGameTranslator.Common
                 if (person.Any(p => !string.IsNullOrEmpty(term) && Holds(p.Key, term) && !Holds(p.Text, fromMachine.Word!))) continue;
                 // CLEARLY agreeing, measured on two files (2026-11-24, 2 to 3 wrong words of 38 with « the most lines » alone: a phrase two lines
                 // share, a compound of a language that glues its words): more than half of the machine's lines that name the term hold it…
-                var namingKeys = machineGrams.Holding(term, keys: true).Where(m => Holds(machine[m].Key, term)).Select(m => machine[m].Key).ToList();
-                int naming = namingKeys.Count;
+                int naming = machineGrams.Holding(term, keys: true).Count(m => Holds(machine[m].Key, term));
                 if (fromMachine.Keys.Count * 2 <= naming) continue;
-                // …and the lines do not all hold the term beside the same other word (first real optimisation, 2026-11-24: `FPS Counter` gave « FPS-räknare » to
-                // `Counter`, `Additional Localization Support` the whole « Ytterligare lokaliseringsstöd » to `Support`, `Error loading PlayerPrefs` « av PlayerPrefs »):
-                // what such lines share is the translation of the phrase, and nothing tells which part is the term's
-                if (SharedNeighbour(term, namingKeys)) continue;
+                // …and the lines that hold it do not all hold the term beside the same other word (first real optimisation, 2026-11-24: `FPS Counter` and `Advanced
+                // FPS Counter` gave « FPS-räknare » to `Counter`, `Additional Localization Support` the whole « Ytterligare lokaliseringsstöd » to `Support`, `Error loading
+                // PlayerPrefs` « av PlayerPrefs »): what such lines share is the translation of the phrase, and nothing tells which part is the term's
+                if (SharedNeighbour(term, fromMachine.Keys.ToList())) continue;
                 // …and the machine's own line of the term alone, when the file has one, writes it (first letter in either case)
                 if (machineText.TryGetValue(term, out var own) && !string.Equals(Casing.LowerFirst(own), Casing.LowerFirst(fromMachine.Word), StringComparison.Ordinal)) continue;
                 fromMachine.FromMachine = true;
