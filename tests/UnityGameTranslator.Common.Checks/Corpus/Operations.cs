@@ -199,11 +199,12 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 e =>
                 {
                     var result = Completion.Complete(CompletionEntries(e.GetProperty("mine")), CompletionEntries(e.GetProperty("pass")),
-                                                     new HashSet<string>(Strings(e, "terms"), StringComparer.Ordinal), Bool(e, "holds_game_lists"));
+                                                     new HashSet<string>(Strings(e, "terms"), StringComparer.Ordinal), Bool(e, "holds_game_lists"),
+                                                     new HashSet<string>(Strings(e, "harmonized"), StringComparer.Ordinal));
                     return CompletionOut(result);
                 }),
             new Operation("completion", "announcement", typeof(Completion), nameof(Completion.Announcement),
-                e => Completion.Announcement(new CompletionResult { NewLines = Int(e, "new"), ValidatedKept = Int(e, "validated_kept"), Replaced = Int(e, "replaced") })),
+                e => Completion.Announcement(new CompletionResult { NewLines = Int(e, "new"), ValidatedKept = Int(e, "validated_kept"), Replaced = Int(e, "replaced"), Harmonized = Int(e, "harmonized") })),
             new Operation("term_evidence", "of", typeof(TermEvidence), nameof(TermEvidence.Of),
                 e => TermEvidenceOut(TermEvidence.Of(Str(e, "term")!, KeyedLines(e.GetProperty("lines"))))),
             new Operation("term_evidence", "of_all", typeof(TermEvidence), nameof(TermEvidence.OfAll),
@@ -903,7 +904,7 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                 if (l.Line.Unlinked != null && l.Line.Unlinked.Count > 0) line["unlinked"] = l.Line.Unlinked.ToList();
                 return (object?)line;
             }).ToList(),
-            ["new"] = result.NewLines, ["validated_kept"] = result.ValidatedKept, ["replaced"] = result.Replaced, ["marked"] = result.Marked,
+            ["new"] = result.NewLines, ["validated_kept"] = result.ValidatedKept, ["replaced"] = result.Replaced, ["marked"] = result.Marked, ["harmonized"] = result.Harmonized,
             ["local_changes"] = result.LocalChanges, ["format"] = result.Format,
         };
 

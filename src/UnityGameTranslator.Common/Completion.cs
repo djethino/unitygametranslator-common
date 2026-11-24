@@ -30,6 +30,12 @@ namespace UnityGameTranslator.Common
 
         /// <summary>Nobody validated it and the pass has no such key: it stays.</summary>
         KeptUnvalidated,
+
+        /// <summary>
+        /// A person validated it (H with words, V), the optimization was told it may bring it in line with the rest of their work, and the pass says other
+        /// words: the pass's text takes its place and the line STAYS validated, its tag and rank kept (user, 2026-11-24: « (a) et elle reste validée »).
+        /// </summary>
+        Harmonized,
     }
 
     /// <summary>One line of the completed file, and what became of it.</summary>
@@ -61,6 +67,9 @@ namespace UnityGameTranslator.Common
         /// <summary>Unvalidated lines the pass replaced.</summary>
         public int Replaced;
 
+        /// <summary>Validated lines the pass brought in line with the rest of their work (<see cref="CompletionVerdict.Harmonized"/>).</summary>
+        public int Harmonized;
+
         /// <summary>Lines that stay and received the mark of a term.</summary>
         public int Marked;
 
@@ -68,7 +77,7 @@ namespace UnityGameTranslator.Common
         /// What to ADD to <c>_local_changes</c>: new + replaced + marked. Over-counting protects (the mod recounts exactly at launch),
         /// under-counting does not.
         /// </summary>
-        public int LocalChanges => NewLines + Replaced + Marked;
+        public int LocalChanges => NewLines + Replaced + Marked + Harmonized;
 
         /// <summary>The format the completed file must be stamped with: that of what it CONTAINS (<see cref="TranslationFormat.OfContent"/>).</summary>
         public int Format;
@@ -98,8 +107,12 @@ namespace UnityGameTranslator.Common
         /// <param name="pass">The lines of the pass, in its order.</param>
         /// <param name="termKeys">The keys of the pass that are terms. A key of the file that is one receives the mark.</param>
         /// <param name="holdsGameLists">The completed file holds a game's lists section (<c>_lists</c>): its own, or the pass's brought in.</param>
+        /// <param name="harmonized">
+        /// The keys of validated lines (H with words, V) the pass may bring in line with the rest of a person's work — the optimization's, never implicit:
+        /// a line nobody named here stays as validated lines always do. S and M are never in it. Null: none.
+        /// </param>
         public static CompletionResult Complete(IReadOnlyList<CompletionEntry> mine, IReadOnlyList<CompletionEntry> pass,
-                                                ISet<string> termKeys, bool holdsGameLists)
+                                                ISet<string> termKeys, bool holdsGameLists, ISet<string>? harmonized = null)
         {
             var result = new CompletionResult();
             var passByKey = new Dictionary<string, TranslationLine>(StringComparer.Ordinal);
@@ -112,7 +125,7 @@ namespace UnityGameTranslator.Common
             {
                 if (!seen.Add(entry.Key)) continue;
                 if (entry.Rank > highest) highest = entry.Rank;
-                result.Lines.Add(Settle(entry, passByKey, termKeys, result));
+                result.Lines.Add(Settle(entry, passByKey, termKeys, harmonized, result));
             }
 
             foreach (var entry in pass)
@@ -133,7 +146,7 @@ namespace UnityGameTranslator.Common
         }
 
         private static CompletionLine Settle(CompletionEntry entry, Dictionary<string, TranslationLine> passByKey,
-                                             ISet<string> termKeys, CompletionResult result)
+                                             ISet<string> termKeys, ISet<string>? harmonized, CompletionResult result)
         {
             var mine = entry.Line;
             bool inPass = passByKey.TryGetValue(entry.Key, out TranslationLine fromPass);
@@ -145,6 +158,18 @@ namespace UnityGameTranslator.Common
 
             if (Merge.IsByHand(tag, mine.Value))
             {
+                // brought in line with the rest of their work: the pass's words, the person's tag (H or V only — S is the person's « leave it », M is not the game's)
+                if (harmonized != null && harmonized.Contains(entry.Key) && (tag == "H" || tag == "V") && inPass
+                    && !string.Equals(mine.Value, fromPass.Value, StringComparison.Ordinal))
+                {
+                    var brought = fromPass;
+                    brought.Tag = tag;
+                    brought.BareString = false;
+                    if (termKeys.Contains(entry.Key) || mine.Term) brought.Term = true;
+                    brought.Unlinked = UnionOf(mine.Unlinked, fromPass.Unlinked);
+                    result.Harmonized++;
+                    return new CompletionLine { Key = entry.Key, Verdict = CompletionVerdict.Harmonized, Line = brought, Rank = entry.Rank };
+                }
                 result.ValidatedKept++;
                 return Keep(entry, mine, CompletionVerdict.Kept, inPass && termKeys.Contains(entry.Key), result);
             }
@@ -194,7 +219,8 @@ namespace UnityGameTranslator.Common
         public static string Announcement(CompletionResult result) =>
             Count(result.NewLines, "new line", "new lines") + " · "
             + Count(result.ValidatedKept, "validated line kept", "validated lines kept") + " · "
-            + Count(result.Replaced, "unvalidated line replaced", "unvalidated lines replaced");
+            + Count(result.Replaced, "unvalidated line replaced", "unvalidated lines replaced")
+            + (result.Harmonized > 0 ? " · " + Count(result.Harmonized, "validated line harmonized", "validated lines harmonized") : "");
 
         private static string Count(int n, string one, string many) =>
             n.ToString(System.Globalization.CultureInfo.InvariantCulture) + " " + (n == 1 ? one : many);

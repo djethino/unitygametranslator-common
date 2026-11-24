@@ -3,10 +3,20 @@
   "classes": ["Completion"],
   "note": "What a pass of UGT Manager's Smart does to a translation somebody already made (user, 2026-11-15: what is validated stays, what was never validated may go). `complete`: the lines of the file (key, line, rank), the lines of the pass, the keys of the pass that are terms, whether the result holds a game's lists section → every line in its order (the file's, then the new ones in the pass's order) with its verdict, the counts and the format of the result. Identity is the key, byte for byte: two different keys are two lines, never merged, never called duplicates. The pass's lines are tagged A when they come in; a line a person validated (H with words, V, S) is never modified, an H with nothing in it is a capture and counts as nothing; M is not a line of the game and is never marked. All the expected values are derived by hand from the decision, never from the code.",
   "operations": {
-    "complete": { "in": { "mine": "list of {key, line, rank?}", "pass": "list of {key, line}", "terms": "list of keys of the pass that are terms", "holds_game_lists": "bool" }, "out": "{lines: [{key, verdict: kept|same|replaced|new|keptunvalidated, v, t, rank, term, marked, unlinked?}], new, validated_kept, replaced, marked, local_changes, format}" },
+    "complete": { "in": { "mine": "list of {key, line, rank?}", "pass": "list of {key, line}", "terms": "list of keys of the pass that are terms", "holds_game_lists": "bool", "harmonized": "list of keys of validated lines (H, V) the pass may bring in line with the rest of the person's work (the optimization's)" }, "out": "{lines: [{key, verdict: kept|same|replaced|new|keptunvalidated, v, t, rank, term, marked, unlinked?}], new, validated_kept, replaced, marked, local_changes, format}" },
     "announcement": { "in": { "new": "int", "validated_kept": "int", "replaced": "int" }, "out": "string: the three counts the screen says before writing" }
   },
   "cases": [
+    { "id": "completion/complete/a-validated-line-named-is-harmonized-and-stays-validated", "op": "complete",
+      "in": { "mine": [ {"key": "Give item (Rope)", "line": {"v": "Lämna (Rep)", "t": "H"}, "rank": 2}, {"key": "Give item (Hook)", "line": {"v": "Lämna (Krok)", "t": "V"}, "rank": 3}, {"key": "Skip me", "line": {"v": "Skip me", "t": "S"}, "rank": 4} ],
+              "pass": [ {"key": "Give item (Rope)", "line": {"v": "Ge föremål (Rep)", "t": "A"}}, {"key": "Give item (Hook)", "line": {"v": "Ge föremål (Krok)", "t": "A"}}, {"key": "Skip me", "line": {"v": "Hoppa", "t": "A"}} ],
+              "terms": [], "holds_game_lists": false, "harmonized": ["Give item (Rope)", "Skip me"] },
+      "out": { "lines": [
+          {"key": "Give item (Rope)", "verdict": "harmonized", "v": "Ge föremål (Rep)", "t": "H", "rank": 2, "term": false, "marked": false},
+          {"key": "Give item (Hook)", "verdict": "kept", "v": "Lämna (Krok)", "t": "V", "rank": 3, "term": false, "marked": false},
+          {"key": "Skip me", "verdict": "kept", "v": "Skip me", "t": "S", "rank": 4, "term": false, "marked": false} ],
+        "new": 0, "validated_kept": 2, "replaced": 0, "marked": 0, "harmonized": 1, "local_changes": 1, "format": 1 },
+      "why": "user, 2026-11-24: a validated line the optimization names is brought in line with the rest of the person's work and STAYS validated (its tag kept); one it does not name stays as validated lines always do; an S is a person's « leave it », never harmonized" },
     { "id": "completion/complete/a-file-with-nothing-takes-the-pass", "op": "complete",
       "in": { "mine": [], "pass": [ {"key": "Play", "line": {"v": "Jouer", "t": "A"}}, {"key": "Quit", "line": {"v": "Quitter", "t": "A"}} ], "terms": [], "holds_game_lists": false },
       "out": { "lines": [
@@ -117,6 +127,10 @@
       "in": { "new": 1, "validated_kept": 1, "replaced": 1 },
       "out": "1 new line · 1 validated line kept · 1 unvalidated line replaced",
       "why": "one is not « 1 lines »" },
+    { "id": "completion/announcement/harmonized-said-when-there-are-some", "op": "announcement",
+      "in": { "new": 0, "validated_kept": 5, "replaced": 2, "harmonized": 3 },
+      "out": "0 new lines · 5 validated lines kept · 2 unvalidated lines replaced · 3 validated lines harmonized",
+      "why": "the validated lines a pass brought in line are said beside the others, before the click; none, nothing more is said" },
     { "id": "completion/announcement/nothing", "op": "announcement",
       "in": { "new": 0, "validated_kept": 0, "replaced": 0 },
       "out": "0 new lines · 0 validated lines kept · 0 unvalidated lines replaced",
