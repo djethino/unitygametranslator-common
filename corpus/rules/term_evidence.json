@@ -5,9 +5,24 @@
   "operations": {
     "of": { "in": { "term": "string", "lines": "list of {key, line}" }, "out": "{verdict: none|thin|word|tied|ambiguous, word, keys, rivals: [{words, keys}]}" },
     "of_all": { "in": { "terms": "list of string", "lines": "list of {key, line}" }, "out": "list of {term, verdict, word}: `ambiguous` for every term whose writing another term receives too" },
-    "of_all_machine": { "in": { "terms": "list of string", "lines": "list of {key, line}" }, "out": "list of {term, verdict, word, from_machine}: `of_all`, then for a term no person's line decides (none or thin) the same search over the MACHINE's lines (tag A or none); taken only when it gives `word` with no rival, a writing no other term receives, and every line of a person naming the term holds it — `from_machine` true. Anything less leaves the term as `of_all` gave it (user, 2026-11-24: the A lines only when they clearly agree, else the model, once per term)" }
+    "of_all_machine": { "in": { "terms": "list of string", "lines": "list of {key, line}" }, "out": "list of {term, verdict, word, from_machine}: `of_all`, then for a term no person's line decides (none or thin) the same search over the MACHINE's lines (tag A or none); taken only when it gives `word` with no rival, held by MORE THAN HALF of the machine lines that name the term, a writing no other term receives, the machine's own line of the term alone (when there is one) writing it, and every line of a person naming the term holding it — `from_machine` true. Anything less leaves the term as `of_all` gave it (user, 2026-11-24: the A lines only when they clearly agree, else the model, once per term)" }
   },
   "cases": [
+    { "id": "term_evidence/of_all_machine/more-than-half-of-the-lines", "op": "of_all_machine",
+      "in": { "terms": ["Wheel"], "lines": [
+          {"key": "Big Wheel", "line": {"v": "Grande roue", "t": "A"}},
+          {"key": "Wheel Lock", "line": {"v": "Verrou de roue", "t": "A"}},
+          {"key": "Wheel Spin", "line": {"v": "Rotation", "t": "A"}},
+          {"key": "Wheel Size", "line": {"v": "Taille", "t": "A"}} ] },
+      "out": [ {"term": "Wheel", "verdict": "none", "word": null, "from_machine": false} ],
+      "why": "« roue » is held by two of the four machine lines that name the term, and no rival: not more than half, so not clearly agreeing" },
+    { "id": "term_evidence/of_all_machine/the-term-own-line-agrees-or-nothing", "op": "of_all_machine",
+      "in": { "terms": ["Wheel"], "lines": [
+          {"key": "Wheel", "line": {"v": "Volant", "t": "A"}},
+          {"key": "Big Wheel", "line": {"v": "Grande roue", "t": "A"}},
+          {"key": "Wheel Lock", "line": {"v": "Verrou de roue", "t": "A"}} ] },
+      "out": [ {"term": "Wheel", "verdict": "none", "word": null, "from_machine": false} ],
+      "why": "the machine translated the term alone « Volant »: its sentences' « roue » is not taken over its own line" },
     { "id": "term_evidence/of_all_machine/machine-lines-agree", "op": "of_all_machine",
       "in": { "terms": ["Wheel"], "lines": [
           {"key": "Big Wheel", "line": {"v": "Grande roue", "t": "A"}},

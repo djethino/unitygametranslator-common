@@ -86,22 +86,26 @@ namespace UnityGameTranslator.Common
         /// <param name="term">The term as the game writes it (its source form).</param>
         /// <param name="validated">The lines of the WHOLE file, key and line. Only those a person validated and wrote words in (H or V, a value) are read.</param>
         public static TermEvidenceResult Of(string term, IReadOnlyList<KeyValuePair<string, TranslationLine>> validated)
-            => OfLines(term, ValidatedLines(validated));
+        {
+            var lines = ValidatedLines(validated);
+            return OfLines(term, lines, new Grams(lines));
+        }
 
-        private static TermEvidenceResult OfLines(string term, List<Line> lines)
+        private static TermEvidenceResult OfLines(string term, List<Line> lines, Grams grams)
         {
             var result = new TermEvidenceResult { Term = term ?? "" };
 
             var evidence = new List<int>();
-            for (int i = 0; i < lines.Count; i++)
-                if (!string.IsNullOrEmpty(term) && Holds(lines[i].Key, term!)) evidence.Add(i);
+            if (!string.IsNullOrEmpty(term))
+                foreach (int i in grams.Holding(term!, keys: true))
+                    if (Holds(lines[i].Key, term!)) evidence.Add(i);
             if (evidence.Count == 0)
             {
                 result.Verdict = TermEvidenceVerdict.None;
                 return result;
             }
 
-            var candidates = Candidates(lines, evidence);
+            var candidates = Candidates(lines, evidence, grams);
             if (candidates.Count == 0)
             {
                 result.Verdict = TermEvidenceVerdict.Thin;
@@ -151,7 +155,8 @@ namespace UnityGameTranslator.Common
         public static List<TermEvidenceResult> OfAll(IReadOnlyList<string> terms, IReadOnlyList<KeyValuePair<string, TranslationLine>> validated)
         {
             var lines = ValidatedLines(validated);
-            return MarkShared(terms.Select(term => OfLines(term, lines)).ToList());
+            var grams = new Grams(lines);
+            return MarkShared(terms.Select(term => OfLines(term, lines, grams)).ToList());
         }
 
         /// <summary>
@@ -170,6 +175,9 @@ namespace UnityGameTranslator.Common
             var machine = MachineLines(lines);
             if (machine.Count == 0) return results;
             var person = ValidatedLines(lines);
+            var machineGrams = new Grams(machine);
+            var machineText = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var m in machine) machineText[m.Key] = m.Text;
 
             var taken = new HashSet<string>(StringComparer.Ordinal);
             foreach (var r in results)
@@ -178,11 +186,17 @@ namespace UnityGameTranslator.Common
             for (int i = 0; i < results.Count; i++)
             {
                 if (results[i].Verdict != TermEvidenceVerdict.None && results[i].Verdict != TermEvidenceVerdict.Thin) continue;
-                var fromMachine = OfLines(results[i].Term, machine);
+                var fromMachine = OfLines(results[i].Term, machine, machineGrams);
                 if (fromMachine.Verdict != TermEvidenceVerdict.Word || fromMachine.Contradicted || taken.Contains(Casing.LowerFirst(fromMachine.Word) ?? "")) continue;
                 // too few of a person's lines to decide is still what a person wrote: a machine's word that one of them does not hold is no word
                 string term = results[i].Term;
-                if (person.Any(p =>!string.IsNullOrEmpty(term) && Holds(p.Key, term) && !Holds(p.Text, fromMachine.Word!))) continue;
+                if (person.Any(p => !string.IsNullOrEmpty(term) && Holds(p.Key, term) && !Holds(p.Text, fromMachine.Word!))) continue;
+                // CLEARLY agreeing, measured on two files (2026-11-24, 2 to 3 wrong words of 38 with « the most lines » alone: a phrase two lines
+                // share, a compound of a language that glues its words): more than half of the machine's lines that name the term hold it…
+                int naming = machineGrams.Holding(term, keys: true).Count(m => Holds(machine[m].Key, term));
+                if (fromMachine.Keys.Count * 2 <= naming) continue;
+                // …and the machine's own line of the term alone, when the file has one, writes it (first letter in either case)
+                if (machineText.TryGetValue(term, out var own) && !string.Equals(Casing.LowerFirst(own), Casing.LowerFirst(fromMachine.Word), StringComparison.Ordinal)) continue;
                 fromMachine.FromMachine = true;
                 results[i] = fromMachine;
                 read.Add(fromMachine);
@@ -266,7 +280,7 @@ namespace UnityGameTranslator.Common
         /// The stretches of 2 to 24 characters that at least two lines of the evidence hold and that are confined to it, each with the lines of
         /// the evidence that hold it. A stretch is looked for with its first letter lowered, so « Roue » and « roue » are one candidate.
         /// </summary>
-        private static List<Candidate> Candidates(List<Line> lines, List<int> evidence)
+        private static List<Candidate> Candidates(List<Line> lines, List<int> evidence, Grams grams)
         {
             var raw = new Dictionary<string, HashSet<int>>(StringComparer.Ordinal);
             foreach (int i in evidence)
@@ -294,13 +308,14 @@ namespace UnityGameTranslator.Common
                 var holding = evidence.Where(i => Holds(lines[i].Text, pair.Key)).ToList();
                 if (holding.Count < MinCount) continue;
 
-                var inEvidence = new HashSet<int>(holding);
-                int everywhere = 0;
-                for (int i = 0; i < lines.Count; i++)
-                    if (inEvidence.Contains(i) || Holds(lines[i].Text, pair.Key)) everywhere++;
                 // confined: a MAJORITY of the lines that hold it are lines of the term's evidence (a word the term's lines share with the rest
-                // of the file is not the term's; the measure is flat from a third to two thirds)
-                if (2 * holding.Count <= everywhere) continue;
+                // of the file is not the term's; the measure is flat from a third to two thirds). Counted on the lines that CAN hold it
+                // (Grams), and no further than the answer: once as many lines outside the evidence hold it, it is not confined.
+                var inEvidence = new HashSet<int>(holding);
+                int outside = 0;
+                foreach (int i in grams.Holding(pair.Key, keys: false))
+                    if (!inEvidence.Contains(i) && Holds(lines[i].Text, pair.Key) && ++outside >= holding.Count) break;
+                if (outside >= holding.Count) continue;
 
                 found.Add(new Candidate { Words = pair.Key, Lines = holding });
             }
@@ -333,6 +348,71 @@ namespace UnityGameTranslator.Common
                     group.Words = candidate.Words;
             }
             return byLines.Values.ToList();
+        }
+
+        /// <summary>
+        /// Which lines CAN hold a stretch, so that the exact test (<see cref="Holds"/>, word edges, first letter in either case) is asked of them only:
+        /// a stretch written in a text holds every pair of UTF-16 units of the stretch after its first character, so the lines that hold the rarest such
+        /// pair are a superset of the answer (a stretch of one or two units: the lines holding its last unit, or its first in either case). Built once
+        /// per set of lines; a necessary condition only — it never decides.
+        /// </summary>
+        private sealed class Grams
+        {
+            private readonly Dictionary<long, List<int>> _keyPairs = new Dictionary<long, List<int>>();
+            private readonly Dictionary<long, List<int>> _textPairs = new Dictionary<long, List<int>>();
+            private readonly Dictionary<char, List<int>> _keyUnits = new Dictionary<char, List<int>>();
+            private readonly Dictionary<char, List<int>> _textUnits = new Dictionary<char, List<int>>();
+            private readonly int _count;
+
+            public Grams(List<Line> lines)
+            {
+                _count = lines.Count;
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    Index(lines[i].Key, i, _keyPairs, _keyUnits);
+                    Index(lines[i].Text, i, _textPairs, _textUnits);
+                }
+            }
+
+            private static void Index(string text, int line, Dictionary<long, List<int>> pairs, Dictionary<char, List<int>> units)
+            {
+                for (int k = 0; k < text.Length; k++)
+                {
+                    Add(units, text[k], line);
+                    if (k + 1 < text.Length) Add(pairs, ((long)text[k] << 16) | text[k + 1], line);
+                }
+            }
+
+            private static void Add<T>(Dictionary<T, List<int>> map, T at, int line) where T : notnull
+            {
+                if (!map.TryGetValue(at, out var list)) map[at] = list = new List<int>();
+                if (list.Count == 0 || list[list.Count - 1] != line) list.Add(line);
+            }
+
+            private static readonly List<int> NoLine = new List<int>();
+
+            /// <summary>The lines, in order, that can hold <paramref name="stretch"/> in their key or their text.</summary>
+            public IEnumerable<int> Holding(string stretch, bool keys)
+            {
+                var pairs = keys ? _keyPairs : _textPairs;
+                var units = keys ? _keyUnits : _textUnits;
+                if (stretch.Length >= 3)
+                {
+                    List<int>? rarest = null;
+                    for (int k = 1; k + 1 < stretch.Length; k++)
+                    {
+                        if (!pairs.TryGetValue(((long)stretch[k] << 16) | stretch[k + 1], out var list)) return NoLine;
+                        if (rarest == null || list.Count < rarest.Count) rarest = list;
+                    }
+                    return rarest!;
+                }
+                if (stretch.Length == 2) return units.TryGetValue(stretch[1], out var last) ? last : NoLine;
+                // one unit: the lines holding it in either case of its first letter
+                string other = Casing.UpperFirst(stretch) == stretch ? Casing.LowerFirst(stretch) ?? stretch : Casing.UpperFirst(stretch) ?? stretch;
+                var a = units.TryGetValue(stretch[0], out var one) ? one : NoLine;
+                var b = other.Length == 1 && other[0] != stretch[0] && units.TryGetValue(other[0], out var two) ? two : NoLine;
+                return a.Concat(b).Distinct().OrderBy(i => i);
+            }
         }
 
         private static int CodePoints(string text)
