@@ -369,6 +369,16 @@ namespace UnityGameTranslator.Common.Checks.Corpus
                         places.Add(new Dictionary<string, object?> { ["term"] = c.Key, ["start"] = c.Start, ["end"] = c.End });
                     return places;
                 }),
+            new Operation("link_finding", "texts_within", typeof(LinkFinding), nameof(LinkFinding.TextsWithin),
+                e =>
+                {
+                    var keys = new List<string>();
+                    foreach (var k in e.GetProperty("keys").EnumerateArray()) keys.Add(k.GetString()!);
+                    var places = new List<Dictionary<string, object?>>();
+                    foreach (var c in LinkFinding.TextsWithin(TermIndex.OfKeys(keys), Str(e, "source") ?? ""))
+                        places.Add(new Dictionary<string, object?> { ["key"] = c.Key, ["start"] = c.Start, ["end"] = c.End });
+                    return places;
+                }),
             new Operation("word_glue", "is_glued", typeof(WordGlue), nameof(WordGlue.IsGlued),
                 e => WordGlue.IsGlued(Int(e, "code_point"))),
             new Operation("word_glue", "edge_before", typeof(WordGlue), nameof(WordGlue.EdgeBefore),

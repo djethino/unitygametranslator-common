@@ -544,7 +544,24 @@ namespace UnityGameTranslator.Common
         }
 
         /// <summary>The places a source cites terms at: occurrences of their keys at word edges, the longest first and never overlapping.</summary>
-        private static List<Place> CitedPlaces(TermIndex index, string source, IReadOnlyList<string>? refused)
+        /// <summary>
+        /// The keys of an index written INSIDE a text at word edges — the places <see cref="Cites"/> finds (longest first, never overlapping,
+        /// never in a tag), with no place covering the whole text: a text that is itself a key of the index still shows the shorter keys it
+        /// holds. For a file's keys indexed whole (<see cref="TermIndex.OfKeys"/>): which lines differ from another only by a text of the file
+        /// (UGT Manager's templates deduced from lines, analyse/smart-optimisation-conception.md §10). In reading order.
+        /// </summary>
+        public static IReadOnlyList<CitedTerm> TextsWithin(TermIndex index, string source)
+        {
+            if (index == null) throw new ArgumentNullException(nameof(index));
+            var within = new List<CitedTerm>();
+            if (string.IsNullOrEmpty(source) || index.Count == 0) return within;
+            var places = CitedPlaces(index, source, null, wholeExcluded: true);
+            places.Sort((a, b) => a.Start.CompareTo(b.Start));
+            foreach (var place in places) within.Add(new CitedTerm { Key = index.Keys[place.Term], Start = place.Start, End = place.End });
+            return within;
+        }
+
+        private static List<Place> CitedPlaces(TermIndex index, string source, IReadOnlyList<string>? refused, bool wholeExcluded = false)
         {
             var found = new List<Place>();
             var tags = Tags.Of(source);
@@ -557,6 +574,7 @@ namespace UnityGameTranslator.Common
                     if (node.Next == null || !node.Next.TryGetValue(source[k], out node!)) break;
                     if (node.Hits == null || !WordGlue.EdgeAfter(source, k + 1)) continue;
                     if (tags.Touch(i, k + 1)) continue;
+                    if (wholeExcluded && i == 0 && k + 1 == source.Length) continue;
                     foreach (var hit in node.Hits) found.Add(new Place { Start = i, End = k + 1, Term = hit.Term });
                 }
             }

@@ -8,9 +8,18 @@
     "written_among": {"in": {"text": "the text SHOWN", "term_key": "string", "writings": "[{words, form}] — this term's", "others": "[{key, writings}] — the other terms the same source cites", "claimed": "[[start, end]] | absent"}, "out": "[{writing, start, end, case}] — the places THIS term wins, in reading order"},
     "writings_of": {"in": {"line": "a term line"}, "out": "[{words, form}] — its word (form null), then its forms in the ordinal order of their ids"},
     "cited_whole": {"in": {"terms": "[key]", "words": "string", "unlinked": "[key] | absent — the terms the line of those words refuses"}, "out": "the key of the term the words ARE the citation of (one place, all the words), or null"},
+    "texts_within": {"in": {"keys": "[key] — the keys of a file, indexed whole", "source": "string"}, "out": "[{key, start, end}] — the keys written inside the source (Cites' places: longest first, never overlapping, never in a tag), never one covering the whole source, in reading order"},
     "cites": {"in": {"terms": "[key] — the keys of the terms (an index of KEYS: what a source cites)", "source": "string", "unlinked": "[key] | absent — the terms the line refuses"}, "out": "[{term, start, end}] — where the source cites a term, in reading order, UTF-16 units [start, end)"}
   },
   "cases": [
+    { "id": "link_finding/texts_within/a-line-that-is-a-key-shows-what-it-holds", "op": "texts_within",
+      "in": {"keys": ["Gland of the Ant", "Ant", "Gland"], "source": "Gland of the Ant"},
+      "out": [{"key": "Gland", "start": 0, "end": 5}, {"key": "Ant", "start": 13, "end": 16}],
+      "why": "Cites answers nothing for a source that is itself a key; the shorter keys it holds are what tells two lines apart" },
+    { "id": "link_finding/texts_within/longest-first-no-overlap", "op": "texts_within",
+      "in": {"keys": ["Give item (<highlight>Party Hat</highlight>)", "Party Hat", "Hat"], "source": "Give item (<highlight>Party Hat</highlight>)"},
+      "out": [{"key": "Party Hat", "start": 22, "end": 31}],
+      "why": "« Hat » inside « Party Hat » has no place left, and the tags around are no part of a key" },
     { "id": "link_finding/find/one-occurrence-is-a-link", "op": "find",
       "in": {"terms": {"Star Coin": {"v": "Pièce d'étoile", "t": "V", "term": true, "forms": {"f1": "pièces d'étoile", "f2": "de la pièce d'étoile"}}, "Coin": {"v": "Pièce", "t": "V", "term": true}, "Key": {"v": "Touche", "t": "V", "term": true, "forms": {"f1": "touches"}}, "Door": {"v": "Porte", "t": "V", "term": true}}, "text": "Il faut une pièce d'étoile.", "source": "Needs a Star Coin."},
       "out": {"v": "Il faut une [!g*0].", "links": [{"to": "Star Coin", "by": "A", "was": "pièce d'étoile", "case": "lower-first"}], "not_found": [], "problem": null},
